@@ -1,5 +1,9 @@
 # aria-packages
 
+<p align="center">
+	<img src="assets/nitpick_logo.png" alt="Nitpick logo: raccoon holding a magnifying glass" width="220">
+</p>
+
 > 🚧 **Rebrand in progress:** Aria is becoming **Nitpick**. This package
 > ecosystem still uses `aria-*` names while the migration is underway. Package
 > history and compatibility paths are being preserved; package-prefix renames
