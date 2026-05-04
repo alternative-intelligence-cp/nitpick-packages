@@ -1,5 +1,10 @@
 # aria-packages
 
+> 🚧 **Rebrand in progress:** Aria is becoming **Nitpick**. This package
+> ecosystem still uses `aria-*` names while the migration is underway. Package
+> history and compatibility paths are being preserved; package-prefix renames
+> will happen gradually after the core repo/tooling aliases are planned.
+
 Ecosystem package libraries for the [Aria programming language](https://github.com/ailp/aria).
 
 **102 packages** (83 with manifests) — see [PACKAGES.md](PACKAGES.md) for the full categorized list and [STDLIB.md](STDLIB.md) for standard library modules.
