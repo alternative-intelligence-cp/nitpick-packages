@@ -1,0 +1,12 @@
+[package]
+name = "hex-shell"
+version = "0.1.0"
+description = "Multi-pane hexstream shell for Aria"
+license = "MIT"
+repository = "https://github.com/alternative-intelligence-cp/aria-packages"
+
+[dependencies]
+aria-libc = ">=0.2.6"
+
+[build]
+link_libraries = ["aria_libc_process"]
