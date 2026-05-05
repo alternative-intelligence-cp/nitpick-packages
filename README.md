@@ -105,9 +105,9 @@ Ecosystem package libraries for the [Aria programming language](https://github.c
 
 ## Installation
 
-### Via aria-pkg
+### Via npkpkg
 ```bash
-aria-pkg install aria-test
+npkpkg install aria-test
 ```
 
 ### Via APT (Debian/Ubuntu)
@@ -126,9 +126,9 @@ Each package follows the standard Aria package layout:
 aria-<name>/
 ├── aria-package.toml    # Package manifest
 ├── src/
-│   └── <name>.aria      # Source code
+│   └── <name>.npk       # Source code
 ├── tests/
-│   └── test_<name>.aria # Tests
+│   └── test_<name>.npk  # Tests
 └── README.md
 ```
 
