@@ -1,0 +1,5 @@
+[package]
+name = "nitpick-sync"
+version = "0.1.0"
+description = "Advanced synchronization primitives (WaitGroup, Semaphore, CountDownLatch)"
+license = "MIT"

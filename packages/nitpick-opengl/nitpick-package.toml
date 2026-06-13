@@ -1,0 +1,15 @@
+[package]
+name = "nitpick-opengl"
+version = "0.1.0"
+authors = ["Nitpick Language Project"]
+license = "Apache-2.0 WITH Runtime-Library-Exception"
+description = "OpenGL 3.3 Core bindings for Nitpick — shaders, buffers, textures, 3D math, via SDL2 windowing + GLAD loader"
+keywords = ["opengl", "graphics", "3d", "gpu", "gamedev", "ffi"]
+categories = ["graphics", "gamedev"]
+
+[dependencies]
+
+[build]
+type = "library"
+entry = "src/nitpick_opengl.npk"
+link_libraries = ["nitpick_opengl_shim", "SDL2", "GL", "dl"]

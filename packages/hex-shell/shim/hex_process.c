@@ -58,6 +58,16 @@ int32_t hex_proc_close(int64_t fd) {
     return (int32_t)close((int)fd);
 }
 
+int64_t hex_proc_open_file(const char* path, const char* mode) {
+    int flags = 0;
+    int m = 0644;
+    if (strcmp(mode, "r") == 0) flags = O_RDONLY;
+    else if (strcmp(mode, "w") == 0) flags = O_WRONLY | O_CREAT | O_TRUNC;
+    else if (strcmp(mode, "a") == 0) flags = O_WRONLY | O_CREAT | O_APPEND;
+    else return -1;
+    return (int64_t)open(path, flags, m);
+}
+
 /* ── Exec /bin/sh -c cmd — never returns on success ─────────────── */
 
 int32_t hex_proc_exec_sh(const char* cmd) {
@@ -220,5 +230,70 @@ int64_t hex_proc_spawn(const char* cmd,
     if (flags >= 0) fcntl((int)fd_dato_r, F_SETFL, flags | O_NONBLOCK);
 
     return (int64_t)pid;
+}
+
+/* ── Spawn 2-process pipeline: cmd1 | cmd2 ──────────────────────── */
+
+int64_t hex_proc_spawn2(const char* cmd1, const char* cmd2,
+                        int64_t fd_stdin_r,  int64_t fd_stdin_w,
+                        int64_t fd_stdout_r, int64_t fd_stdout_w,
+                        int64_t fd_stderr_r, int64_t fd_stderr_w,
+                        int64_t fd_stddbg_r, int64_t fd_stddbg_w,
+                        int64_t fd_dati_r,   int64_t fd_dati_w,
+                        int64_t fd_dato_r,   int64_t fd_dato_w) {
+    int p_out[2];
+    int p_dat[2];
+    pipe(p_out);
+    pipe(p_dat);
+
+    pid_t pid1 = fork();
+    if (pid1 == 0) {
+        dup2((int)fd_stdin_r, 0);
+        dup2(p_out[1], 1);
+        dup2((int)fd_stderr_w, 2);
+        dup2((int)fd_stddbg_w, 3);
+        dup2((int)fd_dati_r, 4);
+        dup2(p_dat[1], 5);
+        for (int fd = 6; fd < 256; fd++) close(fd);
+        execl("/bin/sh", "sh", "-c", cmd1, (char*)NULL);
+        _exit(127);
+    }
+
+    pid_t pid2 = fork();
+    if (pid2 == 0) {
+        dup2(p_out[0], 0);
+        dup2((int)fd_stdout_w, 1);
+        dup2((int)fd_stderr_w, 2);
+        dup2((int)fd_stddbg_w, 3);
+        dup2(p_dat[0], 4);
+        dup2((int)fd_dato_w, 5);
+        for (int fd = 6; fd < 256; fd++) close(fd);
+        execl("/bin/sh", "sh", "-c", cmd2, (char*)NULL);
+        _exit(127);
+    }
+
+    close(p_out[0]); close(p_out[1]);
+    close(p_dat[0]); close(p_dat[1]);
+
+    close((int)fd_stdin_r);
+    close((int)fd_stdout_w);
+    close((int)fd_stderr_w);
+    close((int)fd_stddbg_w);
+    close((int)fd_dati_r);
+    close((int)fd_dato_w);
+    close((int)fd_stdin_w);
+    close((int)fd_dati_w);
+
+    int flags;
+    flags = fcntl((int)fd_stdout_r, F_GETFL, 0);
+    if (flags >= 0) fcntl((int)fd_stdout_r, F_SETFL, flags | O_NONBLOCK);
+    flags = fcntl((int)fd_stderr_r, F_GETFL, 0);
+    if (flags >= 0) fcntl((int)fd_stderr_r, F_SETFL, flags | O_NONBLOCK);
+    flags = fcntl((int)fd_stddbg_r, F_GETFL, 0);
+    if (flags >= 0) fcntl((int)fd_stddbg_r, F_SETFL, flags | O_NONBLOCK);
+    flags = fcntl((int)fd_dato_r, F_GETFL, 0);
+    if (flags >= 0) fcntl((int)fd_dato_r, F_SETFL, flags | O_NONBLOCK);
+
+    return (int64_t)pid2;
 }
 

@@ -1,7 +1,0 @@
-[package]
-name = "aria-cors"
-version = "0.12.1"
-description = "CORS header builder — pure Aria"
-type = "pure"
-
-[dependencies]

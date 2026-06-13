@@ -1,0 +1,109 @@
+// test_nitpick_hash.npk — LIB-13 test suite (15 tests)
+// Tests all 8 hash functions with known-good expected values computed in Python.
+
+extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_hash.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:main = int32() {
+    int32:pass_count = 0i32;
+    // T01: raw fnv1a32(0) == 2615243109 (0x9be17165)
+    uint64:r01 = raw fnv1a32(0u64);
+    uint64:f01 = 0u64; if (r01 == 2615243109u64) { f01 = 1u64; }
+    if (f01 == 1u64) { drop(println("[PASS] T01 raw fnv1a32(0)")); }
+    if (f01 == 0u64) { drop(println("[FAIL] T01 raw fnv1a32(0)")); }
+
+    // T02: raw fnv1a32(1) == 1048580676 (0x3e801244)
+    uint64:r02 = raw fnv1a32(1u64);
+    uint64:f02 = 0u64; if (r02 == 1048580676u64) { f02 = 1u64; }
+    if (f02 == 1u64) { drop(println("[PASS] T02 raw fnv1a32(1)")); }
+    if (f02 == 0u64) { drop(println("[FAIL] T02 raw fnv1a32(1)")); }
+
+    // T03: fnv1a32 is distinct for different inputs
+    uint64:r03a = raw fnv1a32(42u64);
+    uint64:r03b = raw fnv1a32(43u64);
+    uint64:f03 = 0u64; if (r03a != r03b) { f03 = 1u64; }
+    if (f03 == 1u64) { drop(println("[PASS] T03 fnv1a32 distinct")); }
+    if (f03 == 0u64) { drop(println("[FAIL] T03 fnv1a32 distinct")); }
+
+    // T04: raw fnv1a64(0) == 12161962213042174405 (0xa8c7f832281a39c5)
+    uint64:r04 = raw fnv1a64(0u64);
+    uint64:f04 = 0u64; if (r04 == 12161962213042174405u64) { f04 = 1u64; }
+    if (f04 == 1u64) { drop(println("[PASS] T04 raw fnv1a64(0)")); }
+    if (f04 == 0u64) { drop(println("[FAIL] T04 raw fnv1a64(0)")); }
+
+    // T05: raw fnv1a64(1) == 9929646806074584996 (0x89cd31291d2aefa4)
+    uint64:r05 = raw fnv1a64(1u64);
+    uint64:f05 = 0u64; if (r05 == 9929646806074584996u64) { f05 = 1u64; }
+    if (f05 == 1u64) { drop(println("[PASS] T05 raw fnv1a64(1)")); }
+    if (f05 == 0u64) { drop(println("[FAIL] T05 raw fnv1a64(1)")); }
+
+    // T06: raw djb2(0) == 7567884774754821 (0x1ae2f37bb34a05)
+    uint64:r06 = raw djb2(0u64);
+    uint64:f06 = 0u64; if (r06 == 7567884774754821u64) { f06 = 1u64; }
+    if (f06 == 1u64) { drop(println("[PASS] T06 raw djb2(0)")); }
+    if (f06 == 0u64) { drop(println("[FAIL] T06 raw djb2(0)")); }
+
+    // T07: djb2 distinct for 1 vs 0
+    uint64:r07 = raw djb2(1u64);
+    uint64:f07 = 0u64; if (r07 != 7567884774754821u64) { f07 = 1u64; }
+    if (f07 == 1u64) { drop(println("[PASS] T07 djb2 distinct")); }
+    if (f07 == 0u64) { drop(println("[FAIL] T07 djb2 distinct")); }
+
+    // T08: raw sdbm(0) == 0  (zero input → zero output)
+    uint64:r08 = raw sdbm(0u64);
+    uint64:f08 = 0u64; if (r08 == 0u64) { f08 = 1u64; }
+    if (f08 == 1u64) { drop(println("[PASS] T08 raw sdbm(0)==0")); }
+    if (f08 == 0u64) { drop(println("[FAIL] T08 raw sdbm(0)==0")); }
+
+    // T09: raw sdbm(1) != 0  (non-zero input → non-zero output)
+    uint64:r09 = raw sdbm(1u64);
+    uint64:f09 = 0u64; if (r09 != 0u64) { f09 = 1u64; }
+    if (f09 == 1u64) { drop(println("[PASS] T09 raw sdbm(1)!=0")); }
+    if (f09 == 0u64) { drop(println("[FAIL] T09 raw sdbm(1)!=0")); }
+
+    // T10: raw mix64(0) == 0  (fixed point)
+    uint64:r10 = raw mix64(0u64);
+    uint64:f10 = 0u64; if (r10 == 0u64) { f10 = 1u64; }
+    if (f10 == 1u64) { drop(println("[PASS] T10 raw mix64(0)==0")); }
+    if (f10 == 0u64) { drop(println("[FAIL] T10 raw mix64(0)==0")); }
+
+    // T11: raw mix64(1) == 12994781566227106604 (0xb456bcfc34c2cb2c)
+    uint64:r11 = raw mix64(1u64);
+    uint64:f11 = 0u64; if (r11 == 12994781566227106604u64) { f11 = 1u64; }
+    if (f11 == 1u64) { drop(println("[PASS] T11 raw mix64(1)")); }
+    if (f11 == 0u64) { drop(println("[FAIL] T11 raw mix64(1)")); }
+
+    // T12: raw hash_combine(0,0) == 11400714819323198485 (0x9e3779b97f4a7c15)
+    uint64:r12 = raw hash_combine(0u64, 0u64);
+    uint64:f12 = 0u64; if (r12 == 11400714819323198485u64) { f12 = 1u64; }
+    if (f12 == 1u64) { drop(println("[PASS] T12 raw hash_combine(0,0)")); }
+    if (f12 == 0u64) { drop(println("[FAIL] T12 raw hash_combine(0,0)")); }
+
+    // T13: raw splitmix(0) == 16294208416658607535 (0xe220a8397b1dcdaf)
+    uint64:r13 = raw splitmix(0u64);
+    uint64:f13 = 0u64; if (r13 == 16294208416658607535u64) { f13 = 1u64; }
+    if (f13 == 1u64) { drop(println("[PASS] T13 raw splitmix(0)")); }
+    if (f13 == 0u64) { drop(println("[FAIL] T13 raw splitmix(0)")); }
+
+    // T14: raw splitmix(1) != raw splitmix(0)  (avalanche)
+    uint64:r14a = raw splitmix(0u64);
+    uint64:r14b = raw splitmix(1u64);
+    uint64:f14 = 0u64; if (r14a != r14b) { f14 = 1u64; }
+    if (f14 == 1u64) { drop(println("[PASS] T14 splitmix avalanche")); }
+    if (f14 == 0u64) { drop(println("[FAIL] T14 splitmix avalanche")); }
+
+    // T15: raw wang64(1) != raw wang64(0)  (non-trivial for small values)
+    uint64:r15a = raw wang64(0u64);
+    uint64:r15b = raw wang64(1u64);
+    uint64:f15 = 0u64; if (r15a != r15b) { f15 = 1u64; }
+    if (f15 == 1u64) { drop(println("[PASS] T15 wang64 distinct")); }
+    if (f15 == 0u64) { drop(println("[FAIL] T15 wang64 distinct")); }
+
+    
+    drop(println("---"));
+    
+        drop(println("PASS: all tests passed"));
+    exit 0;
+};

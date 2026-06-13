@@ -1,0 +1,115 @@
+// test_tui_v3.npk — Interactive TUI Dashboard Demo
+
+use "nitpick_tui.npk".*;
+
+func:failsafe = int32(tbb32:err) {
+    raw Tui_shutdown();
+    exit 1i32;
+};
+
+func:main = int32() {
+    raw Tui_init();
+
+    // 0 = Form Page, 1 = Log Page
+    int32:active_page = 0i32;
+    int32:focus = 0i32; 
+
+    int32:running = 1i32;
+    int32:vk = 0i32;
+    int32:slider_val = 50i32;
+
+    while (running == 1i32) {
+        
+        nitpick_display_clear();
+
+        // --- DRAW TAB BAR ---
+        LayoutCursor:top_bar = raw Layout_create(2i32, 2i32, 2i32);
+        Widget:tab1 = raw Tui_tabs(0i32, 0i32, "[ Form View ]\0", 0i32);
+        Widget:tab2 = raw Tui_tabs(0i32, 0i32, "[ System Logs ]\0", 0i32);
+        
+        if (active_page == 0i32) { tab1.focused = 1i32; } else { tab1.focused = 0i32; }
+        if (active_page == 1i32) { tab2.focused = 1i32; } else { tab2.focused = 0i32; }
+        
+        tab1 = raw Layout_hbox_add(top_bar, tab1);
+        tab2 = raw Layout_hbox_add(top_bar, tab2);
+        
+        raw Tui_draw_widget(tab1);
+        raw Tui_draw_widget(tab2);
+
+        // --- DRAW CONTENT ---
+        LayoutCursor:content = raw Layout_create(2i32, 4i32, 1i32);
+
+        if (active_page == 0i32) {
+            Widget:panel = raw Tui_panel(2i32, 4i32, 60i32, 15i32, 7i32, 0i32);
+            raw Tui_draw_widget(panel);
+
+            LayoutCursor:form = raw Layout_create(4i32, 6i32, 1i32);
+            
+            // HBox Row 1
+            Widget:lbl_usr = raw Tui_label(0i32, 0i32, "Username:\0", 7i32, 0i32);
+            Widget:inp_usr = raw Tui_input(0i32, 0i32, 20i32, "admin\0");
+            lbl_usr = raw Layout_hbox_add(form, lbl_usr);
+            inp_usr = raw Layout_hbox_add(form, inp_usr);
+            raw Layout_newline(form);
+
+            // HBox Row 2
+            Widget:lbl_sld = raw Tui_label(0i32, 0i32, "Volume:  \0", 7i32, 0i32);
+            Widget:slider  = raw Tui_slider(0i32, 0i32, 20i32, slider_val);
+            lbl_sld = raw Layout_hbox_add(form, lbl_sld);
+            slider  = raw Layout_hbox_add(form, slider);
+            raw Layout_newline(form);
+
+            Widget:btn_quit = raw Tui_button(0i32, 0i32, 10i32, "Quit\0");
+            btn_quit = raw Layout_vbox_add(form, btn_quit);
+
+            // Update focus
+            inp_usr.focused = 0i32; slider.focused = 0i32; btn_quit.focused = 0i32;
+            if (focus == 0i32) { inp_usr.focused = 1i32; }
+            if (focus == 1i32) { slider.focused = 1i32; }
+            if (focus == 2i32) { btn_quit.focused = 1i32; }
+
+            raw Tui_draw_widget(lbl_usr);
+            raw Tui_draw_widget(inp_usr);
+            raw Tui_draw_widget(lbl_sld);
+            raw Tui_draw_widget(slider);
+            raw Tui_draw_widget(btn_quit);
+        }
+        
+        if (active_page == 1i32) {
+            Widget:txt = raw Tui_textarea(2i32, 4i32, 60i32, 15i32, "2026-06-12 10:00:00 [INFO] System boot\0");
+            if (focus == 0i32) { txt.focused = 1i32; } else { txt.focused = 0i32; }
+            raw Tui_draw_widget(txt);
+        }
+
+        nitpick_display_flush();
+
+        // --- INPUT ---
+        vk = nitpick_input_read_key();
+        
+        if (vk == 27i32) { running = 0i32; } // ESC
+        
+        if (vk == 9i32) { // TAB
+            if (active_page == 0i32) { active_page = 1i32; }
+            else { active_page = 0i32; }
+            focus = 0i32;
+        }
+
+        if (active_page == 0i32) {
+            if (vk == 200i32) { focus = focus - 1i32; if (focus < 0i32) { focus = 2i32; } } // UP
+            if (vk == 201i32) { focus = focus + 1i32; if (focus > 2i32) { focus = 0i32; } } // DOWN
+            
+            if (focus == 1i32) { // slider
+                if (vk == 202i32) { slider_val = slider_val - 5i32; if (slider_val < 0i32) { slider_val = 0i32; } } // LEFT
+                if (vk == 203i32) { slider_val = slider_val + 5i32; if (slider_val > 100i32) { slider_val = 100i32; } } // RIGHT
+            }
+
+            if (focus == 2i32) { // btn
+                if (vk == 10i32) { running = 0i32; }
+                if (vk == 13i32) { running = 0i32; }
+            }
+        }
+    }
+
+    raw Tui_shutdown();
+    exit 0i32;
+};

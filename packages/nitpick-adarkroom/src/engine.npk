@@ -1,0 +1,47 @@
+use "state.npk".*;
+
+struct:GameLog = {
+    string:msg0;
+    string:msg1;
+    string:msg2;
+    string:msg3;
+    string:msg4;
+};
+
+pub func:init_log = GameLog() {
+    GameLog:l;
+    l.msg0 = " \0";
+    l.msg1 = " \0";
+    l.msg2 = " \0";
+    l.msg3 = " \0";
+    l.msg4 = " \0";
+    pass l;
+};
+
+pub func:push_log = GameLog(GameLog:l, string:msg) {
+    l.msg4 = l.msg3;
+    l.msg3 = l.msg2;
+    l.msg2 = l.msg1;
+    l.msg1 = l.msg0;
+    l.msg0 = msg;
+    pass l;
+};
+
+pub func:engine_tick = GameState(GameState:s) {
+    s.ticks = s.ticks + 1i64;
+    
+    if (s.fire_level > 0i64) {
+        s.fire_timer = s.fire_timer + 1i64;
+        if (s.fire_timer > 15i64) {
+            s.fire_level = s.fire_level - 1i64;
+            s.fire_timer = 0i64;
+        }
+    }
+    
+    if (s.fire_level == 0i64) { s.room_temp = 0i64; }
+    if (s.fire_level == 1i64) { s.room_temp = 1i64; }
+    if (s.fire_level == 2i64) { s.room_temp = 2i64; }
+    if (s.fire_level >= 3i64) { s.room_temp = 3i64; }
+    
+    pass s;
+};

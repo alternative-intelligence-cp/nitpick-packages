@@ -1,0 +1,8 @@
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+pub func:main = int32() {
+    string:buf = "                                                                                ";
+    wild float64->:ptr = @cast_unchecked<float64->>(buf);
+    ptr[0i64] = 42.0;
+    exit 0;
+};

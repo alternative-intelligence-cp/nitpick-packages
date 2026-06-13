@@ -1,0 +1,20 @@
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_malloc   = int64(int64:bytes);
+    func:nitpick_libc_mem_free     = void(int64:ptr);
+    func:nitpick_libc_mem_read_f64 = float64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_f64 = void(int64:ptr, int64:offset, float64:val);
+}
+
+extern func:println_f64 = void(float64:v);
+
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+pub func:main = int32() {
+    int64:ptr = nitpick_libc_mem_malloc(120i64);
+    nitpick_libc_mem_write_f64(ptr, 0i64, 42.0);
+    float64:val = nitpick_libc_mem_read_f64(ptr, 0i64);
+    println_f64(val);
+    nitpick_libc_mem_free(ptr);
+    if (val == 42.0) { exit 0; }
+    exit 1;
+};

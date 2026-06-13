@@ -1,0 +1,39 @@
+// nitpick_semver.npk — Semantic versioning library for Nitpick
+
+extern "nitpick_semver_shim" {
+    func:nitpick_semver_parse          = int32(string:version);
+    func:nitpick_semver_get_major      = int32();
+    func:nitpick_semver_get_minor      = int32();
+    func:nitpick_semver_get_patch      = int32();
+    func:nitpick_semver_get_prerelease = string();
+    func:nitpick_semver_get_build      = string();
+    func:nitpick_semver_to_string      = string();
+    func:nitpick_semver_compare        = int32(string:a, string:b);
+    func:nitpick_semver_satisfies      = int32(string:version, string:constraint);
+    func:nitpick_semver_bump_major     = string(string:version);
+    func:nitpick_semver_bump_minor     = string(string:version);
+    func:nitpick_semver_bump_patch     = string(string:version);
+}
+
+pub func:parse = int32(string:version) {
+    pass(nitpick_semver_parse(version));
+};
+
+pub func:get_major = int32() { pass(nitpick_semver_get_major()); };
+pub func:get_minor = int32() { pass(nitpick_semver_get_minor()); };
+pub func:get_patch = int32() { pass(nitpick_semver_get_patch()); };
+pub func:get_prerelease = string() { pass(nitpick_semver_get_prerelease()); };
+pub func:get_build = string() { pass(nitpick_semver_get_build()); };
+pub func:to_string = string() { pass(nitpick_semver_to_string()); };
+
+pub func:compare = int32(string:a, string:b) {
+    pass(nitpick_semver_compare(a, b));
+};
+
+pub func:satisfies = int32(string:version, string:constraint) {
+    pass(nitpick_semver_satisfies(version, constraint));
+};
+
+pub func:bump_major = string(string:version) { pass(nitpick_semver_bump_major(version)); };
+pub func:bump_minor = string(string:version) { pass(nitpick_semver_bump_minor(version)); };
+pub func:bump_patch = string(string:version) { pass(nitpick_semver_bump_patch(version)); };

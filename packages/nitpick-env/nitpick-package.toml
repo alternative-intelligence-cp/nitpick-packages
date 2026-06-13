@@ -1,0 +1,11 @@
+[package]
+name = "nitpick-env"
+version = "0.2.6"
+description = "Environment variable management for Nitpick"
+license = "MIT"
+repository = "https://github.com/alternative-intelligence-cp/aria-packages"
+
+[dependencies]
+
+[build]
+link_libraries = ["nitpick_env_shim"]

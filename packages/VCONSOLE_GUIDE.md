@@ -1,15 +1,15 @@
-# Aria Virtual Console — Package Guide
+# Nitpick Virtual Console — Package Guide
 
-The Aria virtual console is a PICO-8-style fantasy console built from five cooperating packages. Together they simulate an 8-bit hardware platform where Aria programs run against a fixed memory map, SNES-style input, 4-channel audio, and terminal-based display.
+The Nitpick virtual console is a PICO-8-style fantasy console built from five cooperating packages. Together they simulate an 8-bit hardware platform where Nitpick programs run against a fixed memory map, SNES-style input, 4-channel audio, and terminal-based display.
 
 ## Architecture Overview
 
 ```
 ┌────────────────────────────────────────────────────────┐
 │                    Game / Cart                         │
-│                  (user Aria code)                      │
+│                  (user Nitpick code)                      │
 ├──────────┬──────────┬──────────┬──────────┬────────────┤
-│ aria-    │ aria-    │ aria-    │ aria-    │ aria-      │
+│ nitpick-    │ nitpick-    │ nitpick-    │ nitpick-    │ nitpick-      │
 │ input    │ display  │ audio   │ color   │ console    │
 │ (POSIX)  │ (ANSI)   │ (ALSA)  │ (pure)  │ (bus mem)  │
 ├──────────┴──────────┴──────────┴──────────┴────────────┤
@@ -19,9 +19,9 @@ The Aria virtual console is a PICO-8-style fantasy console built from five coope
 
 ## Packages
 
-### aria-console — Memory Map & Bus
+### nitpick-console — Memory Map & Bus
 
-**Type**: C shim + pure Aria  
+**Type**: C shim + pure Nitpick  
 **Purpose**: Defines the 64KB virtual address space and provides read/write access to an in-memory byte array.
 
 | Zone | Address Range | Size | Purpose |
@@ -44,7 +44,7 @@ The Aria virtual console is a PICO-8-style fantasy console built from five coope
 
 ---
 
-### aria-input — Keyboard Input
+### nitpick-input — Keyboard Input
 
 **Type**: C shim (POSIX termios)  
 **Purpose**: Raw keyboard input with SNES-style button mapping, frame-based state tracking, and edge detection.
@@ -69,7 +69,7 @@ System: START(1024) SELECT(2048)
 
 ---
 
-### aria-display — Terminal Graphics
+### nitpick-display — Terminal Graphics
 
 **Type**: C shim (ANSI escape codes)  
 **Purpose**: Terminal-based rendering via ANSI escape sequences. Cursor control, color, line/box drawing.
@@ -85,7 +85,7 @@ System: START(1024) SELECT(2048)
 
 ---
 
-### aria-audio — Sound Synthesis
+### nitpick-audio — Sound Synthesis
 
 **Type**: C shim (ALSA on Linux)  
 **Purpose**: 4-channel phase-accumulator synthesis with ADSR envelopes and real audio output.
@@ -104,9 +104,9 @@ System: START(1024) SELECT(2048)
 
 ---
 
-### aria-color — Color Utilities
+### nitpick-color — Color Utilities
 
-**Type**: Pure Aria (no FFI)  
+**Type**: Pure Nitpick (no FFI)  
 **Purpose**: RGBA color packing/unpacking, transforms, and an indexed 16-color palette.
 
 **Color layout**: `R[31:24] G[23:16] B[15:8] A[7:0]` packed in uint64.
@@ -121,9 +121,9 @@ System: START(1024) SELECT(2048)
 ## Typical Game Loop
 
 ```
-use "../aria-input/src/aria_input.aria".*;
-use "../aria-display/src/aria_display.aria".*;
-use "../aria-audio/src/aria_audio.aria".*;
+use "../nitpick-input/src/nitpick_input.npk".*;
+use "../nitpick-display/src/nitpick_display.npk".*;
+use "../nitpick-audio/src/nitpick_audio.npk".*;
 
 func:main = int32() {
     drop(inp_enter_raw());

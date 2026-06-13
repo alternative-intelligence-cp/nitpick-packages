@@ -1,0 +1,12 @@
+pub func:my_func = NIL(wild float64->:ptr) {
+    ptr[0i64] = 42.0;
+};
+
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+pub func:main = int32() {
+    float64[10]:arr;
+    arr[0i64] = 0.0;
+    raw my_func(arr);
+    exit 0;
+};

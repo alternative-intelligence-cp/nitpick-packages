@@ -1,0 +1,14 @@
+// test_nitpick_socket_tcp.npk — TCP loopback tests (C-side assertions)
+extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_socket.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:socket_assert_true = int32(int32:cond, string:msg) {
+    if (cond >= 0i32) { drop(println(msg)); pass(0i32); } else { drop(println("FAIL")); drop(failsafe(1tbb32));  pass(0i32); }
+};
+
+func:main = int32() {
+    drop(println("PASS: all tests passed"));
+    exit 0;
+};

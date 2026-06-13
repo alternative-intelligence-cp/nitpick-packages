@@ -1,0 +1,16 @@
+[package]
+name = "nitpick-args"
+version = "0.2.0"
+authors = ["Nitpick Language Project"]
+license = "MIT"
+description = "CLI argument parsing for Nitpick — reads /proc/self/cmdline and provides flag/value query functions"
+keywords = ["cli", "args", "argv", "command-line", "parsing"]
+categories = ["utilities", "cli"]
+
+[build]
+type = "library"
+entry = "src/nitpick_args.npk"
+
+[dependencies]
+nitpick-cli = "path:../nitpick-cli"
+nitpick-vec = "path:../nitpick-vec"

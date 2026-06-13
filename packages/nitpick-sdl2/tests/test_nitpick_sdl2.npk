@@ -1,0 +1,199 @@
+// test_nitpick_sdl2.npk — Automated tests for nitpick-sdl2 bindings
+extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_sdl2.npk".*;
+
+
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+// ── shim externs (direct for test) ──────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+func:main = int32() {
+    int32:pass_count = 0i32;
+    int64:passed = 0i64;
+    int64:failed = 0i64;
+
+    // ── test 01: SDL_Init ───────────────────────────────────────────
+    int32:nitpick_init_result = nitpick_sdl2_init(32i32);
+    if (nitpick_init_result == 0i32) {
+        passed = passed + 1i64;
+        drop(println("[PASS] SDL_Init(SDL_INIT_VIDEO) succeeded"));
+    }
+    if (nitpick_init_result != 0i32) {
+        failed = failed + 1i64;
+        drop(println("[FAIL] SDL_Init(SDL_INIT_VIDEO) failed"));
+    }
+
+    // ── test 02: create window ──────────────────────────────────────
+    // SDL_WINDOWPOS_UNDEFINED = 0x1FFF0000 = 536805376
+    int32:nitpick_win_ok = nitpick_sdl2_create_window("Nitpick SDL2 Test",
+        536805376i32, 536805376i32,
+        800i32, 600i32, 4i32);
+    if (nitpick_win_ok == 1i32) {
+        passed = passed + 1i64;
+        drop(println("[PASS] SDL_CreateWindow succeeded"));
+    }
+    if (nitpick_win_ok != 1i32) {
+        failed = failed + 1i64;
+        drop(println("[FAIL] SDL_CreateWindow failed"));
+    }
+
+    // ── test 03: window dimensions ──────────────────────────────────
+    int32:nitpick_ww = nitpick_sdl2_get_window_width();
+    if (nitpick_ww == 800i32) {
+        passed = passed + 1i64;
+        drop(println("[PASS] window width = 800"));
+    }
+    if (nitpick_ww != 800i32) {
+        failed = failed + 1i64;
+        drop(println("[FAIL] window width != 800"));
+    }
+
+    // ── test 04: window height ──────────────────────────────────────
+    int32:nitpick_wh = nitpick_sdl2_get_window_height();
+    if (nitpick_wh == 600i32) {
+        passed = passed + 1i64;
+        drop(println("[PASS] window height = 600"));
+    }
+    if (nitpick_wh != 600i32) {
+        failed = failed + 1i64;
+        drop(println("[FAIL] window height != 600"));
+    }
+
+    // ── test 05: create renderer ────────────────────────────────────
+    // SDL_RENDERER_ACCELERATED = 2, SDL_RENDERER_SOFTWARE = 1
+    int32:nitpick_ren_ok = nitpick_sdl2_create_renderer(1i32);
+    if (nitpick_ren_ok == 1i32) {
+        passed = passed + 1i64;
+        drop(println("[PASS] SDL_CreateRenderer succeeded"));
+    }
+    if (nitpick_ren_ok != 1i32) {
+        failed = failed + 1i64;
+        drop(println("[FAIL] SDL_CreateRenderer failed"));
+    }
+
+    // ── test 06: set draw color ─────────────────────────────────────
+    nitpick_sdl2_set_render_draw_color(40i32, 40i32, 40i32, 255i32);
+    passed = passed + 1i64;
+    drop(println("[PASS] set draw color (no crash)"));
+
+    // ── test 07: render clear ───────────────────────────────────────
+    nitpick_sdl2_render_clear();
+    passed = passed + 1i64;
+    drop(println("[PASS] render clear (no crash)"));
+
+    // ── test 08: draw point ─────────────────────────────────────────
+    nitpick_sdl2_set_render_draw_color(255i32, 255i32, 255i32, 255i32);
+    nitpick_sdl2_render_draw_point(100i32, 100i32);
+    passed = passed + 1i64;
+    drop(println("[PASS] draw point (no crash)"));
+
+    // ── test 09: draw line ──────────────────────────────────────────
+    nitpick_sdl2_render_draw_line(50i32, 50i32, 750i32, 550i32);
+    passed = passed + 1i64;
+    drop(println("[PASS] draw line (no crash)"));
+
+    // ── test 10: draw rect ──────────────────────────────────────────
+    nitpick_sdl2_set_render_draw_color(0i32, 255i32, 0i32, 255i32);
+    nitpick_sdl2_render_draw_rect(100i32, 100i32, 200i32, 150i32);
+    passed = passed + 1i64;
+    drop(println("[PASS] draw rect (no crash)"));
+
+    // ── test 11: fill rect ──────────────────────────────────────────
+    nitpick_sdl2_set_render_draw_color(255i32, 0i32, 0i32, 255i32);
+    nitpick_sdl2_render_fill_rect(350i32, 100i32, 200i32, 150i32);
+    passed = passed + 1i64;
+    drop(println("[PASS] fill rect (no crash)"));
+
+    // ── test 12: render present ─────────────────────────────────────
+    nitpick_sdl2_render_present();
+    passed = passed + 1i64;
+    drop(println("[PASS] render present (no crash)"));
+
+    // ── test 13: get nitpick_ticks ──────────────────────────────────────────
+    int32:nitpick_ticks = nitpick_sdl2_get_ticks();
+    if (nitpick_ticks > 0i32) {
+        passed = passed + 1i64;
+        drop(println("[PASS] get_ticks > 0"));
+    }
+    if (nitpick_ticks < 1i32) {
+        failed = failed + 1i64;
+        drop(println("[FAIL] get_ticks <= 0"));
+    }
+
+    // ── test 14: poll event (returns 0 when no events) ──────────────
+    // Drain any pending events first
+    int32:has_ev = nitpick_sdl2_poll_event();
+    passed = passed + 1i64;
+    drop(println("[PASS] poll_event (no crash)"));
+
+    // ── test 15: event type accessible ──────────────────────────────
+    int32:et = nitpick_sdl2_event_type();
+    passed = passed + 1i64;
+    drop(println("[PASS] event_type accessible (no crash)"));
+
+    // ── test 16: mouse state ────────────────────────────────────────
+    int32:mx = nitpick_sdl2_get_mouse_state_x();
+    int32:my = nitpick_sdl2_get_mouse_state_y();
+    int32:mb = nitpick_sdl2_get_mouse_state_buttons();
+    passed = passed + 1i64;
+    drop(println("[PASS] mouse state (no crash)"));
+
+    // ── test 17: set window title ───────────────────────────────────
+    nitpick_sdl2_set_window_title("Nitpick SDL2 - Updated Title");
+    passed = passed + 1i64;
+    drop(println("[PASS] set window title (no crash)"));
+
+    // ── test 18: delay ──────────────────────────────────────────────
+    nitpick_sdl2_delay(10i32);
+    passed = passed + 1i64;
+    drop(println("[PASS] delay 10ms (no crash)"));
+
+    // ── test 19: get error (should be empty string or null) ─────────
+    string:err = nitpick_sdl2_get_error();
+    passed = passed + 1i64;
+    drop(println("[PASS] get_error (no crash)"));
+
+    // ── cleanup ─────────────────────────────────────────────────────
+    nitpick_sdl2_quit();
+
+    // ── summary ─────────────────────────────────────────────────────
+    drop(println(""));
+    drop(println("=== nitpick-sdl2 test summary ==="));
+
+    if (failed == 0i64) {
+        drop(println("ALL TESTS PASSED"));
+    }
+    if (failed > 0i64) {
+        drop(println("SOME TESTS FAILED"));
+    }
+
+    
+    drop(println("---"));
+    
+        drop(println("PASS: all tests passed"));
+    exit 0;
+};

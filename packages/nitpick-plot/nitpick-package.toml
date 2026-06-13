@@ -1,0 +1,11 @@
+[package]
+name = "nitpick-plot"
+version = "0.1.0"
+description = "A lightweight 2D plotting library for Nitpick using raylib"
+authors = ["Randy <randy@nitpick.org>"]
+entry = "src/nitpick_plot.npk"
+
+[dependencies]
+nitpick-vec = { path = "../nitpick-vec" }
+nitpick-raylib = { path = "../nitpick-raylib" }
+nitpick-str = { path = "../nitpick-str" }

@@ -1,0 +1,10 @@
+extern func:malloc = wild int64*(int64:size);
+extern func:free = void(wild float64*:ptr);
+extern func:printf = int32(wild int8*:fmt, int64:val);
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+pub func:main = int32() {
+    wild float64->:ptr = @cast_unchecked<float64->>(malloc(10i64));
+    drop(printf(@cast_unchecked<int8->>("PTR IS: %ld\n"), @cast_unchecked<int64>(ptr)));
+    free(ptr);
+    exit 0;
+};

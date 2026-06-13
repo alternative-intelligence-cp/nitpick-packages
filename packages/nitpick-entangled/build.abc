@@ -1,0 +1,22 @@
+# build.abc — nitpick-entangled package
+#
+# Targets:
+#   nitpick-entangled       — compiled library for downstream packages
+#   test-nitpick-entangled  — test binary
+
+[project]
+name = "nitpick-entangled"
+version = "0.1.0"
+compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
+
+[target.nitpick-entangled]
+type = "library"
+sources = ["src/nitpick_entangled.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-entangled]
+type = "binary"
+sources = ["tests/test_nitpick_entangled.npk"]
+deps = []
+flags = []

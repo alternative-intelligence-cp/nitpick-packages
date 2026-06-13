@@ -8,12 +8,12 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-# v0.35.7: use npkc (ariac is kept as a build-time alias via CMake POST_BUILD)
-ARIAC="/home/randy/Workspace/REPOS/aria/build/npkc"
-LIBC_SHIM="/home/randy/Workspace/REPOS/aria-packages/packages/nitpick-libc/shim"
-PROCESS_SHIM="/home/randy/Workspace/REPOS/aria-packages/packages/nitpick-process/shim"
-DISPLAY_SHIM="/home/randy/Workspace/REPOS/aria-packages/packages/nitpick-display/shim"
-INPUT_SHIM="/home/randy/Workspace/REPOS/aria-packages/packages/nitpick-input/shim"
+# v0.35.7: use npkc (nitpickc is kept as a build-time alias via CMake POST_BUILD)
+ARIAC="/home/randy/Workspace/REPOS/nitpick/build/npkc"
+LIBC_SHIM="/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-libc/shim"
+PROCESS_SHIM="/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-process/shim"
+DISPLAY_SHIM="/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-display/shim"
+INPUT_SHIM="/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-input/shim"
 HEX_SHIM="$SCRIPT_DIR/shim"
 PANE_SHIM="$SCRIPT_DIR/../nitpick-pane/shim"
 ENV_SHIM="$SCRIPT_DIR/../nitpick-env/shim"
@@ -48,7 +48,7 @@ case "${1:-build}" in
             -L "$FS_SHIM" -lnitpick_fs_shim \
             -L "$HEX_SHIM" -largs_alias \
             -L "$PANE_SHIM" -lhex_pane \
-            -L /home/randy/Workspace/REPOS/aria/build_tmp -laria_runtime
+            -L /home/randy/Workspace/REPOS/nitpick/build_tmp -lnitpick_runtime
         echo "Built: hex_shell"
         echo "Run with: LD_LIBRARY_PATH=$DISPLAY_SHIM:$INPUT_SHIM:$TOML_SHIM:$PROCESS_SHIM ./hex_shell"
         ;;
@@ -60,7 +60,7 @@ case "${1:-build}" in
             -L "$HEX_SHIM" -largs_alias \
             -L "$PROCESS_SHIM" -lnitpick_process \
             -I "$SCRIPT_DIR/../nitpick-process/src" \
-            -L /home/randy/Workspace/REPOS/aria/build_tmp -laria_runtime
+            -L /home/randy/Workspace/REPOS/nitpick/build_tmp -lnitpick_runtime
         echo "Running tests..."
         ./test_tokenizer
         ;;

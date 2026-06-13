@@ -1,0 +1,8 @@
+extern func:my_fat = wild float64->(int64:size);
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+pub func:main = int32() {
+    wild float64->:ptr = my_fat(10i64 * 8i64);
+    ptr[0i64] = 42.0;
+    exit 0;
+};

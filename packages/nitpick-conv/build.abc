@@ -1,0 +1,18 @@
+# build.abc — nitpick-conv package
+
+[project]
+name = "nitpick-conv"
+version = "0.1.0"
+compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
+
+[target.nitpick-conv]
+type = "library"
+sources = ["src/nitpick_conv.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-conv]
+type = "binary"
+sources = ["tests/test_nitpick_conv.npk"]
+deps = []
+flags = []

@@ -1,0 +1,11 @@
+[package]
+name = "nitpick-template"
+version = "0.2.6"
+description = "String template engine with variable substitution for Nitpick"
+license = "MIT"
+repository = "https://github.com/alternative-intelligence-cp/aria-packages"
+
+[dependencies]
+
+[build]
+link_libraries = ["nitpick_template_shim"]

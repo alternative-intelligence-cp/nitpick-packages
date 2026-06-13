@@ -1,0 +1,15 @@
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:main = int32() {
+    int64[6]:gf_meta;
+    gf_meta[0i64] = 0i64;
+    
+    int64[]:meta_slice = gf_meta;
+    meta_slice[0i64] = 42i64;
+    
+    if (gf_meta[0i64] == 42i64) {
+        exit 0;
+    } else {
+        exit 1;
+    }
+};

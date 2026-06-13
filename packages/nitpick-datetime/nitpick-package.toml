@@ -1,0 +1,11 @@
+[package]
+name            = "nitpick-datetime"
+version         = "0.2.2"
+description     = "Date and time library for Nitpick — timestamps, formatting, components"
+license         = "MIT"
+repository      = "https://github.com/alternative-intelligence-cp/aria"
+
+[dependencies]
+
+[build]
+link_libraries = ["nitpick_datetime_shim"]

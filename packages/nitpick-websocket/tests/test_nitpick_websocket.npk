@@ -1,0 +1,155 @@
+// test_nitpick_websocket.npk — 12-test suite for nitpick-websocket (v0.12.2)
+extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_websocket.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:test_create_handshake = int32() {
+    int32:pc = 0i32;
+
+    int64:ws = raw ws_create("example.com", "/chat");
+    if (ws > 0i64) { println("[PASS] T01 ws_create"); pc += 1i32; }
+    if (ws <= 0i64) { println("[FAIL] T01"); }
+
+    string:req = raw ws_handshake_request(ws);
+    int32:t2 = 0i32;
+    if (string_contains(req, "GET /chat")) { t2 = 1i32; }
+    if (t2 == 1i32) { println("[PASS] T02 handshake GET path"); pc += 1i32; }
+    if (t2 == 0i32) { println("[FAIL] T02"); }
+
+    int32:t3 = 0i32;
+    if (string_contains(req, "Upgrade: websocket")) { t3 = 1i32; }
+    if (t3 == 1i32) { println("[PASS] T03 handshake Upgrade header"); pc += 1i32; }
+    if (t3 == 0i32) { println("[FAIL] T03"); }
+
+    pass pc;
+};
+
+func:test_handshake_state = int32() {
+    int32:pc = 0i32;
+
+    int64:ws = raw ws_create("example.com", "/chat");
+
+    string:req = raw ws_handshake_request(ws);
+    int32:t4 = 0i32;
+    if (string_contains(req, "Host: example.com")) { t4 = 1i32; }
+    if (t4 == 1i32) { println("[PASS] T04 handshake Host header"); pc += 1i32; }
+    if (t4 == 0i32) { println("[FAIL] T04"); }
+
+    string:st5 = raw ws_state(ws);
+    int32:t5 = 0i32;
+    if (string_contains(st5, "connecting")) { t5 = 1i32; }
+    if (t5 == 1i32) { println("[PASS] T05 initial state=connecting"); pc += 1i32; }
+    if (t5 == 0i32) { println("[FAIL] T05"); }
+
+    int32:_s = raw ws_set_state(ws, "open");
+    string:st6 = raw ws_state(ws);
+    int32:t6 = 0i32;
+    if (string_contains(st6, "open")) { t6 = 1i32; }
+    if (t6 == 1i32) { println("[PASS] T06 set_state open"); pc += 1i32; }
+    if (t6 == 0i32) { println("[FAIL] T06"); }
+
+    pass pc;
+};
+
+func:test_frame_types = int32() {
+    int32:pc = 0i32;
+
+    string:f7 = raw ws_frame_type_name(1i64);
+    int32:t7 = 0i32;
+    if (string_contains(f7, "text")) { t7 = 1i32; }
+    if (t7 == 1i32) { println("[PASS] T07 frame_type 1=text"); pc += 1i32; }
+    if (t7 == 0i32) { println("[FAIL] T07"); }
+
+    string:f8 = raw ws_frame_type_name(2i64);
+    int32:t8 = 0i32;
+    if (string_contains(f8, "binary")) { t8 = 1i32; }
+    if (t8 == 1i32) { println("[PASS] T08 frame_type 2=binary"); pc += 1i32; }
+    if (t8 == 0i32) { println("[FAIL] T08"); }
+
+    string:f9 = raw ws_frame_type_name(8i64);
+    int32:t9 = 0i32;
+    if (string_contains(f9, "close")) { t9 = 1i32; }
+    if (t9 == 1i32) { println("[PASS] T09 frame_type 8=close"); pc += 1i32; }
+    if (t9 == 0i32) { println("[FAIL] T09"); }
+
+    pass pc;
+};
+
+func:test_close_accessors = int32() {
+    int32:pc = 0i32;
+
+    int64:ws = raw ws_create("example.com", "/chat");
+
+    string:f10 = raw ws_frame_type_name(9i64);
+    int32:t10 = 0i32;
+    if (string_contains(f10, "ping")) { t10 = 1i32; }
+    if (t10 == 1i32) { println("[PASS] T10 frame_type 9=ping"); pc += 1i32; }
+    if (t10 == 0i32) { println("[FAIL] T10"); }
+
+    string:h11 = raw ws_host(ws);
+    int32:t11 = 0i32;
+    if (string_contains(h11, "example.com")) { t11 = 1i32; }
+    if (t11 == 1i32) { println("[PASS] T11 ws_host"); pc += 1i32; }
+    if (t11 == 0i32) { println("[FAIL] T11"); }
+
+    string:p12 = raw ws_path(ws);
+    int32:t12 = 0i32;
+    if (string_contains(p12, "/chat")) { t12 = 1i32; }
+    if (t12 == 1i32) { println("[PASS] T12 ws_path"); pc += 1i32; }
+    if (t12 == 0i32) { println("[FAIL] T12"); }
+
+    pass pc;
+};
+
+func:test_shim_functions = int32() {
+    int32:pc = 0i32;
+
+    string:accept = raw WebSocket.compute_accept("dGhlIHNhbXBsZSBub25jZQ==");
+    int32:t13 = 0i32;
+    if (accept == "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=") { t13 = 1i32; }
+    if (t13 == 1i32) { println("[PASS] T13 ws_compute_accept correct"); pc += 1i32; }
+    if (t13 == 0i32) { println("[FAIL] T13"); }
+
+    string:f_bld = raw WebSocket.build_frame(1i64, "hello", 5i32, 0i32);
+    int64:f_len = raw WebSocket.build_frame_len();
+    int32:t14 = 0i32;
+    if (f_len == 7i64) { t14 = 1i32; } // 2 header + 5 payload
+    if (t14 == 1i32) { println("[PASS] T14 ws_build_frame len 7"); pc += 1i32; }
+    if (t14 == 0i32) { println("[FAIL] T14"); }
+
+    int64:op = raw WebSocket.parse_opcode(f_bld);
+    int32:t15 = 0i32;
+    if (op == 1i64) { t15 = 1i32; }
+    if (t15 == 1i32) { println("[PASS] T15 parse_opcode = 1"); pc += 1i32; }
+    if (t15 == 0i32) { println("[FAIL] T15"); }
+
+    int64:p_len = raw WebSocket.parse_payload_len(f_bld);
+    int32:t16 = 0i32;
+    if (p_len == 5i64) { t16 = 1i32; }
+    if (t16 == 1i32) { println("[PASS] T16 parse_payload_len = 5"); pc += 1i32; }
+    if (t16 == 0i32) { println("[FAIL] T16"); }
+
+    string:unmask = raw WebSocket.unmask_payload(f_bld);
+    int32:t17 = 0i32;
+    if (string_contains(unmask, "hello")) { t17 = 1i32; }
+    if (t17 == 1i32) { println("[PASS] T17 unmask_payload = hello"); pc += 1i32; }
+    if (t17 == 0i32) { println("[FAIL] T17"); }
+
+    pass pc;
+};
+
+func:main = int32() {
+    int32:pass_count = 0i32;
+    int32:p1 = raw test_create_handshake();
+    int32:p2 = raw test_handshake_state();
+    int32:p3 = raw test_frame_types();
+    int32:p4 = raw test_close_accessors();
+    int32:p5 = raw test_shim_functions();
+    println("DONE");
+    
+    drop(println("---"));
+    
+        drop(println("PASS: all tests passed"));
+    exit 0;
+};

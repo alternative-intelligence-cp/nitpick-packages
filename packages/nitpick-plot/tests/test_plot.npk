@@ -1,0 +1,15 @@
+use "nitpick_plot.npk".*;
+use "nitpick_raylib.npk".*;
+
+func:failsafe = int32(tbb32:err_code) {
+    exit 1i32;
+};
+
+func:main = int32() {
+    Plot:p = raw Plot_create(800i32, 600i32, "Nitpick Plot Demo\0");
+    
+    // Test showing the window
+    raw Plot_show(p);
+    
+    exit 0i32;
+};

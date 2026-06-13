@@ -1,0 +1,8 @@
+[package]
+name = "nitpick-session"
+version = "0.12.1"
+description = "Server-side session management for Nitpick — handle-based, pure Nitpick"
+license = "MIT"
+categories = ["networking", "middleware"]
+
+[dependencies]

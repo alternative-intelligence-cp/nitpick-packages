@@ -1,0 +1,4 @@
+[build]
+name = "nitpick-mux-tests"
+entry = "tests/test_nitpick_mux.npk"
+output = "/tmp/test_mux_bin"

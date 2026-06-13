@@ -1,0 +1,65 @@
+// nitpick_jwt.npk — JSON Web Token library for Nitpick (v0.1.0)
+//
+// Provides JWT signing, verification, and decoding.
+// Import with: use "nitpick_jwt.npk".*;
+
+use "../../nitpick-crypto/src/nitpick_crypto.npk".*;
+use "../../nitpick-base64/src/nitpick_base64.npk".*;
+use "../../nitpick-str/src/nitpick_str.npk".*;
+
+extern "nitpick_jwt_shim" {
+    func:nitpick_jwt_hex_to_b64url = string(string:hex);
+}
+
+// ── public api ───────────────────────────────────────────────────────────────
+
+pub func:jwt_sign = string(string:payload, string:secret) {
+    // 1. Header: {"alg":"HS256","typ":"JWT"} -> Base64URL
+    string:header_b64 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
+    
+    // 2. Payload
+    string:payload_b64 = raw b64_encode_url_str(payload);
+    
+    // 3. Signing Input
+    string:signing_input_1 = string_concat(header_b64, ".");
+    string:signing_input = string_concat(signing_input_1, payload_b64);
+    
+    // 4. HMAC
+    string:hex_sig = raw Crypto.hmac_sha256(secret, signing_input);
+    
+    // 5. Signature Base64URL
+    string:sig_b64 = nitpick_jwt_hex_to_b64url(hex_sig);
+    
+    // 6. Final JWT
+    string:final_1 = string_concat(signing_input, ".");
+    pass string_concat(final_1, sig_b64);
+};
+
+pub func:jwt_verify = int32(string:token, string:secret) {
+    // A valid JWT has 3 parts
+    int64:count = raw str_token_count(token, ".");
+    if (count != 3i64) { pass 0i32; }
+    
+    string:header_b64 = raw str_token(token, ".", 0i64);
+    string:payload_b64 = raw str_token(token, ".", 1i64);
+    string:sig_b64 = raw str_token(token, ".", 2i64);
+    
+    // Re-sign to verify
+    string:signing_input_1 = string_concat(header_b64, ".");
+    string:signing_input = string_concat(signing_input_1, payload_b64);
+    string:hex_sig = raw Crypto.hmac_sha256(secret, signing_input);
+    string:expected_sig_b64 = nitpick_jwt_hex_to_b64url(hex_sig);
+    
+    if (string_equals(sig_b64, expected_sig_b64)) {
+        pass 1i32;
+    }
+    pass 0i32;
+};
+
+pub func:jwt_decode = string(string:token) {
+    int64:count = raw str_token_count(token, ".");
+    if (count < 2i64) { pass ""; }
+    
+    string:payload_b64 = raw str_token(token, ".", 1i64);
+    pass raw b64_decode(payload_b64);
+};

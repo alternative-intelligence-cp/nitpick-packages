@@ -1,0 +1,191 @@
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:39:37: [0m[1;31merror[0m: [1m  Expected '(' after return type
+  Found: token '['[0m
+   39 |     func:nitpick_alloc_f64 = float64[](int64:size);
+                                            [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:39:38: [0m[1;31merror[0m: [1m  Expected parameter type or type identifier in extern function
+  Found: token ']'[0m
+   39 |     func:nitpick_alloc_f64 = float64[](int64:size);
+                                             [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:39:38: [0m[1;31merror[0m: [1m  Expected ')' after parameters
+  Found: token ']'[0m
+   39 |     func:nitpick_alloc_f64 = float64[](int64:size);
+                                             [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:39:38: [0m[1;31merror[0m: [1m  Expected ';' after extern function signature
+  Found: token ']'[0m
+   39 |     func:nitpick_alloc_f64 = float64[](int64:size);
+                                             [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:39:38: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token ']'[0m
+   39 |     func:nitpick_alloc_f64 = float64[](int64:size);
+                                             [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:39:39: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token '('[0m
+   39 |     func:nitpick_alloc_f64 = float64[](int64:size);
+                                              [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:39:50: [0m[1;31merror[0m: [1m  Expected ';' after extern variable declaration
+  Found: token ')'[0m
+   39 |     func:nitpick_alloc_f64 = float64[](int64:size);
+                                                         [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:39:50: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token ')'[0m
+   39 |     func:nitpick_alloc_f64 = float64[](int64:size);
+                                                         [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:39:51: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token ';'[0m
+   39 |     func:nitpick_alloc_f64 = float64[](int64:size);
+                                                          [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:40:35: [0m[1;31merror[0m: [1m  Expected '(' after return type
+  Found: token '['[0m
+   40 |     func:nitpick_alloc_i64 = int64[](int64:size);
+                                          [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:40:36: [0m[1;31merror[0m: [1m  Expected parameter type or type identifier in extern function
+  Found: token ']'[0m
+   40 |     func:nitpick_alloc_i64 = int64[](int64:size);
+                                           [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:40:36: [0m[1;31merror[0m: [1m  Expected ')' after parameters
+  Found: token ']'[0m
+   40 |     func:nitpick_alloc_i64 = int64[](int64:size);
+                                           [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:40:36: [0m[1;31merror[0m: [1m  Expected ';' after extern function signature
+  Found: token ']'[0m
+   40 |     func:nitpick_alloc_i64 = int64[](int64:size);
+                                           [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:40:36: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token ']'[0m
+   40 |     func:nitpick_alloc_i64 = int64[](int64:size);
+                                           [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:40:37: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token '('[0m
+   40 |     func:nitpick_alloc_i64 = int64[](int64:size);
+                                            [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:40:48: [0m[1;31merror[0m: [1m  Expected ';' after extern variable declaration
+  Found: token ')'[0m
+   40 |     func:nitpick_alloc_i64 = int64[](int64:size);
+                                                       [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:40:48: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token ')'[0m
+   40 |     func:nitpick_alloc_i64 = int64[](int64:size);
+                                                       [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:40:49: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token ';'[0m
+   40 |     func:nitpick_alloc_i64 = int64[](int64:size);
+                                                        [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:41:41: [0m[1;31merror[0m: [1m  Expected ':' after parameter type
+  Found: token '['[0m
+   41 |     func:nitpick_free_f64  = NIL(float64[]:ptr);
+                                                [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:41:41: [0m[1;31merror[0m: [1m  Expected parameter name
+  Found: token '['[0m
+   41 |     func:nitpick_free_f64  = NIL(float64[]:ptr);
+                                                [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:41:41: [0m[1;31merror[0m: [1m  Expected ')' after parameters
+  Found: token '['[0m
+   41 |     func:nitpick_free_f64  = NIL(float64[]:ptr);
+                                                [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:41:41: [0m[1;31merror[0m: [1m  Expected ';' after extern function signature
+  Found: token '['[0m
+   41 |     func:nitpick_free_f64  = NIL(float64[]:ptr);
+                                                [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:41:41: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token '['[0m
+   41 |     func:nitpick_free_f64  = NIL(float64[]:ptr);
+                                                [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:41:42: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token ']'[0m
+   41 |     func:nitpick_free_f64  = NIL(float64[]:ptr);
+                                                 [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:41:43: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token ':'[0m
+   41 |     func:nitpick_free_f64  = NIL(float64[]:ptr);
+                                                  [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:41:44: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: identifier 'ptr'[0m
+   41 |     func:nitpick_free_f64  = NIL(float64[]:ptr);
+                                                   [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:41:47: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token ')'[0m
+   41 |     func:nitpick_free_f64  = NIL(float64[]:ptr);
+                                                      [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:41:48: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token ';'[0m
+   41 |     func:nitpick_free_f64  = NIL(float64[]:ptr);
+                                                       [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:42:39: [0m[1;31merror[0m: [1m  Expected ':' after parameter type
+  Found: token '['[0m
+   42 |     func:nitpick_free_i64  = NIL(int64[]:ptr);
+                                              [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:42:39: [0m[1;31merror[0m: [1m  Expected parameter name
+  Found: token '['[0m
+   42 |     func:nitpick_free_i64  = NIL(int64[]:ptr);
+                                              [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:42:39: [0m[1;31merror[0m: [1m  Expected ')' after parameters
+  Found: token '['[0m
+   42 |     func:nitpick_free_i64  = NIL(int64[]:ptr);
+                                              [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:42:39: [0m[1;31merror[0m: [1m  Expected ';' after extern function signature
+  Found: token '['[0m
+   42 |     func:nitpick_free_i64  = NIL(int64[]:ptr);
+                                              [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:42:39: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token '['[0m
+   42 |     func:nitpick_free_i64  = NIL(int64[]:ptr);
+                                              [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:42:40: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token ']'[0m
+   42 |     func:nitpick_free_i64  = NIL(int64[]:ptr);
+                                               [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:42:41: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token ':'[0m
+   42 |     func:nitpick_free_i64  = NIL(int64[]:ptr);
+                                                [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:42:42: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: identifier 'ptr'[0m
+   42 |     func:nitpick_free_i64  = NIL(int64[]:ptr);
+                                                 [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:42:45: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token ')'[0m
+   42 |     func:nitpick_free_i64  = NIL(int64[]:ptr);
+                                                    [1;32m^[0m
+
+[1mpackages/nitpick-gradient-field/tests/test_nitpick_gradient_field.npk:42:46: [0m[1;31merror[0m: [1m  Expected function or variable declaration in extern block
+  Found: token ';'[0m
+   42 |     func:nitpick_free_i64  = NIL(int64[]:ptr);
+                                                     [1;32m^[0m
+
+[1mSummary: [0m[1;31m38 errors[0m

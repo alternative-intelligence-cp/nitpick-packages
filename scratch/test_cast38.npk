@@ -1,0 +1,12 @@
+extern func:takes_ptr_extern = void(wild float64*:ptr);
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+pub func:main = int32() {
+    float64[15]:nodes;
+    float64[100]:dummy;
+    nodes[0i64] = 0.0;
+    dummy[0i64] = 0.0;
+    takes_ptr_extern(nodes);
+    takes_ptr_extern(dummy);
+    exit 0;
+};

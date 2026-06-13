@@ -1,0 +1,17 @@
+extern func:npk_alloc = int64(int64:size);
+extern func:npk_free = void(int64:ptr);
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:set_val = NIL(wild int64->:arr) {
+    arr[0i64] = 42i64;
+    pass(NIL);
+};
+
+pub func:main = int32() {
+    int64:ptr = npk_alloc(16i64);
+    // Can we cast int64 to wild int64-> ?
+    // No, compiler says cannot cast explicitly.
+    // Wait, let's see if we can use nitpick_libc_mem_write_i64
+    pass(0i32);
+};

@@ -1,0 +1,49 @@
+// test_mongo.npk
+use "nitpick_mongo.npk".*;
+
+extern "libc" {
+    func:printf = int32(string:fmt);
+}
+
+func:failsafe = int32(tbb32:err) {
+    int32:_ = printf("FAILSAFE TRIGGERED!\n\0");
+    exit 1i32;
+};
+
+func:main = int32() {
+    int32:_1 = printf("Initializing MongoDB driver...\n\0");
+    NIL:_2 = raw mongo_init();
+    
+    int32:_3 = printf("Connecting...\n\0");
+    int32:conn = raw mongo_connect("mongodb://localhost:27017\0");
+    
+    int32:_4 = printf("Inserting document...\n\0");
+    int32:ins = raw mongo_insert(conn, "testdb\0", "testcol\0", "{\"name\": \"Alice\", \"age\": 30}\0");
+    
+    int32:_5 = printf("Finding document...\n\0");
+    int32:cursor = raw mongo_find(conn, "testdb\0", "testcol\0", "{\"name\": \"Alice\"}\0", "\0");
+    
+    int32:_6 = printf("Cursor results:\n\0");
+    
+    // We only read one document to test
+    string:doc = raw mongo_cursor_next(cursor);
+    
+    // Print the document
+    // We must manually print the bytes because doc might not be properly null terminated for printf %s
+    // Actually, our shim adds \0 to the buffer! So printf("%s", doc.data) is safe, but we can't do that easily without pointer.
+    // Let's just use Nitpick's built in print()
+    print("Found doc: ");
+    print(doc);
+    print("\n");
+    
+    int32:_7 = raw mongo_cursor_close(cursor);
+    
+    int32:_8 = printf("Deleting document...\n\0");
+    int32:del = raw mongo_delete(conn, "testdb\0", "testcol\0", "{\"name\": \"Alice\"}\0");
+    
+    int32:_9 = raw mongo_disconnect(conn);
+    NIL:_10 = raw mongo_cleanup();
+    
+    int32:_11 = printf("Done!\n\0");
+    exit 0i32;
+};

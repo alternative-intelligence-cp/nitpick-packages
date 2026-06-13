@@ -1,0 +1,12 @@
+[package]
+name = "nitpick-rand"
+version = "0.2.0"
+authors = ["Nitpick Language Project"]
+license = "MIT"
+description = "xorshift64 pseudo-random number generator for Nitpick"
+keywords = ["random", "prng", "xorshift", "uint64"]
+categories = ["algorithms", "math"]
+
+[build]
+type = "library"
+entry = "src/nitpick_rand.npk"

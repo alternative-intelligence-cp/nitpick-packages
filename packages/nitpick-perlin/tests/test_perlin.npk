@@ -1,0 +1,30 @@
+// test_perlin.npk
+
+import "core.npk";
+import "io.npk";
+import "fmt.npk";
+import "../src/nitpick_perlin.npk";
+
+pub func:main = int32() {
+    print("Testing nitpick-perlin...\n");
+
+    noise_set_seed(42);
+
+    let val1 = perlin_2d(0.5, 0.5);
+    let val2 = perlin_3d(0.5, 0.5, 0.5);
+    let val3 = simplex_2d(0.5, 0.5);
+
+    print(fmt_sprintf("Perlin 2D (0.5, 0.5): %f\n", val1));
+    print(fmt_sprintf("Perlin 3D (0.5, 0.5, 0.5): %f\n", val2));
+    print(fmt_sprintf("Simplex 2D (0.5, 0.5): %f\n", val3));
+
+    // Ensure they return different values at different coordinates
+    let val4 = perlin_2d(1.5, 0.5);
+    if val4 == val1 {
+        print("ERROR: Perlin 2D returned identical values for different coords!\n");
+        pass(1);
+    }
+
+    print("SUCCESS: All tests passed.\n");
+    pass(0);
+};

@@ -1,0 +1,294 @@
+use "nitpick_rand.npk".*;
+
+pub struct:Board = {
+    uint64:cells;
+    int64:score;
+    int32:game_over;
+    uint64:rng_state;
+};
+
+pub struct:LineResult = {
+    uint64:line;
+    int64:score_gain;
+};
+
+pub func:get_cell = uint64(uint64:cells, uint64:idx) {
+    uint64:shift = idx * 4u64;
+    pass (cells >> shift) & 15u64;
+};
+
+pub func:set_cell = uint64(uint64:cells, uint64:idx, uint64:val) {
+    uint64:shift = idx * 4u64;
+    uint64:mask = 15u64 << shift;
+    uint64:cleared = cells ^ (cells & mask);
+    pass cleared | ((val & 15u64) << shift);
+};
+
+// Slide and merge a 4-element line represented as a 16-bit sequence of 4-bit nibbles.
+// v0 is rightmost (0 shift), v3 is leftmost (12 shift). We want to slide "down" towards v0.
+pub func:slide_line = LineResult(uint64:line) {
+    uint64:v0 = line & 15u64;
+    uint64:v1 = (line >> 4u64) & 15u64;
+    uint64:v2 = (line >> 8u64) & 15u64;
+    uint64:v3 = (line >> 12u64) & 15u64;
+    
+    // Shift non-zero to v0..v3
+    uint64:nz0 = 0u64; uint64:nz1 = 0u64; uint64:nz2 = 0u64; uint64:nz3 = 0u64;
+    uint64:nz_count = 0u64;
+    
+    if (v0 > 0u64) { nz0 = v0; nz_count = 1u64; }
+    if (v1 > 0u64) {
+        if (nz_count == 0u64) { nz0 = v1; nz_count = 1u64; }
+        else { nz1 = v1; nz_count = nz_count + 1u64; }
+    }
+    if (v2 > 0u64) {
+        if (nz_count == 0u64) { nz0 = v2; nz_count = 1u64; }
+        else { if (nz_count == 1u64) { nz1 = v2; nz_count = 2u64; }
+        else { nz2 = v2; nz_count = nz_count + 1u64; } }
+    }
+    if (v3 > 0u64) {
+        if (nz_count == 0u64) { nz0 = v3; }
+        else { if (nz_count == 1u64) { nz1 = v3; }
+        else { if (nz_count == 2u64) { nz2 = v3; }
+        else { nz3 = v3; } } }
+    }
+    
+    int64:score = 0i64;
+    if ((nz0 > 0u64) && (nz0 == nz1)) {
+        nz0 = nz0 + 1u64;
+        if (nz0 == 1u64) { score = score + 2i64; }
+        if (nz0 == 2u64) { score = score + 4i64; }
+        if (nz0 == 3u64) { score = score + 8i64; }
+        if (nz0 == 4u64) { score = score + 16i64; }
+        if (nz0 == 5u64) { score = score + 32i64; }
+        if (nz0 == 6u64) { score = score + 64i64; }
+        if (nz0 == 7u64) { score = score + 128i64; }
+        if (nz0 == 8u64) { score = score + 256i64; }
+        if (nz0 == 9u64) { score = score + 512i64; }
+        if (nz0 == 10u64) { score = score + 1024i64; }
+        if (nz0 == 11u64) { score = score + 2048i64; }
+        if (nz0 == 12u64) { score = score + 4096i64; }
+        nz1 = nz2; nz2 = nz3; nz3 = 0u64;
+    }
+    if ((nz1 > 0u64) && (nz1 == nz2)) {
+        nz1 = nz1 + 1u64;
+        if (nz1 == 1u64) { score = score + 2i64; }
+        if (nz1 == 2u64) { score = score + 4i64; }
+        if (nz1 == 3u64) { score = score + 8i64; }
+        if (nz1 == 4u64) { score = score + 16i64; }
+        if (nz1 == 5u64) { score = score + 32i64; }
+        if (nz1 == 6u64) { score = score + 64i64; }
+        if (nz1 == 7u64) { score = score + 128i64; }
+        if (nz1 == 8u64) { score = score + 256i64; }
+        if (nz1 == 9u64) { score = score + 512i64; }
+        if (nz1 == 10u64) { score = score + 1024i64; }
+        if (nz1 == 11u64) { score = score + 2048i64; }
+        if (nz1 == 12u64) { score = score + 4096i64; }
+        nz2 = nz3; nz3 = 0u64;
+    }
+    if ((nz2 > 0u64) && (nz2 == nz3)) {
+        nz2 = nz2 + 1u64;
+        if (nz2 == 1u64) { score = score + 2i64; }
+        if (nz2 == 2u64) { score = score + 4i64; }
+        if (nz2 == 3u64) { score = score + 8i64; }
+        if (nz2 == 4u64) { score = score + 16i64; }
+        if (nz2 == 5u64) { score = score + 32i64; }
+        if (nz2 == 6u64) { score = score + 64i64; }
+        if (nz2 == 7u64) { score = score + 128i64; }
+        if (nz2 == 8u64) { score = score + 256i64; }
+        if (nz2 == 9u64) { score = score + 512i64; }
+        if (nz2 == 10u64) { score = score + 1024i64; }
+        if (nz2 == 11u64) { score = score + 2048i64; }
+        if (nz2 == 12u64) { score = score + 4096i64; }
+        nz3 = 0u64;
+    }
+    
+    uint64:out_line = nz0 | (nz1 << 4u64) | (nz2 << 8u64) | (nz3 << 12u64);
+    LineResult:res = LineResult { line: out_line, score_gain: score };
+    pass res;
+};
+
+// LEFT: Slide towards col 0 (v0=c0, v1=c1, v2=c2, v3=c3)
+pub func:board_slide_left = Board(Board:b) {
+    Board:out = b;
+    uint64:c = b.cells;
+    uint64:i = 0u64;
+    while (i < 4u64) {
+        uint64:start = i * 4u64;
+        uint64:v0 = raw get_cell(c, start);
+        uint64:v1 = raw get_cell(c, start + 1u64);
+        uint64:v2 = raw get_cell(c, start + 2u64);
+        uint64:v3 = raw get_cell(c, start + 3u64);
+        uint64:line = v0 | (v1 << 4u64) | (v2 << 8u64) | (v3 << 12u64);
+        LineResult:res = raw slide_line(line);
+        uint64:res_line = res.line;
+        c = raw set_cell(c, start, res_line & 15u64);
+        c = raw set_cell(c, start + 1u64, (res_line >> 4u64) & 15u64);
+        c = raw set_cell(c, start + 2u64, (res_line >> 8u64) & 15u64);
+        c = raw set_cell(c, start + 3u64, (res_line >> 12u64) & 15u64);
+        out.score = out.score + res.score_gain;
+        i = i + 1u64;
+    }
+    out.cells = c;
+    pass out;
+};
+
+// RIGHT: Slide towards col 3 (v0=c3, v1=c2, v2=c1, v3=c0)
+pub func:board_slide_right = Board(Board:b) {
+    Board:out = b;
+    uint64:c = b.cells;
+    uint64:i = 0u64;
+    while (i < 4u64) {
+        uint64:start = i * 4u64;
+        uint64:v0 = raw get_cell(c, start + 3u64);
+        uint64:v1 = raw get_cell(c, start + 2u64);
+        uint64:v2 = raw get_cell(c, start + 1u64);
+        uint64:v3 = raw get_cell(c, start);
+        uint64:line = v0 | (v1 << 4u64) | (v2 << 8u64) | (v3 << 12u64);
+        LineResult:res = raw slide_line(line);
+        uint64:res_line = res.line;
+        c = raw set_cell(c, start + 3u64, res_line & 15u64);
+        c = raw set_cell(c, start + 2u64, (res_line >> 4u64) & 15u64);
+        c = raw set_cell(c, start + 1u64, (res_line >> 8u64) & 15u64);
+        c = raw set_cell(c, start, (res_line >> 12u64) & 15u64);
+        out.score = out.score + res.score_gain;
+        i = i + 1u64;
+    }
+    out.cells = c;
+    pass out;
+};
+
+// UP: Slide towards row 0 (v0=r0, v1=r1, v2=r2, v3=r3)
+pub func:board_slide_up = Board(Board:b) {
+    Board:out = b;
+    uint64:c = b.cells;
+    uint64:i = 0u64;
+    while (i < 4u64) {
+        uint64:col = i;
+        uint64:v0 = raw get_cell(c, col);
+        uint64:v1 = raw get_cell(c, col + 4u64);
+        uint64:v2 = raw get_cell(c, col + 8u64);
+        uint64:v3 = raw get_cell(c, col + 12u64);
+        uint64:line = v0 | (v1 << 4u64) | (v2 << 8u64) | (v3 << 12u64);
+        LineResult:res = raw slide_line(line);
+        uint64:res_line = res.line;
+        c = raw set_cell(c, col, res_line & 15u64);
+        c = raw set_cell(c, col + 4u64, (res_line >> 4u64) & 15u64);
+        c = raw set_cell(c, col + 8u64, (res_line >> 8u64) & 15u64);
+        c = raw set_cell(c, col + 12u64, (res_line >> 12u64) & 15u64);
+        out.score = out.score + res.score_gain;
+        i = i + 1u64;
+    }
+    out.cells = c;
+    pass out;
+};
+
+// DOWN: Slide towards row 3 (v0=r3, v1=r2, v2=r1, v3=r0)
+pub func:board_slide_down = Board(Board:b) {
+    Board:out = b;
+    uint64:c = b.cells;
+    uint64:i = 0u64;
+    while (i < 4u64) {
+        uint64:col = i;
+        uint64:v0 = raw get_cell(c, col + 12u64);
+        uint64:v1 = raw get_cell(c, col + 8u64);
+        uint64:v2 = raw get_cell(c, col + 4u64);
+        uint64:v3 = raw get_cell(c, col);
+        uint64:line = v0 | (v1 << 4u64) | (v2 << 8u64) | (v3 << 12u64);
+        LineResult:res = raw slide_line(line);
+        uint64:res_line = res.line;
+        c = raw set_cell(c, col + 12u64, res_line & 15u64);
+        c = raw set_cell(c, col + 8u64, (res_line >> 4u64) & 15u64);
+        c = raw set_cell(c, col + 4u64, (res_line >> 8u64) & 15u64);
+        c = raw set_cell(c, col, (res_line >> 12u64) & 15u64);
+        out.score = out.score + res.score_gain;
+        i = i + 1u64;
+    }
+    out.cells = c;
+    pass out;
+};
+
+pub func:spawn_tile = Board(Board:b) {
+    Board:out = b;
+    uint64:cells = b.cells;
+    
+    uint64:empty_count = 0u64;
+    uint64:i = 0u64;
+    while (i < 16u64) {
+        if ((raw get_cell(cells, i)) == 0u64) {
+            empty_count = empty_count + 1u64;
+        }
+        i = i + 1u64;
+    }
+    
+    if (empty_count == 0u64) {
+        pass out;
+    }
+    
+    uint64:rng = out.rng_state;
+    rng = raw rand_next(rng);
+    uint64:target = rng % empty_count;
+    
+    uint64:current = 0u64;
+    i = 0u64;
+    while (i < 16u64) {
+        if ((raw get_cell(cells, i)) == 0u64) {
+            if (current == target) {
+                rng = raw rand_next(rng);
+                uint64:val = 1u64;
+                if ((rng % 10u64) == 0u64) { val = 2u64; }
+                out.cells = raw set_cell(cells, i, val);
+                out.rng_state = rng;
+                pass out;
+            }
+            current = current + 1u64;
+        }
+        i = i + 1u64;
+    }
+    out.rng_state = rng;
+    pass out;
+};
+
+pub func:is_game_over = int32(Board:b) {
+    // If there are empty cells, not over
+    uint64:i = 0u64;
+    while (i < 16u64) {
+        if ((raw get_cell(b.cells, i)) == 0u64) {
+            pass 0i32;
+        }
+        i = i + 1u64;
+    }
+    
+    // Check horizontal merges
+    uint64:row = 0u64;
+    while (row < 4u64) {
+        uint64:start = row * 4u64;
+        uint64:v0 = raw get_cell(b.cells, start);
+        uint64:v1 = raw get_cell(b.cells, start + 1u64);
+        uint64:v2 = raw get_cell(b.cells, start + 2u64);
+        uint64:v3 = raw get_cell(b.cells, start + 3u64);
+        if ((v0 == v1) || (v1 == v2) || (v2 == v3)) { pass 0i32; }
+        row = row + 1u64;
+    }
+    
+    // Check vertical merges
+    uint64:col = 0u64;
+    while (col < 4u64) {
+        uint64:v0 = raw get_cell(b.cells, col);
+        uint64:v1 = raw get_cell(b.cells, col + 4u64);
+        uint64:v2 = raw get_cell(b.cells, col + 8u64);
+        uint64:v3 = raw get_cell(b.cells, col + 12u64);
+        if ((v0 == v1) || (v1 == v2) || (v2 == v3)) { pass 0i32; }
+        col = col + 1u64;
+    }
+    
+    pass 1i32;
+};
+
+pub func:init_board = Board(uint64:seed) {
+    Board:b = Board { cells: 0u64, score: 0i64, game_over: 0i32, rng_state: seed };
+    if (b.rng_state == 0u64) { b.rng_state = 1337u64; } // Degenerate seed protection
+    b = raw spawn_tile(b);
+    b = raw spawn_tile(b);
+    pass b;
+};

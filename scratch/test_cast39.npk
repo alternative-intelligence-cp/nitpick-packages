@@ -1,0 +1,22 @@
+extern func:gf_create = void(wild float64*:nodes, wild int64*:gf_meta,
+                          wild float64*:gf_conf, wild float64*:patterns,
+                          int64:n_nodes, float64:node_width,
+                          float64:base_lean, float64:base_tilt, int64:capacity);
+
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+pub func:main = int32() {
+    float64[15]:nodes;
+    int64[6]:gf_meta;
+    float64[2]:gf_conf;
+    float64[52]:patterns;
+    nodes[0i64] = 0.0; gf_meta[0i64] = 0i64; gf_conf[0i64] = 0.0; patterns[0i64] = 0.0;
+    
+    // gf_create(nodes, gf_meta, gf_conf, patterns, 3i64, 100.0, 20.0, 20.0, 4i64)
+    gf_create(nodes, gf_meta, gf_conf, patterns, 3i64, 100.0, 20.0, 20.0, 4i64);
+    
+    if (gf_meta[0i64] == 3i64) {
+        exit 0;
+    }
+    exit 1;
+};

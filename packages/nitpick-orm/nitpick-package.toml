@@ -1,0 +1,8 @@
+[package]
+name = "nitpick-orm"
+version = "0.1.0"
+description = "A programmatic SQL Query Builder for Postgres, MySQL, and SQLite"
+
+[dependencies]
+nitpick-str = "1.0"
+nitpick-conv = "1.0"

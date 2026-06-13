@@ -1,0 +1,278 @@
+// nitpick_orm.npk — SQL Query Builder for Nitpick
+//
+// Provides a programmatic way to construct SQL queries for Postgres, MySQL, and SQLite.
+
+use "nitpick_str.npk".*;
+use "nitpick_conv.npk".*;
+
+pub func:DIALECT_POSTGRES = int32() { pass(0i32); };
+pub func:DIALECT_MYSQL    = int32() { pass(1i32); };
+pub func:DIALECT_SQLITE   = int32() { pass(2i32); };
+pub func:DIALECT_MONGO    = int32() { pass(3i32); };
+
+// In Nitpick we don't have arrays easily resizable outside of nitpick-vec,
+// but for a simple query builder we can use delimited strings to accumulate fields.
+// e.g. "id|name|age"
+pub struct:QueryBuilder = {
+    string:table;
+    int32:op_type; // 0=SELECT, 1=INSERT, 2=UPDATE, 3=DELETE
+    string:select_cols;
+    string:where_clauses;
+    string:insert_cols;
+    string:insert_vals;
+    string:update_set;
+    string:mongo_query; // Accumulates JSON for MongoDB NoSQL queries
+    string:mongo_set;   // Accumulates JSON for MongoDB $set or insert payload
+    string:order_by;
+    int32:limit_val;
+    int32:offset_val;
+};
+
+func:_orm_init = QueryBuilder(string:table, int32:op) {
+    QueryBuilder:q;
+    q.table = table;
+    q.op_type = op;
+    q.select_cols = "*";
+    q.where_clauses = "";
+    q.insert_cols = "";
+    q.insert_vals = "";
+    q.update_set = "";
+    q.mongo_query = "";
+    q.mongo_set = "";
+    q.order_by = "";
+    q.limit_val = -1i32;
+    q.offset_val = -1i32;
+    pass(q);
+};
+
+pub func:orm_select = QueryBuilder(string:table) { pass(raw _orm_init(table, 0i32)); };
+pub func:orm_insert = QueryBuilder(string:table) { pass(raw _orm_init(table, 1i32)); };
+pub func:orm_update = QueryBuilder(string:table) { pass(raw _orm_init(table, 2i32)); };
+pub func:orm_delete = QueryBuilder(string:table) { pass(raw _orm_init(table, 3i32)); };
+
+pub func:orm_cols = QueryBuilder(QueryBuilder:q, string:cols) {
+    q.select_cols = cols;
+    pass(q);
+};
+
+pub func:orm_set = QueryBuilder(QueryBuilder:q, string:col, string:val) {
+    if (string_equals(q.insert_cols, "")) {
+        q.insert_cols = col;
+        q.insert_vals = string_concat("'", string_concat(val, "'"));
+    } else {
+        q.insert_cols = string_concat(q.insert_cols, string_concat(", ", col));
+        q.insert_vals = string_concat(q.insert_vals, string_concat(", '", string_concat(val, "'")));
+    }
+    string:upd_clause = string_concat(col, string_concat(" = '", string_concat(val, "'")));
+    if (string_equals(q.update_set, "")) {
+        q.update_set = upd_clause;
+    } else {
+        q.update_set = string_concat(q.update_set, string_concat(", ", upd_clause));
+    }
+    string:m_clause = string_concat("\"", string_concat(col, string_concat("\": \"", string_concat(val, "\""))));
+    if (string_equals(q.mongo_set, "")) {
+        q.mongo_set = m_clause;
+    } else {
+        q.mongo_set = string_concat(q.mongo_set, string_concat(", ", m_clause));
+    }
+    pass(q);
+};
+
+pub func:orm_set_int = QueryBuilder(QueryBuilder:q, string:col, int64:val) {
+    string:val_s = string_from_int(val);
+    if (string_equals(q.insert_cols, "")) {
+        q.insert_cols = col;
+        q.insert_vals = val_s;
+    } else {
+        q.insert_cols = string_concat(q.insert_cols, string_concat(", ", col));
+        q.insert_vals = string_concat(q.insert_vals, string_concat(", ", val_s));
+    }
+    string:upd_clause = string_concat(col, string_concat(" = ", val_s));
+    if (string_equals(q.update_set, "")) {
+        q.update_set = upd_clause;
+    } else {
+        q.update_set = string_concat(q.update_set, string_concat(", ", upd_clause));
+    }
+    string:m_clause = string_concat("\"", string_concat(col, string_concat("\": ", val_s)));
+    if (string_equals(q.mongo_set, "")) {
+        q.mongo_set = m_clause;
+    } else {
+        q.mongo_set = string_concat(q.mongo_set, string_concat(", ", m_clause));
+    }
+    pass(q);
+};
+
+pub func:orm_where = QueryBuilder(QueryBuilder:q, string:clause) {
+    if (string_equals(q.where_clauses, "")) {
+        q.where_clauses = clause;
+    } else {
+        q.where_clauses = string_concat(q.where_clauses, string_concat(" AND ", clause));
+    }
+    pass(q);
+};
+
+pub func:orm_where_eq = QueryBuilder(QueryBuilder:q, string:col, string:val) {
+    string:clause = string_concat(col, string_concat(" = '", string_concat(val, "'")));
+    q = raw orm_where(q, clause);
+    string:m_clause = string_concat("\"", string_concat(col, string_concat("\": \"", string_concat(val, "\""))));
+    if (string_equals(q.mongo_query, "")) {
+        q.mongo_query = m_clause;
+    } else {
+        q.mongo_query = string_concat(q.mongo_query, string_concat(", ", m_clause));
+    }
+    pass(q);
+};
+
+pub func:orm_where_eq_int = QueryBuilder(QueryBuilder:q, string:col, int64:val) {
+    string:val_s = string_from_int(val);
+    string:clause = string_concat(col, string_concat(" = ", val_s));
+    q = raw orm_where(q, clause);
+    string:m_clause = string_concat("\"", string_concat(col, string_concat("\": ", val_s)));
+    if (string_equals(q.mongo_query, "")) {
+        q.mongo_query = m_clause;
+    } else {
+        q.mongo_query = string_concat(q.mongo_query, string_concat(", ", m_clause));
+    }
+    pass(q);
+};
+
+pub func:orm_limit = QueryBuilder(QueryBuilder:q, int32:lim) {
+    q.limit_val = lim;
+    pass(q);
+};
+
+pub func:orm_offset = QueryBuilder(QueryBuilder:q, int32:offset) {
+    q.offset_val = offset;
+    pass(q);
+};
+
+pub func:orm_order_by = QueryBuilder(QueryBuilder:q, string:order) {
+    q.order_by = order;
+    pass(q);
+};
+
+pub func:orm_to_sql = string(QueryBuilder:q, int32:dialect) {
+    if (q.op_type == 1i32) {
+        string:sql = string_concat("INSERT INTO ", q.table);
+        sql = string_concat(sql, string_concat(" (", q.insert_cols));
+        sql = string_concat(sql, string_concat(") VALUES (", q.insert_vals));
+        sql = string_concat(sql, ");");
+        pass(sql);
+    }
+    if (q.op_type == 2i32) {
+        string:sql = string_concat("UPDATE ", q.table);
+        sql = string_concat(sql, string_concat(" SET ", q.update_set));
+        if (string_equals(q.where_clauses, "") == false) {
+            sql = string_concat(sql, string_concat(" WHERE ", q.where_clauses));
+        }
+        sql = string_concat(sql, ";");
+        pass(sql);
+    }
+    if (q.op_type == 3i32) {
+        string:sql = string_concat("DELETE FROM ", q.table);
+        if (string_equals(q.where_clauses, "") == false) {
+            sql = string_concat(sql, string_concat(" WHERE ", q.where_clauses));
+        }
+        sql = string_concat(sql, ";");
+        pass(sql);
+    }
+
+    string:sql = string_concat("SELECT ", q.select_cols);
+    sql = string_concat(sql, string_concat(" FROM ", q.table));
+    
+    if (string_equals(q.where_clauses, "") == false) {
+        sql = string_concat(sql, string_concat(" WHERE ", q.where_clauses));
+    }
+    
+    if (string_equals(q.order_by, "") == false) {
+        sql = string_concat(sql, string_concat(" ORDER BY ", q.order_by));
+    }
+    
+    // SQLite and Postgres use LIMIT x OFFSET y
+    // MySQL uses LIMIT x OFFSET y as well (or LIMIT y, x)
+    if (q.limit_val >= 0i32) {
+        string:limit_str = string_from_int(@cast<int64>(q.limit_val));
+        sql = string_concat(sql, " LIMIT ");
+        sql = string_concat(sql, limit_str);
+    }
+    
+    if (q.offset_val >= 0i32) {
+        string:offset_str = string_from_int(@cast<int64>(q.offset_val));
+        sql = string_concat(sql, " OFFSET ");
+        sql = string_concat(sql, offset_str);
+    }
+    
+    // Dialect specific tweaks could be added here (e.g. quote characters ` vs ")
+    if (dialect == raw DIALECT_MYSQL()) {
+        // MySQL specific adjustments...
+    }
+    
+    sql = string_concat(sql, ";");
+    pass(sql);
+};
+
+pub func:orm_to_mongo = string(QueryBuilder:q) {
+    if (q.op_type == 1i32) {
+        string:json = "{";
+        if (string_equals(q.mongo_set, "") == false) {
+            json = string_concat(json, q.mongo_set);
+        }
+        json = string_concat(json, "}");
+        pass(json);
+    }
+    if (q.op_type == 2i32) {
+        string:json = "{\"$set\": {";
+        if (string_equals(q.mongo_set, "") == false) {
+            json = string_concat(json, q.mongo_set);
+        }
+        json = string_concat(json, "}}");
+        pass(json);
+    }
+
+    string:json = "{";
+    if (string_equals(q.mongo_query, "") == false) {
+        json = string_concat(json, q.mongo_query);
+    }
+    json = string_concat(json, "}");
+    pass(json);
+};
+
+pub func:orm_to_mongo_query = string(QueryBuilder:q) {
+    string:json = "{";
+    if (string_equals(q.mongo_query, "") == false) {
+        json = string_concat(json, q.mongo_query);
+    }
+    json = string_concat(json, "}");
+    pass(json);
+};
+
+pub func:orm_to_mongo_opts = string(QueryBuilder:q) {
+    string:json = "{";
+    int32:has_prev = 0i32;
+    
+    // Sort
+    if (string_equals(q.order_by, "") == false) {
+        // Assume format is "field DESC" or "field ASC"
+        // Since we are limited in string parsing, let's just do a hack for "score DESC" for now.
+        // In a real ORM we would map order_by correctly.
+        if (string_ends_with(q.order_by, " DESC")) {
+            string:field = raw str_remove_suffix(q.order_by, " DESC");
+            json = string_concat(json, string_concat("\"sort\": {\"", string_concat(field, "\": -1}")));
+        } else {
+            string:field = raw str_remove_suffix(q.order_by, " ASC");
+            json = string_concat(json, string_concat("\"sort\": {\"", string_concat(field, "\": 1}")));
+        }
+        has_prev = 1i32;
+    }
+    
+    // Limit
+    if (q.limit_val > 0i32) {
+        if (has_prev == 1i32) {
+            json = string_concat(json, ", ");
+        }
+        json = string_concat(json, string_concat("\"limit\": ", string_from_int(@cast<int64>(q.limit_val))));
+    }
+    
+    json = string_concat(json, "}");
+    pass(json);
+};

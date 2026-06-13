@@ -1,0 +1,102 @@
+use "nitpick_2048.npk".*;
+
+func:print_board = NIL(Board:b) {
+    uint64:i = 0u64;
+    while (i < 16u64) {
+        uint64:val = raw get_cell(b.cells, i);
+        if (val == 0u64) { print(". \0"); }
+        if (val == 1u64) { print("2 \0"); }
+        if (val == 2u64) { print("4 \0"); }
+        if (val == 3u64) { print("8 \0"); }
+        if (val == 4u64) { print("16 \0"); }
+        if (val == 5u64) { print("32 \0"); }
+        if (val == 6u64) { print("64 \0"); }
+        if (i == 3u64) { print("\n\0"); }
+        if (i == 7u64) { print("\n\0"); }
+        if (i == 11u64) { print("\n\0"); }
+        if (i == 15u64) { print("\n\0"); }
+        i = i + 1u64;
+    }
+    print("\n\0");
+    pass NIL;
+};
+
+func:assert_eq = int32(uint64:a, uint64:b) {
+    if (a != b) {
+        print("ASSERTION FAILED!\n\0");
+        pass 1i32;
+    }
+    pass 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    print("FATAL ERROR!\n\0");
+    exit 1i32;
+};
+
+func:main = int32() {
+    int32:errors = 0i32;
+    print("Testing 2048 Logic...\n\0");
+    
+    Board:b = Board { cells: 0u64, score: 0i64, game_over: 0i32, rng_state: 12345u64 };
+    
+    // Test set_cell / get_cell
+    b.cells = raw set_cell(b.cells, 0u64, 1u64); // 2
+    b.cells = raw set_cell(b.cells, 1u64, 1u64); // 2
+    b.cells = raw set_cell(b.cells, 2u64, 2u64); // 4
+    b.cells = raw set_cell(b.cells, 3u64, 2u64); // 4
+    
+    errors = errors + raw assert_eq(raw get_cell(b.cells, 0u64), 1u64);
+    errors = errors + raw assert_eq(raw get_cell(b.cells, 3u64), 2u64);
+    
+    print("Initial Board (Row 1 is 2, 2, 4, 4):\n\0");
+    raw print_board(b);
+    
+    // Test slide left (should merge 2+2=4 and 4+4=8 -> [2, 3, 0, 0])
+    Board:left_b = raw board_slide_left(b);
+    print("After Slide Left (Expect 4, 8, ., .):\n\0");
+    raw print_board(left_b);
+    errors = errors + raw assert_eq(raw get_cell(left_b.cells, 0u64), 2u64);
+    errors = errors + raw assert_eq(raw get_cell(left_b.cells, 1u64), 3u64);
+    errors = errors + raw assert_eq(raw get_cell(left_b.cells, 2u64), 0u64);
+    
+    // Test slide right (should merge 2+2=4 and 4+4=8 -> [0, 0, 4, 8])
+    Board:right_b = raw board_slide_right(b);
+    print("After Slide Right (Expect ., ., 4, 8):\n\0");
+    raw print_board(right_b);
+    errors = errors + raw assert_eq(raw get_cell(right_b.cells, 2u64), 2u64);
+    errors = errors + raw assert_eq(raw get_cell(right_b.cells, 3u64), 3u64);
+    
+    // Setup for vertical slide
+    Board:vb = Board { cells: 0u64, score: 0i64, game_over: 0i32, rng_state: 12345u64 };
+    vb.cells = raw set_cell(vb.cells, 0u64, 1u64); // col 0, row 0
+    vb.cells = raw set_cell(vb.cells, 4u64, 1u64); // col 0, row 1
+    vb.cells = raw set_cell(vb.cells, 8u64, 2u64); // col 0, row 2
+    vb.cells = raw set_cell(vb.cells, 12u64, 2u64); // col 0, row 3
+    print("Initial Vertical Board:\n\0");
+    raw print_board(vb);
+    
+    Board:up_b = raw board_slide_up(vb);
+    print("After Slide Up:\n\0");
+    raw print_board(up_b);
+    errors = errors + raw assert_eq(raw get_cell(up_b.cells, 0u64), 2u64);
+    errors = errors + raw assert_eq(raw get_cell(up_b.cells, 4u64), 3u64);
+    
+    Board:down_b = raw board_slide_down(vb);
+    print("After Slide Down:\n\0");
+    raw print_board(down_b);
+    errors = errors + raw assert_eq(raw get_cell(down_b.cells, 8u64), 2u64);
+    errors = errors + raw assert_eq(raw get_cell(down_b.cells, 12u64), 3u64);
+    
+    // Spawn test
+    Board:spawn_b = raw init_board(1337u64);
+    print("Init Board (should have 2 tiles):\n\0");
+    raw print_board(spawn_b);
+    
+    if (errors > 0i32) {
+        print("Tests failed!\n\0");
+        exit 1i32;
+    }
+    print("Tests passed successfully!\n\0");
+    exit 0i32;
+};

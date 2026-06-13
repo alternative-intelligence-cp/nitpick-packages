@@ -1,0 +1,402 @@
+// test_nitpick_postgres.nitpick — Comprehensive PostgreSQL tests
+//
+// 32 tests: connect, CRUD, parameterized queries ($1,$2),
+//            transactions, column accessors, error handling,
+//            SQL injection safety, LISTEN/NOTIFY
+//
+// Workarounds for known compiler bugs:
+//   - Variables consumed on use: last_conn() for fresh handles
+//   - "close" in function names: renamed to "disconnect"
+//   - String returns corrupt: column assertions done in C helpers
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+extern "nitpick_postgres_shim" {
+    func:nitpick_postgres_connect    = int32(string:conninfo);
+    func:nitpick_postgres_disconnect = int32(int32:conn_id);
+    func:nitpick_postgres_last_conn  = int32();
+
+    func:nitpick_postgres_exec = int32(int32:conn_id, string:sql);
+
+    func:nitpick_postgres_param_clear      = int32();
+    func:nitpick_postgres_param_add_text   = int32(string:val);
+    func:nitpick_postgres_param_add_int    = int32(int64:val);
+    func:nitpick_postgres_param_add_double = int32(float64:val);
+    func:nitpick_postgres_param_add_null   = int32();
+
+    func:nitpick_postgres_query   = int32(int32:conn_id, string:sql);
+    func:nitpick_postgres_execute = int32(int32:conn_id, string:sql);
+
+    func:nitpick_postgres_next_row     = int32(int32:conn_id);
+    func:nitpick_postgres_row_count    = int32(int32:conn_id);
+    func:nitpick_postgres_column_count = int32(int32:conn_id);
+    func:nitpick_postgres_column_int   = int64(int32:conn_id, int32:col);
+    func:nitpick_postgres_column_is_null = int32(int32:conn_id, int32:col);
+    func:nitpick_postgres_clear_result = int32(int32:conn_id);
+    func:nitpick_postgres_affected_rows = int64(int32:conn_id);
+
+    func:nitpick_postgres_begin    = int32(int32:conn_id);
+    func:nitpick_postgres_commit   = int32(int32:conn_id);
+    func:nitpick_postgres_rollback = int32(int32:conn_id);
+
+    func:nitpick_postgres_status = int32(int32:conn_id);
+
+    func:nitpick_postgres_listen = int32(int32:conn_id, string:channel);
+    func:nitpick_postgres_notify = int32(int32:conn_id, string:channel, string:payload);
+
+    // test assertion helpers (C-side)
+    func:nitpick_postgres_assert_int_eq   = void(int64:actual, int64:expected, string:msg);
+    func:nitpick_postgres_assert_true     = void(bool:val, string:msg);
+    func:nitpick_postgres_assert_col_text_eq = void(int32:conn_id, int32:col, string:expected, string:msg);
+    func:nitpick_postgres_assert_col_int_eq  = void(int32:conn_id, int32:col, int64:expected, string:msg);
+    func:nitpick_postgres_assert_col_is_null = void(int32:conn_id, int32:col, string:msg);
+    func:nitpick_postgres_assert_version_ok  = void(int32:conn_id, string:msg);
+    func:nitpick_postgres_assert_affected_eq = void(int32:conn_id, int64:expected, string:msg);
+    func:nitpick_postgres_test_summary    = void();
+}
+
+// ── Phase 1: connect, version, create table, insert ─────────────────
+
+func:test_phase1 = NIL() {
+    // T01 — connect
+    int32:conn = nitpick_postgres_connect("port=5433 dbname=nitpick_test");
+    int32:c = nitpick_postgres_last_conn();
+    nitpick_postgres_assert_true(c >= 0i32, "T01 connect to nitpick_test");
+
+    // T02 — server version
+    int32:c2 = nitpick_postgres_last_conn();
+    nitpick_postgres_assert_version_ok(c2, "T02 server version available");
+
+    // T03 — connection status
+    int32:c3 = nitpick_postgres_last_conn();
+    int32:st = nitpick_postgres_status(c3);
+    nitpick_postgres_assert_true(st == 1i32, "T03 connection status OK");
+
+    // T04 — drop table if exists (clean slate)
+    int32:c4 = nitpick_postgres_last_conn();
+    int32:d = nitpick_postgres_exec(c4, "DROP TABLE IF EXISTS users");
+    nitpick_postgres_assert_true(d == 1i32, "T04 DROP TABLE IF EXISTS");
+
+    // T05 — create table
+    int32:c5 = nitpick_postgres_last_conn();
+    int32:ct = nitpick_postgres_exec(c5, "CREATE TABLE users(id SERIAL PRIMARY KEY, name TEXT NOT NULL, age INTEGER, email TEXT)");
+    nitpick_postgres_assert_true(ct == 1i32, "T05 CREATE TABLE users");
+
+    // T06 — insert with exec
+    int32:c6 = nitpick_postgres_last_conn();
+    int32:ins = nitpick_postgres_exec(c6, "INSERT INTO users(name, age, email) VALUES('Alice', 30, 'alice@example.com')");
+    nitpick_postgres_assert_true(ins == 1i32, "T06 INSERT Alice via exec");
+
+    pass(NIL);
+};
+
+// ── Phase 2: parameterized insert, affected rows ────────────────────
+
+func:test_phase2 = NIL() {
+    // T07 — param insert Bob
+    nitpick_postgres_param_add_text("Bob");
+    nitpick_postgres_param_add_int(25i64);
+    nitpick_postgres_param_add_text("bob@example.com");
+    int32:c1 = nitpick_postgres_last_conn();
+    int32:r1 = nitpick_postgres_execute(c1, "INSERT INTO users(name, age, email) VALUES($1, $2, $3)");
+    nitpick_postgres_assert_true(r1 == 1i32, "T07 parameterized INSERT Bob");
+
+    // T08 — affected rows
+    int32:c2 = nitpick_postgres_last_conn();
+    nitpick_postgres_assert_affected_eq(c2, 1i64, "T08 affected_rows == 1");
+
+    // T09 — param insert Charlie
+    nitpick_postgres_param_add_text("Charlie");
+    nitpick_postgres_param_add_int(35i64);
+    nitpick_postgres_param_add_text("charlie@example.com");
+    int32:c3 = nitpick_postgres_last_conn();
+    int32:r2 = nitpick_postgres_execute(c3, "INSERT INTO users(name, age, email) VALUES($1, $2, $3)");
+    nitpick_postgres_assert_true(r2 == 1i32, "T09 parameterized INSERT Charlie");
+
+    pass(NIL);
+};
+
+// ── Phase 3a: SELECT + column accessors ─────────────────────────────
+
+func:test_phase3a = NIL() {
+    // T10 — query all users
+    int32:c1 = nitpick_postgres_last_conn();
+    int32:q = nitpick_postgres_query(c1, "SELECT id, name, age, email FROM users ORDER BY id");
+    nitpick_postgres_assert_true(q == 1i32, "T10 SELECT all users");
+
+    // T11 — row count
+    int32:c2 = nitpick_postgres_last_conn();
+    int32:rc = nitpick_postgres_row_count(c2);
+    nitpick_postgres_assert_true(rc == 3i32, "T11 row_count == 3");
+
+    // T12 — column count
+    int32:c3 = nitpick_postgres_last_conn();
+    int32:cc2 = nitpick_postgres_column_count(c3);
+    nitpick_postgres_assert_true(cc2 == 4i32, "T12 column_count == 4");
+
+    // T13 — first row (Alice)
+    int32:c4 = nitpick_postgres_last_conn();
+    int32:nr = nitpick_postgres_next_row(c4);
+    nitpick_postgres_assert_true(nr == 1i32, "T13 next_row returns row 1");
+
+    // T14 — column text (name)
+    int32:c5 = nitpick_postgres_last_conn();
+    nitpick_postgres_assert_col_text_eq(c5, 1i32, "Alice", "T14 row 1 name == Alice");
+
+    // T15 — column int (age)
+    int32:c6 = nitpick_postgres_last_conn();
+    nitpick_postgres_assert_col_int_eq(c6, 2i32, 30i64, "T15 row 1 age == 30");
+
+    pass(NIL);
+};
+
+// ── Phase 3b: more rows, end of results ─────────────────────────────
+
+func:test_phase3b = NIL() {
+    // T16 — row 2 (Bob)
+    int32:c1 = nitpick_postgres_last_conn();
+    int32:nr1 = nitpick_postgres_next_row(c1);
+    nitpick_postgres_assert_true(nr1 == 1i32, "T16 next_row returns row 2");
+
+    int32:c2 = nitpick_postgres_last_conn();
+    nitpick_postgres_assert_col_text_eq(c2, 1i32, "Bob", "T17 row 2 name == Bob");
+
+    int32:c3 = nitpick_postgres_last_conn();
+    nitpick_postgres_assert_col_int_eq(c3, 2i32, 25i64, "T18 row 2 age == 25");
+
+    // T19 — row 3 (Charlie)
+    int32:c4 = nitpick_postgres_last_conn();
+    int32:nr2 = nitpick_postgres_next_row(c4);
+    nitpick_postgres_assert_true(nr2 == 1i32, "T19 next_row returns row 3");
+
+    int32:c5 = nitpick_postgres_last_conn();
+    nitpick_postgres_assert_col_text_eq(c5, 1i32, "Charlie", "T20 row 3 name == Charlie");
+
+    // T21 — no more rows
+    int32:c6 = nitpick_postgres_last_conn();
+    int32:nr3 = nitpick_postgres_next_row(c6);
+    nitpick_postgres_assert_true(nr3 == 0i32, "T21 no more rows");
+
+    // clear result
+    int32:c7 = nitpick_postgres_last_conn();
+    nitpick_postgres_clear_result(c7);
+
+    pass(NIL);
+};
+
+// ── Phase 4a: transaction rollback ──────────────────────────────────
+
+func:test_phase4a = NIL() {
+    // T22 — begin, insert, rollback
+    int32:c1 = nitpick_postgres_last_conn();
+    int32:b = nitpick_postgres_begin(c1);
+    nitpick_postgres_assert_true(b == 1i32, "T22a BEGIN transaction");
+
+    int32:c2 = nitpick_postgres_last_conn();
+    nitpick_postgres_exec(c2, "INSERT INTO users(name, age) VALUES('RollbackUser', 99)");
+
+    int32:c3 = nitpick_postgres_last_conn();
+    int32:rb = nitpick_postgres_rollback(c3);
+    nitpick_postgres_assert_true(rb == 1i32, "T22b ROLLBACK");
+
+    // verify row not present
+    nitpick_postgres_param_add_text("RollbackUser");
+    int32:c4 = nitpick_postgres_last_conn();
+    nitpick_postgres_query(c4, "SELECT id FROM users WHERE name = $1");
+
+    int32:c5 = nitpick_postgres_last_conn();
+    int32:rc = nitpick_postgres_row_count(c5);
+    nitpick_postgres_assert_true(rc == 0i32, "T22c rollback user absent");
+
+    int32:c6 = nitpick_postgres_last_conn();
+    nitpick_postgres_clear_result(c6);
+
+    pass(NIL);
+};
+
+// ── Phase 4b: transaction commit ────────────────────────────────────
+
+func:test_phase4b = NIL() {
+    // T23 — begin, insert, commit
+    int32:c1 = nitpick_postgres_last_conn();
+    int32:b = nitpick_postgres_begin(c1);
+    nitpick_postgres_assert_true(b == 1i32, "T23a BEGIN transaction");
+
+    nitpick_postgres_param_add_text("CommitUser");
+    nitpick_postgres_param_add_int(40i64);
+    int32:c2 = nitpick_postgres_last_conn();
+    nitpick_postgres_execute(c2, "INSERT INTO users(name, age) VALUES($1, $2)");
+
+    int32:c3 = nitpick_postgres_last_conn();
+    int32:cm = nitpick_postgres_commit(c3);
+    nitpick_postgres_assert_true(cm == 1i32, "T23b COMMIT");
+
+    // verify row present
+    nitpick_postgres_param_add_text("CommitUser");
+    int32:c4 = nitpick_postgres_last_conn();
+    nitpick_postgres_query(c4, "SELECT id FROM users WHERE name = $1");
+
+    int32:c5 = nitpick_postgres_last_conn();
+    int32:rc = nitpick_postgres_row_count(c5);
+    nitpick_postgres_assert_true(rc == 1i32, "T23c commit user present");
+
+    int32:c6 = nitpick_postgres_last_conn();
+    nitpick_postgres_clear_result(c6);
+
+    pass(NIL);
+};
+
+// ── Phase 5a: SQL injection safety ──────────────────────────────────
+
+func:test_phase5a = NIL() {
+    // T24 — inject via parameterized query
+    nitpick_postgres_param_add_text("'; DROP TABLE users; --");
+    nitpick_postgres_param_add_int(0i64);
+    int32:c1 = nitpick_postgres_last_conn();
+    int32:r = nitpick_postgres_execute(c1, "INSERT INTO users(name, age) VALUES($1, $2)");
+    nitpick_postgres_assert_true(r == 1i32, "T24a injection string inserted safely");
+
+    // verify table still exists and has rows
+    int32:c2 = nitpick_postgres_last_conn();
+    nitpick_postgres_query(c2, "SELECT count(*) FROM users");
+    int32:c3 = nitpick_postgres_last_conn();
+    int32:nr = nitpick_postgres_next_row(c3);
+    int32:c4 = nitpick_postgres_last_conn();
+    int64:cnt = nitpick_postgres_column_int(c4, 0i32);
+    nitpick_postgres_assert_true(cnt >= 4i64, "T24b table survived injection (rows >= 4)");
+
+    int32:c5 = nitpick_postgres_last_conn();
+    nitpick_postgres_clear_result(c5);
+
+    pass(NIL);
+};
+
+// ── Phase 5b: NULL handling ─────────────────────────────────────────
+
+func:test_phase5b = NIL() {
+    // T25 — insert with NULL email
+    nitpick_postgres_param_add_text("NullUser");
+    nitpick_postgres_param_add_int(50i64);
+    nitpick_postgres_param_add_null();
+    int32:c1 = nitpick_postgres_last_conn();
+    nitpick_postgres_execute(c1, "INSERT INTO users(name, age, email) VALUES($1, $2, $3)");
+
+    // query and check null
+    nitpick_postgres_param_add_text("NullUser");
+    int32:c2 = nitpick_postgres_last_conn();
+    nitpick_postgres_query(c2, "SELECT name, age, email FROM users WHERE name = $1");
+
+    int32:c3 = nitpick_postgres_last_conn();
+    int32:nr = nitpick_postgres_next_row(c3);
+
+    int32:c4 = nitpick_postgres_last_conn();
+    nitpick_postgres_assert_col_is_null(c4, 2i32, "T25 email is NULL");
+
+    int32:c5 = nitpick_postgres_last_conn();
+    nitpick_postgres_clear_result(c5);
+
+    pass(NIL);
+};
+
+// ── Phase 5c: UPDATE ────────────────────────────────────────────────
+
+func:test_phase5c = NIL() {
+    // T26 — UPDATE
+    nitpick_postgres_param_add_int(31i64);
+    nitpick_postgres_param_add_text("Alice");
+    int32:c1 = nitpick_postgres_last_conn();
+    int32:u = nitpick_postgres_execute(c1, "UPDATE users SET age = $1 WHERE name = $2");
+    nitpick_postgres_assert_true(u == 1i32, "T26a UPDATE Alice age");
+
+    int32:c2 = nitpick_postgres_last_conn();
+    nitpick_postgres_assert_affected_eq(c2, 1i64, "T26b affected_rows == 1 after UPDATE");
+
+    // verify
+    nitpick_postgres_param_add_text("Alice");
+    int32:c3 = nitpick_postgres_last_conn();
+    nitpick_postgres_query(c3, "SELECT age FROM users WHERE name = $1");
+    int32:c4 = nitpick_postgres_last_conn();
+    nitpick_postgres_next_row(c4);
+    int32:c5 = nitpick_postgres_last_conn();
+    nitpick_postgres_assert_col_int_eq(c5, 0i32, 31i64, "T26c Alice age == 31 after UPDATE");
+
+    int32:c6 = nitpick_postgres_last_conn();
+    nitpick_postgres_clear_result(c6);
+
+    pass(NIL);
+};
+
+// ── Phase 5d: DELETE ────────────────────────────────────────────────
+
+func:test_phase5d = NIL() {
+    // T27 — DELETE
+    nitpick_postgres_param_add_text("NullUser");
+    int32:c1 = nitpick_postgres_last_conn();
+    int32:dl = nitpick_postgres_execute(c1, "DELETE FROM users WHERE name = $1");
+    nitpick_postgres_assert_true(dl == 1i32, "T27a DELETE NullUser");
+
+    int32:c2 = nitpick_postgres_last_conn();
+    nitpick_postgres_assert_affected_eq(c2, 1i64, "T27b affected_rows == 1 after DELETE");
+
+    int32:c3 = nitpick_postgres_last_conn();
+    nitpick_postgres_clear_result(c3);
+
+    pass(NIL);
+};
+
+// ── Phase 6: LISTEN / NOTIFY ────────────────────────────────────────
+
+func:test_phase6 = NIL() {
+    // T28 — LISTEN
+    int32:c1 = nitpick_postgres_last_conn();
+    int32:ls = nitpick_postgres_listen(c1, "test_channel");
+    nitpick_postgres_assert_true(ls == 1i32, "T28 LISTEN test_channel");
+
+    // T29 — NOTIFY
+    int32:c2 = nitpick_postgres_last_conn();
+    int32:nt = nitpick_postgres_notify(c2, "test_channel", "hello_nitpick");
+    nitpick_postgres_assert_true(nt == 1i32, "T29 NOTIFY test_channel");
+
+    pass(NIL);
+};
+
+// ── Phase 7: error handling + cleanup ───────────────────────────────
+
+func:test_phase7 = NIL() {
+    // T30 — bad SQL returns error
+    int32:c1 = nitpick_postgres_last_conn();
+    int32:bad = nitpick_postgres_exec(c1, "SELEKT * FORM nonexistent");
+    nitpick_postgres_assert_true(bad == 0i32, "T30 bad SQL returns 0 (error)");
+
+    // T31 — cleanup: drop table
+    int32:c2 = nitpick_postgres_last_conn();
+    int32:dr = nitpick_postgres_exec(c2, "DROP TABLE users");
+    nitpick_postgres_assert_true(dr == 1i32, "T31 DROP TABLE users");
+
+    // T32 — disconnect
+    int32:c3 = nitpick_postgres_last_conn();
+    int32:dc = nitpick_postgres_disconnect(c3);
+    nitpick_postgres_assert_true(dc == 1i32, "T32 disconnect");
+
+    pass(NIL);
+};
+
+// ── main ────────────────────────────────────────────────────────────
+
+func:main = int32() {
+    drop(test_phase1());
+    drop(test_phase2());
+    drop(test_phase3a());
+    drop(test_phase3b());
+    drop(test_phase4a());
+    drop(test_phase4b());
+    drop(test_phase5a());
+    drop(test_phase5b());
+    drop(test_phase5c());
+    drop(test_phase5d());
+    drop(test_phase6());
+    drop(test_phase7());
+
+    nitpick_postgres_test_summary();
+    exit 0;
+};

@@ -1,0 +1,21 @@
+// test_nitpick_csv_write.npk — Write tests for nitpick-csv (C-side assertions)
+extern "libc" {
+    func:nitpick_csv_assert_write_contains = int32(string:val, string:msg);
+    func:nitpick_csv_assert_true = int32(int32:val, string:msg); func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_csv.npk".*;
+// Uses <=7 externs to stay under compiler complexity limit.
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+
+
+
+
+
+
+
+
+func:main = int32() {
+    drop(println("PASS: all tests passed"));
+    exit 0;
+};

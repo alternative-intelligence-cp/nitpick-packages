@@ -1,0 +1,39 @@
+// test_gui.npk - A simple Raylib prototype for Nitpick
+
+use "nitpick_raylib.npk".*;
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+func:main = int32() {
+    raw rl_init_window(800i32, 600i32, "Nitpick Raylib Prototype\0");
+    raw rl_set_target_fps(60i32);
+    
+    while (raw rl_window_should_close() == 0i32) {
+        raw rl_begin_drawing();
+        raw rl_clear_background(30i32, 30i32, 30i32, 255i32);
+        
+        // Draw a green "blackjack table"
+        raw rl_draw_rectangle(100i32, 100i32, 600i32, 400i32, 34i32, 139i32, 34i32, 255i32);
+        
+        // Draw a dummy card
+        raw rl_draw_rectangle(300i32, 200i32, 80i32, 120i32, 255i32, 255i32, 255i32, 255i32);
+        raw rl_draw_rectangle_lines(300i32, 200i32, 80i32, 120i32, 0i32, 0i32, 0i32, 255i32);
+        raw rl_draw_text("A S\0", 310i32, 210i32, 20i32, 0i32, 0i32, 0i32, 255i32);
+        
+        // Draw another dummy card
+        raw rl_draw_rectangle(400i32, 200i32, 80i32, 120i32, 255i32, 255i32, 255i32, 255i32);
+        raw rl_draw_rectangle_lines(400i32, 200i32, 80i32, 120i32, 0i32, 0i32, 0i32, 255i32);
+        raw rl_draw_text("10 H\0", 410i32, 210i32, 20i32, 200i32, 0i32, 0i32, 255i32);
+        
+        // Draw text
+        raw rl_draw_text("Hello from Raylib + Nitpick!\0", 250i32, 50i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+        raw rl_draw_fps(10i32, 10i32);
+        
+        raw rl_end_drawing();
+    }
+    
+    raw rl_close_window();
+    exit 0i32;
+};

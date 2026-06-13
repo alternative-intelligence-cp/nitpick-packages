@@ -1,0 +1,15 @@
+extern func:println_f64 = void(float64:v);
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+noinline func:takes_ptr = NIL(wild float64->:ptr) {
+    ptr[14i64] = 42.0;
+    pass NIL;
+};
+
+pub func:main = int32() {
+    float64[15]:nodes;
+    nodes[0i64] = 0.0;
+    drop(takes_ptr(nodes));
+    println_f64(nodes[14i64]);
+    exit 0;
+};

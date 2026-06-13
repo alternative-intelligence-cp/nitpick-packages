@@ -1,0 +1,111 @@
+// nitpick_plot.npk — 2D Plotting Library using Raylib
+
+use "nitpick_raylib.npk".*;
+
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_malloc     = int64(int64:size);
+    func:nitpick_libc_mem_free       = void(int64:ptr);
+    func:nitpick_libc_mem_write_i64  = void(int64:ptr, int64:offset, int64:val);
+    func:nitpick_libc_mem_read_i64   = int64(int64:ptr, int64:offset);
+}
+
+pub struct:Series = {
+    int32:type;
+    int64:xs_ptr;
+    int64:ys_ptr;
+    int64:length;
+    Color:color;
+    flt32:thickness;
+};
+
+pub struct:Plot = {
+    int32:width;
+    int32:height;
+    string:title;
+    
+    int64:series_ptr;
+    int64:series_len;
+    int64:series_cap;
+
+    flt64:x_min;
+    flt64:x_max;
+    flt64:y_min;
+    flt64:y_max;
+    
+    int32:margin_left;
+    int32:margin_right;
+    int32:margin_top;
+    int32:margin_bottom;
+};
+
+pub func:Plot_create = Plot(int32:w, int32:h, string:title) {
+    Plot:p;
+    p.width = w;
+    p.height = h;
+    p.title = title;
+    
+    p.series_cap = 16i64;
+    p.series_len = 0i64;
+    p.series_ptr = nitpick_libc_mem_malloc(p.series_cap * 64i64);
+    
+    p.x_min = 0.0f64;
+    p.x_max = 1.0f64;
+    p.y_min = 0.0f64;
+    p.y_max = 1.0f64;
+    p.margin_left = 60i32;
+    p.margin_right = 30i32;
+    p.margin_top = 40i32;
+    p.margin_bottom = 40i32;
+    pass p;
+};
+
+// Data coordinates to Screen coordinates
+pub func:Plot_map_x = int32(Plot:p, flt64:x) {
+    flt64:range = p.x_max - p.x_min;
+    if (range == 0.0f64) {
+        pass p.margin_left;
+    }
+    flt64:percent = (x - p.x_min) / range;
+    flt64:out_range = @cast<flt64>(p.width - p.margin_right - p.margin_left);
+    pass p.margin_left + @cast<int32>(percent * out_range);
+};
+
+pub func:Plot_map_y = int32(Plot:p, flt64:y) {
+    flt64:range = p.y_max - p.y_min;
+    if (range == 0.0f64) {
+        pass p.height - p.margin_bottom;
+    }
+    flt64:percent = (y - p.y_min) / range;
+    flt64:out_range = @cast<flt64>(p.height - p.margin_bottom - p.margin_top);
+    pass p.height - p.margin_bottom - @cast<int32>(percent * out_range);
+};
+
+pub func:Plot_show = NIL(Plot:p) {
+    aria_rl_init_window(p.width, p.height, p.title);
+    aria_rl_set_target_fps(60i32);
+
+    while (aria_rl_window_should_close() == 0i32) {
+        aria_rl_begin_drawing();
+        aria_rl_clear_background(255i32, 255i32, 255i32, 255i32);
+
+        int32:x0 = p.margin_left;
+        int32:y0 = p.height - p.margin_bottom;
+        int32:x1 = p.width - p.margin_right;
+        int32:y1 = p.margin_top;
+
+        // X and Y axes
+        aria_rl_draw_line(x0, y0, x1, y0, 0i32, 0i32, 0i32, 255i32); 
+        aria_rl_draw_line(x0, y0, x0, y1, 0i32, 0i32, 0i32, 255i32); 
+        aria_rl_draw_text(p.title, x0, 10i32, 20i32, 0i32, 0i32, 0i32, 255i32);
+
+        // Dummy Scatter Data to verify rendering (0.5, 0.5)
+        int32:px = raw Plot_map_x(p, 0.5f64);
+        int32:py = raw Plot_map_y(p, 0.5f64);
+        aria_rl_draw_circle(px, py, 5.0f32, 255i32, 0i32, 0i32, 255i32);
+
+        aria_rl_end_drawing();
+    }
+
+    aria_rl_close_window();
+    pass NIL;
+};

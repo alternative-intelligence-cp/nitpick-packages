@@ -1,0 +1,36 @@
+extern "nitpick_mysql_shim" {
+    func:nitpick_mysql_connect    = int32(string:host, string:user, string:passwd, string:db, int32:port);
+    func:nitpick_mysql_exec = int32(int32:conn_id, string:sql);
+    func:nitpick_mysql_param_clear      = int32();
+    func:nitpick_mysql_param_add_text   = int32(string:val);
+    func:nitpick_mysql_execute = int32(int32:conn_id, string:sql);
+    func:nitpick_mysql_simple_query = int32(int32:conn_id, string:sql);
+    func:nitpick_mysql_next_row     = int32(int32:conn_id);
+    func:nitpick_mysql_column_text  = string(int32:conn_id, int32:col);
+}
+
+extern "libc" {
+    func:printf = int32(string:fmt, string:str);
+}
+
+pub func:main = int32() {
+    int32:conn = nitpick_mysql_connect("127.0.0.1", "randy", "nitpick_test_pw", "nitpick_test", 3306i32);
+    nitpick_mysql_exec(conn, "DROP TABLE IF EXISTS test_text");
+    nitpick_mysql_exec(conn, "CREATE TABLE test_text(id INT, name VARCHAR(255))");
+    
+    nitpick_mysql_param_clear();
+    nitpick_mysql_param_add_text("Hello Nitpick");
+    nitpick_mysql_execute(conn, "INSERT INTO test_text VALUES(1, ?)");
+
+    nitpick_mysql_simple_query(conn, "SELECT name FROM test_text");
+    nitpick_mysql_next_row(conn);
+    
+    string:val = nitpick_mysql_column_text(conn, 0i32);
+    printf("Value: %s\n", val);
+    
+    exit(0i32);
+};
+
+pub func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};

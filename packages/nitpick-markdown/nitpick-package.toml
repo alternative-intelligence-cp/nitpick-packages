@@ -1,0 +1,8 @@
+[package]
+name = "nitpick-markdown"
+version = "0.1.0"
+description = "A simple Markdown to HTML compiler"
+authors = ["Antigravity"]
+
+[dependencies]
+nitpick-str = "path:../nitpick-str"

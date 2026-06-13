@@ -1,0 +1,174 @@
+// nitpick_display.npk — Terminal display state manager (v0.12.2)
+//
+// Pure Nitpick implementation — no extern dependencies.
+// Import with: use "nitpick_display.npk".*;
+//
+// Manages terminal display state: cursor position, colors, attributes,
+// and dimensions. Actual terminal I/O is handled by the application layer.
+// All state stored as strings in ahash handle.
+
+// ── Create & Reset ──────────────────────────────────────────────────────────
+
+pub func:disp_create = int64(int64:cols, int64:rows) {
+    int64:h = ahash(256);
+    ahset(h, "_cols", string_from_int(cols));
+    ahset(h, "_rows", string_from_int(rows));
+    ahset(h, "_cursor_row", "1");
+    ahset(h, "_cursor_col", "1");
+    ahset(h, "_fg", "7");
+    ahset(h, "_bg", "0");
+    ahset(h, "_bold", "0");
+    ahset(h, "_reverse", "0");
+    ahset(h, "_cursor_vis", "1");
+    pass h;
+};
+
+pub func:disp_reset = int32(int64:h) {
+    ahset(h, "_cursor_row", "1");
+    ahset(h, "_cursor_col", "1");
+    ahset(h, "_fg", "7");
+    ahset(h, "_bg", "0");
+    ahset(h, "_bold", "0");
+    ahset(h, "_reverse", "0");
+    ahset(h, "_cursor_vis", "1");
+    pass 0i32;
+};
+
+// ── Cursor ──────────────────────────────────────────────────────────────────
+
+pub func:disp_move = int32(int64:h, int64:row, int64:col) {
+    ahset(h, "_cursor_row", string_from_int(row));
+    ahset(h, "_cursor_col", string_from_int(col));
+    pass 0i32;
+};
+
+pub func:disp_home = int32(int64:h) {
+    ahset(h, "_cursor_row", "1");
+    ahset(h, "_cursor_col", "1");
+    pass 0i32;
+};
+
+pub func:disp_hide_cursor = int32(int64:h) {
+    ahset(h, "_cursor_vis", "0");
+    pass 0i32;
+};
+
+pub func:disp_show_cursor = int32(int64:h) {
+    ahset(h, "_cursor_vis", "1");
+    pass 0i32;
+};
+
+pub func:disp_cursor_row = string(int64:h) {
+    string:v = ahget(h, "_cursor_row");
+    pass v;
+};
+
+pub func:disp_cursor_col = string(int64:h) {
+    string:v = ahget(h, "_cursor_col");
+    pass v;
+};
+
+pub func:disp_cursor_visible = string(int64:h) {
+    string:v = ahget(h, "_cursor_vis");
+    pass v;
+};
+
+// ── Colors & Attributes ─────────────────────────────────────────────────────
+
+pub func:disp_set_fg = int32(int64:h, int64:color) {
+    ahset(h, "_fg", string_from_int(color));
+    pass 0i32;
+};
+
+pub func:disp_set_bg = int32(int64:h, int64:color) {
+    ahset(h, "_bg", string_from_int(color));
+    pass 0i32;
+};
+
+pub func:disp_fg = string(int64:h) {
+    string:v = ahget(h, "_fg");
+    pass v;
+};
+
+pub func:disp_bg = string(int64:h) {
+    string:v = ahget(h, "_bg");
+    pass v;
+};
+
+pub func:disp_set_bold = int32(int64:h, int64:on) {
+    ahset(h, "_bold", string_from_int(on));
+    pass 0i32;
+};
+
+pub func:disp_is_bold = string(int64:h) {
+    string:v = ahget(h, "_bold");
+    pass v;
+};
+
+pub func:disp_set_reverse = int32(int64:h, int64:on) {
+    ahset(h, "_reverse", string_from_int(on));
+    pass 0i32;
+};
+
+pub func:disp_is_reverse = string(int64:h) {
+    string:v = ahget(h, "_reverse");
+    pass v;
+};
+
+// ── Dimensions ──────────────────────────────────────────────────────────────
+
+pub func:disp_resize = int32(int64:h, int64:cols, int64:rows) {
+    ahset(h, "_cols", string_from_int(cols));
+    ahset(h, "_rows", string_from_int(rows));
+    pass 0i32;
+};
+
+pub func:disp_cols = string(int64:h) {
+    string:v = ahget(h, "_cols");
+    pass v;
+};
+
+pub func:disp_rows = string(int64:h) {
+    string:v = ahget(h, "_rows");
+    pass v;
+};
+
+// ── Color names ─────────────────────────────────────────────────────────────
+
+pub func:disp_color_name = string(int64:code) {
+    if (code == 0i64) { pass "black"; }
+    if (code == 1i64) { pass "red"; }
+    if (code == 2i64) { pass "green"; }
+    if (code == 3i64) { pass "yellow"; }
+    if (code == 4i64) { pass "blue"; }
+    if (code == 5i64) { pass "magenta"; }
+    if (code == 6i64) { pass "cyan"; }
+    if (code == 7i64) { pass "white"; }
+    pass "unknown";
+};
+
+// ── Type wrapper ────────────────────────────────────────────────────────────
+
+Type:Display = {
+    func:init       = int64(int64:c, int64:r) { pass raw disp_create(c, r); };
+    func:mv         = int32(int64:h, int64:r, int64:c) { pass raw disp_move(h, r, c); };
+    func:home       = int32(int64:h) { pass raw disp_home(h); };
+    func:hide_cur   = int32(int64:h) { pass raw disp_hide_cursor(h); };
+    func:show_cur   = int32(int64:h) { pass raw disp_show_cursor(h); };
+    func:cur_row    = string(int64:h) { pass raw disp_cursor_row(h); };
+    func:cur_col    = string(int64:h) { pass raw disp_cursor_col(h); };
+    func:cur_vis    = string(int64:h) { pass raw disp_cursor_visible(h); };
+    func:fg_set     = int32(int64:h, int64:c) { pass raw disp_set_fg(h, c); };
+    func:bg_set     = int32(int64:h, int64:c) { pass raw disp_set_bg(h, c); };
+    func:fg_get     = string(int64:h) { pass raw disp_fg(h); };
+    func:bg_get     = string(int64:h) { pass raw disp_bg(h); };
+    func:bold_set   = int32(int64:h, int64:on) { pass raw disp_set_bold(h, on); };
+    func:bold_get   = string(int64:h) { pass raw disp_is_bold(h); };
+    func:rev_set    = int32(int64:h, int64:on) { pass raw disp_set_reverse(h, on); };
+    func:rev_get    = string(int64:h) { pass raw disp_is_reverse(h); };
+    func:sz_set     = int32(int64:h, int64:c, int64:r) { pass raw disp_resize(h, c, r); };
+    func:get_cols   = string(int64:h) { pass raw disp_cols(h); };
+    func:get_rows   = string(int64:h) { pass raw disp_rows(h); };
+    func:clr_name   = string(int64:c) { pass raw disp_color_name(c); };
+    func:rst        = int32(int64:h) { pass raw disp_reset(h); };
+};

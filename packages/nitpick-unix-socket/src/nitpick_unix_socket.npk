@@ -1,0 +1,89 @@
+// nitpick_unix_socket.npk
+
+extern "nitpick_unix_socket_shim" {
+    func:nitpick_unix_socket_create = int64();
+    func:nitpick_unix_socket_bind = int64(int64:fd, string:path);
+    func:nitpick_unix_socket_listen = int64(int64:fd, int64:backlog);
+    func:nitpick_unix_socket_connect = int64(int64:fd, string:path);
+    func:nitpick_unix_socket_accept = int64(int64:fd);
+    func:nitpick_unix_socket_send = int64(int64:fd, string:data, int64:len);
+    func:nitpick_unix_socket_recv = string(int64:fd, int64:max_len);
+    func:nitpick_unix_socket_close = int64(int64:fd);
+    func:nitpick_unix_socket_unlink = int64(string:path);
+}
+
+Type:UnixSocket = {
+    // Create a Unix socket server. Returns fd, or fails on error.
+    func:server = int64(string:path) {
+        drop(nitpick_unix_socket_unlink(path)); // Remove existing socket file if any
+        
+        int64:fd = nitpick_unix_socket_create();
+        if (fd < 0i64) { fail 1; }
+
+        int64:bind_rc = nitpick_unix_socket_bind(fd, path);
+        if (bind_rc < 0i64) {
+            drop(nitpick_unix_socket_close(fd));
+            fail 2;
+        }
+
+        int64:listen_rc = nitpick_unix_socket_listen(fd, 128i64);
+        if (listen_rc < 0i64) {
+            drop(nitpick_unix_socket_close(fd));
+            fail 3;
+        }
+
+        pass fd;
+    };
+
+    // Connect to a Unix socket server. Returns fd, or fails on error.
+    func:client = int64(string:path) {
+        int64:fd = nitpick_unix_socket_create();
+        if (fd < 0i64) { fail 1; }
+
+        int64:conn_rc = nitpick_unix_socket_connect(fd, path);
+        if (conn_rc < 0i64) {
+            drop(nitpick_unix_socket_close(fd));
+            fail 4;
+        }
+
+        pass fd;
+    };
+
+    // Accept a connection (for servers)
+    func:accept = int64(int64:server_fd) {
+        if (server_fd < 0i64) { fail 5; }
+        int64:client_fd = nitpick_unix_socket_accept(server_fd);
+        if (client_fd < 0i64) { fail 6; }
+        pass client_fd;
+    };
+
+    // Send string data
+    func:send = int64(int64:fd, string:data) {
+        if (fd < 0i64) { fail 5; }
+        int64:sent = nitpick_unix_socket_send(fd, data, string_length(data));
+        if (sent < 0i64) { fail 7; }
+        pass sent;
+    };
+
+    // Receive string data
+    func:recv = string(int64:fd, int64:max) {
+        if (fd < 0i64) { fail 5; }
+        // Note: the shim returns "" on EOF or error. For true binary safe error differentiation,
+        // we might want a get_error() in the shim in the future.
+        pass nitpick_unix_socket_recv(fd, max);
+    };
+
+    // Close the socket
+    func:close = int64(int64:fd) {
+        if (fd >= 0i64) {
+            drop(nitpick_unix_socket_close(fd));
+        }
+        pass 0i64;
+    };
+
+    // Unlink the path (used by servers after close)
+    func:unlink = int64(string:path) {
+        drop(nitpick_unix_socket_unlink(path));
+        pass 0i64;
+    };
+};

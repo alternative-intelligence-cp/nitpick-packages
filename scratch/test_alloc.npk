@@ -1,0 +1,16 @@
+extern func:malloc_f64 @link_name("malloc") = wild float64*(int64:size);
+extern func:free = void(wild float64*:ptr);
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:takes_ptr = NIL(wild float64->:ptr) {
+    ptr[0i64] = 42.0;
+    pass(NIL);
+};
+
+pub func:main = int32() {
+    wild float64->:ptr = malloc_f64(16i64);
+    drop(takes_ptr(ptr));
+    free(ptr);
+    exit 0i32;
+};

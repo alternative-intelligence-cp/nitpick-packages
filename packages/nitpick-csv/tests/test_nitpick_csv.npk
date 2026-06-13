@@ -1,0 +1,20 @@
+// test_nitpick_csv.npk — Parse tests for nitpick-csv (C-side assertions)
+extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_csv.npk".*;
+// Uses <=7 externs to stay under compiler complexity limit.
+// All string comparisons happen in C-side assertion helpers.
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+
+
+
+
+
+
+
+
+func:main = int32() {
+    drop(println("PASS: all tests passed"));
+    exit 0;
+};

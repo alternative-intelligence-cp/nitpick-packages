@@ -1,0 +1,186 @@
+// cards.npk - Nitpick Blackjack Deck and Hand Logic using Bitpacking
+
+use "nitpick_rand.npk".*;
+use "nitpick_str.npk".*;
+
+struct:Hand = {
+    int32:count;
+    uint64:c0; // First 10 cards (6 bits each)
+    uint64:c1; // Next 10 cards (6 bits each)
+};
+
+pub func:init_hand = Hand() {
+    Hand:h;
+    h.count = 0i32;
+    h.c0 = 0u64;
+    h.c1 = 0u64;
+    pass h;
+};
+
+pub func:hand_add = Hand(Hand:h, int32:card_id) {
+    if (h.count < 10i32) {
+        uint64:shift = @cast<uint64>(h.count) * 6u64;
+        uint64:c = @cast<uint64>(card_id);
+        h.c0 = h.c0 | (c << shift);
+    } else {
+        if (h.count < 20i32) {
+            uint64:shift = @cast<uint64>(h.count - 10i32) * 6u64;
+            uint64:c = @cast<uint64>(card_id);
+            h.c1 = h.c1 | (c << shift);
+        }
+    }
+    h.count = h.count + 1i32;
+    pass h;
+};
+
+pub func:hand_get = int32(Hand:h, int32:idx) {
+    if (idx < 10i32) {
+        uint64:shift = @cast<uint64>(idx) * 6u64;
+        pass @cast<int32>((h.c0 >> shift) & 63u64);
+    } else {
+        if (idx < 20i32) {
+            uint64:shift = @cast<uint64>(idx - 10i32) * 6u64;
+            pass @cast<int32>((h.c1 >> shift) & 63u64);
+        }
+    }
+    pass 0i32;
+};
+
+pub func:card_val = int32(int32:card_id) {
+    int32:v = (card_id % 13i32) + 1i32;
+    if (v > 10i32) {
+        pass 10i32;
+    }
+    pass v;
+};
+
+pub func:calc_score = int32(Hand:h) {
+    int32:total = 0i32;
+    int32:aces = 0i32;
+    int32:i = 0i32;
+    while (i < h.count) {
+        int32:cid = raw hand_get(h, i);
+        int32:v = raw card_val(cid);
+        if (v == 1i32) {
+            aces = aces + 1i32;
+            total = total + 11i32;
+        } else {
+            total = total + v;
+        }
+        i = i + 1i32;
+    }
+    while ((total > 21i32) & (aces > 0i32)) {
+        total = total - 10i32;
+        aces = aces - 1i32;
+    }
+    pass total;
+};
+
+struct:Deck = {
+    int32:index;
+    uint64:d0; // cards 0-9
+    uint64:d1; // cards 10-19
+    uint64:d2; // cards 20-29
+    uint64:d3; // cards 30-39
+    uint64:d4; // cards 40-49
+    uint64:d5; // cards 50-51
+};
+
+pub func:deck_set = Deck(Deck:d, int32:idx, int32:card_id) {
+    uint64:c = @cast<uint64>(card_id) & 63u64;
+    if (idx < 10i32) {
+        uint64:shift = @cast<uint64>(idx) * 6u64;
+        d.d0 = (d.d0 & ((63u64 << shift) ^ 18446744073709551615u64)) | (c << shift);
+    } else { if (idx < 20i32) {
+        uint64:shift = @cast<uint64>(idx - 10i32) * 6u64;
+        d.d1 = (d.d1 & ((63u64 << shift) ^ 18446744073709551615u64)) | (c << shift);
+    } else { if (idx < 30i32) {
+        uint64:shift = @cast<uint64>(idx - 20i32) * 6u64;
+        d.d2 = (d.d2 & ((63u64 << shift) ^ 18446744073709551615u64)) | (c << shift);
+    } else { if (idx < 40i32) {
+        uint64:shift = @cast<uint64>(idx - 30i32) * 6u64;
+        d.d3 = (d.d3 & ((63u64 << shift) ^ 18446744073709551615u64)) | (c << shift);
+    } else { if (idx < 50i32) {
+        uint64:shift = @cast<uint64>(idx - 40i32) * 6u64;
+        d.d4 = (d.d4 & ((63u64 << shift) ^ 18446744073709551615u64)) | (c << shift);
+    } else { if (idx < 52i32) {
+        uint64:shift = @cast<uint64>(idx - 50i32) * 6u64;
+        d.d5 = (d.d5 & ((63u64 << shift) ^ 18446744073709551615u64)) | (c << shift);
+    }}}}}}
+    pass d;
+};
+
+pub func:deck_get = int32(Deck:d, int32:idx) {
+    if (idx < 10i32) {
+        uint64:shift = @cast<uint64>(idx) * 6u64;
+        pass @cast<int32>((d.d0 >> shift) & 63u64);
+    } else { if (idx < 20i32) {
+        uint64:shift = @cast<uint64>(idx - 10i32) * 6u64;
+        pass @cast<int32>((d.d1 >> shift) & 63u64);
+    } else { if (idx < 30i32) {
+        uint64:shift = @cast<uint64>(idx - 20i32) * 6u64;
+        pass @cast<int32>((d.d2 >> shift) & 63u64);
+    } else { if (idx < 40i32) {
+        uint64:shift = @cast<uint64>(idx - 30i32) * 6u64;
+        pass @cast<int32>((d.d3 >> shift) & 63u64);
+    } else { if (idx < 50i32) {
+        uint64:shift = @cast<uint64>(idx - 40i32) * 6u64;
+        pass @cast<int32>((d.d4 >> shift) & 63u64);
+    } else { if (idx < 52i32) {
+        uint64:shift = @cast<uint64>(idx - 50i32) * 6u64;
+        pass @cast<int32>((d.d5 >> shift) & 63u64);
+    }}}}}}
+    pass 0i32;
+};
+
+pub func:init_deck = Deck() {
+    Deck:d;
+    d.index = 0i32;
+    d.d0 = 0u64; d.d1 = 0u64; d.d2 = 0u64; d.d3 = 0u64; d.d4 = 0u64; d.d5 = 0u64;
+    
+    int32:i = 0i32;
+    while (i < 52i32) {
+        d = raw deck_set(d, i, i);
+        i = i + 1i32;
+    }
+    
+    // Shuffle
+    i = 51i32;
+    while (i > 0i32) {
+        int32:r = @cast<int32>(raw rand_u32_range(0u32, @cast<uint32>(i + 1i32)));
+        int32:ci = raw deck_get(d, i);
+        int32:cr = raw deck_get(d, r);
+        d = raw deck_set(d, i, cr);
+        d = raw deck_set(d, r, ci);
+        i = i - 1i32;
+    }
+    pass d;
+};
+
+pub func:card_str = string(int32:card_id) {
+    int32:suit = card_id / 13i32;
+    int32:v = (card_id % 13i32) + 1i32;
+    
+    string:val_str = "??\0";
+    if (v == 1i32) { val_str = "A\0"; }
+    if (v == 2i32) { val_str = "2\0"; }
+    if (v == 3i32) { val_str = "3\0"; }
+    if (v == 4i32) { val_str = "4\0"; }
+    if (v == 5i32) { val_str = "5\0"; }
+    if (v == 6i32) { val_str = "6\0"; }
+    if (v == 7i32) { val_str = "7\0"; }
+    if (v == 8i32) { val_str = "8\0"; }
+    if (v == 9i32) { val_str = "9\0"; }
+    if (v == 10i32) { val_str = "10\0"; }
+    if (v == 11i32) { val_str = "J\0"; }
+    if (v == 12i32) { val_str = "Q\0"; }
+    if (v == 13i32) { val_str = "K\0"; }
+    
+    string:suit_str = "?\0";
+    if (suit == 0i32) { suit_str = "H\0"; }
+    if (suit == 1i32) { suit_str = "D\0"; }
+    if (suit == 2i32) { suit_str = "C\0"; }
+    if (suit == 3i32) { suit_str = "S\0"; }
+    
+    pass string_concat("[\0", string_concat(val_str, string_concat(" \0", string_concat(suit_str, "]\0"))));
+};

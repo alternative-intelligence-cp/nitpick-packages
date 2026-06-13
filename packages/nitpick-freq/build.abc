@@ -1,0 +1,4 @@
+[build]
+name = "nitpick-freq-tests"
+entry = "tests/test_nitpick_freq.npk"
+output = "/tmp/test_freq_bin"

@@ -1,0 +1,20 @@
+extern func:malloc = wild int64*(int64:size);
+extern func:free = void(wild float64*:ptr);
+
+struct:PtrF64 {
+    wild float64->:ptr;
+}
+
+pub func:my_alloc = PtrF64(int64:size) {
+    wild float64->:p = @cast_unchecked<float64->>(malloc(size));
+    pass(PtrF64{ptr: p});
+};
+
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+pub func:main = int32() {
+    PtrF64:p_struct = raw my_alloc(10i64);
+    p_struct.ptr[0i64] = 42.0;
+    free(p_struct.ptr);
+    exit 0;
+};

@@ -1,0 +1,81 @@
+// nitpick_csv.npk — CSV parser and writer for Nitpick
+//
+// RFC 4180 compliant. Parse CSV text into a row×column grid,
+// or build CSV output field-by-field.
+// Requires: libnitpick_csv_shim.so
+
+extern "nitpick_csv_shim" {
+    // parsing
+    func:nitpick_csv_parse    = int32(string:csv_text);
+    func:nitpick_csv_num_rows = int32();
+    func:nitpick_csv_num_cols = int32();
+    func:nitpick_csv_get_s    = int32(int32:row, int32:col);
+    func:nitpick_csv_last_result = string();
+
+    // writing
+    func:nitpick_csv_write_begin    = void();
+    func:nitpick_csv_write_field    = void(string:value);
+    func:nitpick_csv_write_row_end  = void();
+    func:nitpick_csv_write_result   = string();
+    func:nitpick_csv_write_length   = int32();
+
+    // cleanup
+    func:nitpick_csv_cleanup = void();
+}
+
+// ── public API: parsing ─────────────────────────────────────────────
+
+pub func:csv_parse = int32(string:text) {
+    int32:r = nitpick_csv_parse(text);
+    pass(r);
+};
+
+pub func:csv_num_rows = int32() {
+    int32:r = nitpick_csv_num_rows();
+    pass(r);
+};
+
+pub func:csv_num_cols = int32() {
+    int32:r = nitpick_csv_num_cols();
+    pass(r);
+};
+
+pub func:csv_get = string(int32:row, int32:col) {
+    int32:status = nitpick_csv_get_s(row, col);
+    string:r = nitpick_csv_last_result();
+    pass(r);
+};
+
+// ── public API: writing ─────────────────────────────────────────────
+
+pub func:csv_write_begin = NIL() {
+    nitpick_csv_write_begin();
+    pass(NIL);
+};
+
+pub func:csv_write_field = NIL(string:value) {
+    nitpick_csv_write_field(value);
+    pass(NIL);
+};
+
+pub func:csv_write_row_end = NIL() {
+    nitpick_csv_write_row_end();
+    pass(NIL);
+};
+
+pub func:csv_write_result = string() {
+    string:r = nitpick_csv_write_result();
+    pass(r);
+};
+
+pub func:csv_write_length = int32() {
+    int32:r = nitpick_csv_write_length();
+    pass(r);
+};
+
+// ── public API: cleanup ─────────────────────────────────────────────
+
+pub func:csv_cleanup = NIL() {
+    nitpick_csv_cleanup();
+    pass(NIL);
+};

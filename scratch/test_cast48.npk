@@ -1,0 +1,7 @@
+extern func:println_i64 = void(int64:v);
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+pub func:main = int32() {
+    println_i64(sizeof<wild float64->>());
+    exit 0;
+};

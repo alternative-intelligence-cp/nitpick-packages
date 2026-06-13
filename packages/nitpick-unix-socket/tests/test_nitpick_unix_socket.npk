@@ -1,0 +1,66 @@
+// test_nitpick_unix_socket.npk
+
+use "../src/nitpick_unix_socket.npk".*;
+
+func:test_fail = NIL(string:msg) {
+    drop(println("[FAIL] " + msg));
+    fail 1;
+};
+
+func:test_pass = NIL(string:msg) {
+    drop(println("[PASS] " + msg));
+    pass NIL;
+};
+
+func:assert = NIL(int32:condition, string:msg) {
+    if (condition == 0) { 
+        Result<NIL>:r = test_fail(msg); 
+        NIL:n = raw r; // trigger failsafe
+    } else { 
+        drop(test_pass(msg)); 
+    }
+    pass NIL;
+};
+
+func:failsafe = int32(tbb32:err) {
+    drop(err);
+    drop(println("FATAL ERROR"));
+    exit 1;
+};
+
+func:main = int32() {
+    string:path = "/tmp/test_nitpick.sock";
+    
+    // 1. Create Server
+    int64:srv = raw UnixSocket.server(path);
+    assert(srv >= 0i64, "server create and bind");
+
+    // 2. Create Client and connect
+    int64:cli = raw UnixSocket.client(path);
+    assert(cli >= 0i64, "client create and connect");
+
+    // 3. Accept connection on Server
+    int64:conn = raw UnixSocket.accept(srv);
+    assert(conn >= 0i64, "server accept client");
+
+    // 4. Send from Client to Server
+    int64:sent = raw UnixSocket.send(cli, "hello unix");
+    assert(sent > 0i64, "client send data");
+
+    // 5. Receive on Server
+    string:recv_data = raw UnixSocket.recv(conn, 1024i64);
+    int32:match = 0;
+    if (recv_data == "hello unix") { match = 1; }
+    assert(match, "server recv data matches");
+
+    // 6. Cleanup
+    drop(UnixSocket.close(conn));
+    drop(UnixSocket.close(cli));
+    drop(UnixSocket.close(srv));
+    drop(UnixSocket.unlink(path));
+    
+    drop(test_pass("all tests passed"));
+    drop(test_pass("nitpick-unix-socket/test_nitpick_unix_socket.npk"));
+    
+    exit 0;
+};

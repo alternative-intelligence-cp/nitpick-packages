@@ -1,0 +1,18 @@
+use std.core.memory;
+
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:takes_ptr = NIL(wild float64->:ptr) {
+    ptr[14i64] = 42.0;
+    pass NIL;
+};
+
+pub func:main = int32() {
+    wild float64->:nodes = raw alloc_array<flt64>(15i32);
+    nodes[0i64] = 0.0;
+    drop(takes_ptr(nodes));
+    if (nodes[14i64] == 42.0) {
+        exit 0;
+    }
+    exit 1;
+};

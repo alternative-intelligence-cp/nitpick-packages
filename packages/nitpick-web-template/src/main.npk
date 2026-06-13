@@ -1,0 +1,118 @@
+// main.npk — REST API Boilerplate using Nitpick Web Stack
+//
+// Shows how to integrate nitpick-server, nitpick-router, nitpick-db-pool, 
+// nitpick-postgres, and nitpick-orm to build a complete application.
+
+use "nitpick_server.npk".*;
+use "nitpick_router.npk".*;
+use "nitpick_db_pool.npk".*;
+use "nitpick_postgres.npk".*;
+use "nitpick_orm.npk".*;
+use "nitpick_str.npk".*;
+
+extern "libc" {
+    func:printf = int32(string:fmt);
+}
+
+func:failsafe = int32(tbb32:err) {
+    int32:_ = printf("FAILSAFE TRIGGERED!\n\0");
+    exit 1i32;
+};
+
+// Application Main
+func:main = int32() {
+    int32:_1 = printf("Initializing Server, Router, and DB Pool...\n\0");
+    
+    // 1. Initialize Postgres and the DB Pool
+    NIL:_3 = raw db_pool_init();
+    
+    // In a real application, you would initialize 5-10 connections here.
+    // We will initialize 1 connection to Postgres for the pool.
+    // (Assuming Postgres is running locally on default port)
+    int32:pg_conn = raw pg_connect("host=localhost port=5432 dbname=postgres user=postgres password=postgres\0");
+    if (pg_conn >= 0i32) {
+        int32:_4 = raw db_pool_add(pg_conn);
+        int32:_5 = printf("DB Pool configured successfully.\n\0");
+    } else {
+        int32:_6 = printf("Failed to connect to Postgres. Continuing without DB connection...\n\0");
+    }
+    
+    // 2. Map Routes
+    int64:r_health = raw route_get("/health\0", 100i64);
+    int64:r_users  = raw route_get("/api/users\0", 200i64);
+    
+    // 3. Start Server
+    int64:server_fd = raw srv_listen("0.0.0.0\0", 8080i64, 128i64);
+    if (server_fd < 0i64) {
+        int32:_7 = printf("Failed to bind server to port 8080\n\0");
+        exit 1i32;
+    }
+    
+    int32:_8 = printf("Server listening on http://0.0.0.0:8080\n\0");
+    
+    // 4. Main Event Loop
+    int32:running = 1i32;
+    // We limit loop iterations to 2 so the test doesn't hang forever, 
+    // but in a real app this is `while (true)`.
+    int32:iterations = 0i32;
+    
+    while (iterations < 2i32) {
+        iterations = iterations + 1i32;
+        int32:_9 = printf("Waiting for client request...\n\0");
+        
+        // This blocks until a client connects
+        // int64:client_fd = raw srv_accept(server_fd);
+        // raw srv_read_req(client_fd);
+        
+        // For testing purposes, we simulate the parsed values instead of blocking on network!
+        string:method = "GET\0";
+        string:path = "/api/users\0";
+        
+        // --- Simulated Handler Flow ---
+        
+        int64:handler_id = raw route_match(method, path);
+        
+        if (handler_id == 100i64) {
+            // GET /health
+            // raw srv_respond(client_fd, 200i64, "{\"status\":\"ok\"}\0");
+            int32:_10 = printf("Routed to /health handler\n\0");
+        } else {
+            if (handler_id == 200i64) {
+                // GET /api/users
+                int32:_11 = printf("Routed to /api/users handler. Acquiring DB...\n\0");
+                
+                int32:db_conn = raw db_pool_acquire();
+                if (db_conn >= 0i32) {
+                    // We got a DB connection! Use ORM to build query
+                    QueryBuilder:q = raw orm_select("users\0");
+                    q = raw orm_cols(q, "id, name, email\0");
+                    q = raw orm_limit(q, 10i32);
+                    
+                    string:sql = raw orm_to_sql(q, raw DIALECT_POSTGRES());
+                    int32:_12 = printf("Executing SQL: \0");
+                    print(sql);
+                    print("\n\0");
+                    
+                    // int32:res = raw pg_exec(db_conn, sql);
+                    // string:json_result = transform_pg_res_to_json(res);
+                    
+                    int32:_13 = raw db_pool_release(db_conn);
+                    // raw srv_respond(client_fd, 200i64, json_result);
+                } else {
+                    int32:_14 = printf("No DB connection available!\n\0");
+                    // raw srv_respond(client_fd, 503i64, "{\"error\":\"DB Unavailable\"}\0");
+                }
+            } else {
+                // 404 Not Found
+                int32:_15 = printf("404 Not Found\n\0");
+                // raw srv_respond(client_fd, 404i64, "Not Found\0");
+            }
+        }
+        
+        // raw srv_close_client(client_fd);
+    }
+    
+    // raw srv_close(server_fd);
+    int32:_17 = printf("Server gracefully shut down.\n\0");
+    exit 0i32;
+};

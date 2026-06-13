@@ -1,0 +1,12 @@
+[package]
+name = "nitpick-vec"
+version = "0.2.0"
+authors = ["Nitpick Language Project"]
+license = "MIT"
+description = "2D and 3D float64 vector math: dot, cross, and length-squared operations"
+keywords = ["vector", "math", "vec2", "vec3", "float64", "linear-algebra"]
+categories = ["math", "graphics", "utilities"]
+
+[build]
+type = "library"
+entry = "src/nitpick_vec.npk"

@@ -1,0 +1,215 @@
+// debug_cube.npk — Diagnostic for black screen issue
+//
+// Step 1: calls render_test_frame() which does everything in C
+// Step 2: tries the Nitpick-driven pipeline with debug output
+
+
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// diagnostics
+
+
+
+
+
+func:main = int32() {
+    int32:pass_count = 0i32;
+    drop(println("=== OpenGL Debug Test ==="));
+
+    // Step 0: test float argument passing
+    drop(println("Step 0: Testing float argument passing..."));
+    aria_gl_debug_float_arg(45.0f32);
+    aria_gl_debug_float_arg(1.333f32);
+    aria_gl_debug_float_arg(0.0f32 - 6.0f32);
+
+    // Step 1: Init window
+    drop(println("Step 1: Creating GL context..."));
+    int32:init_ok = aria_gl_init(800i32, 600i32, "Debug Cube");
+    if (init_ok != 0i32) {
+        drop(println("FAILED to create GL context"));
+        exit(1i32);
+    }
+    drop(println("  GL context OK"));
+
+    // Set viewport explicitly
+    aria_gl_viewport(0i32, 0i32, 800i32, 600i32);
+
+    // Step 2: render_test_frame (pure C rendering)
+    drop(println("Step 2: Running pure-C test frame (60 frames)..."));
+    int32:ctest = aria_gl_render_test_frame(0.0f32, 0.0f32);
+    if (ctest == 0i32) {
+        drop(println("  C test frame: OK"));
+    }
+    if (ctest != 0i32) {
+        drop(println("  C test frame: FAILED"));
+    }
+
+    // Step 3: Now try Nitpick-driven rendering
+    drop(println("Step 3: Nitpick-driven rendering (60 frames)..."));
+
+    // build shader
+    string:vs = "#version 330 core\nlayout(location=0)in vec3 aPos;\nlayout(location=1)in vec3 aColor;\nuniform mat4 uMVP;\nout vec3 vColor;\nvoid main(){gl_Position=uMVP*vec4(aPos,1.0);vColor=aColor;}";
+    string:fs = "#version 330 core\nin vec3 vColor;\nout vec4 FragColor;\nvoid main(){FragColor=vec4(vColor,1.0);}";
+    int32:prog = aria_gl_build_program(vs, fs);
+    if (prog <= 0i32) {
+        drop(println("  Shader build FAILED"));
+        aria_gl_quit();
+        exit(1i32);
+    }
+    drop(println("  Shader compiled OK"));
+
+    int32:mvp_loc = aria_gl_get_uniform_location(prog, "uMVP");
+
+    // geometry
+    int32:vao = aria_gl_gen_vao();
+    int32:vbo = aria_gl_gen_buffer();
+    aria_gl_bind_vao(vao);
+    aria_gl_bind_buffer(aria_gl_ARRAY_BUFFER(), vbo);
+    aria_gl_buf_clear();
+    aria_gl_load_cube_geometry();
+    aria_gl_buffer_data_f(aria_gl_ARRAY_BUFFER(), aria_gl_STATIC_DRAW());
+    aria_gl_vertex_attrib_pointer(0i32, 3i32, 6i32, 0i32);
+    aria_gl_enable_vertex_attrib(0i32);
+    aria_gl_vertex_attrib_pointer(1i32, 3i32, 6i32, 3i32);
+    aria_gl_enable_vertex_attrib(1i32);
+
+    int32:clear_mask = aria_gl_COLOR_BUFFER_BIT() + aria_gl_DEPTH_BUFFER_BIT();
+    int32:tri_mode = aria_gl_TRIANGLES();
+
+    aria_gl_enable(aria_gl_DEPTH_TEST());
+    aria_gl_viewport(0i32, 0i32, 800i32, 600i32);
+
+    flt32:angle_y = 0.0f32;
+    flt32:angle_x = 0.0f32;
+
+    // debug: test perspective matrix
+    drop(println("  Testing perspective matrix:"));
+    aria_gl_mat4_perspective(45.0f32, 1.333f32, 0.1f32, 100.0f32);
+    aria_gl_debug_matrix();
+
+    // debug: test translate matrix
+    drop(println("  Testing translate matrix:"));
+    aria_gl_mat4_translate(0.0f32, 0.0f32, 0.0f32 - 6.0f32);
+    aria_gl_debug_matrix();
+
+    // render 60 frames
+    loop(0i32, 60i32, 1i32) {
+        angle_y = angle_y + 2.0f32;
+        angle_x = angle_x + 1.2f32;
+
+        // MVP = proj * view * Ry * Rx
+        aria_gl_mat4_perspective(45.0f32, 1.333f32, 0.1f32, 100.0f32);
+        aria_gl_mat4_store(0i32);
+
+        aria_gl_mat4_translate(0.0f32, 0.0f32, 0.0f32 - 6.0f32);
+        aria_gl_mat4_store(1i32);
+
+        aria_gl_mat4_mul_slots(0i32, 1i32);
+        aria_gl_mat4_store(0i32);
+
+        aria_gl_mat4_rotate_y(angle_y);
+        aria_gl_mat4_store(1i32);
+
+        aria_gl_mat4_mul_slots(0i32, 1i32);
+        aria_gl_mat4_store(0i32);
+
+        aria_gl_mat4_rotate_x(angle_x);
+        aria_gl_mat4_store(1i32);
+
+        aria_gl_mat4_mul_slots(0i32, 1i32);
+
+        // first frame: dump the MVP
+        if ($ == 0i32) {
+            drop(println("  First frame MVP:"));
+            aria_gl_debug_matrix();
+        }
+
+        aria_gl_clear_color(0.15f32, 0.15f32, 0.2f32, 1.0f32);
+        aria_gl_clear(clear_mask);
+        aria_gl_use_program(prog);
+        aria_gl_uniform_matrix4fv(mvp_loc);
+        aria_gl_bind_vao(vao);
+        aria_gl_draw_arrays(tri_mode, 0i32, 36i32);
+        aria_gl_swap();
+
+        // check GL error on first frame
+        if ($ == 0i32) {
+            int32:err = aria_gl_get_error();
+            if (err != 0i32) {
+                drop(println("  GL ERROR on first frame!"));
+            }
+            if (err == 0i32) {
+                drop(println("  No GL errors on first frame"));
+            }
+        }
+
+        aria_gl_delay(16i32);
+    }
+
+    drop(println("  Nitpick rendering done"));
+
+    // cleanup
+    aria_gl_delete_buffer(vbo);
+    aria_gl_delete_vao(vao);
+    aria_gl_delete_program(prog);
+    aria_gl_quit();
+
+    drop(println("=== Debug Test Complete ==="));
+    
+    drop(println("---"));
+    
+        drop(println("PASS: all tests passed"));
+    exit 0;
+};

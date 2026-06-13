@@ -1,0 +1,8 @@
+[package]
+name = "nitpick-nn"
+version = "0.1.0"
+description = "Native Neural Network framework built on nitpick-matrix"
+
+[dependencies]
+nitpick-matrix = "0.11"
+nitpick-math = "0.1"

@@ -1,0 +1,16 @@
+[package]
+name = "nitpick-jwt"
+version = "0.1.0"
+description = "JSON Web Token library for Nitpick"
+authors = ["Antigravity"]
+
+[dependencies]
+nitpick-crypto = "path:../nitpick-crypto"
+nitpick-base64 = "path:../nitpick-base64"
+nitpick-json = "path:../nitpick-json"
+nitpick-str = "path:../nitpick-str"
+
+[build]
+type = "library"
+entry = "src/nitpick_jwt.npk"
+link_libraries = ["nitpick_jwt_shim", "nitpick_base64_shim", "nitpick_crypto_shim"]

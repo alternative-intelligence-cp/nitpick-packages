@@ -1,0 +1,6 @@
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+pub func:main = int32() {
+    wild float64->:p;
+    exit 0;
+};

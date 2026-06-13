@@ -1,0 +1,440 @@
+// nitpick_tui.npk — Text User Interface Toolkit V3
+
+use "nitpick_display.npk".*;
+use "nitpick_input.npk".*;
+use "nitpick_str.npk".*;
+
+extern "nitpick_input" {
+    func:nitpick_input_enter_raw = int32();
+    func:nitpick_input_exit_raw  = int32();
+    func:nitpick_input_read_key  = int32();
+}
+extern "nitpick_display" {
+    func:nitpick_display_box     = int32(int32:col, int32:row, int32:fg, int32:bg, int32:w, int32:h);
+    func:nitpick_display_hline   = int32(int32:col, int32:row, int32:fg, int32:bg, int32:ch, int32:w);
+    func:nitpick_display_vline   = int32(int32:col, int32:row, int32:fg, int32:bg, int32:ch, int32:h);
+    func:nitpick_display_flush   = int32();
+    func:nitpick_display_clear   = int32();
+    func:nitpick_display_move    = int32(int32:col, int32:row);
+    func:nitpick_display_set_fg  = int32(int32:c);
+    func:nitpick_display_set_bg  = int32(int32:c);
+    func:nitpick_display_set_reverse = int32(int32:on);
+    func:nitpick_display_hide_cursor = int32();
+    func:nitpick_display_show_cursor = int32();
+    func:nitpick_display_alt_screen  = int32(int32:on);
+}
+
+pub struct:Widget = {
+    int32:type;       // 1=Panel, 2=Label, 3=Button, 4=InputBox, 5=Checkbox, 6=ProgressBar, 7=Tabs, 8=TextArea, 9=Slider, 10=ListBox, 11=Dropdown, 12=Dialog, 13=TreeView, 14=DataGrid
+    int32:id;
+    int32:x;
+    int32:y;
+    int32:w;
+    int32:h;
+    string:text;
+    int32:fg;
+    int32:bg;
+    int32:focused;
+    int32:value;      // Extensible numeric state (progress, toggle, scroll_y, active_tab)
+};
+
+pub struct:LayoutCursor = {
+    int32:x;
+    int32:y;
+    int32:start_x;
+    int32:padding;
+    int32:max_h_in_row;
+};
+
+// --- Layout Helpers ---
+
+pub func:Layout_create = LayoutCursor(int32:x, int32:y, int32:pad) {
+    LayoutCursor:cur;
+    cur.x = x;
+    cur.y = y;
+    cur.start_x = x;
+    cur.padding = pad;
+    cur.max_h_in_row = 0i32;
+    pass cur;
+};
+
+pub func:Layout_vbox_add = Widget(LayoutCursor:cur, Widget:wdg) {
+    Widget:pos = wdg;
+    pos.x = cur.x;
+    pos.y = cur.y;
+    cur.y = cur.y + pos.h + cur.padding;
+    cur.x = cur.start_x; // Reset x on vbox add
+    cur.max_h_in_row = 0i32;
+    pass pos;
+};
+
+pub func:Layout_hbox_add = Widget(LayoutCursor:cur, Widget:wdg) {
+    Widget:pos = wdg;
+    pos.x = cur.x;
+    pos.y = cur.y;
+    cur.x = cur.x + pos.w + cur.padding;
+    if (pos.h > cur.max_h_in_row) {
+        cur.max_h_in_row = pos.h;
+    }
+    pass pos;
+};
+
+pub func:Layout_newline = NIL(LayoutCursor:cur) {
+    cur.x = cur.start_x;
+    cur.y = cur.y + cur.max_h_in_row + cur.padding;
+    cur.max_h_in_row = 0i32;
+    pass NIL;
+};
+
+// --- Constructors ---
+
+pub func:Tui_panel = Widget(int32:x, int32:y, int32:w, int32:h, int32:fg, int32:bg) {
+    Widget:wdg; wdg.type = 1i32;
+    wdg.x = x; wdg.y = y; wdg.w = w; wdg.h = h;
+    wdg.text = ""; wdg.fg = fg; wdg.bg = bg;
+    wdg.focused = 0i32; wdg.value = 0i32; pass wdg;
+};
+
+pub func:Tui_label = Widget(int32:x, int32:y, string:text, int32:fg, int32:bg) {
+    Widget:wdg; wdg.type = 2i32;
+    wdg.x = x; wdg.y = y; wdg.w = 0i32; wdg.h = 1i32;
+    wdg.text = text; wdg.fg = fg; wdg.bg = bg;
+    wdg.focused = 0i32; wdg.value = 0i32; pass wdg;
+};
+
+pub func:Tui_button = Widget(int32:x, int32:y, int32:w, string:text) {
+    Widget:wdg; wdg.type = 3i32;
+    wdg.x = x; wdg.y = y; wdg.w = w; wdg.h = 1i32;
+    wdg.text = text; wdg.fg = 7i32; wdg.bg = 4i32;
+    wdg.focused = 0i32; wdg.value = 0i32; pass wdg;
+};
+
+pub func:Tui_input = Widget(int32:x, int32:y, int32:w, string:text) {
+    Widget:wdg; wdg.type = 4i32;
+    wdg.x = x; wdg.y = y; wdg.w = w; wdg.h = 1i32;
+    wdg.text = text; wdg.fg = 7i32; wdg.bg = 0i32;
+    wdg.focused = 0i32; wdg.value = 0i32; pass wdg;
+};
+
+pub func:Tui_checkbox = Widget(int32:x, int32:y, string:text, int32:checked) {
+    Widget:wdg; wdg.type = 5i32;
+    wdg.x = x; wdg.y = y; wdg.w = 0i32; wdg.h = 1i32;
+    wdg.text = text; wdg.fg = 7i32; wdg.bg = 0i32;
+    wdg.focused = 0i32; wdg.value = checked; pass wdg;
+};
+
+pub func:Tui_progress = Widget(int32:x, int32:y, int32:w, int32:percent) {
+    Widget:wdg; wdg.type = 6i32;
+    wdg.x = x; wdg.y = y; wdg.w = w; wdg.h = 1i32;
+    wdg.text = ""; wdg.fg = 2i32; wdg.bg = 0i32;
+    wdg.focused = 0i32; wdg.value = percent; pass wdg;
+};
+
+pub func:Tui_tabs = Widget(int32:x, int32:y, string:text, int32:active_tab) {
+    Widget:wdg; wdg.type = 7i32;
+    wdg.x = x; wdg.y = y; wdg.w = 0i32; wdg.h = 1i32;
+    wdg.text = text; wdg.fg = 7i32; wdg.bg = 0i32;
+    wdg.focused = 0i32; wdg.value = active_tab; pass wdg;
+};
+
+pub func:Tui_textarea = Widget(int32:x, int32:y, int32:w, int32:h, string:text) {
+    Widget:wdg; wdg.type = 8i32;
+    wdg.x = x; wdg.y = y; wdg.w = w; wdg.h = h;
+    wdg.text = text; wdg.fg = 7i32; wdg.bg = 0i32;
+    wdg.focused = 0i32; wdg.value = 0i32; pass wdg; // value = scroll_y
+};
+
+pub func:Tui_slider = Widget(int32:x, int32:y, int32:w, int32:val) {
+    Widget:wdg; wdg.type = 9i32;
+    wdg.x = x; wdg.y = y; wdg.w = w; wdg.h = 1i32;
+    wdg.text = ""; wdg.fg = 6i32; wdg.bg = 0i32; // Cyan slider
+    wdg.focused = 0i32; wdg.value = val; pass wdg;
+};
+
+pub func:Tui_listbox = Widget(int32:x, int32:y, int32:w, int32:h, string:items, int32:selected) {
+    Widget:wdg; wdg.type = 10i32;
+    wdg.x = x; wdg.y = y; wdg.w = w; wdg.h = h;
+    wdg.text = items; wdg.fg = 7i32; wdg.bg = 0i32;
+    wdg.focused = 0i32; wdg.value = selected; pass wdg;
+};
+
+pub func:Tui_dropdown = Widget(int32:x, int32:y, int32:w, string:items, int32:selected) {
+    Widget:wdg; wdg.type = 11i32;
+    wdg.x = x; wdg.y = y; wdg.w = w; wdg.h = 1i32; 
+    wdg.text = items; wdg.fg = 7i32; wdg.bg = 0i32;
+    wdg.focused = 0i32; wdg.value = selected; pass wdg;
+};
+
+pub func:Tui_dialog = Widget(int32:x, int32:y, int32:w, int32:h, string:title_and_text, int32:style) {
+    Widget:wdg; wdg.type = 12i32;
+    wdg.x = x; wdg.y = y; wdg.w = w; wdg.h = h;
+    wdg.text = title_and_text; wdg.fg = 7i32; wdg.bg = 1i32;
+    wdg.focused = 0i32; wdg.value = style; pass wdg;
+};
+
+pub func:Tui_treeview = Widget(int32:x, int32:y, int32:w, int32:h, string:items, int32:selected) {
+    Widget:wdg; wdg.type = 13i32;
+    wdg.x = x; wdg.y = y; wdg.w = w; wdg.h = h;
+    wdg.text = items; wdg.fg = 7i32; wdg.bg = 0i32;
+    wdg.focused = 0i32; wdg.value = selected; pass wdg;
+};
+
+pub func:Tui_datagrid = Widget(int32:x, int32:y, int32:w, int32:h, string:csv_data, int32:selected_row) {
+    Widget:wdg; wdg.type = 14i32;
+    wdg.x = x; wdg.y = y; wdg.w = w; wdg.h = h;
+    wdg.text = csv_data; wdg.fg = 7i32; wdg.bg = 0i32;
+    wdg.focused = 0i32; wdg.value = selected_row; pass wdg;
+};
+
+// --- Rendering ---
+
+pub func:Tui_draw_widget = NIL(Widget:wdg) {
+    
+    if (wdg.type == 1i32) {
+        nitpick_display_box(wdg.x, wdg.y, wdg.fg, wdg.bg, wdg.w, wdg.h);
+    }
+    
+    if (wdg.type == 2i32) {
+        nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
+        nitpick_display_move(wdg.x, wdg.y); print(wdg.text);
+    }
+    
+    if (wdg.type == 3i32) {
+        if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
+        nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
+        nitpick_display_move(wdg.x, wdg.y);
+        print("[ "); print(wdg.text); print(" ]");
+        if (wdg.focused == 1i32) { nitpick_display_set_reverse(0i32); }
+    }
+    
+    if (wdg.type == 4i32) {
+        nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
+        if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
+        nitpick_display_move(wdg.x, wdg.y); print(wdg.text);
+        if (wdg.focused == 1i32) { nitpick_display_set_reverse(0i32); }
+    }
+    
+    if (wdg.type == 5i32) {
+        if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
+        nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
+        nitpick_display_move(wdg.x, wdg.y);
+        if (wdg.value == 1i32) { print("[X] "); }
+        if (wdg.value == 0i32) { print("[ ] "); }
+        print(wdg.text);
+        if (wdg.focused == 1i32) { nitpick_display_set_reverse(0i32); }
+    }
+    
+    if (wdg.type == 6i32) {
+        nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
+        nitpick_display_move(wdg.x, wdg.y); print("[");
+        int32:filled = (wdg.w - 2i32) * wdg.value / 100i32;
+        int32:empty = (wdg.w - 2i32) - filled;
+        int32:i = 0i32;
+        while (i < filled) { print("#"); i = i + 1i32; } i = 0i32;
+        while (i < empty) { print("."); i = i + 1i32; }
+        print("]");
+    }
+
+    if (wdg.type == 7i32) {
+        // Tabs: We expect `wdg.text` to be "Tab1|Tab2|Tab3" 
+        // But for simplicity, we will just print `wdg.text` and let the user format it if we don't have split!
+        // Wait, to highlight the active tab, we need to know the bounds.
+        // Let's just do a simple generic rendering: The user passes "[ Tab 1 ] [ Tab 2 ]" and we just render it.
+        // If we want active highlighting, we'd need string processing. For now, let's just print it.
+        if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
+        nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
+        nitpick_display_move(wdg.x, wdg.y); print(wdg.text);
+        if (wdg.focused == 1i32) { nitpick_display_set_reverse(0i32); }
+    }
+
+    if (wdg.type == 8i32) {
+        // TextArea: Draw box, then print text inside.
+        // Since we don't have substring lines easily, we will just print `wdg.text` as a single line for demo.
+        nitpick_display_box(wdg.x, wdg.y, wdg.fg, wdg.bg, wdg.w, wdg.h);
+        nitpick_display_move(wdg.x + 2i32, wdg.y + 2i32);
+        if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
+        print(wdg.text);
+        if (wdg.focused == 1i32) { nitpick_display_set_reverse(0i32); }
+    }
+
+    if (wdg.type == 9i32) {
+        // Slider
+        nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
+        if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
+        nitpick_display_move(wdg.x, wdg.y); print("[");
+        int32:filled = (wdg.w - 2i32) * wdg.value / 100i32;
+        int32:empty = (wdg.w - 2i32) - filled - 1i32;
+        int32:i = 0i32;
+        while (i < filled) { print("-"); i = i + 1i32; }
+        print("O"); i = 0i32;
+        while (i < empty) { print("-"); i = i + 1i32; }
+        print("]");
+        if (wdg.focused == 1i32) { nitpick_display_set_reverse(0i32); }
+    }
+
+    if (wdg.type == 10i32) {
+        // ListBox
+        nitpick_display_box(wdg.x, wdg.y, wdg.fg, wdg.bg, wdg.w, wdg.h);
+        int64:count = raw str_token_count(wdg.text, "|\0");
+        int64:max_vis = wdg.h - 2i32;
+        int64:sel = wdg.value;
+        int64:start_idx = 0i64;
+        if (sel >= max_vis) { start_idx = sel - max_vis + 1i64; }
+        
+        int64:i = 0i64;
+        while (i < max_vis) {
+            int64:idx = start_idx + i;
+            if (idx < count) {
+                if (idx == sel) {
+                    if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
+                    else { nitpick_display_set_fg(0i32); nitpick_display_set_bg(wdg.fg); }
+                } else {
+                    nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
+                }
+                nitpick_display_move(wdg.x + 1i32, wdg.y + 1i32 + @cast<int32>(i));
+                string:item = raw str_token(wdg.text, "|\0", idx);
+                print(" "); print(item); print(" ");
+                nitpick_display_set_reverse(0i32);
+            }
+            i = i + 1i64;
+        }
+    }
+
+    if (wdg.type == 11i32) {
+        // Dropdown
+        int32:expanded = wdg.value / 1000i32;
+        int32:sel = wdg.value - (expanded * 1000i32);
+        
+        string:selected_text = raw str_token(wdg.text, "|\0", @cast<int64>(sel));
+        if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
+        nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
+        nitpick_display_move(wdg.x, wdg.y);
+        print("[ "); print(selected_text); print("  v ]");
+        if (wdg.focused == 1i32) { nitpick_display_set_reverse(0i32); }
+        
+        if (expanded == 1i32) {
+            int64:count = raw str_token_count(wdg.text, "|\0");
+            nitpick_display_box(wdg.x, wdg.y + 1i32, wdg.fg, wdg.bg, wdg.w, @cast<int32>(count) + 2i32);
+            int64:i = 0i64;
+            while (i < count) {
+                if (i == @cast<int64>(sel)) { nitpick_display_set_reverse(1i32); }
+                nitpick_display_move(wdg.x + 1i32, wdg.y + 2i32 + @cast<int32>(i));
+                print(raw str_token(wdg.text, "|\0", i));
+                nitpick_display_set_reverse(0i32);
+                i = i + 1i64;
+            }
+        }
+    }
+
+    if (wdg.type == 12i32) {
+        // Dialog
+        nitpick_display_box(wdg.x, wdg.y, wdg.fg, wdg.bg, wdg.w, wdg.h);
+        nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
+        
+        string:title = raw str_token(wdg.text, "|\0", 0i64);
+        string:msg = raw str_token(wdg.text, "|\0", 1i64);
+        
+        nitpick_display_move(wdg.x + 2i32, wdg.y); print("[ "); print(title); print(" ]");
+        nitpick_display_move(wdg.x + 2i32, wdg.y + 2i32); print(msg);
+        
+        // Render buttons at bottom depending on style
+        int32:btn_y = wdg.y + wdg.h - 2i32;
+        if (wdg.value == 0i32) {
+            // OK
+            nitpick_display_move(wdg.x + wdg.w / 2i32 - 3i32, btn_y);
+            if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
+            print("[ OK ]");
+            nitpick_display_set_reverse(0i32);
+        } else {
+            // OK / Cancel
+            nitpick_display_move(wdg.x + 2i32, btn_y);
+            if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
+            print("[ OK ]");
+            nitpick_display_set_reverse(0i32);
+            nitpick_display_move(wdg.x + wdg.w - 12i32, btn_y);
+            print("[ Cancel ]");
+        }
+    }
+
+    if (wdg.type == 13i32) {
+        // TreeView
+        nitpick_display_box(wdg.x, wdg.y, wdg.fg, wdg.bg, wdg.w, wdg.h);
+        int64:count = raw str_token_count(wdg.text, "|\0");
+        int64:max_vis = wdg.h - 2i32;
+        int64:sel = wdg.value;
+        
+        int64:i = 0i64;
+        while (i < max_vis) {
+            if (i < count) {
+                if (i == sel) {
+                    if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
+                    else { nitpick_display_set_fg(0i32); nitpick_display_set_bg(wdg.fg); }
+                } else {
+                    nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
+                }
+                nitpick_display_move(wdg.x + 1i32, wdg.y + 1i32 + @cast<int32>(i));
+                string:item = raw str_token(wdg.text, "|\0", i);
+                
+                // Depth is denoted by leading '-' (e.g. "--file.txt")
+                // We'll just print it directly for now, which already creates tree visual
+                print(" "); print(item); print(" ");
+                nitpick_display_set_reverse(0i32);
+            }
+            i = i + 1i64;
+        }
+    }
+
+    if (wdg.type == 14i32) {
+        // DataGrid
+        nitpick_display_box(wdg.x, wdg.y, wdg.fg, wdg.bg, wdg.w, wdg.h);
+        int64:row_count = raw str_token_count(wdg.text, "|\0");
+        int64:sel = wdg.value;
+        
+        int64:r = 0i64;
+        while (r < row_count) {
+            string:row_data = raw str_token(wdg.text, "|\0", r);
+            if (r == sel) {
+                if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
+                else { nitpick_display_set_fg(0i32); nitpick_display_set_bg(wdg.fg); }
+            } else {
+                nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
+            }
+            
+            nitpick_display_move(wdg.x + 1i32, wdg.y + 1i32 + @cast<int32>(r));
+            
+            int64:col_count = raw str_token_count(row_data, ",\0");
+            int64:c = 0i64;
+            while (c < col_count) {
+                string:cell = raw str_token(row_data, ",\0", c);
+                print(cell);
+                if (c < col_count - 1i64) {
+                    print(" | ");
+                }
+                c = c + 1i64;
+            }
+            
+            nitpick_display_set_reverse(0i32);
+            r = r + 1i64;
+        }
+    }
+
+    pass NIL;
+};
+
+pub func:Tui_init = NIL() {
+    nitpick_display_alt_screen(1i32);
+    nitpick_display_hide_cursor();
+    nitpick_input_enter_raw();
+    nitpick_display_clear();
+    pass NIL;
+};
+
+pub func:Tui_shutdown = NIL() {
+    nitpick_input_exit_raw();
+    nitpick_display_set_fg(7i32);
+    nitpick_display_set_bg(0i32);
+    nitpick_display_clear();
+    nitpick_display_show_cursor();
+    nitpick_display_alt_screen(0i32);
+    pass NIL;
+};

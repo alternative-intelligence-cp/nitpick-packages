@@ -1,19 +1,29 @@
 #!/bin/bash
 # Test all Nitpick packages
-# Requires: npkc in PATH (or ariac as legacy alias)
+# Requires: npkc in PATH (or nitpickc as legacy alias)
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGES_DIR="$SCRIPT_DIR/../packages"
 
-# v0.35.7: prefer npkc; fall back to ariac for legacy compatibility
+# Collect all shim directories
+shim_flags=""
+for pkg_dir in "$PACKAGES_DIR"/nitpick-*; do
+    shim_dir="$pkg_dir/shim"
+    if [ -d "$shim_dir" ]; then
+        shim_flags="$shim_flags -L$shim_dir"
+        export LD_LIBRARY_PATH="$shim_dir:$LD_LIBRARY_PATH"
+    fi
+done
+
+# v0.35.7: prefer npkc; fall back to nitpickc for legacy compatibility
 if command -v npkc &>/dev/null; then
     NPKC_BIN=npkc
-elif command -v ariac &>/dev/null; then
-    NPKC_BIN=ariac
+elif command -v nitpickc &>/dev/null; then
+    NPKC_BIN=nitpickc
 else
-    echo "ERROR: neither npkc nor ariac found in PATH"
+    echo "ERROR: neither npkc nor nitpickc found in PATH"
     exit 1
 fi
 
@@ -22,7 +32,7 @@ FAIL=0
 SKIP=0
 FAILED_PKGS=""
 
-for pkg_dir in "$PACKAGES_DIR"/*/; do
+for pkg_dir in "$PACKAGES_DIR"/nitpick-*/; do
     pkg_name=$(basename "$pkg_dir")
     test_dir="$pkg_dir/tests"
     
@@ -32,14 +42,68 @@ for pkg_dir in "$PACKAGES_DIR"/*/; do
         continue
     fi
     
+    server_pid=""
+    if [ -f "$test_dir/server.py" ]; then
+        python3 "$test_dir/server.py" >/dev/null 2>&1 &
+        server_pid=$!
+        sleep 1
+    fi
+    
     found_test=0
-    for test_file in "$test_dir"/test_*.aria "$test_dir"/*_test.aria "$test_dir"/test_*.npk "$test_dir"/*_test.npk; do
+    for test_file in "$test_dir"/test_*.npk "$test_dir"/*_test.npk "$test_dir"/test_*.npk "$test_dir"/*_test.npk; do
         [ -f "$test_file" ] || continue
         found_test=1
         test_name=$(basename "$test_file")
         
-        if $NPKC_BIN "$test_file" -I "$pkg_dir/src" -o /tmp/aria_test_bin 2>/dev/null; then
-            if /tmp/aria_test_bin 2>/dev/null; then
+        # Parse link libraries from nitpick-package.toml
+        extra_flags=""
+        if [ -f "$pkg_dir/nitpick-package.toml" ]; then
+            libs=$(grep "^link_libraries" "$pkg_dir/nitpick-package.toml" | sed -E 's/.*=\s*\[(.*)\]/\1/' | tr -d '" ' | tr ',' ' ')
+            for lib in $libs; do
+                extra_flags="$extra_flags -l$lib"
+            done
+        fi
+        
+        # Add generic shim paths
+        if [ -n "$shim_flags" ]; then
+            extra_flags="$extra_flags $shim_flags"
+        fi
+
+        # Always link all nitpick-libc standard libraries to fix broken TOML dependencies
+        ARIA_LIBC_SHIM="/home/randy/Workspace/REPOS/nitpick-libc/shim"
+        if [ -d "$ARIA_LIBC_SHIM" ]; then
+            extra_flags="$extra_flags -L$ARIA_LIBC_SHIM"
+            for lib in "$ARIA_LIBC_SHIM"/lib*.a; do
+                if [ -f "$lib" ]; then
+                    libname=$(basename "$lib" | sed 's/^lib//' | sed 's/\.a$//')
+                    if [ "$libname" != "glibc_compat" ]; then
+                        extra_flags="$extra_flags -l$libname"
+                    fi
+                fi
+            done
+        fi
+        
+
+        
+        # Auto-link the package's own shim if it exists
+        pkg_shim_name=$(echo "$pkg_name" | sed 's/-/_/g')_shim
+        if [ -f "$pkg_dir/shim/lib${pkg_shim_name}.so" ] || [ -f "$pkg_dir/shim/lib${pkg_shim_name}.a" ]; then
+            extra_flags="$extra_flags -L$pkg_dir/shim -l${pkg_shim_name}"
+        fi
+
+        # Provide nitpick-libc
+        libc_libs=""
+        for lib in $PACKAGES_DIR/../nitpick-libc/shim/libnitpick_libc_*.a; do
+            if [ -f "$lib" ]; then
+                libname=$(basename "$lib" | sed 's/^lib//' | sed 's/\.a$//')
+                libc_libs="$libc_libs -l$libname"
+            fi
+        done
+        extra_flags="$extra_flags -L$PACKAGES_DIR/../nitpick-libc/shim $libc_libs"
+
+        bin_name="/tmp/test-${pkg_name}"
+        if $NPKC_BIN "$test_file" -I "$pkg_dir/src" $extra_flags -o "$bin_name" > /tmp/compile_${pkg_name}.log 2>&1; then
+            if "$bin_name" 2>/dev/null; then
                 echo "PASS  $pkg_name/$test_name"
                 PASS=$((PASS + 1))
             else
@@ -52,12 +116,16 @@ for pkg_dir in "$PACKAGES_DIR"/*/; do
             FAIL=$((FAIL + 1))
             FAILED_PKGS="$FAILED_PKGS $pkg_name"
         fi
-        rm -f /tmp/aria_test_bin
+        rm -f /tmp/nitpick_test_bin
     done
     
     if [ "$found_test" -eq 0 ]; then
         echo "SKIP  $pkg_name (no test files)"
         SKIP=$((SKIP + 1))
+    fi
+    
+    if [ -n "$server_pid" ]; then
+        kill "$server_pid" 2>/dev/null || true
     fi
 done
 

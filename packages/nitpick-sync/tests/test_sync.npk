@@ -1,0 +1,104 @@
+use "nitpick_test.npk".*;
+use "nitpick_sync.npk".*;
+use "thread.npk".*;
+
+func:wg_worker = NIL(int64:wg) {
+    NIL:ign1 = raw Thread.sleep_ms(10i64);
+    int32:ign2 = raw WaitGroup.done(wg);
+    pass NIL;
+};
+
+func:test_waitgroup = NIL() {
+    int64:wg = raw WaitGroup.create();
+    if (wg != 0i64) {
+        NIL:ign0 = raw test_assert("WaitGroup.create != 0", 1i32);
+    } else {
+        NIL:ign0 = raw test_assert("WaitGroup.create != 0", 0i32);
+    }
+
+    int32:ign1 = raw WaitGroup.add(wg, 3i64);
+
+    int64:ign2 = raw Thread.spawn(@wg_worker, wg);
+    int64:ign3 = raw Thread.spawn(@wg_worker, wg);
+    int64:ign4 = raw Thread.spawn(@wg_worker, wg);
+
+    int32:ign5 = raw WaitGroup.wait(wg);
+    int32:ignj2 = raw Thread.join(ign2);
+    int32:ignj3 = raw Thread.join(ign3);
+    int32:ignj4 = raw Thread.join(ign4);
+    
+    int32:ign6 = raw WaitGroup.destroy(wg);
+    NIL:ign7 = raw test_assert("WaitGroup done successfully", 1i32);
+    pass NIL;
+};
+
+func:latch_worker = NIL(int64:latch) {
+    NIL:ign1 = raw Thread.sleep_ms(10i64);
+    int32:ign2 = raw CountDownLatch.count_down(latch);
+    pass NIL;
+};
+
+func:test_latch = NIL() {
+    int64:latch = raw CountDownLatch.create(2i64);
+    if (latch != 0i64) {
+        NIL:ign0 = raw test_assert("CountDownLatch.create != 0", 1i32);
+    } else {
+        NIL:ign0 = raw test_assert("CountDownLatch.create != 0", 0i32);
+    }
+
+    int64:ign1 = raw Thread.spawn(@latch_worker, latch);
+    int64:ign2 = raw Thread.spawn(@latch_worker, latch);
+
+    int32:ign3 = raw CountDownLatch.wait(latch);
+    int32:ignj1 = raw Thread.join(ign1);
+    int32:ignj2 = raw Thread.join(ign2);
+    
+    int32:ign4 = raw CountDownLatch.destroy(latch);
+    NIL:ign5 = raw test_assert("CountDownLatch done successfully", 1i32);
+    pass NIL;
+};
+
+func:sem_worker = NIL(int64:sem) {
+    int32:ign1 = raw Semaphore.down(sem);
+    NIL:ign2 = raw Thread.sleep_ms(5i64);
+    int32:ign3 = raw Semaphore.up(sem);
+    pass NIL;
+};
+
+func:test_semaphore = NIL() {
+    int64:sem = raw Semaphore.create(2i64);
+    if (sem != 0i64) {
+        NIL:ign0 = raw test_assert("Semaphore.create != 0", 1i32);
+    } else {
+        NIL:ign0 = raw test_assert("Semaphore.create != 0", 0i32);
+    }
+
+    int64:t1 = raw Thread.spawn(@sem_worker, sem);
+    int64:t2 = raw Thread.spawn(@sem_worker, sem);
+    int64:t3 = raw Thread.spawn(@sem_worker, sem);
+    int64:t4 = raw Thread.spawn(@sem_worker, sem);
+
+    int32:ign1 = raw Thread.join(t1);
+    int32:ign2 = raw Thread.join(t2);
+    int32:ign3 = raw Thread.join(t3);
+    int32:ign4 = raw Thread.join(t4);
+    
+    int32:ign5 = raw Semaphore.destroy(sem);
+    NIL:ign6 = raw test_assert("Semaphore done successfully", 1i32);
+    pass NIL;
+};
+
+pub func:main = int32() {
+    NIL:ign0 = raw test_begin("nitpick-sync tests");
+    
+    NIL:ign1 = raw test_waitgroup();
+    NIL:ign2 = raw test_latch();
+    NIL:ign3 = raw test_semaphore();
+    
+    int32:ign = raw test_end();
+    return 0i32;
+};
+
+pub func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

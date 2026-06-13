@@ -1,0 +1,20 @@
+extern func:malloc = wild float64*(int64:size);
+extern func:free = void(wild float64*:ptr);
+extern func:println_f64 = void(float64:v);
+
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:takes_ptr = NIL(wild float64->:ptr) {
+    ptr[14i64] = 42.0;
+    pass NIL;
+};
+
+pub func:main = int32() {
+    wild float64*:raw_ptr = malloc(15i64 * 8i64);
+    wild float64->:nodes = @cast_unchecked<wild float64->>(raw_ptr);
+    nodes[0i64] = 0.0;
+    drop(takes_ptr(nodes));
+    println_f64(nodes[14i64]);
+    free(raw_ptr);
+    exit 0;
+};

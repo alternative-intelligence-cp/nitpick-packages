@@ -1,0 +1,17 @@
+[package]
+name = "nitpick-websocket"
+version = "0.12.2"
+description = "WebSocket protocol layer — handshake builder, state tracking, frame type identification"
+license = "MIT"
+
+[build]
+type = "library"
+entry = "src/nitpick_websocket.npk"
+link_libraries = ["nitpick_websocket_shim", "nitpick_crypto_shim", "nitpick_base64_shim"]
+
+[dependencies]
+nitpick-crypto = "path:../nitpick-crypto"
+nitpick-base64 = "path:../nitpick-base64"
+
+[metadata]
+categories = ["network", "protocol"]

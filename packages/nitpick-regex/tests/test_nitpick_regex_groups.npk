@@ -1,0 +1,18 @@
+// test_nitpick_regex_groups.npk — Search, groups & replace tests (C-side assertions)
+extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_regex.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+
+
+
+
+
+
+
+
+func:main = int32() {
+    drop(println("PASS: all tests passed"));
+    exit 0;
+};

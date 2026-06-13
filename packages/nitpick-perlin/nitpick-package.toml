@@ -1,0 +1,13 @@
+[package]
+name = "nitpick-perlin"
+version = "0.1.0"
+authors = ["Nitpick Language Project"]
+license = "MIT"
+description = "Procedural noise generation for Nitpick — Perlin and Simplex noise"
+keywords = ["noise", "perlin", "simplex", "procedural", "generation", "math"]
+categories = ["math", "generation"]
+
+[build]
+type = "shim"
+entry = "src/nitpick_perlin.npk"
+link_libraries = ["nitpick_perlin_shim"]

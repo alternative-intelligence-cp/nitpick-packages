@@ -1,0 +1,13 @@
+{
+  "gemini": {
+    "task": "IDLE",
+    "claimed": [
+      "/home/randy/Workspace/REPOS/aria-packages/packages/hex-shell"
+    ]
+  },
+  "copilot": {
+    "task": "IDLE",
+    "claimed": []
+  },
+  "notes": []
+}

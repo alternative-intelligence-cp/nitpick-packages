@@ -1,0 +1,13 @@
+[package]
+name = "nitpick-ftp"
+version = "0.12.2"
+description = "FTP protocol command builder and reply parser"
+license = "MIT"
+
+[build]
+type = "pure"
+
+[dependencies]
+
+[metadata]
+categories = ["network", "protocol"]

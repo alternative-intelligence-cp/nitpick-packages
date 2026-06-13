@@ -1,0 +1,12 @@
+[package]
+name = "nitpick-color"
+version = "0.2.0"
+authors = ["Nitpick Language Project"]
+license = "MIT"
+description = "RGBA color packing, unpacking, and pixel transforms for Nitpick"
+keywords = ["color", "rgba", "pixel", "graphics", "uint64"]
+categories = ["graphics", "utilities"]
+
+[build]
+type = "library"
+entry = "src/nitpick_color.npk"

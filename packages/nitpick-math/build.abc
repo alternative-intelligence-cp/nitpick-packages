@@ -1,0 +1,27 @@
+# build.abc — nitpick-math package
+#
+# Targets:
+#   nitpick-math       — compiled library (ariac -c → .o → .a)
+#                     for downstream packages that want a prebuilt .a
+#   test-nitpick-math  — test binary; inlines src via `use`, links -lm directly
+
+[project]
+name = "nitpick-math"
+version = "0.1.0"
+compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
+
+# Precompiled library target (for downstream consumers)
+[target.nitpick-math]
+type = "library"
+sources = ["src/nitpick_math.npk"]
+deps = []
+flags = []
+
+# Test binary — uses `use "../src/nitpick_math.npk".*;` to include source inline
+# so it only needs -lm at link time, not -lnitpick-math
+[target.test-nitpick-math]
+type = "binary"
+sources = ["tests/test_nitpick_math.npk"]
+deps = []
+flags = []
+link_libraries = ["m"]

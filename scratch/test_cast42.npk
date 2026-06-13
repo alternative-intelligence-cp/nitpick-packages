@@ -1,0 +1,14 @@
+extern func:println_f64 = void(float64:v);
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:takes_ptr = NIL(wild float64->:ptr) {
+    ptr[1i64] = 42.0;
+    pass NIL;
+};
+
+pub func:main = int32() {
+    string:s = "12345678901234567890";
+    wild float64->:ptr = @cast_unchecked<float64->>(s);
+    drop(takes_ptr(ptr));
+    exit 0;
+};

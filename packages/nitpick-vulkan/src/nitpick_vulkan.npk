@@ -1,0 +1,43 @@
+// nitpick_vulkan.npk — Simplified Vulkan bindings for Nitpick
+//
+// Provides a helper-based gateway to Vulkan instance and device creation.
+// Requires: libnitpick_vulkan_shim.so + libvulkan.so
+
+extern "nitpick_vulkan_shim" {
+    func:nitpick_vk_init_instance = int32(string:app_name);
+    func:nitpick_vk_pick_physical_device = int32();
+    func:nitpick_vk_get_device_name = string();
+    func:nitpick_vk_create_logical_device = int32();
+    func:nitpick_vk_cleanup = void();
+    func:nitpick_vk_get_error = string();
+}
+
+pub func:vk_init_instance = int32(string:app_name) {
+    int32:r = nitpick_vk_init_instance(app_name);
+    pass(r);
+};
+
+pub func:vk_pick_physical_device = int32() {
+    int32:r = nitpick_vk_pick_physical_device();
+    pass(r);
+};
+
+pub func:vk_get_device_name = string() {
+    string:r = nitpick_vk_get_device_name();
+    pass(r);
+};
+
+pub func:vk_create_logical_device = int32() {
+    int32:r = nitpick_vk_create_logical_device();
+    pass(r);
+};
+
+pub func:vk_cleanup = NIL() {
+    nitpick_vk_cleanup();
+    pass(NIL);
+};
+
+pub func:vk_get_error = string() {
+    string:r = nitpick_vk_get_error();
+    pass(r);
+};

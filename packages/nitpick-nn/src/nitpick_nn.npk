@@ -1,0 +1,104 @@
+// nitpick_nn.npk — Native Neural Network Primitives for Nitpick
+//
+// Built entirely on nitpick-matrix. Provides activation functions 
+// and dense (linear) layers for forward-pass inference.
+
+use "nitpick_matrix.npk".*;
+use "nitpick_math.npk".*;
+
+Type:NN = {
+    // Computes ReLU activation: max(0, x) element-wise
+    func:relu = int64(int64:mat) {
+        int64:r = raw Matrix.rows(mat);
+        int64:c = raw Matrix.cols(mat);
+        int64:out = raw Matrix.create(r, c);
+        
+        int64:i = 0i64;
+        loop(0i64, r, 1i64) {
+            int64:j = 0i64;
+            loop(0i64, c, 1i64) {
+                flt64:v = raw Matrix.get(mat, i, j);
+                if (v < 0.0) {
+                    drop Matrix.set(out, i, j, 0.0);
+                } else {
+                    drop Matrix.set(out, i, j, v);
+                }
+                j += 1i64;
+            }
+            i += 1i64;
+        }
+        pass out;
+    };
+
+    // Computes Sigmoid activation: 1 / (1 + e^-x) element-wise
+    func:sigmoid = int64(int64:mat) {
+        int64:r = raw Matrix.rows(mat);
+        int64:c = raw Matrix.cols(mat);
+        int64:out = raw Matrix.create(r, c);
+        
+        int64:i = 0i64;
+        loop(0i64, r, 1i64) {
+            int64:j = 0i64;
+            loop(0i64, c, 1i64) {
+                flt64:v = raw Matrix.get(mat, i, j);
+                flt64:sig = 1.0 / (1.0 + raw math_exp(0.0 - v));
+                drop Matrix.set(out, i, j, sig);
+                j += 1i64;
+            }
+            i += 1i64;
+        }
+        pass out;
+    };
+
+    // Computes a linear dense layer: (input * weights) + bias
+    // input: N x in_features
+    // weights: in_features x out_features
+    // bias: 1 x out_features (broadcast across all N rows)
+    func:linear = int64(int64:input, int64:weights, int64:bias) {
+        int64:out = raw Matrix.multiply(input, weights);
+        int64:r = raw Matrix.rows(out);
+        int64:c = raw Matrix.cols(out);
+        
+        int64:i = 0i64;
+        loop(0i64, r, 1i64) {
+            int64:j = 0i64;
+            loop(0i64, c, 1i64) {
+                flt64:v = raw Matrix.get(out, i, j);
+                flt64:b = raw Matrix.get(bias, 0i64, j);
+                drop Matrix.set(out, i, j, v + b);
+                j += 1i64;
+            }
+            i += 1i64;
+        }
+        pass out;
+    };
+    
+    // Computes Softmax activation across rows
+    func:softmax = int64(int64:mat) {
+        int64:r = raw Matrix.rows(mat);
+        int64:c = raw Matrix.cols(mat);
+        int64:out = raw Matrix.create(r, c);
+        
+        int64:i = 0i64;
+        loop(0i64, r, 1i64) {
+            flt64:sum_exp = 0.0;
+            // First pass: sum of exponentials
+            int64:j = 0i64;
+            loop(0i64, c, 1i64) {
+                flt64:v = raw Matrix.get(mat, i, j);
+                sum_exp += raw math_exp(v);
+                j += 1i64;
+            }
+            // Second pass: normalize
+            j = 0i64;
+            loop(0i64, c, 1i64) {
+                flt64:v = raw Matrix.get(mat, i, j);
+                flt64:prob = raw math_exp(v) / sum_exp;
+                drop Matrix.set(out, i, j, prob);
+                j += 1i64;
+            }
+            i += 1i64;
+        }
+        pass out;
+    };
+};

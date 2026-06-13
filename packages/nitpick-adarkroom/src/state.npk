@@ -1,0 +1,45 @@
+struct:GameState = {
+    int64:wood;
+    int64:meat;
+    int64:fur;
+    
+    int64:fire_level; // 0: dead, 1: smoldering, 2: flickering, 3: burning, 4: roaring
+    int64:fire_timer; // ticks since last stoked
+    
+    int64:room_temp;  // 0: freezing, 1: cold, 2: warm, 3: hot
+    
+    int64:ticks;
+    int32:stranger_arrived;
+    int32:builder_hut;
+};
+
+pub func:init_state = GameState() {
+    GameState:s;
+    s.wood = 0i64;
+    s.meat = 0i64;
+    s.fur = 0i64;
+    s.fire_level = 0i64;
+    s.fire_timer = 0i64;
+    s.room_temp = 0i64;
+    s.ticks = 0i64;
+    s.stranger_arrived = 0i32;
+    s.builder_hut = 0i32;
+    pass s;
+};
+
+pub func:get_fire_str = string(int64:level) {
+    if (level == 0i64) { pass "dead\0"; }
+    if (level == 1i64) { pass "smoldering\0"; }
+    if (level == 2i64) { pass "flickering\0"; }
+    if (level == 3i64) { pass "burning\0"; }
+    if (level >= 4i64) { pass "roaring\0"; }
+    pass "???\0";
+};
+
+pub func:get_temp_str = string(int64:temp) {
+    if (temp == 0i64) { pass "freezing\0"; }
+    if (temp == 1i64) { pass "cold\0"; }
+    if (temp == 2i64) { pass "warm\0"; }
+    if (temp >= 3i64) { pass "hot\0"; }
+    pass "???\0";
+};

@@ -1,0 +1,18 @@
+# build.abc — nitpick-clamp package
+
+[project]
+name = "nitpick-clamp"
+version = "0.1.0"
+compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
+
+[target.nitpick-clamp]
+type = "library"
+sources = ["src/nitpick_clamp.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-clamp]
+type = "binary"
+sources = ["tests/test_nitpick_clamp.npk"]
+deps = []
+flags = []

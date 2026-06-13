@@ -1,0 +1,39 @@
+// nitpick_template.npk — String template engine for Nitpick
+
+extern "nitpick_template_shim" {
+    func:nitpick_template_set    = int32(string:key, string:value);
+    func:nitpick_template_get    = string(string:key);
+    func:nitpick_template_render = string(string:tmpl);
+    func:nitpick_template_clear  = void();
+    func:nitpick_template_count  = int32();
+    func:nitpick_template_has    = int32(string:key);
+    func:nitpick_template_remove = int32(string:key);
+}
+
+pub func:set = int32(string:key, string:value) {
+    pass(nitpick_template_set(key, value));
+};
+
+pub func:get = string(string:key) {
+    pass(nitpick_template_get(key));
+};
+
+pub func:render = string(string:tmpl) {
+    pass(nitpick_template_render(tmpl));
+};
+
+pub func:clear = void() {
+    nitpick_template_clear();
+};
+
+pub func:count = int32() {
+    pass(nitpick_template_count());
+};
+
+pub func:has = int32(string:key) {
+    pass(nitpick_template_has(key));
+};
+
+pub func:remove = int32(string:key) {
+    pass(nitpick_template_remove(key));
+};

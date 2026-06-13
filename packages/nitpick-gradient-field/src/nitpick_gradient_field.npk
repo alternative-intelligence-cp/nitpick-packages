@@ -1,0 +1,363 @@
+// nitpick_gradient_field.npk — GradientField  (LIB-27)
+//
+// A spatial decision field driven by a single DecisionGradientT emitter.
+// N FieldNodes each carry a weight vector (lean_w, tilt_w) describing
+// how the emitter signal reaches them.  On each projection the emitter's
+// current state is normalised into lean_signal ∈ [-1,+1] and
+// tilt_signal ∈ [-0.5,+0.5] then applied to every node after reset to neutral.
+//
+// Port of gradient_field.py Python POC.
+// Author: Randy Hoggard  Date: March 2026
+//
+// ── nodes (int64, n_nodes * 5 elements) ─────────────────────────────
+//   nitpick_libc_mem_read_f64(nodes, (i*5+0) * 8i64)  pbc     position bias centre    (mutable on project)
+//   nitpick_libc_mem_read_f64(nodes, (i*5+1) * 8i64)  pbm     position bias magnitude (mutable on project)
+//   nitpick_libc_mem_read_f64(nodes, (i*5+2) * 8i64)  lean_w  lean sensitivity  [-1.0 .. +1.0]
+//   nitpick_libc_mem_read_f64(nodes, (i*5+3) * 8i64)  tilt_w  tilt sensitivity  [-1.0 .. +1.0]
+//   nitpick_libc_mem_read_f64(nodes, (i*5+4) * 8i64)  width   DG span
+//
+// ── gf_meta (int64, 6 elements) ───────────────────────────────────────
+//   nitpick_libc_mem_read_i64(gf_meta, (0) * 8i64)  n_nodes
+//   nitpick_libc_mem_read_i64(gf_meta, (1) * 8i64)  capacity       max FieldPatterns retained
+//   nitpick_libc_mem_read_i64(gf_meta, (2) * 8i64)  head           ring-buffer head index
+//   nitpick_libc_mem_read_i64(gf_meta, (3) * 8i64)  count          current pattern count
+//   nitpick_libc_mem_read_i64(gf_meta, (4) * 8i64)  proj_count     total projections performed
+//   nitpick_libc_mem_read_i64(gf_meta, (5) * 8i64)  slot_sz        = 4 + n_nodes*3
+//
+// ── gf_conf (int64, 2 elements) ──────────────────────────────────────
+//   nitpick_libc_mem_read_f64(gf_conf, (0) * 8i64)  base_lean
+//   nitpick_libc_mem_read_f64(gf_conf, (1) * 8i64)  base_tilt
+//
+// ── patterns (int64, capacity * slot_sz elements) ───────────────────
+//   slot[0]           emitter step count at projection  (stored as float64)
+//   slot[1]           emitter lean signal [-1..+1]
+//   slot[2]           emitter tilt signal [-0.5..+0.5]
+//   slot[3]           emitter decision code             (stored as float64)
+//   slot[4 + i*3]     node[i] decision code             (stored as float64)
+//   slot[5 + i*3]     node[i] opt_a
+//   slot[6 + i*3]     node[i] opt_b
+//
+// ── Emitter buffers (caller-owned, passed to gf_drive/gf_project) ────────────
+//   em_dg    int64  5 elements            (DG cell: pbc,pbm,width,pbw,spare)
+//   em_meta  int64    5 elements            (DGT meta: step_count,cap,head,count,depth)
+//   em_snaps int64  emitter_cap * 8 elems (DGT snapshot ring)
+//
+// ── Direction codes for gf_drive ─────────────────────────────────────────────
+//   gf_dir_a    = 0   lean toward option A
+//   gf_dir_unkn = 1   lean toward UNKNOWN (centre)
+//   gf_dir_b    = 2   lean toward option B
+// ─────────────────────────────────────────────────────────────────────────────
+
+use "../../nitpick-decision-t/src/nitpick_decision_t.npk".*;
+
+extern "libc" {
+    func:nitpick_libc_mem_read_f64 = float64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_f64 = int64(int64:ptr, int64:offset, float64:val);
+    func:nitpick_libc_mem_read_i64 = int64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_i64 = int64(int64:ptr, int64:offset, int64:val);
+}
+
+// Private clamp helper (mirrors _dg_clamp in aria_decision_t)
+func:_gf_clamp = float64(float64:v, float64:lo, float64:hi) {
+    if (v < lo) { pass(lo); }
+    if (v > hi) { pass(hi); }
+    pass(v);
+};
+
+// ── Direction constants ───────────────────────────────────────────────────────
+
+pub func:gf_dir_a    = int64() { pass(0i64); };
+pub func:gf_dir_unkn = int64() { pass(1i64); };
+pub func:gf_dir_b    = int64() { pass(2i64); };
+
+// ── Initialisation ────────────────────────────────────────────────────────────
+
+// gf_create: initialise all GF buffers.
+//   All nodes start at neutral: pbc=node_width*0.5, pbm=0.5, lean_w=1, tilt_w=1, width=node_width.
+//   Emitter buffers are NOT touched — caller creates/owns the emitter.
+pub func:gf_create = NIL(int64:nodes, int64:gf_meta,
+                          int64:gf_conf, int64:patterns,
+                          int64:n_nodes, float64:node_width,
+                          float64:base_lean, float64:base_tilt, int64:capacity) {
+    int64:slot_sz = 4i64 + n_nodes * 3i64;
+    drop(nitpick_libc_mem_write_i64(gf_meta, (0i64) * 8i64, n_nodes));
+    drop(nitpick_libc_mem_write_i64(gf_meta, (1i64) * 8i64, capacity));
+    drop(nitpick_libc_mem_write_i64(gf_meta, (2i64) * 8i64, 0i64));
+    drop(nitpick_libc_mem_write_i64(gf_meta, (3i64) * 8i64, 0i64));
+    drop(nitpick_libc_mem_write_i64(gf_meta, (4i64) * 8i64, 0i64));
+    drop(nitpick_libc_mem_write_i64(gf_meta, (5i64) * 8i64, slot_sz));
+    drop(nitpick_libc_mem_write_f64(gf_conf, (0i64) * 8i64, base_lean));
+    drop(nitpick_libc_mem_write_f64(gf_conf, (1i64) * 8i64, base_tilt));
+    // Initialise all nodes to neutral
+    int64:i = 0i64;
+    while (i < n_nodes) {
+        drop(nitpick_libc_mem_write_f64(nodes, (i * 5i64 + 0i64) * 8i64, node_width * 0.5));
+        drop(nitpick_libc_mem_write_f64(nodes, (i * 5i64 + 1i64) * 8i64, 0.5));
+        drop(nitpick_libc_mem_write_f64(nodes, (i * 5i64 + 2i64) * 8i64, 1.0));
+        drop(nitpick_libc_mem_write_f64(nodes, (i * 5i64 + 3i64) * 8i64, 1.0));
+        drop(nitpick_libc_mem_write_f64(nodes, (i * 5i64 + 4i64) * 8i64, node_width));
+        i = i + 1i64;
+    }
+    pass(NIL);
+};
+
+// ── Node setup ────────────────────────────────────────────────────────────────
+
+// gf_set_node: update node i's weight vector (lean_w, tilt_w) and width.
+pub func:gf_set_node = NIL(int64:nodes, int64:i,
+                            float64:lean_w, float64:tilt_w, float64:width) {
+    drop(nitpick_libc_mem_write_f64(nodes, (i * 5i64 + 2i64) * 8i64, lean_w));
+    drop(nitpick_libc_mem_write_f64(nodes, (i * 5i64 + 3i64) * 8i64, tilt_w));
+    drop(nitpick_libc_mem_write_f64(nodes, (i * 5i64 + 4i64) * 8i64, width));
+    pass(NIL);
+};
+
+// ── Node accessors ────────────────────────────────────────────────────────────
+
+pub func:gf_node_pbc    = float64(int64:nodes, int64:i) { pass(nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 0i64) * 8i64)); };
+pub func:gf_node_pbm    = float64(int64:nodes, int64:i) { pass(nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 1i64) * 8i64)); };
+pub func:gf_node_lean_w = float64(int64:nodes, int64:i) { pass(nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 2i64) * 8i64)); };
+pub func:gf_node_tilt_w = float64(int64:nodes, int64:i) { pass(nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 3i64) * 8i64)); };
+pub func:gf_node_width  = float64(int64:nodes, int64:i) { pass(nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 4i64) * 8i64)); };
+
+pub func:gf_node_dec = int64(int64:nodes, int64:i) {
+    float64:pbc = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 0i64) * 8i64);
+    float64:pbm = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 1i64) * 8i64);
+    float64:w   = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 4i64) * 8i64);
+    int64:dc    = raw dg_decision_code(pbc, pbm, w);
+    pass(dc);
+};
+
+pub func:gf_node_opt_a = float64(int64:nodes, int64:i) {
+    float64:pbc = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 0i64) * 8i64);
+    float64:pbm = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 1i64) * 8i64);
+    float64:w   = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 4i64) * 8i64);
+    pass(raw dg_opt_a(pbc, pbm, w));
+};
+
+pub func:gf_node_opt_b = float64(int64:nodes, int64:i) {
+    float64:pbc = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 0i64) * 8i64);
+    float64:pbm = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 1i64) * 8i64);
+    float64:w   = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 4i64) * 8i64);
+    pass(raw dg_opt_b(pbc, pbm, w));
+};
+
+// Internal: write one node's decision + opt_a + opt_b into the patterns ring buffer.
+// Called inside gf_project's per-node loop to prevent LLVM vectorizing across loop body.
+func:_gf_write_node_to_slot = NIL(int64:nodes, int64:patterns,
+                                   int64:base, int64:j) {
+    float64:npbc = nitpick_libc_mem_read_f64(nodes, (j * 5i64 + 0i64) * 8i64);
+    float64:npbm = nitpick_libc_mem_read_f64(nodes, (j * 5i64 + 1i64) * 8i64);
+    float64:nw   = nitpick_libc_mem_read_f64(nodes, (j * 5i64 + 4i64) * 8i64);
+    int64:nd = raw dg_decision_code(npbc, npbm, nw);
+    drop(nitpick_libc_mem_write_f64(patterns, (base + 4i64 + j * 3i64) * 8i64, nd => flt64));
+    drop(nitpick_libc_mem_write_f64(patterns, (base + 5i64 + j * 3i64) * 8i64, raw dg_opt_a(npbc, npbm, nw)));
+    drop(nitpick_libc_mem_write_f64(patterns, (base + 6i64 + j * 3i64) * 8i64, raw dg_opt_b(npbc, npbm, nw)));
+    pass(NIL);
+};
+
+// ── Projection ────────────────────────────────────────────────────────────────
+
+// gf_project: project emitter's current state onto all nodes, record FieldPattern.
+//   Signal extraction:
+//     lean_signal = (emitter_pbc - center) / quarter   [-1..+1]
+//     tilt_signal = emitter_pbm - 0.5                  [-0.5..+0.5]
+//   Each node is reset to (pbc=center, pbm=0.5) then:
+//     pbc   = clamp(center + lean_w * lean_signal * base_lean,  lo, hi)
+//     pbm   = clamp(0.5   + tilt_w * tilt_signal * base_tilt / (width*0.5), 0, 1)
+pub func:gf_project = NIL(int64:nodes, int64:gf_meta,
+                           int64:gf_conf, int64:patterns,
+                           int64:em_dg, int64:em_meta) {
+    // Extract emitter signals
+    float64:e_pbc   = nitpick_libc_mem_read_f64(em_dg, (0i64) * 8i64);
+    float64:e_pbm   = nitpick_libc_mem_read_f64(em_dg, (1i64) * 8i64);
+    float64:e_width = nitpick_libc_mem_read_f64(em_dg, (2i64) * 8i64);
+    float64:center  = e_width * 0.5;
+    float64:quarter = e_width * 0.25;
+    float64:lean_sig = 0.0;
+    if (quarter > 0.0001) {
+        lean_sig = (e_pbc - center) / quarter;
+    }
+    float64:tilt_sig = e_pbm - 0.5;
+
+    float64:base_lean = nitpick_libc_mem_read_f64(gf_conf, (0i64) * 8i64);
+    float64:base_tilt = nitpick_libc_mem_read_f64(gf_conf, (1i64) * 8i64);
+
+    int64:n_nodes    = nitpick_libc_mem_read_i64(gf_meta, (0i64) * 8i64);
+    int64:capacity   = nitpick_libc_mem_read_i64(gf_meta, (1i64) * 8i64);
+    int64:head       = nitpick_libc_mem_read_i64(gf_meta, (2i64) * 8i64);
+    int64:count      = nitpick_libc_mem_read_i64(gf_meta, (3i64) * 8i64);
+    int64:proj_count = nitpick_libc_mem_read_i64(gf_meta, (4i64) * 8i64);
+    int64:slot_sz    = nitpick_libc_mem_read_i64(gf_meta, (5i64) * 8i64);
+    int64:em_step    = nitpick_libc_mem_read_i64(em_meta, (0i64) * 8i64);
+
+    // Project onto each node: combined reset + apply lean and tilt
+    int64:i = 0i64;
+    while (i < n_nodes) {
+        float64:w      = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 4i64) * 8i64);
+        float64:nd_ctr = w * 0.5;
+        float64:lo     = w * 0.25;
+        float64:hi     = w * 0.75;
+        float64:pbw    = nd_ctr;
+        float64:lw     = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 2i64) * 8i64);
+        float64:tw     = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 3i64) * 8i64);
+        float64:lean_d = lw * lean_sig * base_lean;
+        float64:tilt_d = tw * tilt_sig * base_tilt;
+        // Reset pbc to center and apply lean delta
+        drop(nitpick_libc_mem_write_f64(nodes, (i * 5i64 + 0i64) * 8i64, raw(_gf_clamp(nd_ctr + lean_d, lo, hi))));
+        // Reset pbm to 0.5 and apply tilt delta
+        if (pbw > 0.0001) {
+            drop(nitpick_libc_mem_write_f64(nodes, (i * 5i64 + 1i64) * 8i64, raw(_gf_clamp(0.5 + tilt_d / pbw, 0.0, 1.0))));
+        }
+        if (pbw <= 0.0001) {
+            drop(nitpick_libc_mem_write_f64(nodes, (i * 5i64 + 1i64) * 8i64, 0.5));
+        }
+        i = i + 1i64;
+    }
+
+    // Write FieldPattern to ring buffer.
+    // Use proj_count % capacity for the physical slot — guaranteed in [0,capacity-1].
+    // This avoids any if-block variable mutation that the Nitpick compiler may mishandle.
+    int64:phys_slot = proj_count % capacity;
+    int64:base = phys_slot * slot_sz;
+
+    drop(nitpick_libc_mem_write_f64(patterns, (base + 0i64) * 8i64, em_step => flt64));
+    drop(nitpick_libc_mem_write_f64(patterns, (base + 1i64) * 8i64, lean_sig));
+    drop(nitpick_libc_mem_write_f64(patterns, (base + 2i64) * 8i64, tilt_sig));
+    int64:e_dec = raw dg_decision_code(e_pbc, e_pbm, e_width);
+    drop(nitpick_libc_mem_write_f64(patterns, (base + 3i64) * 8i64, e_dec => flt64));
+
+    // Per-node decision and confidence (use fresh variable j to avoid SSA reuse of i)
+    int64:j = 0i64;
+    while (j < n_nodes) {
+        drop(_gf_write_node_to_slot(nodes, patterns, base, j));
+        j = j + 1i64;
+    }
+
+    proj_count = proj_count + 1i64;
+    if (count < capacity) { count = count + 1i64; }
+    // head = oldest readable slot = next write position when ring is full
+    if (count >= capacity) { head = proj_count % capacity; }
+    drop(nitpick_libc_mem_write_i64(gf_meta, (2i64) * 8i64, head));
+    drop(nitpick_libc_mem_write_i64(gf_meta, (3i64) * 8i64, count));
+    drop(nitpick_libc_mem_write_i64(gf_meta, (4i64) * 8i64, proj_count));
+    pass(NIL);
+};
+
+// gf_drive: mutate emitter (via dgt_observe) then project onto all nodes.
+//   dir_code: 0=lean_a  1=lean_unkn  2=lean_b
+pub func:gf_drive = NIL(int64:nodes, int64:gf_meta,
+                         int64:gf_conf, int64:patterns,
+                         int64:em_dg, int64:em_meta,
+                         int64:em_snaps,
+                         float64:lean, float64:tilt, int64:dir_code) {
+    drop(dgt_observe(em_dg, em_meta, em_snaps, lean, tilt, 8i64, dir_code));
+    drop(gf_project(nodes, gf_meta, gf_conf, patterns, em_dg, em_meta));
+    pass(NIL);
+};
+
+// ── Meta accessors ────────────────────────────────────────────────────────────
+
+pub func:gf_n_nodes       = int64(int64:gf_meta)   { pass(nitpick_libc_mem_read_i64(gf_meta, (0i64) * 8i64)); };
+pub func:gf_pattern_count = int64(int64:gf_meta)   { pass(nitpick_libc_mem_read_i64(gf_meta, (3i64) * 8i64)); };
+pub func:gf_proj_count    = int64(int64:gf_meta)   { pass(nitpick_libc_mem_read_i64(gf_meta, (4i64) * 8i64)); };
+pub func:gf_base_lean     = float64(int64:gf_conf) { pass(nitpick_libc_mem_read_f64(gf_conf, (0i64) * 8i64)); };
+pub func:gf_base_tilt     = float64(int64:gf_conf) { pass(nitpick_libc_mem_read_f64(gf_conf, (1i64) * 8i64)); };
+
+// ── Pattern retrieval ─────────────────────────────────────────────────────────
+
+// gf_get_pattern: copy logical pattern at idx into out_pattern.
+// Logical 0 = oldest, logical count-1 = newest.
+// out_pattern must hold at least slot_sz float64 (= 4 + n_nodes*3).
+// Returns 1 on success, 0 if out-of-range.
+pub func:gf_get_pattern = int64(int64:patterns, int64:gf_meta,
+                                 int64:idx, int64:out_pattern) {
+    int64:count    = nitpick_libc_mem_read_i64(gf_meta, (3i64) * 8i64);
+    int64:capacity = nitpick_libc_mem_read_i64(gf_meta, (1i64) * 8i64);
+    int64:head     = nitpick_libc_mem_read_i64(gf_meta, (2i64) * 8i64);
+    int64:slot_sz  = nitpick_libc_mem_read_i64(gf_meta, (5i64) * 8i64);
+    if (idx < 0i64)     { pass(0i64); }
+    if (idx >= count)   { pass(0i64); }
+    int64:phys = (head + idx) % capacity;
+    int64:base = phys * slot_sz;
+    int64:j = 0i64;
+    while (j < slot_sz) {
+        drop(nitpick_libc_mem_write_f64(out_pattern, (j) * 8i64, nitpick_libc_mem_read_f64(patterns, (base + j) * 8i64)));
+        j = j + 1i64;
+    }
+    pass(1i64);
+};
+
+// Pattern slot accessors (operate on an out_pattern buffer from gf_get_pattern)
+pub func:gf_pat_emitter_step = float64(int64:out) { pass(nitpick_libc_mem_read_f64(out, (0i64) * 8i64)); };
+pub func:gf_pat_emitter_lean = float64(int64:out) { pass(nitpick_libc_mem_read_f64(out, (1i64) * 8i64)); };
+pub func:gf_pat_emitter_tilt = float64(int64:out) { pass(nitpick_libc_mem_read_f64(out, (2i64) * 8i64)); };
+pub func:gf_pat_emitter_dec  = float64(int64:out) { pass(nitpick_libc_mem_read_f64(out, (3i64) * 8i64)); };
+
+pub func:gf_pat_node_dec = int64(int64:out, int64:i) {
+    pass(nitpick_libc_mem_read_f64(out, (4i64 + i * 3i64) * 8i64) => int64);
+};
+pub func:gf_pat_node_a = float64(int64:out, int64:i) {
+    pass(nitpick_libc_mem_read_f64(out, (5i64 + i * 3i64) * 8i64));
+};
+pub func:gf_pat_node_b = float64(int64:out, int64:i) {
+    pass(nitpick_libc_mem_read_f64(out, (6i64 + i * 3i64) * 8i64));
+};
+
+// ── Analysis ──────────────────────────────────────────────────────────────────
+
+// gf_consensus_count: count live nodes whose current decision equals dec_code.
+pub func:gf_consensus_count = int64(int64:nodes, int64:gf_meta, int64:dec_code) {
+    int64:n_nodes = nitpick_libc_mem_read_i64(gf_meta, (0i64) * 8i64);
+    int64:cnt = 0i64;
+    int64:i = 0i64;
+    while (i < n_nodes) {
+        float64:pbc = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 0i64) * 8i64);
+        float64:pbm = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 1i64) * 8i64);
+        float64:w   = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 4i64) * 8i64);
+        int64:dc    = raw dg_decision_code(pbc, pbm, w);
+        if (dc == dec_code) { cnt = cnt + 1i64; }
+        i = i + 1i64;
+    }
+    pass(cnt);
+};
+
+// gf_pattern_shifts: count consecutive pattern pairs in history that differ.
+// A shift occurs when at least one node's decision code changes.
+pub func:gf_pattern_shifts = int64(int64:patterns, int64:gf_meta) {
+    int64:count    = nitpick_libc_mem_read_i64(gf_meta, (3i64) * 8i64);
+    int64:capacity = nitpick_libc_mem_read_i64(gf_meta, (1i64) * 8i64);
+    int64:head     = nitpick_libc_mem_read_i64(gf_meta, (2i64) * 8i64);
+    int64:slot_sz  = nitpick_libc_mem_read_i64(gf_meta, (5i64) * 8i64);
+    int64:n_nodes  = nitpick_libc_mem_read_i64(gf_meta, (0i64) * 8i64);
+    if (count < 2i64) { pass(0i64); }
+    int64:shifts = 0i64;
+    int64:i = 1i64;
+    while (i < count) {
+        int64:prev_phys = (head + i - 1i64) % capacity;
+        int64:curr_phys = (head + i) % capacity;
+        int64:prev_base = prev_phys * slot_sz;
+        int64:curr_base = curr_phys * slot_sz;
+        int64:changed = 0i64;
+        int64:j = 0i64;
+        while (j < n_nodes) {
+            int64:pd = nitpick_libc_mem_read_f64(patterns, (prev_base + 4i64 + j * 3i64) * 8i64) => int64;
+            int64:cd = nitpick_libc_mem_read_f64(patterns, (curr_base + 4i64 + j * 3i64) * 8i64) => int64;
+            if (pd != cd) { changed = 1i64; }
+            j = j + 1i64;
+        }
+        if (changed == 1i64) { shifts = shifts + 1i64; }
+        i = i + 1i64;
+    }
+    pass(shifts);
+};
+
+// gf_is_nodal: return 1 if node i is nodal (both |lean_w| and |tilt_w| <= threshold).
+pub func:gf_is_nodal = int64(int64:nodes, int64:i, float64:threshold) {
+    float64:lw = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 2i64) * 8i64);
+    float64:tw = nitpick_libc_mem_read_f64(nodes, (i * 5i64 + 3i64) * 8i64);
+    if (lw < 0.0) { lw = 0.0 - lw; }
+    if (tw < 0.0) { tw = 0.0 - tw; }
+    if (lw <= threshold && tw <= threshold) { pass(1i64); }
+    pass(0i64);
+};

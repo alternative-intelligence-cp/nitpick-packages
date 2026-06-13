@@ -1,15 +1,15 @@
-# Aria Database Client Libraries — Guide
+# Nitpick Database Client Libraries — Guide
 
-This guide covers the four database client libraries available in the Aria package ecosystem.
+This guide covers the four database client libraries available in the Nitpick package ecosystem.
 
 ## Overview
 
 | Package | Database | API Prefix | System Library | Server Required |
 |---------|----------|-----------|----------------|-----------------|
-| aria-sqlite | SQLite 3 | `sqlite_*` | libsqlite3 | No (embedded) |
-| aria-postgres | PostgreSQL | `pg_*` | libpq | Yes |
-| aria-mysql | MySQL / MariaDB | `mysql_db_*` | libmysqlclient | Yes |
-| aria-redis | Redis | `redis_*` | libhiredis | Yes |
+| nitpick-sqlite | SQLite 3 | `sqlite_*` | libsqlite3 | No (embedded) |
+| nitpick-postgres | PostgreSQL | `pg_*` | libpq | Yes |
+| nitpick-mysql | MySQL / MariaDB | `mysql_db_*` | libmysqlclient | Yes |
+| nitpick-redis | Redis | `redis_*` | libhiredis | Yes |
 
 All SQL libraries use **parameterized queries** to prevent SQL injection attacks.
 
@@ -19,32 +19,32 @@ All SQL libraries use **parameterized queries** to prevent SQL injection attacks
 # Install the dev libraries you need:
 sudo apt install libsqlite3-dev    # SQLite
 sudo apt install libpq-dev         # PostgreSQL
-sudo apt install libmysqlclient-dev # MySQL (or libmariadb-dev)
+sudo apt install libmysqlclient-dev # MySQL (or libmnitpickdb-dev)
 sudo apt install libhiredis-dev    # Redis
 ```
 
 ## Building
 
-Each package has a C shim that bridges Aria's FFI to the native C library:
+Each package has a C shim that bridges Nitpick's FFI to the native C library:
 
 ```bash
-cd aria-packages/packages/aria-sqlite/shim
-cc -O2 -shared -fPIC -Wall -o libaria_sqlite_shim.so aria_sqlite_shim.c -lsqlite3
+cd nitpick-packages/packages/nitpick-sqlite/shim
+cc -O2 -shared -fPIC -Wall -o libnitpick_sqlite_shim.so nitpick_sqlite_shim.c -lsqlite3
 ```
 
 Build flags per database:
 
 | Package | Include Path | Link Flag |
 |---------|-------------|-----------|
-| aria-sqlite | (default) | `-lsqlite3` |
-| aria-postgres | `-I/usr/include/postgresql` | `-lpq` |
-| aria-mysql | `-I/usr/include/mysql` | `-lmysqlclient` |
-| aria-redis | (default) | `-lhiredis` |
+| nitpick-sqlite | (default) | `-lsqlite3` |
+| nitpick-postgres | `-I/usr/include/postgresql` | `-lpq` |
+| nitpick-mysql | `-I/usr/include/mysql` | `-lmysqlclient` |
+| nitpick-redis | (default) | `-lhiredis` |
 
-Compile your Aria program:
+Compile your Nitpick program:
 
 ```bash
-ariac my_program.aria -L shim -laria_sqlite_shim -lsqlite3 -o my_program
+nitpickc my_program.npk -L shim -lnitpick_sqlite_shim -lsqlite3 -o my_program
 LD_LIBRARY_PATH=shim ./my_program
 ```
 
@@ -52,7 +52,7 @@ LD_LIBRARY_PATH=shim ./my_program
 
 ### Connection Management
 
-All drivers use a connection pool (16 slots). `connect()` returns a connection ID (int32). Due to Aria's move semantics, use `last_conn()` / `last_db()` to get a fresh handle before each call:
+All drivers use a connection pool (16 slots). `connect()` returns a connection ID (int32). Due to Nitpick's move semantics, use `last_conn()` / `last_db()` to get a fresh handle before each call:
 
 ```
 int32:db = sqlite_open(":memory:");
@@ -181,14 +181,14 @@ pg_commit(c2);    // or pg_rollback(c2)
 
 ## Known Compiler Workarounds
 
-These workarounds are required due to known Aria compiler bugs (as of v0.2.2):
+These workarounds are required due to known Nitpick compiler bugs (as of v0.2.2):
 
 1. **Move semantics**: All variables are consumed on first use. Use `last_conn()` / `last_db()` before each call that needs a handle.
 
 2. **Reserved names in extern**: `close` and `free` in function names cause compiler issues. All drivers use `disconnect` instead.
 
-3. **String return corruption**: Strings returned from extern functions may be corrupted. All drivers provide C-side assertion helpers for testing instead of returning strings to Aria.
+3. **String return corruption**: Strings returned from extern functions may be corrupted. All drivers provide C-side assertion helpers for testing instead of returning strings to Nitpick.
 
 4. **Function call limits in main**: Split test logic into phase functions called from main with `drop(test_phaseN());`.
 
-5. **void vs NIL**: Aria functions must return `NIL` (not `void`). `void` is only valid in extern declarations.
+5. **void vs NIL**: Nitpick functions must return `NIL` (not `void`). `void` is only valid in extern declarations.

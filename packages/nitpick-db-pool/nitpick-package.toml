@@ -1,0 +1,6 @@
+[package]
+name = "nitpick-db-pool"
+version = "0.1.0"
+description = "Generic connection pooling for Nitpick DB drivers"
+
+[dependencies]

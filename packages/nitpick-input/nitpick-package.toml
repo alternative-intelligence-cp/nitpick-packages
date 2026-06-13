@@ -1,0 +1,13 @@
+[package]
+name = "nitpick-input"
+version = "0.12.2"
+description = "Key mapping and button state manager — bitmask ops, bindings, press/release detection"
+license = "MIT"
+
+[build]
+type = "pure"
+
+[dependencies]
+
+[metadata]
+categories = ["terminal", "input"]

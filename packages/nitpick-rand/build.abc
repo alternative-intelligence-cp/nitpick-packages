@@ -1,0 +1,25 @@
+# build.abc — nitpick-rand package
+#
+# Targets:
+#   nitpick-rand       — compiled library (.o → .a) for downstream packages
+#   test-nitpick-rand  — test binary; imports src via `use "../src/nitpick_rand.npk".*;`
+
+[project]
+name = "nitpick-rand"
+version = "0.1.0"
+compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
+
+# Precompiled library target (for downstream consumers)
+[target.nitpick-rand]
+type = "library"
+sources = ["src/nitpick_rand.npk"]
+deps = []
+flags = []
+
+# Test binary — test file uses `use "../src/nitpick_rand.npk".*;` to include
+# library source inline; no extra link libraries needed (pure Nitpick, no C deps)
+[target.test-nitpick-rand]
+type = "binary"
+sources = ["tests/test_nitpick_rand.npk"]
+deps = []
+flags = []

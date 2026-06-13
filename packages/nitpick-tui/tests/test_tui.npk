@@ -1,0 +1,109 @@
+// test_tui.npk — Interactive TUI demo V2
+
+use "nitpick_tui.npk".*;
+
+func:failsafe = int32(tbb32:err) {
+    raw Tui_shutdown();
+    exit 1i32;
+};
+
+func:main = int32() {
+    raw Tui_init();
+
+    // Setup Layout Cursor starting at (4, 4) with padding of 1 line between widgets
+    LayoutCursor:layout = raw Layout_create(4i32, 4i32, 1i32);
+
+    Widget:panel = raw Tui_panel(2i32, 2i32, 50i32, 25i32, 7i32, 0i32);
+    Widget:label = raw Layout_vbox_add(layout, raw Tui_label(0i32, 0i32, "Nitpick TUI Toolkit Demo V2\0", 3i32, 0i32));
+    Widget:input = raw Layout_vbox_add(layout, raw Tui_input(0i32, 0i32, 40i32, "Type here...\0"));
+    Widget:chk   = raw Layout_vbox_add(layout, raw Tui_checkbox(0i32, 0i32, "Enable Advanced Features\0", 0i32));
+    Widget:prog  = raw Layout_vbox_add(layout, raw Tui_progress(0i32, 0i32, 40i32, 35i32));
+    
+    // Custom Menu / Listbox using VBox Layout
+    Widget:menu_lbl = raw Layout_vbox_add(layout, raw Tui_label(0i32, 0i32, "Select an option:\0", 6i32, 0i32));
+    Widget:menu_1   = raw Layout_vbox_add(layout, raw Tui_label(0i32, 0i32, "  Option 1\0", 7i32, 0i32));
+    Widget:menu_2   = raw Layout_vbox_add(layout, raw Tui_label(0i32, 0i32, "  Option 2\0", 7i32, 0i32));
+    Widget:menu_3   = raw Layout_vbox_add(layout, raw Tui_label(0i32, 0i32, "  Option 3\0", 7i32, 0i32));
+
+    Widget:btn   = raw Layout_vbox_add(layout, raw Tui_button(0i32, 0i32, 10i32, "Quit\0"));
+    
+    // Focus state mapping
+    // 0 = input, 1 = checkbox, 2 = menu_1, 3 = menu_2, 4 = menu_3, 5 = btn
+    int32:focus = 0i32;
+    input.focused = 1i32;
+
+    int32:running = 1i32;
+    int32:vk = 0i32;
+
+    while (running == 1i32) {
+        
+        // --- DRAW ---
+        nitpick_display_clear();
+        raw Tui_draw_widget(panel);
+        raw Tui_draw_widget(label);
+        raw Tui_draw_widget(input);
+        raw Tui_draw_widget(chk);
+        raw Tui_draw_widget(prog);
+        raw Tui_draw_widget(menu_lbl);
+        
+        // Highlight menu items if focused
+        if (focus == 2i32) { menu_1.focused = 1i32; } else { menu_1.focused = 0i32; }
+        if (focus == 3i32) { menu_2.focused = 1i32; } else { menu_2.focused = 0i32; }
+        if (focus == 4i32) { menu_3.focused = 1i32; } else { menu_3.focused = 0i32; }
+
+        raw Tui_draw_widget(menu_1);
+        raw Tui_draw_widget(menu_2);
+        raw Tui_draw_widget(menu_3);
+        raw Tui_draw_widget(btn);
+        nitpick_display_flush();
+
+        // --- INPUT ---
+        vk = nitpick_input_read_key();
+        
+        if (vk == 200i32) { // UP
+            focus = focus - 1i32;
+            if (focus < 0i32) { focus = 5i32; }
+        }
+        if (vk == 201i32) { // DOWN
+            focus = focus + 1i32;
+            if (focus > 5i32) { focus = 0i32; }
+        }
+        
+        // Update specific focus flags
+        input.focused = 0i32; chk.focused = 0i32; btn.focused = 0i32;
+        if (focus == 0i32) { input.focused = 1i32; }
+        if (focus == 1i32) { chk.focused = 1i32; }
+        if (focus == 5i32) { btn.focused = 1i32; }
+
+        if (vk == 32i32) { // Space
+            if (focus == 1i32) {
+                // Toggle checkbox
+                if (chk.value == 1i32) { chk.value = 0i32; }
+                else { chk.value = 1i32; }
+            }
+        }
+        
+        if (vk == 10i32) { // Enter (or 13)
+            if (focus == 5i32) {
+                running = 0i32; // Quit button activated
+            }
+        }
+        if (vk == 13i32) { // Enter
+            if (focus == 5i32) {
+                running = 0i32; // Quit button activated
+            }
+        }
+        
+        // Quick ESC exit
+        if (vk == 27i32) {
+            running = 0i32;
+        }
+
+        // Animate progress bar slightly to show it's alive
+        prog.value = prog.value + 1i32;
+        if (prog.value > 100i32) { prog.value = 0i32; }
+    }
+
+    raw Tui_shutdown();
+    exit 0i32;
+};

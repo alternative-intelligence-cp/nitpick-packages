@@ -1,0 +1,6 @@
+[package]
+name = "nitpick-diff"
+version = "0.11.1"
+description = "Sequence diffing — LCS, edit distance, and patch generation"
+entry = "src/nitpick_diff.npk"
+type = "pure"

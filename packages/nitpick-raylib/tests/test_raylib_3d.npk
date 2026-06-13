@@ -1,0 +1,39 @@
+use "nitpick_raylib.npk";
+
+pub func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    raw rl_init_window(800i32, 600i32, "Nitpick Raylib 3D Test");
+    raw rl_set_target_fps(60i32);
+
+    int32:frames = 0i32;
+
+    while (raw rl_window_should_close() == 0i32) {
+        if (frames > 5i32) {
+            break;
+        }
+
+        raw rl_begin_drawing();
+        raw rl_clear_background(245i32, 245i32, 245i32, 255i32);
+
+        raw rl_begin_mode_3d(0.0f32, 10.0f32, 10.0f32,
+                             0.0f32, 0.0f32, 0.0f32,
+                             0.0f32, 1.0f32, 0.0f32,
+                             45.0f32, 0i32);
+
+        raw rl_draw_grid(10i32, 1.0f32);
+        raw rl_draw_cube(0.0f32, 1.0f32, 0.0f32, 2.0f32, 2.0f32, 2.0f32, 255i32, 0i32, 0i32, 255i32);
+        raw rl_draw_cube_wires(0.0f32, 1.0f32, 0.0f32, 2.0f32, 2.0f32, 2.0f32, 0i32, 0i32, 0i32, 255i32);
+
+        raw rl_end_mode_3d();
+        raw rl_draw_fps(10i32, 10i32);
+        raw rl_end_drawing();
+        
+        frames = frames + 1i32;
+    }
+
+    raw rl_close_window();
+    return 0i32;
+};

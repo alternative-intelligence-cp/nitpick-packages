@@ -1,0 +1,69 @@
+// test_cli_ecosystem.npk
+use "nitpick_args.npk".*;
+use "nitpick_log.npk".*;
+use "nitpick_cli.npk".*;
+
+extern "libc" {
+    func:printf = int32(string:fmt);
+}
+
+func:failsafe = int32(tbb32:err) { exit 1i32; };
+
+func:main = int32() {
+    // 1. Initialize Log and set it to Output to terminal (stdout)
+    NIL:_1 = raw log_init();
+    NIL:_2 = raw log_to_stdout();
+    
+    // Simulate reading ARGV from the OS
+    string:args = raw args_make4("my_server\0", "--verbose\0", "--help\0", "8080\0");
+    
+    // 2. Set up the Smart ArgParser
+    ArgParser:p = raw Parser_create();
+    p = raw Parser_add_flag(p, "--verbose\0", "Enable detailed debugging output\0");
+    p = raw Parser_add_flag(p, "--help\0", "Print this help menu\0");
+    p = raw Parser_add_option(p, "--port\0", "Port to listen on (default 3000)\0");
+    
+    // Check if user requested help
+    if (raw args_has(args, "--help\0")) {
+        NIL:_3 = raw Parser_print_help(p);
+        exit 0i32;
+    }
+    
+    // 3. Parse arguments
+    int32:port = raw args_get_int(args, "--port\0", 3000i32);
+    bool:verbose = raw args_has(args, "--verbose\0");
+    
+    if (verbose) {
+        NIL:_4 = raw log_set_level(0i32); // Trace
+    } else {
+        NIL:_4 = raw log_set_level(2i32); // Info
+    }
+    
+    // 4. Output Colored Logs
+    NIL:_5 = raw log_info("Starting the Nitpick HTTP Server...\0");
+    
+    if (verbose) {
+        NIL:_6 = raw log_debug("Verbose mode enabled by user flag.\0");
+    }
+    
+    // Show integer parsing result
+    if (port == 8080i32) {
+        NIL:_7 = raw log_info("Successfully bound to port 8080!\0");
+    } else {
+        NIL:_7 = raw log_error("Failed to bind to requested port.\0");
+    }
+    
+    NIL:_8 = raw log_warn("Running as root is not recommended.\0");
+    NIL:_9 = raw log_fatal("Just testing the fatal color.\0");
+    
+    // 5. Output JSON Logs
+    NIL:_10 = raw log_show_timestamp(0i32);
+    NIL:_11 = raw log_show_level(0i32);
+    int32:_12 = printf("\n--- JSON Output Stream ---\n");
+    
+    NIL:_13 = raw log_json("INFO", "Database Connected", "\"db_host\":\"127.0.0.1\",\"latency_ms\":12");
+    NIL:_14 = raw log_json("ERROR", "Connection Timeout", "\"retry_count\":5");
+    
+    NIL:_15 = raw log_cleanup();
+    exit 0i32;
+};

@@ -1,0 +1,114 @@
+// nitpick_datetime.npk — Date and time library for Nitpick
+//
+// Timestamps, components, formatting, duration arithmetic, sleep.
+// Requires: libnitpick_datetime_shim.so
+
+extern "nitpick_datetime_shim" {
+    // current time
+    func:nitpick_datetime_now          = int64();
+    func:nitpick_datetime_now_ms       = int64();
+    func:nitpick_datetime_now_us       = int64();
+    func:nitpick_datetime_monotonic_ms = int64();
+
+    // local time components
+    func:nitpick_datetime_year    = int32(int64:epoch);
+    func:nitpick_datetime_month   = int32(int64:epoch);
+    func:nitpick_datetime_day     = int32(int64:epoch);
+    func:nitpick_datetime_hour    = int32(int64:epoch);
+    func:nitpick_datetime_minute  = int32(int64:epoch);
+    func:nitpick_datetime_second  = int32(int64:epoch);
+    func:nitpick_datetime_weekday = int32(int64:epoch);
+    func:nitpick_datetime_yearday = int32(int64:epoch);
+
+    // UTC components
+    func:nitpick_datetime_utc_year   = int32(int64:epoch);
+    func:nitpick_datetime_utc_month  = int32(int64:epoch);
+    func:nitpick_datetime_utc_day    = int32(int64:epoch);
+    func:nitpick_datetime_utc_hour   = int32(int64:epoch);
+    func:nitpick_datetime_utc_minute = int32(int64:epoch);
+    func:nitpick_datetime_utc_second = int32(int64:epoch);
+
+    // formatting
+    func:nitpick_datetime_format     = string(int64:epoch, string:fmt);
+    func:nitpick_datetime_format_utc = string(int64:epoch, string:fmt);
+    func:nitpick_datetime_iso8601    = string(int64:epoch);
+    func:nitpick_datetime_last_result = string();
+
+    // parsing
+    func:nitpick_datetime_parse         = int64(string:date_str, string:fmt);
+    func:nitpick_datetime_parse_utc     = int64(string:date_str, string:fmt);
+    func:nitpick_datetime_parse_iso8601 = int64(string:date_str);
+
+    // construction
+    func:nitpick_datetime_make     = int64(int32:year, int32:month, int32:day, int32:hour, int32:minute, int32:second);
+    func:nitpick_datetime_make_utc = int64(int32:year, int32:month, int32:day, int32:hour, int32:minute, int32:second);
+
+    // duration
+    func:nitpick_datetime_diff        = int64(int64:a, int64:b);
+    func:nitpick_datetime_add_seconds = int64(int64:epoch, int64:seconds);
+    func:nitpick_datetime_add_days    = int64(int64:epoch, int32:days);
+
+    // sleep
+    func:nitpick_datetime_sleep_ms = void(int32:ms);
+}
+
+// ── public API: current time ────────────────────────────────────────
+
+pub func:dt_now = int64() { int64:r = nitpick_datetime_now(); pass(r); };
+pub func:dt_now_ms = int64() { int64:r = nitpick_datetime_now_ms(); pass(r); };
+pub func:dt_now_us = int64() { int64:r = nitpick_datetime_now_us(); pass(r); };
+pub func:dt_monotonic_ms = int64() { int64:r = nitpick_datetime_monotonic_ms(); pass(r); };
+
+// ── public API: local time components ───────────────────────────────
+
+pub func:dt_year = int32(int64:epoch) { int32:r = nitpick_datetime_year(epoch); pass(r); };
+pub func:dt_month = int32(int64:epoch) { int32:r = nitpick_datetime_month(epoch); pass(r); };
+pub func:dt_day = int32(int64:epoch) { int32:r = nitpick_datetime_day(epoch); pass(r); };
+pub func:dt_hour = int32(int64:epoch) { int32:r = nitpick_datetime_hour(epoch); pass(r); };
+pub func:dt_minute = int32(int64:epoch) { int32:r = nitpick_datetime_minute(epoch); pass(r); };
+pub func:dt_second = int32(int64:epoch) { int32:r = nitpick_datetime_second(epoch); pass(r); };
+pub func:dt_weekday = int32(int64:epoch) { int32:r = nitpick_datetime_weekday(epoch); pass(r); };
+pub func:dt_yearday = int32(int64:epoch) { int32:r = nitpick_datetime_yearday(epoch); pass(r); };
+
+// ── public API: UTC components ──────────────────────────────────────
+
+pub func:dt_utc_year = int32(int64:epoch) { int32:r = nitpick_datetime_utc_year(epoch); pass(r); };
+pub func:dt_utc_month = int32(int64:epoch) { int32:r = nitpick_datetime_utc_month(epoch); pass(r); };
+pub func:dt_utc_day = int32(int64:epoch) { int32:r = nitpick_datetime_utc_day(epoch); pass(r); };
+pub func:dt_utc_hour = int32(int64:epoch) { int32:r = nitpick_datetime_utc_hour(epoch); pass(r); };
+pub func:dt_utc_minute = int32(int64:epoch) { int32:r = nitpick_datetime_utc_minute(epoch); pass(r); };
+pub func:dt_utc_second = int32(int64:epoch) { int32:r = nitpick_datetime_utc_second(epoch); pass(r); };
+
+// ── public API: formatting ──────────────────────────────────────────
+
+pub func:dt_format = string(int64:epoch, string:fmt) { drop(nitpick_datetime_format(epoch, fmt)); string:r = nitpick_datetime_last_result(); pass(r); };
+pub func:dt_format_utc = string(int64:epoch, string:fmt) { drop(nitpick_datetime_format_utc(epoch, fmt)); string:r = nitpick_datetime_last_result(); pass(r); };
+pub func:dt_iso8601 = string(int64:epoch) { drop(nitpick_datetime_iso8601(epoch)); string:r = nitpick_datetime_last_result(); pass(r); };
+
+// ── public API: parsing ─────────────────────────────────────────────
+
+pub func:dt_parse = int64(string:date_str, string:fmt) { int64:r = nitpick_datetime_parse(date_str, fmt); pass(r); };
+pub func:dt_parse_utc = int64(string:date_str, string:fmt) { int64:r = nitpick_datetime_parse_utc(date_str, fmt); pass(r); };
+pub func:dt_parse_iso8601 = int64(string:date_str) { int64:r = nitpick_datetime_parse_iso8601(date_str); pass(r); };
+
+// ── public API: construction ────────────────────────────────────────
+
+pub func:dt_make = int64(int32:year, int32:month, int32:day, int32:hour, int32:minute, int32:second) {
+    int64:r = nitpick_datetime_make(year, month, day, hour, minute, second);
+    pass(r);
+};
+
+pub func:dt_make_utc = int64(int32:year, int32:month, int32:day, int32:hour, int32:minute, int32:second) {
+    int64:r = nitpick_datetime_make_utc(year, month, day, hour, minute, second);
+    pass(r);
+};
+
+// ── public API: duration ────────────────────────────────────────────
+
+pub func:dt_diff = int64(int64:a, int64:b) { int64:r = nitpick_datetime_diff(a, b); pass(r); };
+pub func:dt_add_seconds = int64(int64:epoch, int64:seconds) { int64:r = nitpick_datetime_add_seconds(epoch, seconds); pass(r); };
+pub func:dt_add_days = int64(int64:epoch, int32:days) { int64:r = nitpick_datetime_add_days(epoch, days); pass(r); };
+
+// ── public API: sleep ───────────────────────────────────────────────
+
+pub func:dt_sleep_ms = NIL(int32:ms) { nitpick_datetime_sleep_ms(ms); pass(NIL); };

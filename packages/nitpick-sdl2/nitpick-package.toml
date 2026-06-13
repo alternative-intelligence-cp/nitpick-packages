@@ -1,0 +1,11 @@
+[package]
+name            = "nitpick-sdl2"
+version         = "0.2.2"
+description     = "Nitpick bindings for SDL2 — windowing, 2D rendering, events, and input"
+license         = "MIT"
+repository      = "https://github.com/alternative-intelligence-cp/aria"
+
+[dependencies]
+
+[build]
+link_libraries = ["nitpick_sdl2_shim", "SDL2"]

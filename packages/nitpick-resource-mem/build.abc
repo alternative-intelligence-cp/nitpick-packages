@@ -1,0 +1,25 @@
+# build.abc — nitpick-resource-mem package
+#
+# Targets:
+#   nitpick-resource-mem       — compiled library for downstream packages
+#   test-nitpick-resource-mem  — test binary; imports src via `use "../src/nitpick_resource_mem.npk".*;`
+#
+# Note: clock() is from libc, always linked by the C runtime.
+# malloc/free are from libc, always linked by the C runtime.
+
+[project]
+name = "nitpick-resource-mem"
+version = "0.1.0"
+compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
+
+[target.nitpick-resource-mem]
+type = "library"
+sources = ["src/nitpick_resource_mem.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-resource-mem]
+type = "binary"
+sources = ["tests/test_nitpick_resource_mem.npk"]
+deps = []
+flags = []

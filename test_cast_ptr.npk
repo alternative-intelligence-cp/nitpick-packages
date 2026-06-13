@@ -1,0 +1,15 @@
+extern "libc" {
+    func:malloc = wild float64->(int64:size);
+    func:free   = NIL(wild float64->:ptr);
+}
+func:failsafe = int32(tbb32:err) { exit 1; };
+func:main = int32() {
+    wild float64->:ptr = malloc(80i64);
+    float64[]:arr = @cast_unchecked<float64[]>(ptr);
+    arr[0i64] = 42.0;
+    
+    if (arr[0i64] > 40.0) {
+        exit 0;
+    }
+    exit 1;
+};

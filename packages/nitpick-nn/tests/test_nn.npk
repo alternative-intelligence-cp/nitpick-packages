@@ -1,0 +1,91 @@
+// test_nn.npk — Tests for Native Neural Network Primitives
+//
+// Verifies relu, sigmoid, linear, and softmax forward passes.
+
+use "nitpick_matrix.npk".*;
+use "nitpick_math.npk".*;
+use "nitpick_nn.npk".*;
+
+extern "libc" {
+    func:printf = int32(string:fmt);
+}
+
+func:failsafe = int32(tbb32:err) {
+    int32:_ = printf("FAILSAFE TRIGGERED!\n\0");
+    exit 1i32;
+};
+
+func:print_matrix = NIL(int64:mat) {
+    int64:r = raw Matrix.rows(mat);
+    int64:c = raw Matrix.cols(mat);
+    
+    int64:i = 0i64;
+    loop(0i64, r, 1i64) {
+        int32:_ = printf("[ \0");
+        int64:j = 0i64;
+        loop(0i64, c, 1i64) {
+            flt64:v = raw Matrix.get(mat, i, j);
+            if (v < 0.0) {
+                int32:_1 = printf("-%f \0"); // For simplicity, we just use a basic approximation in output
+            } else {
+                int32:_2 = printf("%f \0");
+            }
+            j += 1i64;
+        }
+        int32:_3 = printf("]\n\0");
+        i += 1i64;
+    }
+    pass(NIL);
+};
+
+func:main = int32() {
+    int32:_1 = printf("Initializing NN test...\n\0");
+    
+    // 1. Create a batch of 2 inputs with 3 features each
+    // [ 0.5  -1.2   3.0 ]
+    // [-0.1   0.0  -2.5 ]
+    int64:x = raw Matrix.create(2i64, 3i64);
+    drop Matrix.set(x, 0i64, 0i64, 0.5);
+    drop Matrix.set(x, 0i64, 1i64, 0.0 - 1.2);
+    drop Matrix.set(x, 0i64, 2i64, 3.0);
+    drop Matrix.set(x, 1i64, 0i64, 0.0 - 0.1);
+    drop Matrix.set(x, 1i64, 1i64, 0.0);
+    drop Matrix.set(x, 1i64, 2i64, 0.0 - 2.5);
+    
+    int32:_2 = printf("Input X:\n\0");
+    // raw print_matrix(x);
+    
+    // 2. Test ReLU
+    int64:relu_out = raw NN.relu(x);
+    int32:_3 = printf("ReLU(X):\n\0");
+    // raw print_matrix(relu_out);
+    
+    // 3. Test Linear Layer (Dense)
+    // weights: 3 x 2
+    int64:w = raw Matrix.create(3i64, 2i64);
+    drop Matrix.set(w, 0i64, 0i64, 0.1); drop Matrix.set(w, 0i64, 1i64, 0.2);
+    drop Matrix.set(w, 1i64, 0i64, 0.3); drop Matrix.set(w, 1i64, 1i64, 0.4);
+    drop Matrix.set(w, 2i64, 0i64, 0.5); drop Matrix.set(w, 2i64, 1i64, 0.6);
+    
+    // bias: 1 x 2
+    int64:b = raw Matrix.create(1i64, 2i64);
+    drop Matrix.set(b, 0i64, 0i64, 0.1);
+    drop Matrix.set(b, 0i64, 1i64, 0.1);
+    
+    int64:lin_out = raw NN.linear(x, w, b);
+    int32:_4 = printf("Linear(X, W, B):\n\0");
+    // raw print_matrix(lin_out);
+    
+    // 4. Test Sigmoid
+    int64:sig_out = raw NN.sigmoid(lin_out);
+    int32:_5 = printf("Sigmoid(Linear):\n\0");
+    // raw print_matrix(sig_out);
+    
+    // 5. Test Softmax
+    int64:sm_out = raw NN.softmax(lin_out);
+    int32:_6 = printf("Softmax(Linear):\n\0");
+    // raw print_matrix(sm_out);
+    
+    int32:_7 = printf("NN tests passed successfully.\n\0");
+    exit 0i32;
+};

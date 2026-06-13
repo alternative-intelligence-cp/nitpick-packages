@@ -1,0 +1,44 @@
+use "nitpick_vulkan.npk";
+use "nitpick_str.npk";
+
+pub func:main = int32() {
+    println("Testing Vulkan...");
+
+    int32:r1 = raw vk_init_instance("Test App");
+    if (r1 == 0i32) {
+        println("Error: Failed to init instance");
+        string:err = raw vk_get_error();
+        println(err);
+        return 1i32;
+    }
+    println("Instance initialized!");
+
+    int32:r2 = raw vk_pick_physical_device();
+    if (r2 == 0i32) {
+        println("Error: Failed to pick physical device");
+        string:err = raw vk_get_error();
+        println(err);
+        return 1i32;
+    }
+    string:name = raw vk_get_device_name();
+    print("Picked GPU: ");
+    println(name);
+
+    int32:r3 = raw vk_create_logical_device();
+    if (r3 == 0i32) {
+        println("Error: Failed to create logical device");
+        string:err = raw vk_get_error();
+        println(err);
+        return 1i32;
+    }
+    println("Logical device created!");
+
+    raw vk_cleanup();
+    println("Cleanup done. Vulkan wrapper works!");
+
+    return 0i32;
+};
+
+pub func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

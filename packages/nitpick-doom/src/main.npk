@@ -1,0 +1,67 @@
+use "nitpick_raylib.npk".*;
+
+extern "libc" {
+    func:doom_init = void();
+    func:doom_update = void(flt64:move_forward, flt64:move_turn);
+    func:doom_calculate_frame = void(int32:width, int32:height);
+    func:doom_get_wall_height = int32(int32:col);
+    func:doom_get_wall_shade = int32(int32:col);
+}
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+func:main = int32() {
+    raw rl_init_window(800i32, 600i32, "Nitpick DOOM\0");
+    raw rl_set_target_fps(60i32);
+    
+    doom_init();
+    
+    while (raw rl_window_should_close() == 0i32) {
+        
+        flt64:move_fwd = 0.0;
+        flt64:move_turn = 0.0;
+        
+        if (raw rl_is_key_down(87i32) == 1i32) { move_fwd = 1.0; } // W
+        if (raw rl_is_key_down(83i32) == 1i32) { move_fwd = 0.0 - 1.0; } // S
+        if (raw rl_is_key_down(65i32) == 1i32 || raw rl_is_key_down(263i32) == 1i32) { move_turn = 0.0 - 1.0; } // A or Left
+        if (raw rl_is_key_down(68i32) == 1i32 || raw rl_is_key_down(262i32) == 1i32) { move_turn = 1.0; } // D or Right
+        
+        doom_update(move_fwd, move_turn);
+        
+        doom_calculate_frame(800i32, 600i32);
+        
+        raw rl_begin_drawing();
+        
+        // Draw ceiling and floor
+        raw rl_draw_rectangle(0i32, 0i32, 800i32, 300i32, 40i32, 40i32, 40i32, 255i32); // Ceiling
+        raw rl_draw_rectangle(0i32, 300i32, 800i32, 300i32, 70i32, 70i32, 70i32, 255i32); // Floor
+        
+        // Draw walls
+        int32:col = 0i32;
+        while (col < 800i32) {
+            int32:h = doom_get_wall_height(col);
+            int32:s = doom_get_wall_shade(col);
+            
+            if (h > 600i32) { h = 600i32; }
+            int32:y = 300i32 - (h / 2i32);
+            
+            // Draw one column of wall, red-tinted
+            int32:r = s;
+            int32:g = s / 4i32;
+            int32:b = s / 4i32;
+            
+            raw rl_draw_rectangle(col, y, 1i32, h, r, g, b, 255i32);
+            col = col + 1i32;
+        }
+        
+        // UI
+        raw rl_draw_text("WASD to move, A/D or Arrow keys to turn\0", 10i32, 10i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+        
+        raw rl_end_drawing();
+    }
+    
+    raw rl_close_window();
+    exit 0i32;
+};

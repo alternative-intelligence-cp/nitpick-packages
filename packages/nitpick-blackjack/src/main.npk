@@ -1,0 +1,324 @@
+// main.npk - Nitpick Blackjack Raylib GUI
+
+use "nitpick_raylib.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_mongo.npk".*;
+use "nitpick_orm.npk".*;
+use "nitpick_json.npk".*;
+
+extern "libc" {
+    func:usleep = int32(int32:usec);
+    func:blackjack_init_deck = void();
+    func:blackjack_init_hands = void();
+    func:blackjack_deal_initial = void();
+    func:blackjack_player_hit = void();
+    func:blackjack_dealer_hit = void();
+    func:blackjack_player_score = int32();
+    func:blackjack_dealer_score = int32();
+    func:blackjack_get_p_count = int32();
+    func:blackjack_get_d_count = int32();
+    func:blackjack_get_p_card = int32(int32:idx);
+    func:blackjack_get_d_card = int32(int32:idx);
+}
+
+func:failsafe = int32(tbb32:err) {
+    raw rl_close_window();
+    exit 1i32;
+};
+
+pub func:save_wallet = int32(int32:db_conn, int32:wallet) {
+    if (db_conn >= 0i32) {
+        QueryBuilder:del_q = raw orm_delete("blackjack_save");
+        del_q = raw orm_where_eq_int(del_q, "save_id", 1i64);
+        string:del_query = string_concat(raw orm_to_mongo(del_q), "\0");
+        int32:_d = raw mongo_delete(db_conn, "nitpick_games\0", "blackjack_save\0", del_query);
+        
+        QueryBuilder:ins_q = raw orm_insert("blackjack_save");
+        ins_q = raw orm_set_int(ins_q, "save_id", 1i64);
+        ins_q = raw orm_set_int(ins_q, "wallet", @cast<int64>(wallet));
+        string:ins_query = string_concat(raw orm_to_mongo(ins_q), "\0");
+        int32:_i = raw mongo_insert(db_conn, "nitpick_games\0", "blackjack_save\0", ins_query);
+    }
+    pass(0i32);
+};
+
+func:draw_card = int32(int32:card_id, int32:x, int32:y, int32:hidden) {
+    if (hidden == 1i32) {
+        raw rl_draw_rectangle(x, y, 70i32, 100i32, 40i32, 80i32, 180i32, 255i32);
+        raw rl_draw_rectangle_lines(x, y, 70i32, 100i32, 255i32, 255i32, 255i32, 255i32);
+        pass(0i32);
+    }
+    raw rl_draw_rectangle(x, y, 70i32, 100i32, 255i32, 255i32, 255i32, 255i32);
+    raw rl_draw_rectangle_lines(x, y, 70i32, 100i32, 0i32, 0i32, 0i32, 255i32);
+    
+    int32:suit = card_id / 13i32;
+    int32:v = (card_id % 13i32) + 1i32;
+    
+    string:val_str = "??";
+    if (v == 1i32) { val_str = "A\0"; }
+    if (v == 2i32) { val_str = "2\0"; }
+    if (v == 3i32) { val_str = "3\0"; }
+    if (v == 4i32) { val_str = "4\0"; }
+    if (v == 5i32) { val_str = "5\0"; }
+    if (v == 6i32) { val_str = "6\0"; }
+    if (v == 7i32) { val_str = "7\0"; }
+    if (v == 8i32) { val_str = "8\0"; }
+    if (v == 9i32) { val_str = "9\0"; }
+    if (v == 10i32) { val_str = "10\0"; }
+    if (v == 11i32) { val_str = "J\0"; }
+    if (v == 12i32) { val_str = "Q\0"; }
+    if (v == 13i32) { val_str = "K\0"; }
+    
+    string:suit_str = "?\0";
+    int32:r = 0i32; int32:g = 0i32; int32:b = 0i32; // Default black
+    if (suit == 0i32) { suit_str = "H\0"; r = 220i32; g = 20i32; b = 20i32; } // Hearts - Red
+    if (suit == 1i32) { suit_str = "D\0"; r = 220i32; g = 20i32; b = 20i32; } // Diamonds - Red
+    if (suit == 2i32) { suit_str = "C\0"; } // Clubs - Black
+    if (suit == 3i32) { suit_str = "S\0"; } // Spades - Black
+    
+    raw rl_draw_text(val_str, x + 5i32, y + 5i32, 20i32, r, g, b, 255i32);
+    raw rl_draw_text(suit_str, x + 45i32, y + 75i32, 20i32, r, g, b, 255i32);
+    raw rl_draw_text(suit_str, x + 25i32, y + 35i32, 30i32, r, g, b, 255i32);
+    
+    pass(0i32);
+};
+
+func:draw_button = int32(int32:x, int32:y, int32:w, int32:h, string:label) {
+    raw rl_draw_rectangle(x, y, w, h, 220i32, 220i32, 220i32, 255i32);
+    raw rl_draw_rectangle_lines(x, y, w, h, 50i32, 50i32, 50i32, 255i32);
+    raw rl_draw_text(label, x + 15i32, y + 15i32, 20i32, 0i32, 0i32, 0i32, 255i32);
+    pass(0i32);
+};
+
+func:is_clicked = int32(int32:mx, int32:my, int32:bx, int32:by, int32:bw, int32:bh) {
+    if (mx >= bx && mx <= bx + bw) {
+        if (my >= by && my <= by + bh) {
+            pass(1i32);
+        }
+    }
+    pass(0i32);
+};
+
+func:main = int32() {
+    raw rl_init_window(800i32, 600i32, "Nitpick Blackjack\0");
+    raw rl_set_target_fps(60i32);
+    
+    int32:wallet = 200i32;
+    int32:current_bet = 10i32;
+    int32:phase = 0i32; // 0: Bet, 1: Player, 2: Dealer/Resolve, 3: Game Over
+    string:msg = "Place your bet!\0";
+    
+    raw mongo_init();
+    int32:db_conn = raw mongo_connect("mongodb://localhost:27017\0");
+    if (db_conn >= 0i32) {
+        int32:cursor = raw mongo_find(db_conn, "nitpick_games\0", "blackjack_save\0", "{\"save_id\": 1}\0", "\0");
+        if (cursor >= 0i32) {
+            string:doc = raw mongo_cursor_next(cursor);
+            if (string_length(doc) > 0i64) {
+                int32:jp = raw json_parse(doc);
+                if (jp == 1i32) {
+                    wallet = @cast<int32>(raw json_get_int("wallet\0"));
+                    if (wallet < 10i32) {
+                        wallet = 200i32;
+                        msg = "You were broke! Here is a $200 loan.\0";
+                    } else {
+                        msg = "Welcome back! Place your bet!\0";
+                    }
+                }
+            }
+            int32:_c = raw mongo_cursor_close(cursor);
+        }
+    }
+    
+    int32:running = 1i32;
+    int32:mouse_clicked = 0i32;
+    
+    while (raw rl_window_should_close() == 0i32) {
+        
+        mouse_clicked = raw rl_is_mouse_button_pressed(0i32);
+        int32:mx = raw rl_get_mouse_x();
+        int32:my = raw rl_get_mouse_y();
+        
+        if (mouse_clicked == 1i32) {
+            if (phase == 0i32) {
+                // Bet Down: x=300, y=500, w=50, h=50
+                if (raw is_clicked(mx, my, 300i32, 500i32, 50i32, 50i32) == 1i32) {
+                    if (current_bet - 10i32 >= 10i32) {
+                        current_bet = current_bet - 10i32;
+                    }
+                }
+                // Bet Up: x=450, y=500, w=50, h=50
+                if (raw is_clicked(mx, my, 450i32, 500i32, 50i32, 50i32) == 1i32) {
+                    if (current_bet + 10i32 <= wallet) {
+                        current_bet = current_bet + 10i32;
+                    }
+                }
+                // Deal: x=360, y=500, w=80, h=50
+                if (raw is_clicked(mx, my, 360i32, 500i32, 80i32, 50i32) == 1i32) {
+                    wallet = wallet - current_bet;
+                    msg = "Dealing cards...\0";
+                    blackjack_init_deck();
+                    blackjack_init_hands();
+                    blackjack_deal_initial();
+                    if (blackjack_player_score() == 21i32) {
+                        phase = 2i32;
+                    } else {
+                        phase = 1i32;
+                    }
+                }
+            } else {
+                if (phase == 1i32) {
+                    // Hit: x=300, y=500, w=80, h=50
+                    if (raw is_clicked(mx, my, 300i32, 500i32, 80i32, 50i32) == 1i32) {
+                        blackjack_player_hit();
+                        if (blackjack_player_score() >= 21i32) {
+                            phase = 2i32;
+                        }
+                    }
+                    // Stand: x=420, y=500, w=100, h=50
+                    if (raw is_clicked(mx, my, 420i32, 500i32, 100i32, 50i32) == 1i32) {
+                        phase = 2i32;
+                    }
+                }
+            }
+            if (phase == 3i32) {
+                // Play Again: x=300, y=500, w=150, h=50
+                if (raw is_clicked(mx, my, 300i32, 500i32, 150i32, 50i32) == 1i32) {
+                    if (wallet == 0i32) {
+                        msg = "You're broke! Here is a $200 loan.\0";
+                        wallet = 200i32;
+                    } else {
+                        msg = "Place your bet!\0";
+                    }
+                    if (current_bet > wallet) {
+                        current_bet = wallet;
+                    }
+                    phase = 0i32;
+                }
+                // Quit: x=470, y=500, w=100, h=50
+                if (raw is_clicked(mx, my, 470i32, 500i32, 100i32, 50i32) == 1i32) {
+                    raw rl_close_window();
+                    exit 0i32;
+                }
+            }
+        }
+        
+        if (phase == 2i32) {
+            int32:p_score = blackjack_player_score();
+            if (p_score > 21i32) {
+                msg = "Busted! You lose.\0";
+            } else {
+                int32:d_score = blackjack_dealer_score();
+                while (d_score < 17i32) {
+                    blackjack_dealer_hit();
+                    d_score = blackjack_dealer_score();
+                }
+                
+                if (d_score > 21i32) {
+                    msg = "Dealer Busted! You win!\0";
+                    wallet = wallet + (current_bet * 2i32);
+                } else {
+                    if (p_score > d_score) {
+                        if (p_score == 21i32) {
+                            msg = "Blackjack! You win 2.5x!\0";
+                            wallet = wallet + (current_bet * 5i32) / 2i32;
+                        } else {
+                            msg = "You win!\0";
+                            wallet = wallet + (current_bet * 2i32);
+                        }
+                    } else {
+                        if (p_score < d_score) {
+                            msg = "You lose.\0";
+                        } else {
+                            msg = "Push! Draw.\0";
+                            wallet = wallet + current_bet;
+                        }
+                    }
+                }
+            }
+            int32:_save = raw save_wallet(db_conn, wallet);
+            phase = 3i32;
+        }
+        
+        // --- DRAWING ---
+        raw rl_begin_drawing();
+        raw rl_clear_background(35i32, 107i32, 45i32, 255i32); // Casino Green
+        
+        // Headers
+        raw rl_draw_text("NITPICK BLACKJACK\0", 250i32, 20i32, 30i32, 255i32, 255i32, 255i32, 255i32);
+        
+        string:w_str = string_concat("WALLET: $", string_from_int(wallet));
+        raw rl_draw_text(string_concat(w_str, "\0"), 20i32, 20i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+        
+        string:b_str = string_concat("BET: $", string_from_int(current_bet));
+        raw rl_draw_text(string_concat(b_str, "\0"), 20i32, 50i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+        
+        // Message Area
+        raw rl_draw_rectangle(0i32, 400i32, 800i32, 60i32, 0i32, 0i32, 0i32, 150i32);
+        raw rl_draw_text(msg, 50i32, 420i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+        
+        // Cards
+        if (phase > 0i32) {
+            // Dealer
+            raw rl_draw_text("DEALER\0", 50i32, 100i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+            int32:d_cnt = blackjack_get_d_count();
+            int32:i = 0i32;
+            while (i < d_cnt) {
+                int32:cx = 50i32 + (i * 80i32);
+                int32:cy = 130i32;
+                if (phase == 1i32) {
+                    if (i == 1i32) {
+                        int32:_dc = raw draw_card(0i32, cx, cy, 1i32); // hidden
+                    } else {
+                        int32:_dc2 = raw draw_card(blackjack_get_d_card(i), cx, cy, 0i32);
+                    }
+                } else {
+                    int32:_dc3 = raw draw_card(blackjack_get_d_card(i), cx, cy, 0i32);
+                }
+                i = i + 1i32;
+            }
+            if (phase >= 2i32) {
+                string:ds_str = string_concat("Score: ", string_from_int(blackjack_dealer_score()));
+                raw rl_draw_text(string_concat(ds_str, "\0"), 50i32 + (d_cnt * 80i32), 170i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+            }
+            
+            // Player
+            raw rl_draw_text("PLAYER\0", 50i32, 250i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+            int32:p_cnt = blackjack_get_p_count();
+            int32:j = 0i32;
+            while (j < p_cnt) {
+                int32:cx2 = 50i32 + (j * 80i32);
+                int32:cy2 = 280i32;
+                int32:_pc = raw draw_card(blackjack_get_p_card(j), cx2, cy2, 0i32);
+                j = j + 1i32;
+            }
+            string:ps_str = string_concat("Score: ", string_from_int(blackjack_player_score()));
+            raw rl_draw_text(string_concat(ps_str, "\0"), 50i32 + (p_cnt * 80i32), 320i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+        }
+        
+        // Buttons
+        if (phase == 0i32) {
+            int32:_b1 = raw draw_button(300i32, 500i32, 50i32, 50i32, " -\0");
+            int32:_b2 = raw draw_button(360i32, 500i32, 80i32, 50i32, "DEAL\0");
+            int32:_b3 = raw draw_button(450i32, 500i32, 50i32, 50i32, " +\0");
+        }
+        if (phase == 1i32) {
+            int32:_b4 = raw draw_button(300i32, 500i32, 80i32, 50i32, " HIT\0");
+            int32:_b5 = raw draw_button(420i32, 500i32, 100i32, 50i32, " STAND\0");
+        }
+        if (phase == 3i32) {
+            int32:_b6 = raw draw_button(300i32, 500i32, 150i32, 50i32, " PLAY AGAIN\0");
+            int32:_b7 = raw draw_button(470i32, 500i32, 100i32, 50i32, " QUIT\0");
+        }
+        
+        raw rl_end_drawing();
+    }
+    
+    if (db_conn >= 0i32) {
+        int32:_d = raw mongo_disconnect(db_conn);
+        raw mongo_cleanup();
+    }
+    
+    raw rl_close_window();
+    exit 0i32;
+};

@@ -1,0 +1,4 @@
+[build]
+name = "nitpick-bits-tests"
+entry = "tests/test_nitpick_bits.npk"
+output = "/tmp/test_bits_bin"

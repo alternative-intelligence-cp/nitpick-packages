@@ -1,0 +1,16 @@
+extern "libc" {
+    func:malloc = int64(int64:size);
+    func:free   = NIL(int64:ptr);
+    func:aria_mem_read_float64 = float64(int64:ptr, int64:offset);
+    func:aria_mem_write_float64 = int64(int64:ptr, int64:offset, float64:val);
+}
+func:failsafe = int32(tbb32:err) { exit 1; };
+func:main = int32() {
+    int64:ptr = malloc(8i64);
+    drop(aria_mem_write_float64(ptr, 0i64, 42.5));
+    float64:val = aria_mem_read_float64(ptr, 0i64);
+    if (val > 42.0) {
+        return 0i32;
+    }
+    return 1i32;
+};

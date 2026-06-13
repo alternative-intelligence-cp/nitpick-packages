@@ -1,0 +1,8 @@
+[package]
+name = "nitpick-fs"
+version = "0.1.0"
+description = "Filesystem utilities for Nitpick"
+license = "MIT"
+
+[dependencies]
+link_libraries = ["nitpick_fs_shim"]

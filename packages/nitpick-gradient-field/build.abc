@@ -1,0 +1,5 @@
+// build.abc — nitpick-gradient-field
+build test {
+    src  = "tests/test_nitpick_gradient_field.npk"
+    out  = "/tmp/test_agf"
+}

@@ -1,0 +1,5 @@
+extern func:malloc = wild int64*(int64:size);
+pub func:main = int32() {
+    wild float64->:ptr = @cast_unchecked<wild float64->>(malloc(10i64));
+    pass(0i32);
+};

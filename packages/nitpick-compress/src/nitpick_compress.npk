@@ -1,0 +1,59 @@
+// nitpick_compress.npk — Compression/decompression library for Nitpick (v0.11.2)
+//
+// Keeps C shim for zlib integration.
+// Import with: use "nitpick_compress.npk".*;
+
+extern "nitpick_compress_shim" {
+    func:nitpick_compress_deflate   = int32(string:data, int32:len);
+    func:nitpick_compress_inflate   = int32(string:data, int32:len);
+    func:nitpick_compress_gzip      = int32(string:data, int32:len);
+    func:nitpick_compress_gunzip    = int32(string:data, int32:len);
+    func:nitpick_compress_get_result = string();
+    func:nitpick_compress_get_length = int32();
+    func:nitpick_compress_get_error  = int32();
+    func:nitpick_compress_roundtrip  = int32(string:data, int32:len);
+    func:nitpick_compress_version    = string();
+}
+
+extern "libc" { func:string_length = int64(string:s); }
+
+// ── Type wrapper ───────────────────────────────────────────────────────────────
+
+Type:Compress = {
+
+    func:deflate = int32(string:data, int32:len) {
+        pass nitpick_compress_deflate(data, len);
+    };
+
+    func:inflate = int32(string:data, int32:len) {
+        pass nitpick_compress_inflate(data, len);
+    };
+
+    func:gzip = int32(string:data, int32:len) {
+        pass nitpick_compress_gzip(data, len);
+    };
+
+    func:gunzip = int32(string:data, int32:len) {
+        pass nitpick_compress_gunzip(data, len);
+    };
+
+    func:get_result = string() {
+        pass nitpick_compress_get_result();
+    };
+
+    func:get_length = int32() {
+        pass nitpick_compress_get_length();
+    };
+
+    func:get_error = int32() {
+        pass nitpick_compress_get_error();
+    };
+
+    func:roundtrip = int32(string:data, int32:len) {
+        pass nitpick_compress_roundtrip(data, len);
+    };
+
+    func:version = string() {
+        pass nitpick_compress_version();
+    };
+};

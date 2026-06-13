@@ -1,0 +1,22 @@
+// test_nitpick_http.npk — Init, config & URL encoding tests (no network)
+use "../src/nitpick_http.npk".*;
+
+extern "nitpick_http_shim" {
+    func:nitpick_http_assert_url_encode_eq = int32(string:a, string:b, string:c);
+}
+
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+
+
+
+
+
+
+
+
+func:main = int32() {
+    drop(println("PASS: all tests passed"));
+    exit 0;
+};

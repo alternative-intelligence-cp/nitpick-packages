@@ -1,0 +1,22 @@
+# build.abc — nitpick-buf package
+#
+# Targets:
+#   nitpick-buf       — compiled library for downstream packages
+#   test-nitpick-buf  — test binary; imports src via `use "../src/nitpick_buf.npk".*;`
+
+[project]
+name = "nitpick-buf"
+version = "0.1.0"
+compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
+
+[target.nitpick-buf]
+type = "library"
+sources = ["src/nitpick_buf.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-buf]
+type = "binary"
+sources = ["tests/test_nitpick_buf.npk"]
+deps = []
+flags = []

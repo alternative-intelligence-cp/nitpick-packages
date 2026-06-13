@@ -1,0 +1,42 @@
+// nitpick_crypto.npk — Cryptographic hashing library for Nitpick (v0.11.2)
+//
+// Keeps C shim for OpenSSL integration.
+// Import with: use "nitpick_crypto.npk".*;
+
+extern "nitpick_crypto_shim" {
+    func:nitpick_crypto_sha1          = string(string:data);
+    func:nitpick_crypto_sha256        = string(string:data);
+    func:nitpick_crypto_md5           = string(string:data);
+    func:nitpick_crypto_hmac_sha256   = string(string:key, string:data);
+    func:nitpick_crypto_sha256_verify = int32(string:data, string:expected);
+    func:nitpick_crypto_md5_verify    = int32(string:data, string:expected);
+}
+
+// ── Type wrapper ───────────────────────────────────────────────────────────────
+
+Type:Crypto = {
+
+    func:sha1 = string(string:data) {
+        pass nitpick_crypto_sha1(data);
+    };
+
+    func:sha256 = string(string:data) {
+        pass nitpick_crypto_sha256(data);
+    };
+
+    func:md5 = string(string:data) {
+        pass nitpick_crypto_md5(data);
+    };
+
+    func:hmac_sha256 = string(string:key, string:data) {
+        pass nitpick_crypto_hmac_sha256(key, data);
+    };
+
+    func:sha256_verify = int32(string:data, string:expected) {
+        pass nitpick_crypto_sha256_verify(data, expected);
+    };
+
+    func:md5_verify = int32(string:data, string:expected) {
+        pass nitpick_crypto_md5_verify(data, expected);
+    };
+};

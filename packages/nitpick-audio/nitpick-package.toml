@@ -1,0 +1,15 @@
+[package]
+name = "nitpick-audio"
+version = "0.2.0"
+authors = ["Nitpick Language Project"]
+license = "MIT"
+description = "Software audio synthesis for Nitpick virtual console — 4-channel mixing, waveform generation via C shim"
+keywords = ["audio", "synthesis", "waveform", "console", "ffi"]
+categories = ["audio"]
+
+[dependencies]
+
+[build]
+type = "library"
+entry = "src/nitpick_audio.npk"
+link_libraries = ["nitpick_audio_shim", "asound", "SDL2"]

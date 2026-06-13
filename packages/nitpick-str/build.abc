@@ -1,0 +1,9 @@
+targets {
+    lib "nitpick-str" {
+        src = "src/nitpick_str.npk"
+    }
+
+    bin "test-nitpick-str" {
+        src = "tests/test_nitpick_str.npk"
+    }
+}

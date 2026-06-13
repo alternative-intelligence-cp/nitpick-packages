@@ -1,0 +1,12 @@
+[package]
+name            = "nitpick-http"
+version         = "0.12.0"
+description     = "HTTP client library for Nitpick — GET, POST, headers, status codes via libcurl"
+license         = "MIT"
+repository      = "https://github.com/alternative-intelligence-cp/aria"
+categories      = ["networking", "http"]
+
+[dependencies]
+
+[build]
+link_libraries = ["nitpick_http_shim", "curl"]

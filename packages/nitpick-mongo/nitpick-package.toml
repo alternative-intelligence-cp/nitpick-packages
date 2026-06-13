@@ -1,0 +1,6 @@
+[package]
+name = "nitpick-mongo"
+version = "0.1.0"
+description = "MongoDB driver for Nitpick using libmongoc"
+
+[dependencies]

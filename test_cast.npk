@@ -1,0 +1,14 @@
+extern "libc" {
+    func:malloc = int64(int64:size);
+    func:free   = NIL(int64:ptr);
+}
+
+func:main = int32() {
+    float64[]:arr = @cast_unchecked<float64[]>(malloc(80i64));
+    arr[0i64] = 42.0;
+    
+    if (arr[0i64] > 40.0) {
+        exit 0;
+    }
+    exit 1;
+};

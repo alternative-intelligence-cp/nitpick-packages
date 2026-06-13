@@ -1,0 +1,54 @@
+// test_orm.npk
+use "nitpick_orm.npk".*;
+
+extern "libc" {
+    func:printf = int32(string:fmt);
+}
+
+func:failsafe = int32(tbb32:err) {
+    int32:_ = printf("FAILSAFE TRIGGERED!\n\0");
+    exit 1i32;
+};
+
+func:main = int32() {
+    int32:_1 = printf("Initializing ORM Test...\n\0");
+    
+    // --- SELECT ---
+    QueryBuilder:q = raw orm_select("users");
+    q = raw orm_cols(q, "id, name, email");
+    q = raw orm_where_eq(q, "status", "active");
+    q = raw orm_where_eq(q, "role", "admin");
+    q = raw orm_order_by(q, "created_at DESC");
+    q = raw orm_limit(q, 10i32);
+    q = raw orm_offset(q, 20i32);
+    
+    int32:_2 = printf("SELECT SQL Postgres: \0");
+    print(raw orm_to_sql(q, raw DIALECT_POSTGRES())); print("\n");
+    
+    int32:_4 = printf("SELECT Mongo JSON: \0");
+    print(raw orm_to_mongo(q)); print("\n");
+    
+    // --- INSERT ---
+    QueryBuilder:q2 = raw orm_insert("users");
+    q2 = raw orm_set(q2, "name", "John Doe");
+    q2 = raw orm_set(q2, "email", "john@example.com");
+    q2 = raw orm_set_int(q2, "age", 30i64);
+    
+    int32:_5 = printf("INSERT SQL: \0");
+    print(raw orm_to_sql(q2, raw DIALECT_POSTGRES())); print("\n");
+    int32:_6 = printf("INSERT Mongo: \0");
+    print(raw orm_to_mongo(q2)); print("\n");
+    
+    // --- UPDATE ---
+    QueryBuilder:q3 = raw orm_update("users");
+    q3 = raw orm_set(q3, "status", "inactive");
+    q3 = raw orm_where_eq(q3, "id", "123");
+    
+    int32:_7 = printf("UPDATE SQL: \0");
+    print(raw orm_to_sql(q3, raw DIALECT_POSTGRES())); print("\n");
+    int32:_8 = printf("UPDATE Mongo: \0");
+    print(raw orm_to_mongo(q3)); print("\n");
+    
+    int32:_9 = printf("Done!\n\0");
+    exit 0i32;
+};

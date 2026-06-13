@@ -1,0 +1,10 @@
+func:failsafe = int32(tbb32:err) { exit 1; };
+pub func:test_fn = float64(float64[]:arr) {
+    pass(arr[0i64]);
+};
+func:main = int32() {
+    float64[5]:my_arr;
+    my_arr[0i64] = 42.0;
+    float64:val = test_fn(my_arr);
+    exit 0;
+};

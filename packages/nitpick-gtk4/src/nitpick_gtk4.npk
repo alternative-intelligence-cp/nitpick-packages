@@ -1,0 +1,298 @@
+// nitpick_gtk4.npk — Idiomatic Nitpick bindings for GTK4
+//
+// Provides native desktop GUI with window, labels, buttons, entries,
+// checkboxes, and CSS styling.
+// Requires: libnitpick_gtk4_shim.so + GTK4 libraries
+
+// ── extern declarations (C shim) ────────────────────────────────────
+
+extern "nitpick_gtk4_shim" {
+    // init / quit
+    func:nitpick_gtk4_init = int32(string:app_id);
+    func:nitpick_gtk4_run  = int32();
+    func:nitpick_gtk4_quit = void();
+
+    // main loop
+    func:nitpick_gtk4_is_running      = int32();
+    func:nitpick_gtk4_iteration       = int32(int32:blocking);
+    func:nitpick_gtk4_events_pending  = int32();
+
+    // events
+    func:nitpick_gtk4_get_last_event = int32();
+
+    // window
+    func:nitpick_gtk4_has_window          = int32();
+    func:nitpick_gtk4_set_title           = void(string:title);
+    func:nitpick_gtk4_set_default_size    = void(int32:w, int32:h);
+    func:nitpick_gtk4_window_close        = void();
+    func:nitpick_gtk4_window_present      = void();
+    func:nitpick_gtk4_window_fullscreen   = void();
+    func:nitpick_gtk4_window_unfullscreen = void();
+    func:nitpick_gtk4_window_maximize     = void();
+    func:nitpick_gtk4_window_minimize     = void();
+
+    // widgets: label
+    func:nitpick_gtk4_add_label      = int32(string:text);
+    func:nitpick_gtk4_label_set_text = void(int32:id, string:text);
+
+    // widgets: button
+    func:nitpick_gtk4_add_button = int32(string:label);
+
+    // widgets: entry
+    func:nitpick_gtk4_add_entry      = int32(string:placeholder);
+    func:nitpick_gtk4_entry_get_text = string(int32:id);
+
+    // widgets: separator
+    func:nitpick_gtk4_add_separator = int32();
+
+    // widgets: check button
+    func:nitpick_gtk4_add_check_button        = int32(string:label);
+    func:nitpick_gtk4_check_button_get_active = int32(int32:id);
+    func:nitpick_gtk4_check_button_set_active = void(int32:id, int32:active);
+
+    // advanced widgets
+    func:nitpick_gtk4_add_image = int32(string:filename);
+    func:nitpick_gtk4_add_progress_bar = int32();
+    func:nitpick_gtk4_progress_bar_set_fraction = void(int32:id, flt32:fraction);
+    func:nitpick_gtk4_add_combo_box_text = int32();
+    func:nitpick_gtk4_combo_box_text_append = void(int32:id, string:id_str, string:text);
+    func:nitpick_gtk4_combo_box_set_active = void(int32:id, int32:index);
+    func:nitpick_gtk4_combo_box_get_active = int32(int32:id);
+    func:nitpick_gtk4_add_grid = int32();
+    func:nitpick_gtk4_grid_attach = void(int32:grid_id, int32:child_id, int32:col, int32:row, int32:colspan, int32:rowspan);
+    func:nitpick_gtk4_add_scrolled_window = int32();
+    func:nitpick_gtk4_scrolled_window_set_child = void(int32:sw_id, int32:child_id);
+
+    // widget properties
+    func:nitpick_gtk4_widget_set_visible      = void(int32:id, int32:visible);
+    func:nitpick_gtk4_widget_set_sensitive    = void(int32:id, int32:sensitive);
+    func:nitpick_gtk4_widget_set_size_request = void(int32:id, int32:w, int32:h);
+    func:nitpick_gtk4_widget_add_css_class    = void(int32:id, string:css_class);
+
+    // CSS
+    func:nitpick_gtk4_load_css = void(string:css);
+
+    // box layout
+    func:nitpick_gtk4_box_set_spacing      = void(int32:spacing);
+    func:nitpick_gtk4_box_set_homogeneous  = void(int32:homogeneous);
+}
+
+// ── event constants ─────────────────────────────────────────────────
+
+pub func:GTK_EVT_NONE     = int32() { pass(0i32); };
+pub func:GTK_EVT_ACTIVATE = int32() { pass(1i32); };
+pub func:GTK_EVT_DESTROY  = int32() { pass(2i32); };
+pub func:GTK_EVT_CLICKED  = int32() { pass(3i32); };
+
+// ── public API: init / quit ─────────────────────────────────────────
+
+pub func:gtk_init = int32(string:app_id) {
+    int32:r = nitpick_gtk4_init(app_id);
+    pass(r);
+};
+
+pub func:gtk_run = int32() {
+    int32:r = nitpick_gtk4_run();
+    pass(r);
+};
+
+pub func:gtk_quit = NIL() {
+    nitpick_gtk4_quit();
+    pass(NIL);
+};
+
+// ── public API: main loop ───────────────────────────────────────────
+
+pub func:gtk_is_running = int32() {
+    int32:r = nitpick_gtk4_is_running();
+    pass(r);
+};
+
+pub func:gtk_iterate = int32(int32:blocking) {
+    int32:r = nitpick_gtk4_iteration(blocking);
+    pass(r);
+};
+
+pub func:gtk_events_pending = int32() {
+    int32:r = nitpick_gtk4_events_pending();
+    pass(r);
+};
+
+// ── public API: events ──────────────────────────────────────────────
+
+pub func:gtk_get_last_event = int32() {
+    int32:r = nitpick_gtk4_get_last_event();
+    pass(r);
+};
+
+// ── public API: window ──────────────────────────────────────────────
+
+pub func:gtk_has_window = int32() {
+    int32:r = nitpick_gtk4_has_window();
+    pass(r);
+};
+
+pub func:gtk_set_title = NIL(string:title) {
+    nitpick_gtk4_set_title(title);
+    pass(NIL);
+};
+
+pub func:gtk_set_default_size = NIL(int32:w, int32:h) {
+    nitpick_gtk4_set_default_size(w, h);
+    pass(NIL);
+};
+
+pub func:gtk_window_close = NIL() {
+    nitpick_gtk4_window_close();
+    pass(NIL);
+};
+
+pub func:gtk_window_present = NIL() {
+    nitpick_gtk4_window_present();
+    pass(NIL);
+};
+
+// ── public API: widgets ─────────────────────────────────────────────
+
+pub func:gtk_add_label = int32(string:text) {
+    int32:r = nitpick_gtk4_add_label(text);
+    pass(r);
+};
+
+pub func:gtk_label_set_text = NIL(int32:id, string:text) {
+    nitpick_gtk4_label_set_text(id, text);
+    pass(NIL);
+};
+
+pub func:gtk_add_button = int32(string:label) {
+    int32:r = nitpick_gtk4_add_button(label);
+    pass(r);
+};
+
+pub func:gtk_add_entry = int32(string:placeholder) {
+    int32:r = nitpick_gtk4_add_entry(placeholder);
+    pass(r);
+};
+
+pub func:gtk_entry_get_text = string(int32:id) {
+    string:r = nitpick_gtk4_entry_get_text(id);
+    pass(r);
+};
+
+pub func:gtk_add_separator = int32() {
+    int32:r = nitpick_gtk4_add_separator();
+    pass(r);
+};
+
+pub func:gtk_add_check_button = int32(string:label) {
+    int32:r = nitpick_gtk4_add_check_button(label);
+    pass(r);
+};
+
+pub func:gtk_check_get_active = int32(int32:id) {
+    int32:r = nitpick_gtk4_check_button_get_active(id);
+    pass(r);
+};
+
+pub func:gtk_check_set_active = NIL(int32:id, int32:active) {
+    nitpick_gtk4_check_button_set_active(id, active);
+    pass(NIL);
+};
+
+// ── public API: advanced widgets ──────────────────────────────────────
+
+pub func:gtk4_add_image = int32(string:filename) {
+    int32:r = nitpick_gtk4_add_image(filename);
+    pass(r);
+};
+
+pub func:gtk4_add_progress_bar = int32() {
+    int32:r = nitpick_gtk4_add_progress_bar();
+    pass(r);
+};
+
+pub func:gtk4_progress_bar_set_fraction = NIL(int32:id, flt32:fraction) {
+    nitpick_gtk4_progress_bar_set_fraction(id, fraction);
+    pass(NIL);
+};
+
+pub func:gtk4_add_combo_box_text = int32() {
+    int32:r = nitpick_gtk4_add_combo_box_text();
+    pass(r);
+};
+
+pub func:gtk4_combo_box_text_append = NIL(int32:id, string:id_str, string:text) {
+    nitpick_gtk4_combo_box_text_append(id, id_str, text);
+    pass(NIL);
+};
+
+pub func:gtk4_combo_box_set_active = NIL(int32:id, int32:index) {
+    nitpick_gtk4_combo_box_set_active(id, index);
+    pass(NIL);
+};
+
+pub func:gtk4_combo_box_get_active = int32(int32:id) {
+    int32:r = nitpick_gtk4_combo_box_get_active(id);
+    pass(r);
+};
+
+pub func:gtk4_add_grid = int32() {
+    int32:r = nitpick_gtk4_add_grid();
+    pass(r);
+};
+
+pub func:gtk4_grid_attach = NIL(int32:grid_id, int32:child_id, int32:col, int32:row, int32:colspan, int32:rowspan) {
+    nitpick_gtk4_grid_attach(grid_id, child_id, col, row, colspan, rowspan);
+    pass(NIL);
+};
+
+pub func:gtk4_add_scrolled_window = int32() {
+    int32:r = nitpick_gtk4_add_scrolled_window();
+    pass(r);
+};
+
+pub func:gtk4_scrolled_window_set_child = NIL(int32:sw_id, int32:child_id) {
+    nitpick_gtk4_scrolled_window_set_child(sw_id, child_id);
+    pass(NIL);
+};
+
+// ── public API: widget properties ───────────────────────────────────
+
+pub func:gtk_widget_set_visible = NIL(int32:id, int32:visible) {
+    nitpick_gtk4_widget_set_visible(id, visible);
+    pass(NIL);
+};
+
+pub func:gtk_widget_set_sensitive = NIL(int32:id, int32:sensitive) {
+    nitpick_gtk4_widget_set_sensitive(id, sensitive);
+    pass(NIL);
+};
+
+pub func:gtk_widget_set_size = NIL(int32:id, int32:w, int32:h) {
+    nitpick_gtk4_widget_set_size_request(id, w, h);
+    pass(NIL);
+};
+
+pub func:gtk_widget_add_css_class = NIL(int32:id, string:css_class) {
+    nitpick_gtk4_widget_add_css_class(id, css_class);
+    pass(NIL);
+};
+
+// ── public API: CSS ─────────────────────────────────────────────────
+
+pub func:gtk_load_css = NIL(string:css) {
+    nitpick_gtk4_load_css(css);
+    pass(NIL);
+};
+
+// ── public API: box layout ──────────────────────────────────────────
+
+pub func:gtk_box_set_spacing = NIL(int32:spacing) {
+    nitpick_gtk4_box_set_spacing(spacing);
+    pass(NIL);
+};
+
+pub func:gtk_box_set_homogeneous = NIL(int32:homogeneous) {
+    nitpick_gtk4_box_set_homogeneous(homogeneous);
+    pass(NIL);
+};

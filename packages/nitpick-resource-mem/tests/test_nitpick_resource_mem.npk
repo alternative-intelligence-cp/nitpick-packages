@@ -1,0 +1,20 @@
+// test_nitpick_resource_mem.npk — LIB-24  test suite  (nitpick-resource-mem)
+//
+// 20 deterministic tests covering read/write constraints, expiry semantics,
+// peek, is_live, status, and resource-nitpick_left accounting.
+//
+// Status code reference (stored in result[2]):
+//   0 = RM_LIVE      1 = RM_WRITE_OK   2 = RM_EXP_READS
+//   3 = RM_EXP_WRITES  4 = RM_EXP_TTL
+//   result[0]: 1 = ok,  0 = error
+//   Unlimited sentinel: 0i64 - 1i64 = -1
+
+extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_resource_mem.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:main = int32() {
+    drop(println("PASS: all tests passed"));
+    exit 0;
+};

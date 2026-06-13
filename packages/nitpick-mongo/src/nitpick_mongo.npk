@@ -1,0 +1,87 @@
+// nitpick_mongo.npk — MongoDB driver for Nitpick
+//
+// Operates heavily on JSON strings mapping to MongoDB's Extended JSON format.
+
+extern "nitpick_mongo_shim" {
+    func:nitpick_mongo_init       = int32();
+    func:nitpick_mongo_cleanup    = int32();
+    func:nitpick_mongo_connect    = int32(string:uri);
+    func:nitpick_mongo_disconnect = int32(int32:conn_id);
+    
+    func:nitpick_mongo_last_conn   = int32();
+    func:nitpick_mongo_last_cursor = int32();
+    
+    func:nitpick_mongo_insert = int32(int32:conn_id, string:db, string:col, string:json_doc);
+    func:nitpick_mongo_find   = int32(int32:conn_id, string:db, string:col, string:json_query, string:opts_json);
+    func:nitpick_mongo_delete = int32(int32:conn_id, string:db, string:col, string:json_query);
+    
+    func:nitpick_mongo_cursor_next  = string(int32:cursor_id);
+    func:nitpick_mongo_cursor_close = int32(int32:cursor_id);
+}
+
+pub func:mongo_init = NIL() {
+    int32:_ = nitpick_mongo_init();
+    pass(NIL);
+};
+
+pub func:mongo_cleanup = NIL() {
+    int32:_ = nitpick_mongo_cleanup();
+    pass(NIL);
+};
+
+pub func:mongo_connect = int32(string:uri) {
+    int32:r = nitpick_mongo_connect(uri);
+    if (r < 0i32) {
+        fail(1i32);
+    }
+    pass(r);
+};
+
+pub func:mongo_disconnect = int32(int32:conn_id) {
+    int32:_ = nitpick_mongo_disconnect(conn_id);
+    pass(conn_id);
+};
+
+pub func:mongo_last_conn = int32() {
+    pass(nitpick_mongo_last_conn());
+};
+
+pub func:mongo_last_cursor = int32() {
+    pass(nitpick_mongo_last_cursor());
+};
+
+pub func:mongo_insert = int32(int32:conn_id, string:db, string:col, string:json_doc) {
+    int32:r = nitpick_mongo_insert(conn_id, db, col, json_doc);
+    if (r < 0i32) {
+        fail(2i32);
+    }
+    pass(r);
+};
+
+pub func:mongo_find = int32(int32:conn_id, string:db, string:col, string:json_query, string:opts_json) {
+    int32:r = nitpick_mongo_find(conn_id, db, col, json_query, opts_json);
+    if (r < 0i32) {
+        fail(3i32);
+    }
+    pass(r);
+};
+
+pub func:mongo_delete = int32(int32:conn_id, string:db, string:col, string:json_query) {
+    int32:r = nitpick_mongo_delete(conn_id, db, col, json_query);
+    if (r < 0i32) {
+        fail(4i32);
+    }
+    pass(r);
+};
+
+pub func:mongo_cursor_next = string(int32:cursor_id) {
+    // Note: C shim returns a const char* which nitpick wraps as a string.
+    // If it returns NULL, the string will have a 0 length or NULL data pointer.
+    string:doc = nitpick_mongo_cursor_next(cursor_id);
+    pass(doc);
+};
+
+pub func:mongo_cursor_close = int32(int32:cursor_id) {
+    int32:_ = nitpick_mongo_cursor_close(cursor_id);
+    pass(cursor_id);
+};

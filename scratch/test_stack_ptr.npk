@@ -1,0 +1,18 @@
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:set_val = NIL(wild int64->:arr) {
+    arr[0i64] = 42i64;
+    pass(NIL);
+};
+
+pub func:main = int32() {
+    int64[2]:arr;
+    arr[0i64] = 0i64;
+    drop(set_val(arr));
+    if (arr[0i64] == 42i64) {
+        print("PASS\n");
+    } else {
+        print("FAIL\n");
+    }
+    exit 0i32;
+};

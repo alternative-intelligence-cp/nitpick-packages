@@ -1,0 +1,15 @@
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:takes_ptr = NIL(wild float64->:ptr) {
+    ptr[14i64] = 42.0;
+    pass NIL;
+};
+
+pub func:main = int32() {
+    float64[15]:nodes;
+    nodes[0i64] = 0.0;
+    float64[100]:dummy; // Try to force a larger stack frame
+    dummy[0i64] = 0.0;
+    drop(takes_ptr(nodes));
+    exit 0;
+};

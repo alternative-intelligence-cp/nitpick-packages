@@ -1,0 +1,8 @@
+[package]
+name = "nitpick-base64"
+version = "0.1.0"
+description = "Base64 encoding and decoding for Nitpick"
+license = "MIT"
+
+[dependencies]
+link_libraries = ["nitpick_base64_shim"]

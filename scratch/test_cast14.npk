@@ -1,0 +1,9 @@
+extern func:malloc = wild int64*(int64:size);
+extern func:free = void(wild float64*:ptr);
+pub func:alloc_f64 = void(int64:size, wild float64->->:out_ptr) {
+    out_ptr[0i64] = @cast_unchecked<float64->>(malloc(size));
+};
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+pub func:main = int32() {
+    exit 0;
+};

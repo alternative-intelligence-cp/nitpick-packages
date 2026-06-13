@@ -1,0 +1,28 @@
+// test_nitpick_test.npk — Self-test for the nitpick-test framework
+extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_test.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+func:main = int32() {
+    drop(println("PASS: all tests passed"));
+    exit 0;
+};

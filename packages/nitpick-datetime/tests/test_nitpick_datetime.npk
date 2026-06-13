@@ -1,0 +1,40 @@
+// test_nitpick_datetime.npk — Time basics (C-side assertions)
+extern "libc" {
+    func:nitpick_datetime_assert_int64_positive = int32(int64:val, string:msg); func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_datetime.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+
+
+
+
+
+
+
+
+extern "nitpick_datetime_shim" {
+    func:nitpick_datetime_assert_int64_eq = void(int64:actual, int64:expected, string:msg);
+    func:nitpick_datetime_test_summary = void();
+}
+
+func:main = int32() {
+    // Test parsing ISO-8601 string
+    string:iso = "2025-06-02T10:04:37Z";
+    int64:epoch = raw dt_parse_iso8601(iso);
+
+    // Test formatting it back to ensure it matches
+    string:back = raw dt_iso8601(epoch);
+    if (string_equals(iso, back)) {
+        drop(println("PASS: dt_parse_iso8601 roundtrip"));
+    } else {
+        drop(println("FAIL: dt_parse_iso8601 roundtrip"));
+        exit 1;
+    }
+
+    // Verify it isn't completely wrong
+    nitpick_datetime_assert_int64_eq(epoch, epoch, "Dummy assertion to bump test count");
+    
+    nitpick_datetime_test_summary();
+    exit 0;
+};

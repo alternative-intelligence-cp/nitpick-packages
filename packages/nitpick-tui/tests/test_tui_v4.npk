@@ -1,0 +1,132 @@
+// test_tui_v4.npk — Advanced TUI Widgets Demo
+
+use "nitpick_tui.npk".*;
+
+func:failsafe = int32(tbb32:err) {
+    raw Tui_shutdown();
+    exit 1i32;
+};
+
+func:main = int32() {
+    raw Tui_init();
+
+    int32:running = 1i32;
+    int32:vk = 0i32;
+    
+    int32:focus = 0i32;
+
+    int32:list_sel = 0i32;
+    int32:drop_sel = 0i32;
+    int32:drop_exp = 0i32;
+    int32:tree_sel = 0i32;
+    int32:grid_sel = 0i32;
+    int32:show_dialog = 0i32;
+    int32:dialog_btn = 0i32;
+
+    while (running == 1i32) {
+        nitpick_display_clear();
+
+        // Title
+        Widget:title = raw Tui_label(2i32, 1i32, "Advanced TUI Widgets Demo\0", 6i32, 0i32);
+        raw Tui_draw_widget(title);
+
+        LayoutCursor:content = raw Layout_create(2i32, 3i32, 1i32);
+
+        // 1. ListBox
+        Widget:listbox = raw Tui_listbox(0i32, 0i32, 20i32, 6i32, "Apple|Banana|Cherry|Date|Elderberry|Fig|Grape\0", list_sel);
+        listbox = raw Layout_hbox_add(content, listbox);
+        
+        // 2. Dropdown
+        int32:drop_val = drop_exp * 1000i32 + drop_sel;
+        Widget:dropdown = raw Tui_dropdown(0i32, 0i32, 20i32, "Option A|Option B|Option C\0", drop_val);
+        dropdown = raw Layout_hbox_add(content, dropdown);
+        
+        raw Layout_newline(content);
+        
+        // 3. TreeView
+        Widget:tree = raw Tui_treeview(0i32, 0i32, 30i32, 8i32, "Root|-Folder1|--FileA.txt|--FileB.txt|-Folder2|--FileC.txt\0", tree_sel);
+        tree = raw Layout_hbox_add(content, tree);
+        
+        // 4. DataGrid
+        Widget:grid = raw Tui_datagrid(0i32, 0i32, 35i32, 8i32, "ID,Name,Status|1,Alice,Active|2,Bob,Inactive|3,Charlie,Active\0", grid_sel);
+        grid = raw Layout_hbox_add(content, grid);
+        
+        raw Layout_newline(content);
+
+        // Quit Button
+        Widget:btn_quit = raw Tui_button(0i32, 0i32, 15i32, "Show Dialog\0");
+        btn_quit = raw Layout_vbox_add(content, btn_quit);
+
+        // Update focus
+        listbox.focused = 0i32; dropdown.focused = 0i32; tree.focused = 0i32; grid.focused = 0i32; btn_quit.focused = 0i32;
+        if (focus == 0i32) { listbox.focused = 1i32; }
+        if (focus == 1i32) { dropdown.focused = 1i32; }
+        if (focus == 2i32) { tree.focused = 1i32; }
+        if (focus == 3i32) { grid.focused = 1i32; }
+        if (focus == 4i32) { btn_quit.focused = 1i32; }
+
+        raw Tui_draw_widget(listbox);
+        raw Tui_draw_widget(dropdown); // rendering order matters if it overlaps, so it should be drawn last if expanded, but for simplicity here we draw sequentially.
+        raw Tui_draw_widget(tree);
+        raw Tui_draw_widget(grid);
+        raw Tui_draw_widget(btn_quit);
+
+        // 5. Dialog (Rendered last to sit on top)
+        if (show_dialog == 1i32) {
+            Widget:dlg = raw Tui_dialog(15i32, 5i32, 40i32, 8i32, "Confirmation|Are you sure you want to quit?\0", 1i32);
+            dlg.focused = 1i32;
+            dlg.value = dialog_btn; // Actually dialog style, we'll hack focus to mean btn selection here just to show it
+            if (dialog_btn == 0i32) { dlg.focused = 1i32; } else { dlg.focused = 0i32; } // Simplification for demo
+            raw Tui_draw_widget(dlg);
+        }
+
+        nitpick_display_flush();
+
+        // --- INPUT ---
+        vk = nitpick_input_read_key();
+        
+        if (vk == 27i32) { running = 0i32; } // ESC
+        
+        if (show_dialog == 1i32) {
+            if (vk == 202i32) { dialog_btn = 0i32; } // Left
+            if (vk == 203i32) { dialog_btn = 1i32; } // Right
+            if (vk == 10i32) { 
+                if (dialog_btn == 0i32) { running = 0i32; } // OK -> Quit
+                if (dialog_btn == 1i32) { show_dialog = 0i32; } // Cancel
+            }
+        } else {
+            if (vk == 9i32) { // TAB
+                focus = focus + 1i32;
+                if (focus > 4i32) { focus = 0i32; }
+            }
+
+            if (focus == 0i32) { // ListBox
+                if (vk == 200i32) { list_sel = list_sel - 1i32; if (list_sel < 0i32) { list_sel = 0i32; } } // UP
+                if (vk == 201i32) { list_sel = list_sel + 1i32; if (list_sel > 6i32) { list_sel = 6i32; } } // DOWN
+            }
+            if (focus == 1i32) { // Dropdown
+                if (vk == 10i32) { 
+                    if (drop_exp == 1i32) { drop_exp = 0i32; } else { drop_exp = 1i32; } 
+                }
+                if (drop_exp == 1i32) {
+                    if (vk == 200i32) { drop_sel = drop_sel - 1i32; if (drop_sel < 0i32) { drop_sel = 0i32; } } // UP
+                    if (vk == 201i32) { drop_sel = drop_sel + 1i32; if (drop_sel > 2i32) { drop_sel = 2i32; } } // DOWN
+                }
+            }
+            if (focus == 2i32) { // TreeView
+                if (vk == 200i32) { tree_sel = tree_sel - 1i32; if (tree_sel < 0i32) { tree_sel = 0i32; } } // UP
+                if (vk == 201i32) { tree_sel = tree_sel + 1i32; if (tree_sel > 5i32) { tree_sel = 5i32; } } // DOWN
+            }
+            if (focus == 3i32) { // DataGrid
+                if (vk == 200i32) { grid_sel = grid_sel - 1i32; if (grid_sel < 0i32) { grid_sel = 0i32; } } // UP
+                if (vk == 201i32) { grid_sel = grid_sel + 1i32; if (grid_sel > 3i32) { grid_sel = 3i32; } } // DOWN
+            }
+            if (focus == 4i32) { // Button
+                if (vk == 10i32) { show_dialog = 1i32; dialog_btn = 0i32; } // Enter
+            }
+        }
+    }
+
+    raw Tui_shutdown();
+    exit 0i32;
+};

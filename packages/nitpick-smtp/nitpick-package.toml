@@ -1,0 +1,13 @@
+[package]
+name = "nitpick-smtp"
+version = "0.12.2"
+description = "SMTP protocol command builder and reply parser"
+license = "MIT"
+
+[build]
+type = "pure"
+
+[dependencies]
+
+[metadata]
+categories = ["network", "protocol"]

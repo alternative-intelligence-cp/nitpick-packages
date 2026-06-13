@@ -1,0 +1,10 @@
+func:failsafe = int32(tbb32:err) { exit 1; };
+func:takes_int = int64(int64:ptr) {
+    pass(ptr);
+};
+func:main = int32() {
+    int64[5]:arr;
+    arr[0i64] = 42i64;
+    int64:val = takes_int(arr);
+    exit 0;
+};

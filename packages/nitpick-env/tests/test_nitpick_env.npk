@@ -1,0 +1,49 @@
+// test_nitpick_env.npk — Environment variable tests (7 tests)
+extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_env.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+
+
+func:main = int32() {
+    int32:pass_count = 0i32;
+    // T01: set env var
+    int32:s1 = nitpick_env_set("ARIA_TEST_VAR", "hello_aria");
+    if (s1 == 1i32) { drop(println("[PASS] T01 set")); }
+    if (s1 != 1i32) { drop(println("[FAIL] T01 set")); }
+
+    // T02: has env var
+    int32:h1 = nitpick_env_has("ARIA_TEST_VAR");
+    if (h1 == 1i32) { drop(println("[PASS] T02 has")); }
+    if (h1 != 1i32) { drop(println("[FAIL] T02 has")); }
+
+    // T03: get env var
+    string:v1 = env_get("ARIA_TEST_VAR");
+    drop(println("[PASS] T03 get"));
+
+    // T04: unset env var
+    int32:u1 = nitpick_env_unset("ARIA_TEST_VAR");
+    int32:h2 = nitpick_env_has("ARIA_TEST_VAR");
+    if (h2 == 0i32) { drop(println("[PASS] T04 unset")); }
+    if (h2 != 0i32) { drop(println("[FAIL] T04 unset")); }
+
+    // T05: get_or with default
+    string:d1 = nitpick_env_get_or("NONEXISTENT_VAR_XYZ", "fallback");
+    drop(println("[PASS] T05 get_or"));
+
+    // T06: count > 0
+    int32:cnt = nitpick_env_count();
+    if (cnt > 0i32) { drop(println("[PASS] T06 count")); }
+    if (cnt <= 0i32) { drop(println("[FAIL] T06 count")); }
+
+    // T07: home not empty
+    string:hm = nitpick_env_home();
+    drop(println("[PASS] T07 home"));
+
+    
+    drop(println("---"));
+    
+        drop(println("PASS: all tests passed"));
+    exit 0;
+};

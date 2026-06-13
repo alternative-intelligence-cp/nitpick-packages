@@ -1,0 +1,7 @@
+[package]
+name = "nitpick-body-parser"
+version = "0.12.1"
+description = "HTTP body parser — URL-encoded and content-type detection — pure Nitpick"
+type = "pure"
+
+[dependencies]

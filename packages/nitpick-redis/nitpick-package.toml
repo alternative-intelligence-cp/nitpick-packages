@@ -1,0 +1,11 @@
+[package]
+name = "nitpick-redis"
+version = "0.1.0"
+description = "Redis client library for Nitpick via hiredis"
+authors = ["Randy <randy@ariax.org>"]
+
+[dependencies]
+
+[build]
+shim = "shim/nitpick_redis_shim.c"
+link_libraries = ["nitpick_redis_shim", "hiredis"]

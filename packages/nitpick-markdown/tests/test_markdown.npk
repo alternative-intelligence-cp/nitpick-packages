@@ -1,0 +1,21 @@
+// test_markdown.npk
+
+use "nitpick_markdown.npk".*;
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+func:main = int32() {
+    string:markdown_input = "# Markdown Test\n\nThis is a paragraph with **bold** and *italic* text.\n\n## Subheader\n\n- Item 1\n- Item 2 with a [link](https://example.com)\n- Item 3\n\nHere is some inline `code` to test.\n\n### End\n\0";
+    
+    print("--- Input Markdown ---\n\0");
+    print(markdown_input);
+    
+    print("\n--- HTML Output ---\n\0");
+    string:html_output = raw md_to_html(markdown_input);
+    print(html_output);
+    print("\n\0");
+    
+    exit 0i32;
+};

@@ -1,0 +1,10 @@
+[package]
+name = "nitpick-2048"
+version = "0.1.0"
+
+[dependencies]
+nitpick-str = "1.0.0"
+nitpick-tui = "1.0.0"
+nitpick-input = "1.0.0"
+nitpick-rand = "1.0.0"
+nitpick-math = "1.0.0"

@@ -1,0 +1,22 @@
+# build.abc — nitpick-color package
+#
+# Targets:
+#   nitpick-color       — compiled library (.o → .a) for downstream packages
+#   test-nitpick-color  — test binary; imports src via `use "../src/nitpick_color.npk".*;`
+
+[project]
+name = "nitpick-color"
+version = "0.1.0"
+compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
+
+[target.nitpick-color]
+type = "library"
+sources = ["src/nitpick_color.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-color]
+type = "binary"
+sources = ["tests/test_nitpick_color.npk"]
+deps = []
+flags = []

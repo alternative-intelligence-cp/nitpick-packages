@@ -1,0 +1,25 @@
+# build.abc — nitpick-args package (LIB-21)
+#
+# Targets:
+#   nitpick-args       — compiled library for downstream packages
+#   test-nitpick-args  — test binary; imports src via `use "../src/nitpick_args.npk".*;`
+#
+# Note: extern "libc" in nitpick_args.npk uses fopen/fgetc/fclose.
+# libc is always linked by the C runtime so no explicit deps are needed.
+
+[project]
+name = "nitpick-args"
+version = "0.1.0"
+compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
+
+[target.nitpick-args]
+type = "library"
+sources = ["src/nitpick_args.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-args]
+type = "binary"
+sources = ["tests/test_nitpick_args.npk"]
+deps = []
+flags = []

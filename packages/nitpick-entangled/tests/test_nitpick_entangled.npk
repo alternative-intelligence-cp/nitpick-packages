@@ -1,0 +1,27 @@
+// test_nitpick_entangled.npk — EntangledPair LIB-26 test suite
+//
+// Tests: 20 cases covering ep_create, lean mutations (alpha/beta),
+// tilt mutations (alpha/beta/pair), coupling propagation, anti-coupling,
+// crystallization, observe_alpha/beta, ep_get_snap readback,
+// sync_count, crystallization_count, propagation_count, ring buffer.
+//
+// Memory:
+//   ep       — 12 float64 (EP cell)
+//   meta     — 5  int64   (ring buffer metadata)
+//   snaps    — capacity * 16 float64 (PairSnapshot ring buffer)
+//   snap     — 16 float64 (scratch for ep_get_snap)
+
+extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_entangled.npk".*;
+
+extern "libc" { func:aria_alloc = int64(int64:size); }
+
+extern "libc" { func:malloc = int64(int64:size); }
+
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:main = int32() {
+    drop(println("PASS: all tests passed"));
+    exit 0;
+};

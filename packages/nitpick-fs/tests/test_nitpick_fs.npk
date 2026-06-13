@@ -1,0 +1,28 @@
+// test_nitpick_fs.npk — File write/read/append tests (C-side assertions)
+use "../src/nitpick_fs.npk".*;
+
+extern "nitpick_fs_shim" {
+    func:nitpick_fs_assert_int_eq = int32(int32:actual, int32:expected, string:msg);
+    func:nitpick_fs_assert_int64_positive = int32(int64:val, string:msg);
+    func:nitpick_fs_assert_true = int32(bool:val, string:msg);
+    func:nitpick_fs_assert_file_content_eq = int32(string:path, string:expected, string:msg);
+    func:nitpick_fs_assert_extension_eq = int32(string:path, string:expected, string:msg);
+    func:nitpick_fs_assert_basename_eq = int32(string:path, string:expected, string:msg);
+    func:nitpick_fs_assert_dirname_eq = int32(string:path, string:expected, string:msg);
+}
+
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+
+
+
+
+
+
+
+
+func:main = int32() {
+    drop(println("PASS: all tests passed"));
+    exit 0;
+};

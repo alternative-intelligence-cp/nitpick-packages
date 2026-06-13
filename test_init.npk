@@ -1,0 +1,17 @@
+func:mutate = NIL(int64[]:slice) {
+    slice[0i64] = 42i64;
+};
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:main = int32() {
+    int64[6]:gf_meta = [0i64, 0i64, 0i64, 0i64, 0i64, 0i64];
+    
+    drop(mutate(gf_meta));
+    
+    if (gf_meta[0i64] == 42i64) {
+        return 0i32;
+    } else {
+        return 1i32;
+    }
+};

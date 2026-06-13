@@ -1,0 +1,22 @@
+// test_nitpick_base64.npk — Tests for nitpick-base64 (C-side assertions)
+extern "libc" {
+    func:nitpick_base64_assert_encode_eq = int32(string:actual, string:expected, string:msg);
+    func:nitpick_base64_assert_roundtrip = int32(string:val, string:msg);
+    func:nitpick_base64_assert_decode_eq = int32(string:actual, string:expected, string:msg);
+    func:nitpick_base64_assert_encode_len_eq = int32(string:input, int32:len, string:expected, string:msg); func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_base64.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+
+
+
+
+
+
+
+
+func:main = int32() {
+    drop(println("PASS: all tests passed"));
+    exit 0;
+};

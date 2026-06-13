@@ -1,0 +1,10 @@
+pub func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:takes_ptr = NIL(wild float64->:ptr) {
+    ptr[14i64] = 42.0;
+    pass NIL;
+};
+
+pub func:main = int32() {
+    exit 0;
+};

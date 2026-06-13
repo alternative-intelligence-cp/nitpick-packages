@@ -1,0 +1,45 @@
+// test_nitpick_jwt.npk — 5-test suite for nitpick-jwt (v0.1.0)
+extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_jwt.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:main = int32() {
+    int32:pass_count = 0i32;
+
+    string:secret = "my-super-secret-key-12345";
+    string:payload = "{\"user_id\":123,\"admin\":true}";
+    
+    // T01: jwt_sign non-empty
+    string:token = raw jwt_sign(payload, secret);
+    int64:len = string_length(token);
+    if (len > 0i64) { println("[PASS] T01 jwt_sign non-empty"); pass_count += 1i32; }
+    if (len <= 0i64) { println("[FAIL] T01 jwt_sign"); }
+
+    // T02: jwt_verify valid
+    int32:v1 = raw jwt_verify(token, secret);
+    if (v1 == 1i32) { println("[PASS] T02 jwt_verify valid token"); pass_count += 1i32; }
+    if (v1 != 1i32) { println("[FAIL] T02 jwt_verify valid"); }
+
+    // T03: jwt_verify wrong secret
+    int32:v2 = raw jwt_verify(token, "wrong-secret");
+    if (v2 == 0i32) { println("[PASS] T03 jwt_verify wrong secret"); pass_count += 1i32; }
+    if (v2 != 0i32) { println("[FAIL] T03 jwt_verify wrong secret"); }
+
+    // T04: jwt_decode payload
+    string:decoded = raw jwt_decode(token);
+    if (string_equals(decoded, payload)) { println("[PASS] T04 jwt_decode"); pass_count += 1i32; }
+    if (!string_equals(decoded, payload)) { println("[FAIL] T04 jwt_decode"); }
+
+    // T05: jwt_verify tampered token
+    // Append a character to the payload segment
+    string:tampered = string_concat(token, "a"); 
+    int32:v3 = raw jwt_verify(tampered, secret);
+    if (v3 == 0i32) { println("[PASS] T05 jwt_verify tampered"); pass_count += 1i32; }
+    if (v3 != 0i32) { println("[FAIL] T05 jwt_verify tampered"); }
+
+    if (pass_count == 5i32) {
+        println("DONE");
+    }
+    exit 0i32;
+};

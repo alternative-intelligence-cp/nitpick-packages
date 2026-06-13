@@ -1,0 +1,195 @@
+// nitpick-sync — Advanced Synchronization Primitives
+//
+// Includes WaitGroup, Semaphore, and CountDownLatch.
+// Built on top of stdlib Mutex and CondVar.
+
+use "mutex.npk".*;
+use "condvar.npk".*;
+
+// nitpick_libc_mem shims for struct allocation
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_malloc     = int64(int64:size);
+    func:nitpick_libc_mem_free       = void(int64:ptr);
+    func:nitpick_libc_mem_read_i64   = int64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_i64  = void(int64:ptr, int64:offset, int64:val);
+}
+
+Type:WaitGroup = {
+    func:create = int64() {
+        int64:ptr = nitpick_libc_mem_malloc(24i64);
+        if (ptr == 0i64) { pass 0i64; }
+
+        int64:mtx = raw Mutex.create();
+        int64:cv = raw CondVar.create();
+
+        nitpick_libc_mem_write_i64(ptr, 0i64, 0i64);
+        nitpick_libc_mem_write_i64(ptr, 8i64, mtx);
+        nitpick_libc_mem_write_i64(ptr, 16i64, cv);
+
+        pass ptr;
+    };
+
+    func:destroy = int32(int64:wg) {
+        if (wg == 0i64) { pass -1i32; }
+        int64:mtx = nitpick_libc_mem_read_i64(wg, 8i64);
+        int64:cv = nitpick_libc_mem_read_i64(wg, 16i64);
+        
+        int32:ign1 = raw Mutex.destroy(mtx);
+        int32:ign2 = raw CondVar.destroy(cv);
+        nitpick_libc_mem_free(wg);
+        pass 0i32;
+    };
+
+    func:add = int32(int64:wg, int64:delta) {
+        if (wg == 0i64) { pass -1i32; }
+        int64:mtx = nitpick_libc_mem_read_i64(wg, 8i64);
+        int64:cv = nitpick_libc_mem_read_i64(wg, 16i64);
+
+        int32:ign1 = raw Mutex.lock(mtx);
+        int64:count = nitpick_libc_mem_read_i64(wg, 0i64);
+        count = count + delta;
+        nitpick_libc_mem_write_i64(wg, 0i64, count);
+        
+        if (count == 0i64) {
+            int32:ign2 = raw CondVar.broadcast(cv);
+        }
+        int32:ign3 = raw Mutex.unlock(mtx);
+        pass 0i32;
+    };
+
+    func:done = int32(int64:wg) {
+        int32:r = raw WaitGroup.add(wg, -1i64);
+        pass r;
+    };
+
+    func:wait = int32(int64:wg) {
+        if (wg == 0i64) { pass -1i32; }
+        int64:mtx = nitpick_libc_mem_read_i64(wg, 8i64);
+        int64:cv = nitpick_libc_mem_read_i64(wg, 16i64);
+
+        int32:ign1 = raw Mutex.lock(mtx);
+        int64:count = nitpick_libc_mem_read_i64(wg, 0i64);
+        while (count > 0i64) {
+            int32:ign2 = raw CondVar.wait(cv, mtx);
+            count = nitpick_libc_mem_read_i64(wg, 0i64);
+        }
+        int32:ign3 = raw Mutex.unlock(mtx);
+        pass 0i32;
+    };
+};
+
+Type:Semaphore = {
+    func:create = int64(int64:initial_permits) {
+        int64:ptr = nitpick_libc_mem_malloc(24i64);
+        if (ptr == 0i64) { pass 0i64; }
+
+        int64:mtx = raw Mutex.create();
+        int64:cv = raw CondVar.create();
+
+        nitpick_libc_mem_write_i64(ptr, 0i64, initial_permits);
+        nitpick_libc_mem_write_i64(ptr, 8i64, mtx);
+        nitpick_libc_mem_write_i64(ptr, 16i64, cv);
+
+        pass ptr;
+    };
+
+    func:destroy = int32(int64:sem) {
+        if (sem == 0i64) { pass -1i32; }
+        int64:mtx = nitpick_libc_mem_read_i64(sem, 8i64);
+        int64:cv = nitpick_libc_mem_read_i64(sem, 16i64);
+        
+        int32:ign1 = raw Mutex.destroy(mtx);
+        int32:ign2 = raw CondVar.destroy(cv);
+        nitpick_libc_mem_free(sem);
+        pass 0i32;
+    };
+
+    func:down = int32(int64:sem) {
+        if (sem == 0i64) { pass -1i32; }
+        int64:mtx = nitpick_libc_mem_read_i64(sem, 8i64);
+        int64:cv = nitpick_libc_mem_read_i64(sem, 16i64);
+
+        int32:ign1 = raw Mutex.lock(mtx);
+        int64:permits = nitpick_libc_mem_read_i64(sem, 0i64);
+        while (permits <= 0i64) {
+            int32:ign2 = raw CondVar.wait(cv, mtx);
+            permits = nitpick_libc_mem_read_i64(sem, 0i64);
+        }
+        nitpick_libc_mem_write_i64(sem, 0i64, permits - 1i64);
+        int32:ign3 = raw Mutex.unlock(mtx);
+        pass 0i32;
+    };
+
+    func:up = int32(int64:sem) {
+        if (sem == 0i64) { pass -1i32; }
+        int64:mtx = nitpick_libc_mem_read_i64(sem, 8i64);
+        int64:cv = nitpick_libc_mem_read_i64(sem, 16i64);
+
+        int32:ign1 = raw Mutex.lock(mtx);
+        int64:permits = nitpick_libc_mem_read_i64(sem, 0i64);
+        nitpick_libc_mem_write_i64(sem, 0i64, permits + 1i64);
+        int32:ign2 = raw CondVar.signal(cv);
+        int32:ign3 = raw Mutex.unlock(mtx);
+        pass 0i32;
+    };
+};
+
+Type:CountDownLatch = {
+    func:create = int64(int64:count) {
+        int64:ptr = nitpick_libc_mem_malloc(24i64);
+        if (ptr == 0i64) { pass 0i64; }
+
+        int64:mtx = raw Mutex.create();
+        int64:cv = raw CondVar.create();
+
+        nitpick_libc_mem_write_i64(ptr, 0i64, count);
+        nitpick_libc_mem_write_i64(ptr, 8i64, mtx);
+        nitpick_libc_mem_write_i64(ptr, 16i64, cv);
+
+        pass ptr;
+    };
+
+    func:destroy = int32(int64:latch) {
+        if (latch == 0i64) { pass -1i32; }
+        int64:mtx = nitpick_libc_mem_read_i64(latch, 8i64);
+        int64:cv = nitpick_libc_mem_read_i64(latch, 16i64);
+        
+        int32:ign1 = raw Mutex.destroy(mtx);
+        int32:ign2 = raw CondVar.destroy(cv);
+        nitpick_libc_mem_free(latch);
+        pass 0i32;
+    };
+
+    func:count_down = int32(int64:latch) {
+        if (latch == 0i64) { pass -1i32; }
+        int64:mtx = nitpick_libc_mem_read_i64(latch, 8i64);
+        int64:cv = nitpick_libc_mem_read_i64(latch, 16i64);
+
+        int32:ign1 = raw Mutex.lock(mtx);
+        int64:count = nitpick_libc_mem_read_i64(latch, 0i64);
+        if (count > 0i64) {
+            count = count - 1i64;
+            nitpick_libc_mem_write_i64(latch, 0i64, count);
+            if (count == 0i64) {
+                int32:ign2 = raw CondVar.broadcast(cv);
+            }
+        }
+        int32:ign3 = raw Mutex.unlock(mtx);
+        pass 0i32;
+    };
+
+    func:wait = int32(int64:latch) {
+        if (latch == 0i64) { pass -1i32; }
+        int64:mtx = nitpick_libc_mem_read_i64(latch, 8i64);
+        int64:cv = nitpick_libc_mem_read_i64(latch, 16i64);
+
+        int32:ign1 = raw Mutex.lock(mtx);
+        int64:count = nitpick_libc_mem_read_i64(latch, 0i64);
+        while (count > 0i64) {
+            int32:ign2 = raw CondVar.wait(cv, mtx);
+            count = nitpick_libc_mem_read_i64(latch, 0i64);
+        }
+        int32:ign3 = raw Mutex.unlock(mtx);
+        pass 0i32;
+    };
+};

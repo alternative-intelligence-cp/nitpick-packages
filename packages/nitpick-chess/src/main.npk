@@ -1,0 +1,193 @@
+use "nitpick_raylib.npk".*;
+use "nitpick_str.npk".*;
+
+extern "libc" {
+    func:chess_init = void();
+    func:chess_get_piece = int32(int32:sq);
+    func:chess_gen_moves = int32(int32:white_turn);
+    func:chess_get_move_from = int32(int32:idx);
+    func:chess_get_move_to = int32(int32:idx);
+    func:chess_apply_move = int32(int32:from_sq, int32:to_sq);
+}
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+func:draw_piece = NIL(int32:p, int32:x, int32:y) {
+    if (p == 0i32) { pass NIL; }
+    
+    int32:is_white = 0i32;
+    if (p >= 1i32 && p <= 6i32) { is_white = 1i32; }
+    
+    int32:ptype = p;
+    if (ptype >= 7i32) { ptype = ptype - 6i32; }
+    
+    string:text = "?\0";
+    if (ptype == 1i32) { text = "P\0"; }
+    if (ptype == 2i32) { text = "N\0"; }
+    if (ptype == 3i32) { text = "B\0"; }
+    if (ptype == 4i32) { text = "R\0"; }
+    if (ptype == 5i32) { text = "Q\0"; }
+    if (ptype == 6i32) { text = "K\0"; }
+    
+    int32:cr = 0i32; int32:cg = 0i32; int32:cb = 0i32;
+    if (is_white == 1i32) {
+        cr = 255i32; cg = 255i32; cb = 255i32;
+    }
+    
+    raw rl_draw_text(text, x + 25i32, y + 15i32, 50i32, cr, cg, cb, 255i32);
+    
+    // Draw outline for better visibility
+    if (is_white == 1i32) {
+        raw rl_draw_text(text, x + 24i32, y + 14i32, 50i32, 0i32, 0i32, 0i32, 100i32);
+    } else {
+        raw rl_draw_text(text, x + 24i32, y + 14i32, 50i32, 255i32, 255i32, 255i32, 100i32);
+    }
+    pass NIL;
+};
+
+func:main = int32() {
+    raw rl_init_window(740i32, 800i32, "Nitpick Chess\0");
+    raw rl_set_target_fps(60i32);
+    
+    chess_init();
+    
+    int32:white_turn = 1i32;
+    int32:selected_sq = 0i32 - 1i32;
+    int32:game_over = 0i32; // 0=playing, 1=white wins, 2=black wins, 3=draw
+    int32:num_moves = chess_gen_moves(white_turn);
+    
+    while (raw rl_window_should_close() == 0i32) {
+        if (game_over == 0i32) {
+            if (raw rl_is_mouse_button_pressed(0i32) == 1i32) {
+                int32:mx = raw rl_get_mouse_x();
+                int32:my = raw rl_get_mouse_y();
+                
+                int32:bx = mx - 50i32;
+                int32:by = my - 50i32;
+                
+                if (bx >= 0i32 && bx < 640i32 && by >= 0i32 && by < 640i32) {
+                    int32:file = bx / 80i32;
+                    int32:rank = 7i32 - (by / 80i32);
+                    int32:clicked_sq = (rank * 8i32) + file;
+                    
+                    int32:p = chess_get_piece(clicked_sq);
+                    int32:owns = 0i32;
+                    if (white_turn == 1i32 && p >= 1i32 && p <= 6i32) { owns = 1i32; }
+                    if (white_turn == 0i32 && p >= 7i32 && p <= 12i32) { owns = 1i32; }
+                    
+                    if (owns == 1i32) {
+                        selected_sq = clicked_sq;
+                    } else if (selected_sq != (0i32 - 1i32)) {
+                        // Check if valid move
+                        int32:is_valid = 0i32;
+                        int32:i = 0i32;
+                        while (i < num_moves) {
+                            if (chess_get_move_from(i) == selected_sq && chess_get_move_to(i) == clicked_sq) {
+                                is_valid = 1i32;
+                                i = num_moves; // break
+                            } else {
+                                i = i + 1i32;
+                            }
+                        }
+                        
+                        if (is_valid == 1i32) {
+                            int32:cap = chess_apply_move(selected_sq, clicked_sq);
+                            selected_sq = 0i32 - 1i32;
+                            
+                            if (cap == 6i32) {
+                                game_over = 2i32; // Black wins
+                            } else if (cap == 12i32) {
+                                game_over = 1i32; // White wins
+                            } else {
+                                white_turn = 1i32 - white_turn;
+                                num_moves = chess_gen_moves(white_turn);
+                                if (num_moves == 0i32) {
+                                    game_over = 3i32; // Stalemate (or checkmate, we treat as draw for now)
+                                }
+                            }
+                        } else {
+                            selected_sq = 0i32 - 1i32;
+                        }
+                    }
+                }
+            }
+        } else {
+            // Restart
+            if (raw rl_is_key_pressed(257i32) == 1i32) {
+                chess_init();
+                white_turn = 1i32;
+                selected_sq = 0i32 - 1i32;
+                game_over = 0i32;
+                num_moves = chess_gen_moves(white_turn);
+            }
+        }
+        
+        raw rl_begin_drawing();
+        raw rl_clear_background(40i32, 40i32, 40i32, 255i32);
+        
+        // Draw board
+        int32:r = 0i32;
+        while (r < 8i32) {
+            int32:f = 0i32;
+            while (f < 8i32) {
+                int32:sq = (r * 8i32) + f;
+                int32:is_light = (r + f) % 2i32;
+                
+                int32:cr = 118i32; int32:cg = 150i32; int32:cb = 86i32; // Dark green
+                if (is_light == 1i32) {
+                    cr = 238i32; cg = 238i32; cb = 210i32; // Light cream
+                }
+                
+                int32:x = 50i32 + (f * 80i32);
+                int32:y = 50i32 + ((7i32 - r) * 80i32);
+                
+                // Highlight selected
+                if (sq == selected_sq) {
+                    cr = 246i32; cg = 246i32; cb = 105i32; // Yellow
+                }
+                
+                raw rl_draw_rectangle(x, y, 80i32, 80i32, cr, cg, cb, 255i32);
+                
+                // Highlight valid moves for selected
+                if (selected_sq != (0i32 - 1i32)) {
+                    int32:i = 0i32;
+                    while (i < num_moves) {
+                        if (chess_get_move_from(i) == selected_sq && chess_get_move_to(i) == sq) {
+                            raw rl_draw_rectangle(x + 30i32, y + 30i32, 20i32, 20i32, 0i32, 0i32, 0i32, 50i32);
+                        }
+                        i = i + 1i32;
+                    }
+                }
+                
+                raw draw_piece(chess_get_piece(sq), x, y);
+                
+                f = f + 1i32;
+            }
+            r = r + 1i32;
+        }
+        
+        // Draw border
+        raw rl_draw_rectangle_lines(48i32, 48i32, 644i32, 644i32, 255i32, 255i32, 255i32, 255i32);
+        
+        if (game_over == 1i32) {
+            raw rl_draw_text("WHITE WINS! Press ENTER to restart\0", 180i32, 720i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+        } else if (game_over == 2i32) {
+            raw rl_draw_text("BLACK WINS! Press ENTER to restart\0", 180i32, 720i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+        } else if (game_over == 3i32) {
+            raw rl_draw_text("GAME OVER / STALEMATE. Press ENTER to restart\0", 130i32, 720i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+        } else {
+            if (white_turn == 1i32) {
+                raw rl_draw_text("White's Turn\0", 300i32, 720i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+            } else {
+                raw rl_draw_text("Black's Turn\0", 300i32, 720i32, 20i32, 200i32, 200i32, 200i32, 255i32);
+            }
+        }
+        
+        raw rl_end_drawing();
+    }
+    
+    raw rl_close_window();
+    exit 0i32;
+};

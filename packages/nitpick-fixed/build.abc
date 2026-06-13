@@ -1,0 +1,4 @@
+[build]
+name = "nitpick-fixed-tests"
+entry = "tests/test_nitpick_fixed.npk"
+output = "/tmp/test_fixed_bin"
