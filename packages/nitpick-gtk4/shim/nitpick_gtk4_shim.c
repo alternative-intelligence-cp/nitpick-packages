@@ -29,8 +29,15 @@ static int             g_running = 0;
 #define EVT_CLICKED    3
 #define EVT_DIALOG_RESPONSE 4
 #define EVT_FILE_CHOSEN     5
+#define EVT_KEY_PRESS       6
+#define EVT_KEY_RELEASE     7
 
 static int32_t g_last_event = EVT_NONE;
+static int32_t g_last_clicked_button = -1;
+static guint g_last_keyval = 0;
+static guint g_last_keycode = 0;
+static GdkModifierType g_last_modifier = 0;
+static char g_clipboard_text[8192] = {0};
 
 static char g_dialog_response[256] = {0};
 static char g_chosen_file[1024] = {0};
@@ -46,6 +53,23 @@ static int32_t    g_widget_count = 0;
 static void on_window_destroy(GtkWidget *widget, gpointer user_data);
 static void on_button_clicked(GtkButton *button, gpointer user_data);
 
+static gboolean on_key_pressed(GtkEventControllerKey *controller, guint keyval, guint keycode, GdkModifierType state, gpointer user_data) {
+    (void)controller; (void)user_data;
+    g_last_event = EVT_KEY_PRESS;
+    g_last_keyval = keyval;
+    g_last_keycode = keycode;
+    g_last_modifier = state;
+    return FALSE;
+}
+
+static void on_key_released(GtkEventControllerKey *controller, guint keyval, guint keycode, GdkModifierType state, gpointer user_data) {
+    (void)controller; (void)user_data;
+    g_last_event = EVT_KEY_RELEASE;
+    g_last_keyval = keyval;
+    g_last_keycode = keycode;
+    g_last_modifier = state;
+}
+
 static void on_activate(GtkApplication *app, gpointer user_data) {
     (void)user_data;
     g_window = gtk_application_window_new(app);
@@ -58,14 +82,20 @@ static void on_activate(GtkApplication *app, gpointer user_data) {
 
     gtk_window_present(GTK_WINDOW(g_window));
     g_signal_connect(g_window, "destroy", G_CALLBACK(on_window_destroy), NULL);
+
+    GtkEventController *key_ctrl = gtk_event_controller_key_new();
+    g_signal_connect(key_ctrl, "key-pressed", G_CALLBACK(on_key_pressed), NULL);
+    g_signal_connect(key_ctrl, "key-released", G_CALLBACK(on_key_released), NULL);
+    gtk_widget_add_controller(g_window, key_ctrl);
+
     g_running = 1;
     g_last_event = EVT_ACTIVATE;
 }
 
 static void on_button_clicked(GtkButton *button, gpointer user_data) {
     (void)button;
-    (void)user_data;
     g_last_event = EVT_CLICKED;
+    g_last_clicked_button = (int32_t)(intptr_t)user_data;
 }
 
 static void on_window_destroy(GtkWidget *widget, gpointer user_data) {
@@ -133,9 +163,17 @@ int32_t nitpick_gtk4_get_last_event(void) {
     return e;
 }
 
+int32_t nitpick_gtk4_get_last_clicked_button(void) {
+    return g_last_clicked_button;
+}
+
 int32_t nitpick_gtk4_events_pending(void) {
     return (int32_t)g_main_context_pending(NULL);
 }
+
+int32_t nitpick_gtk4_get_last_keyval(void) { return (int32_t)g_last_keyval; }
+int32_t nitpick_gtk4_get_last_keycode(void) { return (int32_t)g_last_keycode; }
+int32_t nitpick_gtk4_get_last_modifier(void) { return (int32_t)g_last_modifier; }
 
 /* ── window ──────────────────────────────────────────────────────────── */
 
@@ -234,9 +272,10 @@ void nitpick_gtk4_label_set_text(int32_t id, const char *text) {
 int32_t nitpick_gtk4_add_button(const char *label) {
     if (!g_box) return -1;
     GtkWidget *btn = gtk_button_new_with_label(label);
-    g_signal_connect(btn, "clicked", G_CALLBACK(on_button_clicked), NULL);
+    int32_t id = register_widget(btn);
+    g_signal_connect(btn, "clicked", G_CALLBACK(on_button_clicked), (gpointer)(intptr_t)id);
     gtk_box_append(GTK_BOX(g_box), btn);
-    return register_widget(btn);
+    return id;
 }
 
 /* Entry (text input) */
@@ -254,6 +293,19 @@ const char *nitpick_gtk4_entry_get_text(int32_t id) {
     if (id < 0 || id >= g_widget_count || !g_widgets[id]) return "";
     GtkEntryBuffer *buf = gtk_entry_get_buffer(GTK_ENTRY(g_widgets[id]));
     return gtk_entry_buffer_get_text(buf);
+}
+
+void nitpick_gtk4_entry_set_text(int32_t id, const char *text) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        GtkEntryBuffer *buf = gtk_entry_get_buffer(GTK_ENTRY(g_widgets[id]));
+        gtk_entry_buffer_set_text(buf, text, -1);
+    }
+}
+
+const char *nitpick_gtk4_float_to_string(double val) {
+    static char buf[64];
+    snprintf(buf, sizeof(buf), "%g", val);
+    return buf;
 }
 
 /* Separator */
@@ -407,6 +459,37 @@ const char *nitpick_gtk4_text_view_get_text(int32_t id) {
     return "";
 }
 
+void nitpick_gtk4_text_view_create_tag(int32_t id, const char *tag_name, const char *fg_color, const char *bg_color, int32_t weight) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        GtkTextBuffer *buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(g_widgets[id]));
+        gtk_text_buffer_create_tag(buf, tag_name,
+                                   "foreground", (fg_color && fg_color[0]) ? fg_color : NULL,
+                                   "background", (bg_color && bg_color[0]) ? bg_color : NULL,
+                                   "weight", weight > 0 ? weight : PANGO_WEIGHT_NORMAL,
+                                   NULL);
+    }
+}
+
+void nitpick_gtk4_text_view_insert_with_tag(int32_t id, const char *text, const char *tag_name) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        GtkTextBuffer *buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(g_widgets[id]));
+        GtkTextIter iter;
+        gtk_text_buffer_get_end_iter(buf, &iter);
+        gtk_text_buffer_insert_with_tags_by_name(buf, &iter, text, -1, tag_name, NULL);
+    }
+}
+
+void nitpick_gtk4_text_view_scroll_to_end(int32_t id) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        GtkTextBuffer *buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(g_widgets[id]));
+        GtkTextIter iter;
+        gtk_text_buffer_get_end_iter(buf, &iter);
+        GtkTextMark *mark = gtk_text_buffer_create_mark(buf, NULL, &iter, FALSE);
+        gtk_text_view_scroll_mark_onscreen(GTK_TEXT_VIEW(g_widgets[id]), mark);
+        gtk_text_buffer_delete_mark(buf, mark);
+    }
+}
+
 /* ListBox */
 int32_t nitpick_gtk4_add_list_box(void) {
     if (!g_box) return -1;
@@ -517,6 +600,20 @@ void nitpick_gtk4_widget_add_css_class(int32_t id, const char *css_class) {
     }
 }
 
+int32_t nitpick_gtk4_widget_get_width(int32_t id) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        return gtk_widget_get_width(g_widgets[id]);
+    }
+    return 0;
+}
+
+int32_t nitpick_gtk4_widget_get_height(int32_t id) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        return gtk_widget_get_height(g_widgets[id]);
+    }
+    return 0;
+}
+
 /* ── CSS styling ─────────────────────────────────────────────────────── */
 
 void nitpick_gtk4_load_css(const char *css_string) {
@@ -619,4 +716,33 @@ void nitpick_gtk4_show_file_chooser(const char *title) {
 
 const char* nitpick_gtk4_get_chosen_file(void) {
     return g_chosen_file;
+}
+
+/* ── Clipboard ───────────────────────────────────────────────────────── */
+
+static void on_clipboard_read(GObject *source_object, GAsyncResult *res, gpointer user_data) {
+    (void)user_data;
+    GdkClipboard *clipboard = GDK_CLIPBOARD(source_object);
+    char *text = gdk_clipboard_read_text_finish(clipboard, res, NULL);
+    if (text) {
+        strncpy(g_clipboard_text, text, sizeof(g_clipboard_text) - 1);
+        g_clipboard_text[sizeof(g_clipboard_text) - 1] = '\0';
+        g_free(text);
+    } else {
+        g_clipboard_text[0] = '\0';
+    }
+}
+
+void nitpick_gtk4_clipboard_set_text(const char *text) {
+    GdkClipboard *cb = gdk_display_get_clipboard(gdk_display_get_default());
+    if (cb) gdk_clipboard_set_text(cb, text);
+}
+
+void nitpick_gtk4_clipboard_request_text(void) {
+    GdkClipboard *cb = gdk_display_get_clipboard(gdk_display_get_default());
+    if (cb) gdk_clipboard_read_text_async(cb, NULL, on_clipboard_read, NULL);
+}
+
+const char* nitpick_gtk4_clipboard_get_text(void) {
+    return g_clipboard_text;
 }

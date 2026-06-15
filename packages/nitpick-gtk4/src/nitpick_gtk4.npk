@@ -19,6 +19,14 @@ extern "nitpick_gtk4_shim" {
 
     // events
     func:nitpick_gtk4_get_last_event = int32();
+    func:nitpick_gtk4_get_last_keyval = int32();
+    func:nitpick_gtk4_get_last_keycode = int32();
+    func:nitpick_gtk4_get_last_modifier = int32();
+
+    // clipboard
+    func:nitpick_gtk4_clipboard_set_text = void(string:text);
+    func:nitpick_gtk4_clipboard_request_text = void();
+    func:nitpick_gtk4_clipboard_get_text = string();
 
     // window
     func:nitpick_gtk4_has_window          = int32();
@@ -41,6 +49,11 @@ extern "nitpick_gtk4_shim" {
     // widgets: entry
     func:nitpick_gtk4_add_entry      = int32(string:placeholder);
     func:nitpick_gtk4_entry_get_text = string(int32:id);
+    func:nitpick_gtk4_entry_set_text = void(int32:id, string:text);
+    
+    // new custom shim functions
+    func:nitpick_gtk4_get_last_clicked_button = int32();
+    func:nitpick_gtk4_float_to_string = string(float64:val);
 
     // widgets: separator
     func:nitpick_gtk4_add_separator = int32();
@@ -67,6 +80,9 @@ extern "nitpick_gtk4_shim" {
     func:nitpick_gtk4_add_text_view = int32();
     func:nitpick_gtk4_text_view_set_text = void(int32:id, string:text);
     func:nitpick_gtk4_text_view_get_text = string(int32:id);
+    func:nitpick_gtk4_text_view_create_tag = void(int32:id, string:tag_name, string:fg, string:bg, int32:weight);
+    func:nitpick_gtk4_text_view_insert_with_tag = void(int32:id, string:text, string:tag_name);
+    func:nitpick_gtk4_text_view_scroll_to_end = void(int32:id);
 
     func:nitpick_gtk4_add_list_box = int32();
     func:nitpick_gtk4_list_box_append = void(int32:lb_id, int32:child_id);
@@ -88,6 +104,8 @@ extern "nitpick_gtk4_shim" {
     func:nitpick_gtk4_widget_set_sensitive    = void(int32:id, int32:sensitive);
     func:nitpick_gtk4_widget_set_size_request = void(int32:id, int32:w, int32:h);
     func:nitpick_gtk4_widget_add_css_class    = void(int32:id, string:css_class);
+    func:nitpick_gtk4_widget_get_width        = int32(int32:id);
+    func:nitpick_gtk4_widget_get_height       = int32(int32:id);
 
     // CSS
     func:nitpick_gtk4_load_css = void(string:css);
@@ -118,6 +136,8 @@ pub func:GTK_EVT_DESTROY  = int32() { pass(2i32); };
 pub func:GTK_EVT_CLICKED  = int32() { pass(3i32); };
 pub func:GTK_EVT_DIALOG_RESPONSE = int32() { pass(4i32); };
 pub func:GTK_EVT_FILE_CHOSEN     = int32() { pass(5i32); };
+pub func:GTK_EVT_KEY_PRESS       = int32() { pass(6i32); };
+pub func:GTK_EVT_KEY_RELEASE     = int32() { pass(7i32); };
 
 pub func:GTK_ORIENTATION_HORIZONTAL = int32() { pass(0i32); };
 pub func:GTK_ORIENTATION_VERTICAL   = int32() { pass(1i32); };
@@ -160,6 +180,38 @@ pub func:gtk4_events_pending = int32() {
 
 pub func:gtk4_get_last_event = int32() {
     int32:r = nitpick_gtk4_get_last_event();
+    pass(r);
+};
+
+pub func:gtk4_get_last_keyval = int32() {
+    int32:r = nitpick_gtk4_get_last_keyval();
+    pass(r);
+};
+
+pub func:gtk4_get_last_keycode = int32() {
+    int32:r = nitpick_gtk4_get_last_keycode();
+    pass(r);
+};
+
+pub func:gtk4_get_last_modifier = int32() {
+    int32:r = nitpick_gtk4_get_last_modifier();
+    pass(r);
+};
+
+// ── public API: clipboard ───────────────────────────────────────────
+
+pub func:gtk4_clipboard_set_text = NIL(string:text) {
+    nitpick_gtk4_clipboard_set_text(text);
+    pass(NIL);
+};
+
+pub func:gtk4_clipboard_request_text = NIL() {
+    nitpick_gtk4_clipboard_request_text();
+    pass(NIL);
+};
+
+pub func:gtk4_clipboard_get_text = string() {
+    string:r = nitpick_gtk4_clipboard_get_text();
     pass(r);
 };
 
@@ -234,6 +286,21 @@ pub func:gtk4_add_entry = int32(string:placeholder) {
 
 pub func:gtk4_entry_get_text = string(int32:id) {
     string:r = nitpick_gtk4_entry_get_text(id);
+    pass(r);
+};
+
+pub func:gtk4_entry_set_text = NIL(int32:id, string:text) {
+    nitpick_gtk4_entry_set_text(id, text);
+    pass(NIL);
+};
+
+pub func:gtk4_get_last_clicked_button = int32() {
+    int32:r = nitpick_gtk4_get_last_clicked_button();
+    pass(r);
+};
+
+pub func:gtk4_float_to_string = string(float64:val) {
+    string:r = nitpick_gtk4_float_to_string(val);
     pass(r);
 };
 
@@ -329,6 +396,21 @@ pub func:gtk4_text_view_get_text = string(int32:id) {
     pass(r);
 };
 
+pub func:gtk4_text_view_create_tag = NIL(int32:id, string:tag_name, string:fg, string:bg, int32:weight) {
+    nitpick_gtk4_text_view_create_tag(id, tag_name, fg, bg, weight);
+    pass(NIL);
+};
+
+pub func:gtk4_text_view_insert_with_tag = NIL(int32:id, string:text, string:tag_name) {
+    nitpick_gtk4_text_view_insert_with_tag(id, text, tag_name);
+    pass(NIL);
+};
+
+pub func:gtk4_text_view_scroll_to_end = NIL(int32:id) {
+    nitpick_gtk4_text_view_scroll_to_end(id);
+    pass(NIL);
+};
+
 pub func:gtk4_add_list_box = int32() {
     int32:r = nitpick_gtk4_add_list_box();
     pass(r);
@@ -404,6 +486,16 @@ pub func:gtk4_widget_set_size = NIL(int32:id, int32:w, int32:h) {
 pub func:gtk4_widget_add_css_class = NIL(int32:id, string:css_class) {
     nitpick_gtk4_widget_add_css_class(id, css_class);
     pass(NIL);
+};
+
+pub func:gtk4_widget_get_width = int32(int32:id) {
+    int32:r = nitpick_gtk4_widget_get_width(id);
+    pass(r);
+};
+
+pub func:gtk4_widget_get_height = int32(int32:id) {
+    int32:r = nitpick_gtk4_widget_get_height(id);
+    pass(r);
 };
 
 // ── public API: CSS ─────────────────────────────────────────────────
