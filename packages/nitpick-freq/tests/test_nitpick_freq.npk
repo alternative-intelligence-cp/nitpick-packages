@@ -1,10 +1,10 @@
 extern "libc" { func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_freq.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:_err) { exit 1; };
 
 func:main = int32() {
-    int32:pass_count = 0i32;
+    int32:_pass_count = 0i32;
     // T01: hz_to_ns — 1 Hz -> 1_000_000_000 ns
     uint64:r01 = raw hz_to_ns(1u64);
     uint64:f01 = 0u64; if (r01 == 1000000000u64) { f01 = 1u64; }

@@ -1,4 +1,15 @@
-[build]
-name = "nitpick-freq-tests"
-entry = "tests/test_nitpick_freq.npk"
-output = "/tmp/test_freq_bin"
+[project]
+name = "nitpick-freq"
+version = "0.2.0"
+
+[target.nitpick-freq]
+type = "library"
+sources = ["src/nitpick_freq.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-freq]
+type = "binary"
+sources = ["tests/test_nitpick_freq.npk"]
+deps = []
+flags = ["-I", "src"]
