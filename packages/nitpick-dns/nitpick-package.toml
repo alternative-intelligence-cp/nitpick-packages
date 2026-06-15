@@ -1,0 +1,5 @@
+[package]
+name = "nitpick-dns"
+version = "0.12.0"
+description = "DNS resolution utilities for hostname to IP mapping and validation"
+author = "Nitpick Authors"

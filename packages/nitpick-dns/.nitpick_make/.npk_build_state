@@ -7,21 +7,21 @@
   "targets": {
     "nitpick-dns": {
       "artifact_path": ".nitpick_make/build/libnitpick-dns.a",
-      "source_hash": "fnv1a:2396243385224930209",
+      "source_hash": "fnv1a:13424412823736855647",
       "command_hash": 9321741568017236443,
-      "source_timestamp": 18446744069052264472,
-      "build_timestamp": 1781508279,
-      "build_duration_ms": 0,
+      "source_timestamp": 18446744069053432780,
+      "build_timestamp": 1781545164,
+      "build_duration_ms": 80,
       "dependencies": [],
       "implicit_inputs": []
     },
     "test-nitpick-dns": {
       "artifact_path": ".nitpick_make/build/test-nitpick-dns",
-      "source_hash": "fnv1a:9698295136372723863",
+      "source_hash": "fnv1a:6126976120405652009",
       "command_hash": 4374981037545678941,
-      "source_timestamp": 18446744069053395894,
-      "build_timestamp": 1781508279,
-      "build_duration_ms": 0,
+      "source_timestamp": 18446744069053432780,
+      "build_timestamp": 1781545164,
+      "build_duration_ms": 192,
       "dependencies": [],
       "implicit_inputs": []
     }

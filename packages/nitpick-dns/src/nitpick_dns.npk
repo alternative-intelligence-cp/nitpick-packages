@@ -1,6 +1,6 @@
 // nitpick_dns.npk — DNS resolution for Nitpick (v0.12.0)
 //
-// Backed by aria-libc_net.
+// Backed by nitpick_libc_net.
 // Import with: use "nitpick_dns.npk".*;
 //
 // Provides hostname resolution, reverse lookup, multi-result resolve,
@@ -8,56 +8,56 @@
 //
 // v0.12.0: New package for networking foundation.
 
-extern "aria_libc_net" {
-    func:aria_libc_net_resolve        = string(string:hostname);
-    func:aria_libc_net_resolve_all    = string(string:hostname);
-    func:aria_libc_net_reverse_lookup = string(string:ip_addr);
-    func:aria_libc_net_is_ipv4        = int64(string:addr);
+extern "libc" {
+    func:nitpick_libc_net_resolve        = string(string:hostname);
+    func:nitpick_libc_net_resolve_all    = string(string:hostname);
+    func:nitpick_libc_net_reverse_lookup = string(string:ip_addr);
+    func:nitpick_libc_net_is_ipv4        = int64(string:addr);
 }
 
 // ── core resolution ─────────────────────────────────────────────────────────
 
-pub func:dns_resolve = string(string:hostname) {
-    pass aria_libc_net_resolve(hostname);
+func:dns_resolve = string(string:hostname) {
+    pass nitpick_libc_net_resolve(hostname);
 };
 
-pub func:dns_resolve_all = string(string:hostname) {
-    pass aria_libc_net_resolve_all(hostname);
+func:dns_resolve_all = string(string:hostname) {
+    pass nitpick_libc_net_resolve_all(hostname);
 };
 
-pub func:dns_reverse = string(string:ip_addr) {
-    pass aria_libc_net_reverse_lookup(ip_addr);
+func:dns_reverse = string(string:ip_addr) {
+    pass nitpick_libc_net_reverse_lookup(ip_addr);
 };
 
 // ── validators ──────────────────────────────────────────────────────────────
 
-pub func:dns_is_ipv4 = int64(string:addr) {
-    pass aria_libc_net_is_ipv4(addr);
+func:dns_is_ipv4 = int64(string:addr) {
+    pass nitpick_libc_net_is_ipv4(addr);
 };
 
-pub func:dns_is_hostname = int64(string:addr) {
-    int64:ip = aria_libc_net_is_ipv4(addr);
+func:dns_is_hostname = int64(string:addr) {
+    int64:ip = nitpick_libc_net_is_ipv4(addr);
     if (ip == 1i64) { pass 0i64; }
     pass 1i64;
 };
 
 // ── convenience ─────────────────────────────────────────────────────────────
 
-pub func:dns_resolve_or = string(string:hostname, string:fallback) {
-    string:resolved = aria_libc_net_resolve(hostname);
+func:dns_resolve_or = string(string:hostname, string:fallback) {
+    string:resolved = nitpick_libc_net_resolve(hostname);
     if (resolved == "") { pass fallback; }
     pass resolved;
 };
 
-pub func:dns_can_resolve = int64(string:hostname) {
-    string:resolved = aria_libc_net_resolve(hostname);
+func:dns_can_resolve = int64(string:hostname) {
+    string:resolved = nitpick_libc_net_resolve(hostname);
     if (resolved == "") { pass 0i64; }
     pass 1i64;
 };
 
 // ── Type wrapper ───────────────────────────────────────────────────────────
 
-Type:Dns = {
+pub Type:Dns = {
     func:resolve      = string(string:host) { pass raw dns_resolve(host); };
     func:resolve_all  = string(string:host) { pass raw dns_resolve_all(host); };
     func:reverse      = string(string:ip) { pass raw dns_reverse(ip); };
