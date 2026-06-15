@@ -40,7 +40,7 @@ func:bitset_destroy = int32(int64:bs) {
 };
 
 func:bitset_set = int32(int64:bs, int64:idx) {
-    int64:nb = bs_nbits(bs);
+    int64:nb = raw bs_nbits(bs);
     if (idx < 0i64) { pass -1i32; }
     if (idx >= nb) { pass -1i32; }
     aria_libc_mem_write_byte(bs, 8i64 + idx, 1i32);
@@ -48,7 +48,7 @@ func:bitset_set = int32(int64:bs, int64:idx) {
 };
 
 func:bitset_clear = int32(int64:bs, int64:idx) {
-    int64:nb = bs_nbits(bs);
+    int64:nb = raw bs_nbits(bs);
     if (idx < 0i64) { pass -1i32; }
     if (idx >= nb) { pass -1i32; }
     aria_libc_mem_write_byte(bs, 8i64 + idx, 0i32);
@@ -56,20 +56,20 @@ func:bitset_clear = int32(int64:bs, int64:idx) {
 };
 
 func:bitset_test = int32(int64:bs, int64:idx) {
-    int64:nb = bs_nbits(bs);
+    int64:nb = raw bs_nbits(bs);
     if (idx < 0i64) { pass -1i32; }
     if (idx >= nb) { pass -1i32; }
     pass aria_libc_mem_read_byte(bs, 8i64 + idx);
 };
 
 func:bitset_toggle = int32(int64:bs, int64:idx) {
-    int32:cur = bitset_test(bs, idx);
-    if (cur == 1i32) { pass bitset_clear(bs, idx); }
-    pass bitset_set(bs, idx);
+    int32:cur = raw bitset_test(bs, idx);
+    if (cur == 1i32) { pass raw bitset_clear(bs, idx); }
+    pass raw bitset_set(bs, idx);
 };
 
 func:bitset_count = int32(int64:bs) {
-    int64:nb = bs_nbits(bs);
+    int64:nb = raw bs_nbits(bs);
     int32:cnt = 0i32;
     int64:i = 0i64;
     loop(0i64, nb, 1i64) {
@@ -81,11 +81,11 @@ func:bitset_count = int32(int64:bs) {
 };
 
 func:bitset_size = int64(int64:bs) {
-    pass bs_nbits(bs);
+    pass raw bs_nbits(bs);
 };
 
 func:bitset_is_empty = int32(int64:bs) {
-    int32:c = bitset_count(bs);
+    int32:c = raw bitset_count(bs);
     if (c == 0i32) { pass 1i32; }
     pass 0i32;
 };
@@ -93,7 +93,7 @@ func:bitset_is_empty = int32(int64:bs) {
 // ── set operations (mutate first argument) ──────────────────────────────────
 
 func:bitset_union = int32(int64:a, int64:b) {
-    int64:na = bs_nbits(a);
+    int64:na = raw bs_nbits(a);
     int64:i = 0i64;
     loop(0i64, na, 1i64) {
         int32:bv = aria_libc_mem_read_byte(b, 8i64 + i);
@@ -106,7 +106,7 @@ func:bitset_union = int32(int64:a, int64:b) {
 };
 
 func:bitset_intersect = int32(int64:a, int64:b) {
-    int64:na = bs_nbits(a);
+    int64:na = raw bs_nbits(a);
     int64:i = 0i64;
     loop(0i64, na, 1i64) {
         int32:bv = aria_libc_mem_read_byte(b, 8i64 + i);
@@ -119,7 +119,7 @@ func:bitset_intersect = int32(int64:a, int64:b) {
 };
 
 func:bitset_complement = int32(int64:bs) {
-    int64:nb = bs_nbits(bs);
+    int64:nb = raw bs_nbits(bs);
     int64:i = 0i64;
     loop(0i64, nb, 1i64) {
         int32:cur = aria_libc_mem_read_byte(bs, 8i64 + i);
@@ -135,7 +135,7 @@ func:bitset_complement = int32(int64:bs) {
 };
 
 func:bitset_difference = int32(int64:a, int64:b) {
-    int64:na = bs_nbits(a);
+    int64:na = raw bs_nbits(a);
     int64:i = 0i64;
     loop(0i64, na, 1i64) {
         int32:bv = aria_libc_mem_read_byte(b, 8i64 + i);
@@ -148,8 +148,8 @@ func:bitset_difference = int32(int64:a, int64:b) {
 };
 
 func:bitset_equals = int32(int64:a, int64:b) {
-    int64:na = bs_nbits(a);
-    int64:nb = bs_nbits(b);
+    int64:na = raw bs_nbits(a);
+    int64:nb = raw bs_nbits(b);
     if (na != nb) { pass 0i32; }
     int64:i = 0i64;
     loop(0i64, na, 1i64) {

@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-bitset"
+version = "0.11.3"
+
+[target.nitpick-bitset]
+type = "library"
+sources = ["src/nitpick_bitset.npk"]
+deps = []
+flags = ["-I", "../../../nitpick-libc/src", "-L", "../../../nitpick-libc/shim", "-lnitpick_libc_mem"]
+
+[target.test-nitpick-bitset]
+type = "binary"
+sources = ["tests/test_nitpick_bitset.npk"]
+deps = []
+flags = ["-I", "../../../nitpick-libc/src", "-L", "../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-I", "src"]
