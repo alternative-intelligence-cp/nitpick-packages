@@ -21,7 +21,7 @@ extern "libc" {
     func:blackjack_get_d_card = int32(int32:idx);
 }
 
-func:failsafe = int32(tbb32:err) {
+func:failsafe = int32(tbb32:_err) {
     raw rl_close_window();
     exit 1i32;
 };
@@ -35,7 +35,7 @@ pub func:save_wallet = int32(int32:db_conn, int32:wallet) {
         
         QueryBuilder:ins_q = raw orm_insert("blackjack_save");
         ins_q = raw orm_set_int(ins_q, "save_id", 1i64);
-        ins_q = raw orm_set_int(ins_q, "wallet", @cast<int64>(wallet));
+        ins_q = raw orm_set_int(ins_q, "wallet", @cast_unchecked<int64>(wallet));
         string:ins_query = string_concat(raw orm_to_mongo(ins_q), "\0");
         int32:_i = raw mongo_insert(db_conn, "nitpick_games\0", "blackjack_save\0", ins_query);
     }
@@ -117,7 +117,7 @@ func:main = int32() {
             if (string_length(doc) > 0i64) {
                 int32:jp = raw json_parse(doc);
                 if (jp == 1i32) {
-                    wallet = @cast<int32>(raw json_get_int("wallet\0"));
+                    wallet = @cast_unchecked<int32>(raw json_get_int("wallet\0"));
                     if (wallet < 10i32) {
                         wallet = 200i32;
                         msg = "You were broke! Here is a $200 loan.\0";
@@ -130,7 +130,7 @@ func:main = int32() {
         }
     }
     
-    int32:running = 1i32;
+    int32:_running = 1i32;
     int32:mouse_clicked = 0i32;
     
     while (raw rl_window_should_close() == 0i32) {
