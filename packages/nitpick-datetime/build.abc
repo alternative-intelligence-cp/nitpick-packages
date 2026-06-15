@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-datetime"
+version = "0.2.2"
+
+[target.nitpick-datetime]
+type = "library"
+sources = ["src/nitpick_datetime.npk"]
+deps = []
+flags = ["-L.", "-lnitpick_datetime_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-nitpick-datetime]
+type = "binary"
+sources = ["tests/test_nitpick_datetime.npk"]
+deps = []
+flags = ["-I", "src", "-I", "../nitpick-str/src", "-L.", "-lnitpick_datetime_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
