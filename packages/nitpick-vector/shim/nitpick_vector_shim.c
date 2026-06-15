@@ -64,7 +64,7 @@ void nitpick_vector_insert(const char* text, const char* embedding_json) {
 }
 
 const char* nitpick_vector_search(const char* query_embedding_json) {
-    float query[DIM];
+    float query[DIM] = {0};
     parse_float_array(query_embedding_json, query, DIM);
     
     int best_idx = -1;

@@ -1,0 +1,48 @@
+extern "libc" { func:printf = int32(string:fmt); }
+use "nitpick_vector.npk".*;
+
+int32:fail_cnt = 0i32;
+func:failsafe = int32(tbb32:err) { drop(err); exit 1i32; };
+
+func:main = int32() {
+    drop(printf("Starting nitpick-vector tests...\n\0"));
+    
+    // 1. Init
+    drop(Vector.init("test_vector.db"));
+    
+    // 2. Check count initially
+    int32:c1 = raw Vector.count();
+    if (c1 == 0i32) { drop(printf("[PASS] T01 count==0\n\0\n\0")); }
+    if (c1 != 0i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T01 count==0\n\0\n\0")); }
+    
+    // 3. Insert records
+    drop(Vector.insert("apple", "[1.0, 0.0, 0.0]"));
+    drop(Vector.insert("banana", "[0.0, 1.0, 0.0]"));
+    drop(Vector.insert("cherry", "[0.0, 0.0, 1.0]"));
+    
+    // 4. Count == 3
+    int32:c2 = raw Vector.count();
+    if (c2 == 3i32) { drop(printf("[PASS] T02 count==3\n\0\n\0")); }
+    if (c2 != 3i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T02 count==3\n\0\n\0")); }
+    
+    // 5. Search
+    string:res1 = raw Vector.search("[0.9, 0.1, 0.0]");
+    if (res1 == "apple") { drop(printf("[PASS] T03 search apple\n\0\n\0")); }
+    if (res1 != "apple") { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T03 search apple\n\0\n\0")); }
+    
+    // 6. Search 2
+    string:res2 = raw Vector.search("[0.0, 0.9, 0.1]");
+    if (res2 == "banana") { drop(printf("[PASS] T04 search banana\n\0\n\0")); }
+    if (res2 != "banana") { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T04 search banana\n\0\n\0")); }
+    
+    // 7. Last score
+    float64:score = raw Vector.last_score();
+    int64:score_ok = 0i64;
+    if (score > 0.0) { score_ok = 1i64; }
+    if (score_ok == 1i64) { drop(printf("[PASS] T05 score > 0\n\0\n\0")); }
+    if (score_ok == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T05 score > 0\n\0\n\0")); }
+
+    drop(printf("---\n\0"));
+    drop(printf("PASS: all tests passed\n\0"));
+    if (fail_cnt > 0i32) { drop(printf("FAIL\n\0\n\0")); } exit fail_cnt;
+};

@@ -1,0 +1,13 @@
+[project]
+name = "nitpick-vector"
+version = "0.1.0"
+
+[target.nitpick-vector]
+type = "library"
+sources = ["src/nitpick_vector.npk"]
+
+[target.test_vector]
+type = "binary"
+sources = ["tests/test_nitpick_vector.npk"]
+deps = ["nitpick-vector"]
+flags = ["-I", "src", "-Lshim", "-lnitpick_vector_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_string", "-lnitpick_libc_mem", "-lnitpick_libc_io"]

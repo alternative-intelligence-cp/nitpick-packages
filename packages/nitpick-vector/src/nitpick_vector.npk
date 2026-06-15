@@ -10,24 +10,26 @@ extern "nitpick_vector_shim" {
     func:nitpick_vector_count = int32();
 }
 
-pub func:vector_init = NIL(string:db_path) {
-    nitpick_vector_init(db_path);
-    pass(NIL);
-};
+pub Type:Vector = {
+    func:init = NIL(string:db_path) {
+        nitpick_vector_init(db_path);
+        pass(NIL);
+    };
 
-pub func:vector_insert = NIL(string:text, string:embedding_json) {
-    nitpick_vector_insert(text, embedding_json);
-    pass(NIL);
-};
+    func:insert = NIL(string:text, string:embedding_json) {
+        nitpick_vector_insert(text, embedding_json);
+        pass(NIL);
+    };
 
-pub func:vector_search = string(string:query_embedding_json) {
-    pass(nitpick_vector_search(query_embedding_json));
-};
+    func:search = string(string:query_embedding_json) {
+        pass(nitpick_vector_search(query_embedding_json));
+    };
 
-pub func:vector_last_score = float64() {
-    pass(nitpick_vector_last_score());
-};
+    func:last_score = float64() {
+        pass(nitpick_vector_last_score());
+    };
 
-pub func:vector_count = int32() {
-    pass(nitpick_vector_count());
+    func:count = int32() {
+        pass(nitpick_vector_count());
+    };
 };
