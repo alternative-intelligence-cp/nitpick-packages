@@ -6,7 +6,7 @@ extern "nitpick_http_shim" {
 }
 
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:_err) { exit 1; };
 
 
 
