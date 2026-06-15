@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-input"
+version = "0.12.2"
+
+[target.nitpick-input]
+type = "library"
+sources = ["src/nitpick_input.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-input]
+type = "binary"
+sources = ["tests/test_nitpick_input.npk"]
+deps = []
+flags = ["-I", "src"]

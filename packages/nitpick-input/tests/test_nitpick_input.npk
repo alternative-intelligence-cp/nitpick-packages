@@ -2,7 +2,7 @@
 extern "libc" { func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_input.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:_err) { exit 1; };
 
 func:test_create_names = int32() {
     int32:pc = 0i32;
@@ -106,11 +106,11 @@ func:test_bindings = int32() {
 };
 
 func:main = int32() {
-    int32:pass_count = 0i32;
-    int32:p1 = raw test_create_names();
-    int32:p2 = raw test_bitmask();
-    int32:p3 = raw test_press_release();
-    int32:p4 = raw test_bindings();
+    int32:_pass_count = 0i32;
+    int32:_p1 = raw test_create_names();
+    int32:_p2 = raw test_bitmask();
+    int32:_p3 = raw test_press_release();
+    int32:_p4 = raw test_bindings();
     println("DONE");
     
     drop(println("---"));
