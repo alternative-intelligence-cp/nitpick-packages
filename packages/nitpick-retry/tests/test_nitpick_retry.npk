@@ -1,130 +1,136 @@
 // test_nitpick_retry.npk — 12-test suite for nitpick-retry (v0.12.3)
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+extern "libc" { func:printf = int32(string:fmt); }
 use "../src/nitpick_retry.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+int64:fail_cnt = 0i64;
+
+func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+func:assert_eq_i32 = int32(int32:actual, int32:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i32);
+};
+
+func:assert_eq_i64 = int64(int64:actual, int64:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass 0i64;
+};
+
+func:assert_eq_string = int32(string:actual, string:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i32);
+};
 
 func:test_basic = int32() {
-    int32:pc = 0i32;
+    int64:r = raw Retry.init(3i64, 100i64, 5000i64);
+    int32:ok1 = 0i32;
+    if (r > 0i64) { ok1 = 1i32; }
+    drop assert_eq_i32(ok1, 1i32, "T01 retry_create\0");
 
-    // T01: Create returns valid handle
-    int64:r = raw retry_create(3i64, 100i64, 5000i64);
-    if (r > 0i64) { println("[PASS] T01 retry_create"); pc += 1i32; }
-    if (r <= 0i64) { println("[FAIL] T01"); }
+    string:a2 = raw Retry.attempt(r);
+    drop assert_eq_string(a2, "0", "T02 attempt=0\0");
 
-    // T02: Initial attempt is 0
-    string:a2 = raw retry_get_attempt(r);
-    int32:t2 = 0i32;
-    if (string_contains(a2, "0")) { t2 = 1i32; }
-    if (t2 == 1i32) { println("[PASS] T02 attempt=0"); pc += 1i32; }
-    if (t2 == 0i32) { println("[FAIL] T02"); }
+    int64:sr3 = raw Retry.can_retry(r);
+    drop assert_eq_i64(sr3, 1i64, "T03 should_retry=1\0");
 
-    // T03: should_retry initially 1
-    int64:sr3 = raw retry_should_retry(r);
-    if (sr3 == 1i64) { println("[PASS] T03 should_retry=1"); pc += 1i32; }
-    if (sr3 != 1i64) { println("[FAIL] T03"); }
-
-    pass pc;
+    pass 0i32;
 };
 
 func:test_delay = int32() {
-    int32:pc = 0i32;
+    int64:r = raw Retry.init(5i64, 100i64, 5000i64);
 
-    // base=100, cap=5000
-    int64:r = raw retry_create(5i64, 100i64, 5000i64);
+    string:d4 = raw Retry.delay(r);
+    drop assert_eq_string(d4, "100", "T04 delay=100\0");
 
-    // T04: Delay at attempt 0 = 100 (100 * 2^0 = 100)
-    string:d4 = raw retry_next_delay(r);
-    int32:t4 = 0i32;
-    if (string_contains(d4, "100")) { t4 = 1i32; }
-    if (t4 == 1i32) { println("[PASS] T04 delay=100"); pc += 1i32; }
-    if (t4 == 0i32) { println("[FAIL] T04"); }
+    int32:_f1 = raw Retry.rec_fail(r);
+    string:d5 = raw Retry.delay(r);
+    drop assert_eq_string(d5, "200", "T05 delay=200\0");
 
-    // T05: After one fail, delay at attempt 1 = 200 (100 * 2^1)
-    int32:_f1 = raw retry_record_fail(r);
-    string:d5 = raw retry_next_delay(r);
-    int32:t5 = 0i32;
-    if (string_contains(d5, "200")) { t5 = 1i32; }
-    if (t5 == 1i32) { println("[PASS] T05 delay=200"); pc += 1i32; }
-    if (t5 == 0i32) { println("[FAIL] T05"); }
+    int64:r2 = raw Retry.init(5i64, 1000i64, 3000i64);
+    int32:_f2a = raw Retry.rec_fail(r2);
+    int32:_f2b = raw Retry.rec_fail(r2);
+    int32:_f2c = raw Retry.rec_fail(r2);
+    string:d6 = raw Retry.delay(r2);
+    drop assert_eq_string(d6, "3000", "T06 delay capped=3000\0");
 
-    // T06: Delay capped at cap_ms
-    // Create with base=1000, cap=3000, fail 3 times to get 2^3=8000 > 3000
-    int64:r2 = raw retry_create(5i64, 1000i64, 3000i64);
-    int32:_f2a = raw retry_record_fail(r2);
-    int32:_f2b = raw retry_record_fail(r2);
-    int32:_f2c = raw retry_record_fail(r2);
-    string:d6 = raw retry_next_delay(r2);
-    int32:t6 = 0i32;
-    if (string_contains(d6, "3000")) { t6 = 1i32; }
-    if (t6 == 1i32) { println("[PASS] T06 delay capped=3000"); pc += 1i32; }
-    if (t6 == 0i32) { println("[FAIL] T06"); }
-
-    pass pc;
+    pass 0i32;
 };
 
 func:test_fail = int32() {
-    int32:pc = 0i32;
+    int64:r = raw Retry.init(2i64, 100i64, 5000i64);
 
-    int64:r = raw retry_create(2i64, 100i64, 5000i64);
+    int32:_f1 = raw Retry.rec_fail(r);
+    string:a7 = raw Retry.attempt(r);
+    drop assert_eq_string(a7, "1", "T07 attempt=1\0");
 
-    // T07: After one fail, attempt = 1
-    int32:_f1 = raw retry_record_fail(r);
-    string:a7 = raw retry_get_attempt(r);
-    int32:t7 = 0i32;
-    if (string_contains(a7, "1")) { t7 = 1i32; }
-    if (t7 == 1i32) { println("[PASS] T07 attempt=1"); pc += 1i32; }
-    if (t7 == 0i32) { println("[FAIL] T07"); }
+    int32:_f2 = raw Retry.rec_fail(r);
+    int64:ex8 = raw Retry.is_done(r);
+    drop assert_eq_i64(ex8, 1i64, "T08 exhausted\0");
 
-    // T08: After two fails (max=2), exhausted
-    int32:_f2 = raw retry_record_fail(r);
-    int64:ex8 = raw retry_exhausted(r);
-    if (ex8 == 1i64) { println("[PASS] T08 exhausted"); pc += 1i32; }
-    if (ex8 != 1i64) { println("[FAIL] T08"); }
+    int64:sr9 = raw Retry.can_retry(r);
+    drop assert_eq_i64(sr9, 0i64, "T09 no retry\0");
 
-    // T09: should_retry = 0 when exhausted
-    int64:sr9 = raw retry_should_retry(r);
-    if (sr9 == 0i64) { println("[PASS] T09 no retry"); pc += 1i32; }
-    if (sr9 != 0i64) { println("[FAIL] T09"); }
-
-    pass pc;
+    pass 0i32;
 };
 
 func:test_success = int32() {
-    int32:pc = 0i32;
+    int64:r = raw Retry.init(3i64, 100i64, 5000i64);
 
-    int64:r = raw retry_create(3i64, 100i64, 5000i64);
+    int64:ok10 = raw Retry.is_ok(r);
+    drop assert_eq_i64(ok10, 0i64, "T10 not ok yet\0");
 
-    // T10: Initially not succeeded
-    int64:ok10 = raw retry_succeeded(r);
-    if (ok10 == 0i64) { println("[PASS] T10 not ok yet"); pc += 1i32; }
-    if (ok10 != 0i64) { println("[FAIL] T10"); }
+    int32:_f1 = raw Retry.rec_fail(r);
+    int32:_ok = raw Retry.rec_ok(r);
+    int64:ok11 = raw Retry.is_ok(r);
+    drop assert_eq_i64(ok11, 1i64, "T11 succeeded\0");
 
-    // T11: After record_ok, succeeded = 1
-    int32:_f1 = raw retry_record_fail(r);
-    int32:_ok = raw retry_record_ok(r);
-    int64:ok11 = raw retry_succeeded(r);
-    if (ok11 == 1i64) { println("[PASS] T11 succeeded"); pc += 1i32; }
-    if (ok11 != 1i64) { println("[FAIL] T11"); }
+    int64:sr12 = raw Retry.can_retry(r);
+    drop assert_eq_i64(sr12, 0i64, "T12 no retry after ok\0");
 
-    // T12: should_retry = 0 after success
-    int64:sr12 = raw retry_should_retry(r);
-    if (sr12 == 0i64) { println("[PASS] T12 no retry after ok"); pc += 1i32; }
-    if (sr12 != 0i64) { println("[FAIL] T12"); }
-
-    pass pc;
+    pass 0i32;
 };
 
 func:main = int32() {
-    int32:pass_count = 0i32;
-    int32:p1 = raw test_basic();
-    int32:p2 = raw test_delay();
-    int32:p3 = raw test_fail();
-    int32:p4 = raw test_success();
-    println("DONE");
-    
-    drop(println("---"));
-    
-        drop(println("PASS: all tests passed"));
-    exit 0;
+    drop test_basic();
+    drop test_delay();
+    drop test_fail();
+    drop test_success();
+
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+
+    drop(printf("SUCCESS: All tests passed.\n\0"));
+    exit 0i32;
 };

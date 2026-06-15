@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-retry"
+version = "0.1.0"
+
+[target.nitpick-retry]
+type = "library"
+sources = ["src/nitpick_retry.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-retry]
+type = "binary"
+sources = ["tests/test_nitpick_retry.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_mem"]
