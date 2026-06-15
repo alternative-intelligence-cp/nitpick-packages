@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-postgres"
+version = "0.2.3"
+
+[target.nitpick-postgres]
+type = "library"
+sources = ["src/nitpick_postgres.npk"]
+deps = []
+flags = ["-Lshim", "-lnitpick_postgres_shim", "-lpq"]
+
+[target.test-nitpick-postgres]
+type = "binary"
+sources = ["tests/test_nitpick_postgres.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim", "-lnitpick_postgres_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_mem", "-lpq"]

@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "test-nitpick-postgres": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-postgres",
+      "source_hash": "fnv1a:8123627149254638756",
+      "command_hash": 6042440152954857132,
+      "source_timestamp": 18446744069052427326,
+      "build_timestamp": 1781516626,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "nitpick-postgres": {
+      "artifact_path": ".nitpick_make/build/libnitpick-postgres.a",
+      "source_hash": "fnv1a:17018593077089394167",
+      "command_hash": 15111276949688123941,
+      "source_timestamp": 18446744069052264474,
+      "build_timestamp": 1781516626,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}
