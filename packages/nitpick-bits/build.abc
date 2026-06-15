@@ -1,4 +1,15 @@
-[build]
-name = "nitpick-bits-tests"
-entry = "tests/test_nitpick_bits.npk"
-output = "/tmp/test_bits_bin"
+[project]
+name = "nitpick-bits"
+version = "0.2.0"
+
+[target.nitpick-bits]
+type = "library"
+sources = ["src/nitpick_bits.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-bits]
+type = "binary"
+sources = ["tests/test_nitpick_bits.npk"]
+deps = []
+flags = []
