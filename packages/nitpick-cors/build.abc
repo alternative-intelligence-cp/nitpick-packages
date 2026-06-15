@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-cors"
+version = "0.12.1"
+
+[target.nitpick-cors]
+type = "library"
+sources = ["src/nitpick_cors.npk"]
+deps = []
+flags = ["-I", "../nitpick-str/src"]
+
+[target.test-nitpick-cors]
+type = "binary"
+sources = ["tests/test_nitpick_cors.npk"]
+deps = []
+flags = ["-I", "src", "-I", "../nitpick-str/src", "-L", "../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]

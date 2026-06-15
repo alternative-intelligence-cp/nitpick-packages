@@ -1,7 +1,0 @@
-[package]
-name = "nitpick-cors"
-version = "0.12.1"
-description = "CORS header builder — pure Nitpick"
-type = "pure"
-
-[dependencies]
