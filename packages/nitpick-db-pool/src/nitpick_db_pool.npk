@@ -19,11 +19,11 @@ pub Type:DbPool = {
         pass nitpick_pool_add(conn);
     };
 
-    func:acquire = int32() {
+    func:get_conn = int32() {
         pass nitpick_pool_acquire();
     };
 
-    func:release = int32(int32:conn) {
+    func:free_conn = int32(int32:conn) {
         pass nitpick_pool_release(conn);
     };
 };
