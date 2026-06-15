@@ -7,7 +7,7 @@
 [project]
 name = "nitpick-buf"
 version = "0.1.0"
-compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
+compiler = "/home/randy/Workspace/REPOS/nitpick/build/nitpickc"
 
 [target.nitpick-buf]
 type = "library"
