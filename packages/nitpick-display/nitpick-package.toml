@@ -1,0 +1,5 @@
+[package]
+name = "nitpick-display"
+version = "0.12.2"
+description = "Terminal display state manager for dimensions, colors, and cursor"
+author = "Nitpick Authors"

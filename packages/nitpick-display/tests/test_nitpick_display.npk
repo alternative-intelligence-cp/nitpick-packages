@@ -1,130 +1,131 @@
-// test_nitpick_display.npk — 12-test suite for nitpick-display (v0.12.2)
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+// test_nitpick_display.npk
+extern "libc" { func:printf = int32(string:fmt); }
 use "../src/nitpick_display.npk".*;
 
-func:failsafe = int32(tbb32:_err) { exit 1; };
+int64:fail_cnt = 0i64;
+
+func:failsafe = int32(tbb32:_err) {
+    drop _err;
+    exit 1i32;
+};
+
+func:assert_eq_i64 = int64(int64:actual, int64:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i64);
+};
 
 func:test_create_cursor = int32() {
-    int32:pc = 0i32;
+    int64:d = raw Display.init(80i64, 24i64);
+    int64:t1 = 0i64;
+    if (d > 0i64) { t1 = 1i64; }
+    drop assert_eq_i64(t1, 1i64, "T01 disp_create\0");
 
-    int64:d = raw disp_create(80i64, 24i64);
-    if (d > 0i64) { println("[PASS] T01 disp_create"); pc += 1i32; }
-    if (d <= 0i64) { println("[FAIL] T01"); }
+    drop raw Display.mv(d, 3i64, 5i64);
+    string:row2 = raw Display.cur_row(d);
+    int64:t2 = 0i64;
+    if (string_contains(row2, "3")) { t2 = 1i64; }
+    drop assert_eq_i64(t2, 1i64, "T02 cursor_row=3\0");
 
-    int32:_m = raw disp_move(d, 3i64, 5i64);
-    string:row2 = raw disp_cursor_row(d);
-    int32:t2 = 0i32;
-    if (string_contains(row2, "3")) { t2 = 1i32; }
-    if (t2 == 1i32) { println("[PASS] T02 cursor_row=3"); pc += 1i32; }
-    if (t2 == 0i32) { println("[FAIL] T02"); }
+    string:col3 = raw Display.cur_col(d);
+    int64:t3 = 0i64;
+    if (string_contains(col3, "5")) { t3 = 1i64; }
+    drop assert_eq_i64(t3, 1i64, "T03 cursor_col=5\0");
 
-    string:col3 = raw disp_cursor_col(d);
-    int32:t3 = 0i32;
-    if (string_contains(col3, "5")) { t3 = 1i32; }
-    if (t3 == 1i32) { println("[PASS] T03 cursor_col=5"); pc += 1i32; }
-    if (t3 == 0i32) { println("[FAIL] T03"); }
-
-    pass pc;
+    pass 0i32;
 };
 
 func:test_colors = int32() {
-    int32:pc = 0i32;
+    int64:d = raw Display.init(80i64, 24i64);
 
-    int64:d = raw disp_create(80i64, 24i64);
+    drop raw Display.fg_set(d, 1i64);
+    string:fg4 = raw Display.fg_get(d);
+    int64:t4 = 0i64;
+    if (string_contains(fg4, "1")) { t4 = 1i64; }
+    drop assert_eq_i64(t4, 1i64, "T04 fg=1 (red)\0");
 
-    int32:_f = raw disp_set_fg(d, 1i64);
-    string:fg4 = raw disp_fg(d);
-    int32:t4 = 0i32;
-    if (string_contains(fg4, "1")) { t4 = 1i32; }
-    if (t4 == 1i32) { println("[PASS] T04 fg=1 (red)"); pc += 1i32; }
-    if (t4 == 0i32) { println("[FAIL] T04"); }
+    drop raw Display.bg_set(d, 4i64);
+    string:bg5 = raw Display.bg_get(d);
+    int64:t5 = 0i64;
+    if (string_contains(bg5, "4")) { t5 = 1i64; }
+    drop assert_eq_i64(t5, 1i64, "T05 bg=4 (blue)\0");
 
-    int32:_b = raw disp_set_bg(d, 4i64);
-    string:bg5 = raw disp_bg(d);
-    int32:t5 = 0i32;
-    if (string_contains(bg5, "4")) { t5 = 1i32; }
-    if (t5 == 1i32) { println("[PASS] T05 bg=4 (blue)"); pc += 1i32; }
-    if (t5 == 0i32) { println("[FAIL] T05"); }
+    string:cn6 = raw Display.clr_name(1i64);
+    int64:t6 = 0i64;
+    if (string_contains(cn6, "red")) { t6 = 1i64; }
+    drop assert_eq_i64(t6, 1i64, "T06 color_name(1)=red\0");
 
-    string:cn6 = raw disp_color_name(1i64);
-    int32:t6 = 0i32;
-    if (string_contains(cn6, "red")) { t6 = 1i32; }
-    if (t6 == 1i32) { println("[PASS] T06 color_name(1)=red"); pc += 1i32; }
-    if (t6 == 0i32) { println("[FAIL] T06"); }
-
-    pass pc;
+    pass 0i32;
 };
 
 func:test_attributes = int32() {
-    int32:pc = 0i32;
+    int64:d = raw Display.init(80i64, 24i64);
 
-    int64:d = raw disp_create(80i64, 24i64);
+    drop raw Display.bold_set(d, 1i64);
+    string:bold7 = raw Display.bold_get(d);
+    int64:t7 = 0i64;
+    if (string_contains(bold7, "1")) { t7 = 1i64; }
+    drop assert_eq_i64(t7, 1i64, "T07 bold=1\0");
 
-    int32:_b = raw disp_set_bold(d, 1i64);
-    string:bold7 = raw disp_is_bold(d);
-    int32:t7 = 0i32;
-    if (string_contains(bold7, "1")) { t7 = 1i32; }
-    if (t7 == 1i32) { println("[PASS] T07 bold=1"); pc += 1i32; }
-    if (t7 == 0i32) { println("[FAIL] T07"); }
+    drop raw Display.hide_cur(d);
+    string:vis8 = raw Display.cur_vis(d);
+    int64:t8 = 0i64;
+    if (string_contains(vis8, "0")) { t8 = 1i64; }
+    drop assert_eq_i64(t8, 1i64, "T08 cursor hidden\0");
 
-    int32:_h = raw disp_hide_cursor(d);
-    string:vis8 = raw disp_cursor_visible(d);
-    int32:t8 = 0i32;
-    if (string_contains(vis8, "0")) { t8 = 1i32; }
-    if (t8 == 1i32) { println("[PASS] T08 cursor hidden"); pc += 1i32; }
-    if (t8 == 0i32) { println("[FAIL] T08"); }
+    drop raw Display.show_cur(d);
+    string:vis9 = raw Display.cur_vis(d);
+    int64:t9 = 0i64;
+    if (string_contains(vis9, "1")) { t9 = 1i64; }
+    drop assert_eq_i64(t9, 1i64, "T09 cursor shown\0");
 
-    int32:_s = raw disp_show_cursor(d);
-    string:vis9 = raw disp_cursor_visible(d);
-    int32:t9 = 0i32;
-    if (string_contains(vis9, "1")) { t9 = 1i32; }
-    if (t9 == 1i32) { println("[PASS] T09 cursor shown"); pc += 1i32; }
-    if (t9 == 0i32) { println("[FAIL] T09"); }
-
-    pass pc;
+    pass 0i32;
 };
 
 func:test_dimensions_reset = int32() {
-    int32:pc = 0i32;
+    int64:d = raw Display.init(80i64, 24i64);
 
-    int64:d = raw disp_create(80i64, 24i64);
+    string:cols10 = raw Display.get_cols(d);
+    int64:t10 = 0i64;
+    if (string_contains(cols10, "80")) { t10 = 1i64; }
+    drop assert_eq_i64(t10, 1i64, "T10 cols=80\0");
 
-    string:cols10 = raw disp_cols(d);
-    int32:t10 = 0i32;
-    if (string_contains(cols10, "80")) { t10 = 1i32; }
-    if (t10 == 1i32) { println("[PASS] T10 cols=80"); pc += 1i32; }
-    if (t10 == 0i32) { println("[FAIL] T10"); }
+    drop raw Display.sz_set(d, 120i64, 40i64);
+    string:rows11 = raw Display.get_rows(d);
+    int64:t11 = 0i64;
+    if (string_contains(rows11, "40")) { t11 = 1i64; }
+    drop assert_eq_i64(t11, 1i64, "T11 rows=40 after resize\0");
 
-    int32:_r = raw disp_resize(d, 120i64, 40i64);
-    string:rows11 = raw disp_rows(d);
-    int32:t11 = 0i32;
-    if (string_contains(rows11, "40")) { t11 = 1i32; }
-    if (t11 == 1i32) { println("[PASS] T11 rows=40 after resize"); pc += 1i32; }
-    if (t11 == 0i32) { println("[FAIL] T11"); }
+    drop raw Display.mv(d, 9i64, 7i64);
+    drop raw Display.fg_set(d, 2i64);
+    drop raw Display.bold_set(d, 1i64);
+    drop raw Display.rst(d);
+    string:fg12 = raw Display.fg_get(d);
+    int64:t12 = 0i64;
+    if (string_contains(fg12, "7")) { t12 = 1i64; }
+    drop assert_eq_i64(t12, 1i64, "T12 reset fg=7 (white)\0");
 
-    int32:_m2 = raw disp_move(d, 9i64, 7i64);
-    int32:_f2 = raw disp_set_fg(d, 2i64);
-    int32:_b2 = raw disp_set_bold(d, 1i64);
-    int32:_rst = raw disp_reset(d);
-    string:fg12 = raw disp_fg(d);
-    int32:t12 = 0i32;
-    if (string_contains(fg12, "7")) { t12 = 1i32; }
-    if (t12 == 1i32) { println("[PASS] T12 reset fg=7 (white)"); pc += 1i32; }
-    if (t12 == 0i32) { println("[FAIL] T12"); }
-
-    pass pc;
+    pass 0i32;
 };
 
 func:main = int32() {
-    int32:_pass_count = 0i32;
-    int32:p1 = raw test_create_cursor();
-    int32:p2 = raw test_colors();
-    int32:p3 = raw test_attributes();
-    int32:p4 = raw test_dimensions_reset();
-    println("DONE");
-    
-    drop(println("---"));
-    
-        drop(println("PASS: all tests passed"));
-    exit 0;
+    drop raw test_create_cursor();
+    drop raw test_colors();
+    drop raw test_attributes();
+    drop raw test_dimensions_reset();
+
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+    drop(printf("SUCCESS: All tests passed.\n\0"));
+    exit 0i32;
 };

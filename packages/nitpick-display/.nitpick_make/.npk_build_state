@@ -7,21 +7,21 @@
   "targets": {
     "nitpick-display": {
       "artifact_path": ".nitpick_make/build/libnitpick-display.a",
-      "source_hash": "fnv1a:9762993216727766818",
+      "source_hash": "fnv1a:5894556004946502705",
       "command_hash": 9807081941854681205,
-      "source_timestamp": 18446744069052264473,
-      "build_timestamp": 1781508251,
-      "build_duration_ms": 0,
+      "source_timestamp": 18446744069053432736,
+      "build_timestamp": 1781545119,
+      "build_duration_ms": 103,
       "dependencies": [],
       "implicit_inputs": []
     },
     "test-nitpick-display": {
       "artifact_path": ".nitpick_make/build/test-nitpick-display",
-      "source_hash": "fnv1a:7420112304250035685",
+      "source_hash": "fnv1a:9615360378000138874",
       "command_hash": 16962120608415030429,
-      "source_timestamp": 18446744069053395866,
-      "build_timestamp": 1781508251,
-      "build_duration_ms": 0,
+      "source_timestamp": 18446744069053432736,
+      "build_timestamp": 1781545120,
+      "build_duration_ms": 233,
       "dependencies": [],
       "implicit_inputs": []
     }

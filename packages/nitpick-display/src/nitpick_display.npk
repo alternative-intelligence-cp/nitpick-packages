@@ -9,7 +9,7 @@
 
 // ── Create & Reset ──────────────────────────────────────────────────────────
 
-pub func:disp_create = int64(int64:cols, int64:rows) {
+func:disp_create = int64(int64:cols, int64:rows) {
     int64:h = ahash(256);
     ahset(h, "_cols", string_from_int(cols));
     ahset(h, "_rows", string_from_int(rows));
@@ -23,7 +23,7 @@ pub func:disp_create = int64(int64:cols, int64:rows) {
     pass h;
 };
 
-pub func:disp_reset = int32(int64:h) {
+func:disp_reset = int32(int64:h) {
     ahset(h, "_cursor_row", "1");
     ahset(h, "_cursor_col", "1");
     ahset(h, "_fg", "7");
@@ -36,106 +36,106 @@ pub func:disp_reset = int32(int64:h) {
 
 // ── Cursor ──────────────────────────────────────────────────────────────────
 
-pub func:disp_move = int32(int64:h, int64:row, int64:col) {
+func:disp_move = int32(int64:h, int64:row, int64:col) {
     ahset(h, "_cursor_row", string_from_int(row));
     ahset(h, "_cursor_col", string_from_int(col));
     pass 0i32;
 };
 
-pub func:disp_home = int32(int64:h) {
+func:disp_home = int32(int64:h) {
     ahset(h, "_cursor_row", "1");
     ahset(h, "_cursor_col", "1");
     pass 0i32;
 };
 
-pub func:disp_hide_cursor = int32(int64:h) {
+func:disp_hide_cursor = int32(int64:h) {
     ahset(h, "_cursor_vis", "0");
     pass 0i32;
 };
 
-pub func:disp_show_cursor = int32(int64:h) {
+func:disp_show_cursor = int32(int64:h) {
     ahset(h, "_cursor_vis", "1");
     pass 0i32;
 };
 
-pub func:disp_cursor_row = string(int64:h) {
+func:disp_cursor_row = string(int64:h) {
     string:v = ahget(h, "_cursor_row");
     pass v;
 };
 
-pub func:disp_cursor_col = string(int64:h) {
+func:disp_cursor_col = string(int64:h) {
     string:v = ahget(h, "_cursor_col");
     pass v;
 };
 
-pub func:disp_cursor_visible = string(int64:h) {
+func:disp_cursor_visible = string(int64:h) {
     string:v = ahget(h, "_cursor_vis");
     pass v;
 };
 
 // ── Colors & Attributes ─────────────────────────────────────────────────────
 
-pub func:disp_set_fg = int32(int64:h, int64:color) {
+func:disp_set_fg = int32(int64:h, int64:color) {
     ahset(h, "_fg", string_from_int(color));
     pass 0i32;
 };
 
-pub func:disp_set_bg = int32(int64:h, int64:color) {
+func:disp_set_bg = int32(int64:h, int64:color) {
     ahset(h, "_bg", string_from_int(color));
     pass 0i32;
 };
 
-pub func:disp_fg = string(int64:h) {
+func:disp_fg = string(int64:h) {
     string:v = ahget(h, "_fg");
     pass v;
 };
 
-pub func:disp_bg = string(int64:h) {
+func:disp_bg = string(int64:h) {
     string:v = ahget(h, "_bg");
     pass v;
 };
 
-pub func:disp_set_bold = int32(int64:h, int64:on) {
+func:disp_set_bold = int32(int64:h, int64:on) {
     ahset(h, "_bold", string_from_int(on));
     pass 0i32;
 };
 
-pub func:disp_is_bold = string(int64:h) {
+func:disp_is_bold = string(int64:h) {
     string:v = ahget(h, "_bold");
     pass v;
 };
 
-pub func:disp_set_reverse = int32(int64:h, int64:on) {
+func:disp_set_reverse = int32(int64:h, int64:on) {
     ahset(h, "_reverse", string_from_int(on));
     pass 0i32;
 };
 
-pub func:disp_is_reverse = string(int64:h) {
+func:disp_is_reverse = string(int64:h) {
     string:v = ahget(h, "_reverse");
     pass v;
 };
 
 // ── Dimensions ──────────────────────────────────────────────────────────────
 
-pub func:disp_resize = int32(int64:h, int64:cols, int64:rows) {
+func:disp_resize = int32(int64:h, int64:cols, int64:rows) {
     ahset(h, "_cols", string_from_int(cols));
     ahset(h, "_rows", string_from_int(rows));
     pass 0i32;
 };
 
-pub func:disp_cols = string(int64:h) {
+func:disp_cols = string(int64:h) {
     string:v = ahget(h, "_cols");
     pass v;
 };
 
-pub func:disp_rows = string(int64:h) {
+func:disp_rows = string(int64:h) {
     string:v = ahget(h, "_rows");
     pass v;
 };
 
 // ── Color names ─────────────────────────────────────────────────────────────
 
-pub func:disp_color_name = string(int64:code) {
+func:disp_color_name = string(int64:code) {
     if (code == 0i64) { pass "black"; }
     if (code == 1i64) { pass "red"; }
     if (code == 2i64) { pass "green"; }
@@ -149,7 +149,7 @@ pub func:disp_color_name = string(int64:code) {
 
 // ── Type wrapper ────────────────────────────────────────────────────────────
 
-Type:Display = {
+pub Type:Display = {
     func:init       = int64(int64:c, int64:r) { pass raw disp_create(c, r); };
     func:mv         = int32(int64:h, int64:r, int64:c) { pass raw disp_move(h, r, c); };
     func:home       = int32(int64:h) { pass raw disp_home(h); };
