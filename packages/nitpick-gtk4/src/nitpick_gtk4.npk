@@ -142,6 +142,7 @@ pub func:GTK_EVT_FILE_CHOSEN     = int32() { pass(5i32); };
 pub func:GTK_EVT_KEY_PRESS       = int32() { pass(6i32); };
 pub func:GTK_EVT_KEY_RELEASE     = int32() { pass(7i32); };
 pub func:GTK_EVT_LIST_BOX_ROW_ACTIVATED = int32() { pass(8i32); };
+pub func:GTK_EVT_CLIPBOARD_TEXT_READY = int32() { pass(9i32); };
 
 pub func:GTK_ORIENTATION_HORIZONTAL = int32() { pass(0i32); };
 pub func:GTK_ORIENTATION_VERTICAL   = int32() { pass(1i32); };

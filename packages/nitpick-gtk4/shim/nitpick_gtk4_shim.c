@@ -32,6 +32,7 @@ static int             g_running = 0;
 #define EVT_KEY_PRESS       6
 #define EVT_KEY_RELEASE     7
 #define EVT_LIST_BOX_ROW_ACTIVATED 8
+#define EVT_CLIPBOARD_TEXT_READY 9
 
 static int32_t g_last_event = EVT_NONE;
 static int32_t g_last_clicked_button = -1;
@@ -770,6 +771,7 @@ static void on_clipboard_read(GObject *source_object, GAsyncResult *res, gpointe
     } else {
         g_clipboard_text[0] = '\0';
     }
+    g_last_event = EVT_CLIPBOARD_TEXT_READY;
 }
 
 void nitpick_gtk4_clipboard_set_text(const char *text) {
