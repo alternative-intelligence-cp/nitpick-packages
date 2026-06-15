@@ -1,0 +1,5 @@
+[package]
+name = "nitpick-diff"
+version = "0.11.1"
+description = "Sequence diffing utilities including LCS and edit distance"
+author = "Nitpick Authors"

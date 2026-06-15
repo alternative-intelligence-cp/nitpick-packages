@@ -7,21 +7,21 @@
   "targets": {
     "test-nitpick-diff": {
       "artifact_path": ".nitpick_make/build/test-nitpick-diff",
-      "source_hash": "fnv1a:336805812050511201",
+      "source_hash": "fnv1a:12617586087608844825",
       "command_hash": 10176336046507727734,
-      "source_timestamp": 18446744069053395840,
-      "build_timestamp": 1781508223,
-      "build_duration_ms": 231,
+      "source_timestamp": 18446744069053432692,
+      "build_timestamp": 1781545076,
+      "build_duration_ms": 270,
       "dependencies": [],
       "implicit_inputs": []
     },
     "nitpick-diff": {
       "artifact_path": ".nitpick_make/build/libnitpick-diff.a",
-      "source_hash": "fnv1a:15550339969247664891",
+      "source_hash": "fnv1a:5774452409094791410",
       "command_hash": 16808510103264059040,
-      "source_timestamp": 18446744069053395839,
-      "build_timestamp": 1781508223,
-      "build_duration_ms": 134,
+      "source_timestamp": 18446744069053432692,
+      "build_timestamp": 1781545075,
+      "build_duration_ms": 150,
       "dependencies": [],
       "implicit_inputs": []
     }

@@ -1,88 +1,102 @@
-// test_nitpick_diff.npk — 12-test suite for nitpick-diff (v0.11.1)
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+// test_nitpick_diff.npk
+extern "libc" { func:printf = int32(string:fmt); }
 use "../src/nitpick_diff.npk".*;
 
+int64:fail_cnt = 0i64;
 
+func:failsafe = int32(tbb32:_err) {
+    drop _err;
+    exit 1i32;
+};
 
-func:failsafe = int32(tbb32:_err) { exit 1; };
+func:assert_eq_i64 = int64(int64:actual, int64:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i64);
+};
 
 func:main = int32() {
-    int32:_pass_count = 0i32;
-    // a = [1,2,3,4,5], b = [1,3,5]
-    int64:a = aria_libc_mem_malloc(40i64);
-    aria_libc_mem_write_i64(a, 0i64,  1i64);
-    aria_libc_mem_write_i64(a, 8i64,  2i64);
-    aria_libc_mem_write_i64(a, 16i64, 3i64);
-    aria_libc_mem_write_i64(a, 24i64, 4i64);
-    aria_libc_mem_write_i64(a, 32i64, 5i64);
-    int64:b = aria_libc_mem_malloc(24i64);
-    aria_libc_mem_write_i64(b, 0i64, 1i64);
-    aria_libc_mem_write_i64(b, 8i64, 3i64);
-    aria_libc_mem_write_i64(b, 16i64, 5i64);
+    int64:a = nitpick_libc_mem_malloc(40i64);
+    nitpick_libc_mem_write_i64(a, 0i64,  1i64);
+    nitpick_libc_mem_write_i64(a, 8i64,  2i64);
+    nitpick_libc_mem_write_i64(a, 16i64, 3i64);
+    nitpick_libc_mem_write_i64(a, 24i64, 4i64);
+    nitpick_libc_mem_write_i64(a, 32i64, 5i64);
+    
+    int64:b = nitpick_libc_mem_malloc(24i64);
+    nitpick_libc_mem_write_i64(b, 0i64, 1i64);
+    nitpick_libc_mem_write_i64(b, 8i64, 3i64);
+    nitpick_libc_mem_write_i64(b, 16i64, 5i64);
 
-    // T01: lcs_length
     int64:lcs = raw Diff.lcs_length(a, 5i64, b, 3i64);
-    if (lcs == 3i64) { println("[PASS] T01 lcs=3"); } else { println("[FAIL] T01"); }
+    drop assert_eq_i64(lcs, 3i64, "T01 lcs=3\0");
 
-    // T02: edit_distance
     int64:ed = raw Diff.edit_distance(a, 5i64, b, 3i64);
-    if (ed == 2i64) { println("[PASS] T02 ed=2"); } else { println("[FAIL] T02"); }
+    drop assert_eq_i64(ed, 2i64, "T02 ed=2\0");
 
-    // T03: are_equal (not equal)
     int32:eq1 = raw Diff.are_equal(a, 5i64, b, 3i64);
-    if (eq1 == 0i32) { println("[PASS] T03 not equal"); } else { println("[FAIL] T03"); }
+    drop assert_eq_i64(eq1 => int64, 0i64, "T03 not equal\0");
 
-    // T04: are_equal (equal)
     int32:eq2 = raw Diff.are_equal(a, 5i64, a, 5i64);
-    if (eq2 == 1i32) { println("[PASS] T04 equal"); } else { println("[FAIL] T04"); }
+    drop assert_eq_i64(eq2 => int64, 1i64, "T04 equal\0");
 
-    // T05: similarity (equal seqs)
     int64:sim = raw Diff.similarity(a, 5i64, a, 5i64);
-    if (sim == 100i64) { println("[PASS] T05 sim=100"); } else { println("[FAIL] T05"); }
+    drop assert_eq_i64(sim, 100i64, "T05 sim=100\0");
 
-    // T06: diff returns handle
     int64:dh = raw Diff.diff(a, 5i64, b, 3i64);
     int64:dlen = raw Diff.length(dh);
-    if (dlen > 0i64) { println("[PASS] T06 diff len>0"); } else { println("[FAIL] T06"); }
+    int64:t6 = 0i64;
+    if (dlen > 0i64) { t6 = 1i64; }
+    drop assert_eq_i64(t6, 1i64, "T06 diff len>0\0");
 
-    // T07: delete_count
     int64:dc = raw Diff.delete_count(dh);
-    if (dc == 2i64) { println("[PASS] T07 del=2"); } else { println("[FAIL] T07"); }
+    drop assert_eq_i64(dc, 2i64, "T07 del=2\0");
 
-    // T08: insert_count
     int64:ic = raw Diff.insert_count(dh);
-    if (ic == 0i64) { println("[PASS] T08 ins=0"); } else { println("[FAIL] T08"); }
+    drop assert_eq_i64(ic, 0i64, "T08 ins=0\0");
 
-    // T09: equal_count
     int64:ec = raw Diff.equal_count(dh);
-    if (ec == 3i64) { println("[PASS] T09 eq=3"); } else { println("[FAIL] T09"); }
+    drop assert_eq_i64(ec, 3i64, "T09 eq=3\0");
 
-    drop Diff.destroy(dh);
+    drop raw Diff.destroy(dh);
 
-    // T10: lcs output
-    int64:out = aria_libc_mem_malloc(40i64);
-    int64:olen = aria_libc_mem_malloc(8i64);
-    drop Diff.lcs(a, 5i64, b, 3i64, out, olen);
-    int64:ol = aria_libc_mem_read_i64(olen, 0i64);
-    if (ol == 3i64) { println("[PASS] T10 lcs out=3"); } else { println("[FAIL] T10"); }
+    int64:out = nitpick_libc_mem_malloc(40i64);
+    int64:olen = nitpick_libc_mem_malloc(8i64);
+    drop raw Diff.lcs(a, 5i64, b, 3i64, out, olen);
+    int64:ol = nitpick_libc_mem_read_i64(olen, 0i64);
+    drop assert_eq_i64(ol, 3i64, "T10 lcs out=3\0");
 
-    // T11: lcs values correct
-    int64:lv0 = aria_libc_mem_read_i64(out, 0i64);
-    int64:lv1 = aria_libc_mem_read_i64(out, 8i64);
-    int64:lv2 = aria_libc_mem_read_i64(out, 16i64);
+    int64:lv0 = nitpick_libc_mem_read_i64(out, 0i64);
+    int64:lv1 = nitpick_libc_mem_read_i64(out, 8i64);
+    int64:lv2 = nitpick_libc_mem_read_i64(out, 16i64);
+    int64:t11 = 0i64;
     if (lv0 == 1i64) {
         if (lv1 == 3i64) {
-            if (lv2 == 5i64) { println("[PASS] T11 lcs vals"); } else { println("[FAIL] T11"); }
-        } else { println("[FAIL] T11"); }
-    } else { println("[FAIL] T11"); }
+            if (lv2 == 5i64) { t11 = 1i64; }
+        }
+    }
+    drop assert_eq_i64(t11, 1i64, "T11 lcs vals\0");
 
-    // T12: edit_distance of identical
     int64:ed2 = raw Diff.edit_distance(a, 5i64, a, 5i64);
-    if (ed2 == 0i64) { println("[PASS] T12 ed=0 same"); } else { println("[FAIL] T12"); }
+    drop assert_eq_i64(ed2, 0i64, "T12 ed=0 same\0");
 
-    aria_libc_mem_free(out);
-    aria_libc_mem_free(olen);
-    aria_libc_mem_free(a);
-    aria_libc_mem_free(b);
+    nitpick_libc_mem_free(out);
+    nitpick_libc_mem_free(olen);
+    nitpick_libc_mem_free(a);
+    nitpick_libc_mem_free(b);
+
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+    drop(printf("SUCCESS: All tests passed.\n\0"));
     exit 0i32;
 };
