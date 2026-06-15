@@ -1,0 +1,5 @@
+[package]
+name = "nitpick-deque"
+version = "0.11.3"
+description = "Double-ended queue with O(1) push and pop operations"
+author = "Nitpick Authors"

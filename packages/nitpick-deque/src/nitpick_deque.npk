@@ -1,6 +1,6 @@
 // nitpick_deque.npk — Double-ended queue (v0.11.3)
 //
-// Pure Nitpick + aria-libc_mem.
+// Pure Nitpick + nitpick_libc_mem.
 // Import with: use "nitpick_deque.npk".*;
 //
 // Circular buffer with O(1) push/pop at both ends.
@@ -9,25 +9,25 @@
 //
 // v0.11.3: New pure Nitpick package.
 
-extern "aria_libc_mem" {
-    func:aria_libc_mem_malloc      = int64(int64:bytes);
-    func:aria_libc_mem_free        = int32(int64:ptr);
-    func:aria_libc_mem_zero        = int32(int64:ptr, int64:bytes);
-    func:aria_libc_mem_write_i64   = void(int64:ptr, int64:offset, int64:val);
-    func:aria_libc_mem_read_i64    = int64(int64:ptr, int64:offset);
+extern "libc" {
+    func:nitpick_libc_mem_malloc      = int64(int64:bytes);
+    func:nitpick_libc_mem_free        = int32(int64:ptr);
+    func:nitpick_libc_mem_zero        = int32(int64:ptr, int64:bytes);
+    func:nitpick_libc_mem_write_i64   = void(int64:ptr, int64:offset, int64:val);
+    func:nitpick_libc_mem_read_i64    = int64(int64:ptr, int64:offset);
 }
 
 // ── header read/write helpers ───────────────────────────────────────────────
 
-func:dq_cap = int64(int64:dq) { pass aria_libc_mem_read_i64(dq, 0i64); };
-func:dq_size = int64(int64:dq) { pass aria_libc_mem_read_i64(dq, 8i64); };
-func:dq_head = int64(int64:dq) { pass aria_libc_mem_read_i64(dq, 16i64); };
-func:dq_tail = int64(int64:dq) { pass aria_libc_mem_read_i64(dq, 24i64); };
-func:dq_data = int64(int64:dq) { pass aria_libc_mem_read_i64(dq, 32i64); };
+func:dq_cap = int64(int64:dq) { pass nitpick_libc_mem_read_i64(dq, 0i64); };
+func:dq_size = int64(int64:dq) { pass nitpick_libc_mem_read_i64(dq, 8i64); };
+func:dq_head = int64(int64:dq) { pass nitpick_libc_mem_read_i64(dq, 16i64); };
+func:dq_tail = int64(int64:dq) { pass nitpick_libc_mem_read_i64(dq, 24i64); };
+func:dq_data = int64(int64:dq) { pass nitpick_libc_mem_read_i64(dq, 32i64); };
 
-func:dq_set_size = int32(int64:dq, int64:v) { aria_libc_mem_write_i64(dq, 8i64, v); pass 0i32; };
-func:dq_set_head = int32(int64:dq, int64:v) { aria_libc_mem_write_i64(dq, 16i64, v); pass 0i32; };
-func:dq_set_tail = int32(int64:dq, int64:v) { aria_libc_mem_write_i64(dq, 24i64, v); pass 0i32; };
+func:dq_set_size = int32(int64:dq, int64:v) { nitpick_libc_mem_write_i64(dq, 8i64, v); pass 0i32; };
+func:dq_set_head = int32(int64:dq, int64:v) { nitpick_libc_mem_write_i64(dq, 16i64, v); pass 0i32; };
+func:dq_set_tail = int32(int64:dq, int64:v) { nitpick_libc_mem_write_i64(dq, 24i64, v); pass 0i32; };
 
 // modulo without % operator: a mod b = a - (a / b) * b
 func:dq_mod = int64(int64:a, int64:b) {
@@ -38,22 +38,22 @@ func:dq_mod = int64(int64:a, int64:b) {
 // ── core functions ──────────────────────────────────────────────────────────
 
 func:deque_create = int64(int64:cap) {
-    int64:hdr = aria_libc_mem_malloc(40i64);
-    int32:zh = aria_libc_mem_zero(hdr, 40i64);
-    int64:data = aria_libc_mem_malloc(cap * 8i64);
-    int32:zd = aria_libc_mem_zero(data, cap * 8i64);
-    aria_libc_mem_write_i64(hdr, 0i64, cap);
-    aria_libc_mem_write_i64(hdr, 8i64, 0i64);
-    aria_libc_mem_write_i64(hdr, 16i64, 0i64);
-    aria_libc_mem_write_i64(hdr, 24i64, 0i64);
-    aria_libc_mem_write_i64(hdr, 32i64, data);
+    int64:hdr = nitpick_libc_mem_malloc(40i64);
+    int32:zh = nitpick_libc_mem_zero(hdr, 40i64);
+    int64:data = nitpick_libc_mem_malloc(cap * 8i64);
+    int32:zd = nitpick_libc_mem_zero(data, cap * 8i64);
+    nitpick_libc_mem_write_i64(hdr, 0i64, cap);
+    nitpick_libc_mem_write_i64(hdr, 8i64, 0i64);
+    nitpick_libc_mem_write_i64(hdr, 16i64, 0i64);
+    nitpick_libc_mem_write_i64(hdr, 24i64, 0i64);
+    nitpick_libc_mem_write_i64(hdr, 32i64, data);
     pass hdr;
 };
 
 func:deque_destroy = int32(int64:dq) {
     int64:data = raw dq_data(dq);
-    int32:fd = aria_libc_mem_free(data);
-    pass aria_libc_mem_free(dq);
+    int32:fd = nitpick_libc_mem_free(data);
+    pass nitpick_libc_mem_free(dq);
 };
 
 func:deque_push_back = int32(int64:dq, int64:val) {
@@ -62,7 +62,7 @@ func:deque_push_back = int32(int64:dq, int64:val) {
     if (sz >= cap) { pass -1i32; }
     int64:tail = raw dq_tail(dq);
     int64:data = raw dq_data(dq);
-    aria_libc_mem_write_i64(data, tail * 8i64, val);
+    nitpick_libc_mem_write_i64(data, tail * 8i64, val);
     int64:new_tail = raw dq_mod(tail + 1i64, cap);
     int32:st = raw dq_set_tail(dq, new_tail);
     int32:ss = raw dq_set_size(dq, sz + 1i64);
@@ -76,7 +76,7 @@ func:deque_push_front = int32(int64:dq, int64:val) {
     int64:head = raw dq_head(dq);
     int64:new_head = raw dq_mod(head - 1i64 + cap, cap);
     int64:data = raw dq_data(dq);
-    aria_libc_mem_write_i64(data, new_head * 8i64, val);
+    nitpick_libc_mem_write_i64(data, new_head * 8i64, val);
     int32:sh = raw dq_set_head(dq, new_head);
     int32:ss = raw dq_set_size(dq, sz + 1i64);
     pass 0i32;
@@ -89,7 +89,7 @@ func:deque_pop_back = int64(int64:dq) {
     int64:tail = raw dq_tail(dq);
     int64:new_tail = raw dq_mod(tail - 1i64 + cap, cap);
     int64:data = raw dq_data(dq);
-    int64:val = aria_libc_mem_read_i64(data, new_tail * 8i64);
+    int64:val = nitpick_libc_mem_read_i64(data, new_tail * 8i64);
     int32:st = raw dq_set_tail(dq, new_tail);
     int32:ss = raw dq_set_size(dq, sz - 1i64);
     pass val;
@@ -101,7 +101,7 @@ func:deque_pop_front = int64(int64:dq) {
     int64:cap = raw dq_cap(dq);
     int64:head = raw dq_head(dq);
     int64:data = raw dq_data(dq);
-    int64:val = aria_libc_mem_read_i64(data, head * 8i64);
+    int64:val = nitpick_libc_mem_read_i64(data, head * 8i64);
     int64:new_head = raw dq_mod(head + 1i64, cap);
     int32:sh = raw dq_set_head(dq, new_head);
     int32:ss = raw dq_set_size(dq, sz - 1i64);
@@ -113,7 +113,7 @@ func:deque_peek_front = int64(int64:dq) {
     if (sz == 0i64) { pass -1i64; }
     int64:head = raw dq_head(dq);
     int64:data = raw dq_data(dq);
-    pass aria_libc_mem_read_i64(data, head * 8i64);
+    pass nitpick_libc_mem_read_i64(data, head * 8i64);
 };
 
 func:deque_peek_back = int64(int64:dq) {
@@ -123,7 +123,7 @@ func:deque_peek_back = int64(int64:dq) {
     int64:tail = raw dq_tail(dq);
     int64:back = raw dq_mod(tail - 1i64 + cap, cap);
     int64:data = raw dq_data(dq);
-    pass aria_libc_mem_read_i64(data, back * 8i64);
+    pass nitpick_libc_mem_read_i64(data, back * 8i64);
 };
 
 func:deque_is_empty = int32(int64:dq) {
@@ -141,7 +141,7 @@ func:deque_clear = int32(int64:dq) {
 
 // ── Type wrapper ───────────────────────────────────────────────────────────
 
-Type:Deque = {
+pub Type:Deque = {
     func:create = int64(int64:cap) { pass raw deque_create(cap); };
     func:destroy = int32(int64:dq) { pass raw deque_destroy(dq); };
     func:push_back = int32(int64:dq, int64:val) { pass raw deque_push_back(dq, val); };
