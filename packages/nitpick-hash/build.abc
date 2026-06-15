@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-hash"
+version = "0.2.0"
+
+[target.nitpick-hash]
+type = "library"
+sources = ["src/nitpick_hash.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-hash]
+type = "binary"
+sources = ["tests/test_nitpick_hash.npk"]
+deps = []
+flags = ["-I", "src"]

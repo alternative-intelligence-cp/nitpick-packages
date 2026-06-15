@@ -4,10 +4,10 @@
 extern "libc" { func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_hash.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:_err) { exit 1; };
 
 func:main = int32() {
-    int32:pass_count = 0i32;
+    int32:_pass_count = 0i32;
     // T01: raw fnv1a32(0) == 2615243109 (0x9be17165)
     uint64:r01 = raw fnv1a32(0u64);
     uint64:f01 = 0u64; if (r01 == 2615243109u64) { f01 = 1u64; }
