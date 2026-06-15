@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "test-nitpick-websocket": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-websocket",
+      "source_hash": "fnv1a:17129838681885198983",
+      "command_hash": 17462026425099481723,
+      "source_timestamp": 18446744069053435475,
+      "build_timestamp": 1781547863,
+      "build_duration_ms": 45,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "nitpick-websocket": {
+      "artifact_path": ".nitpick_make/build/libnitpick-websocket.a",
+      "source_hash": "fnv1a:11065383206341559398",
+      "command_hash": 14345077617337937234,
+      "source_timestamp": 18446744069053435342,
+      "build_timestamp": 1781547863,
+      "build_duration_ms": 106,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

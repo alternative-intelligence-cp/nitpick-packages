@@ -151,7 +151,7 @@ extern "nitpick_websocket_shim" {
 
 extern "libc" { func:string_length = int64(string:s); }
 
-Type:WebSocket = {
+pub Type:WebSocket = {
     func:init       = int64(string:host, string:path) { pass raw ws_create(host, path); };
     func:handshake  = string(int64:h) { pass raw ws_handshake_request(h); };
     func:accept     = int64(int64:h, string:r) { pass raw ws_check_accept(h, r); };

@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-websocket"
+version = "0.1.0"
+
+[target.nitpick-websocket]
+type = "library"
+sources = ["src/nitpick_websocket.npk"]
+deps = []
+flags = ["-Lshim/.nitpick_make/lib", "-lnitpick_websocket_shim"]
+
+[target.test-nitpick-websocket]
+type = "binary"
+sources = ["tests/test_nitpick_websocket.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_websocket_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_string"]
