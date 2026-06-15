@@ -1,0 +1,27 @@
+[project]
+name = "nitpick-socket"
+version = "0.1.0"
+
+[target.nitpick-socket]
+type = "library"
+sources = ["src/nitpick_socket.npk", "src/nitpick_socket_v2.npk"]
+deps = []
+flags = ["-Lshim/.nitpick_make/lib", "-lnitpick_socket", "-L../../../nitpick-libc/shim", "-lnitpick_libc_net"]
+
+[target.test-nitpick-socket]
+type = "binary"
+sources = ["tests/test_nitpick_socket.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_socket", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_net"]
+
+[target.test-nitpick-socket-tcp]
+type = "binary"
+sources = ["tests/test_nitpick_socket_tcp.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_socket", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_net"]
+
+[target.test-nitpick-socket-v2]
+type = "binary"
+sources = ["tests/test_nitpick_socket_v2.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_socket", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_net"]

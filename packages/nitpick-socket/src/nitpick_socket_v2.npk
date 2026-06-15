@@ -6,163 +6,163 @@
 // Socket FDs are passed as int64 handles.
 // All operations return int64 status (>= 0 success, < 0 error).
 //
-// v0.12.0: Migrated to aria_libc_net shim.
+// v0.12.0: Migrated to nitpick_libc_net shim.
 
-extern "aria_libc_net" {
+extern "nitpick_libc_net" {
     // creation
-    func:aria_libc_net_socket_tcp       = int64();
-    func:aria_libc_net_socket_udp       = int64();
+    func:nitpick_libc_net_socket_tcp       = int64();
+    func:nitpick_libc_net_socket_udp       = int64();
 
     // options
-    func:aria_libc_net_setsockopt_reuse = int64(int64:fd);
-    func:aria_libc_net_set_nonblocking  = int64(int64:fd);
-    func:aria_libc_net_set_blocking     = int64(int64:fd);
-    func:aria_libc_net_set_timeout      = int64(int64:fd, int64:seconds);
+    func:nitpick_libc_net_setsockopt_reuse = int64(int64:fd);
+    func:nitpick_libc_net_set_nonblocking  = int64(int64:fd);
+    func:nitpick_libc_net_set_blocking     = int64(int64:fd);
+    func:nitpick_libc_net_set_timeout      = int64(int64:fd, int64:seconds);
 
     // bind / listen / accept / connect
-    func:aria_libc_net_bind    = int64(int64:fd, string:addr, int64:port);
-    func:aria_libc_net_listen  = int64(int64:fd, int64:backlog);
-    func:aria_libc_net_accept  = int64(int64:fd);
-    func:aria_libc_net_connect = int64(int64:fd, string:host, int64:port);
+    func:nitpick_libc_net_bind    = int64(int64:fd, string:addr, int64:port);
+    func:nitpick_libc_net_listen  = int64(int64:fd, int64:backlog);
+    func:nitpick_libc_net_accept  = int64(int64:fd);
+    func:nitpick_libc_net_connect = int64(int64:fd, string:host, int64:port);
 
     // TCP send / recv
-    func:aria_libc_net_send     = int64(int64:fd, string:data, int64:len);
-    func:aria_libc_net_send_str = int64(int64:fd, string:data);
-    func:aria_libc_net_recv     = string(int64:fd, int64:max_len);
+    func:nitpick_libc_net_send     = int64(int64:fd, string:data, int64:len);
+    func:nitpick_libc_net_send_str = int64(int64:fd, string:data);
+    func:nitpick_libc_net_recv     = string(int64:fd, int64:max_len);
 
     // UDP sendto / recvfrom
-    func:aria_libc_net_sendto   = int64(int64:fd, string:data, int64:len, string:host, int64:port);
-    func:aria_libc_net_recvfrom = string(int64:fd);
+    func:nitpick_libc_net_sendto   = int64(int64:fd, string:data, int64:len, string:host, int64:port);
+    func:nitpick_libc_net_recvfrom = string(int64:fd);
 
     // poll
-    func:aria_libc_net_poll_read  = int64(int64:fd, int64:timeout_ms);
-    func:aria_libc_net_poll_write = int64(int64:fd, int64:timeout_ms);
+    func:nitpick_libc_net_poll_read  = int64(int64:fd, int64:timeout_ms);
+    func:nitpick_libc_net_poll_write = int64(int64:fd, int64:timeout_ms);
 
     // close / error
-    func:aria_libc_net_close       = int64(int64:fd);
-    func:aria_libc_net_errno       = int64();
-    func:aria_libc_net_strerror    = string();
-    func:aria_libc_net_recv_length = int64();
+    func:nitpick_libc_net_close       = int64(int64:fd);
+    func:nitpick_libc_net_errno       = int64();
+    func:nitpick_libc_net_strerror    = string();
+    func:nitpick_libc_net_recv_length = int64();
 
     // DNS
-    func:aria_libc_net_resolve = string(string:hostname);
+    func:nitpick_libc_net_resolve = string(string:hostname);
 
     // peer info
-    func:aria_libc_net_getpeername = string(int64:fd);
-    func:aria_libc_net_getpeerport = int64(int64:fd);
+    func:nitpick_libc_net_getpeername = string(int64:fd);
+    func:nitpick_libc_net_getpeerport = int64(int64:fd);
 }
 
 // ── TCP ─────────────────────────────────────────────────────────────────────
 
 pub func:socket_tcp_create = int64() {
-    pass aria_libc_net_socket_tcp();
+    pass nitpick_libc_net_socket_tcp();
 };
 
 pub func:socket_tcp_connect = int64(string:host, int64:port) {
-    int64:fd = aria_libc_net_socket_tcp();
+    int64:fd = nitpick_libc_net_socket_tcp();
     if (fd < 0i64) { pass -1i64; }
-    int64:rv = aria_libc_net_connect(fd, host, port);
-    if (rv < 1i64) { aria_libc_net_close(fd); pass -1i64; }
+    int64:rv = nitpick_libc_net_connect(fd, host, port);
+    if (rv < 1i64) { nitpick_libc_net_close(fd); pass -1i64; }
     pass fd;
 };
 
 pub func:socket_tcp_listen = int64(string:addr, int64:port, int64:backlog) {
-    int64:fd = aria_libc_net_socket_tcp();
+    int64:fd = nitpick_libc_net_socket_tcp();
     if (fd < 0i64) { pass -1i64; }
-    int64:reuse = aria_libc_net_setsockopt_reuse(fd);
-    int64:bnd = aria_libc_net_bind(fd, addr, port);
-    if (bnd < 1i64) { aria_libc_net_close(fd); pass -1i64; }
-    int64:lst = aria_libc_net_listen(fd, backlog);
-    if (lst < 1i64) { aria_libc_net_close(fd); pass -1i64; }
+    int64:reuse = nitpick_libc_net_setsockopt_reuse(fd);
+    int64:bnd = nitpick_libc_net_bind(fd, addr, port);
+    if (bnd < 1i64) { nitpick_libc_net_close(fd); pass -1i64; }
+    int64:lst = nitpick_libc_net_listen(fd, backlog);
+    if (lst < 1i64) { nitpick_libc_net_close(fd); pass -1i64; }
     pass fd;
 };
 
 pub func:socket_tcp_accept = int64(int64:listen_fd) {
-    pass aria_libc_net_accept(listen_fd);
+    pass nitpick_libc_net_accept(listen_fd);
 };
 
 // ── UDP ─────────────────────────────────────────────────────────────────────
 
 pub func:socket_udp_create = int64() {
-    pass aria_libc_net_socket_udp();
+    pass nitpick_libc_net_socket_udp();
 };
 
 pub func:socket_udp_bind = int64(int64:fd, string:addr, int64:port) {
-    pass aria_libc_net_bind(fd, addr, port);
+    pass nitpick_libc_net_bind(fd, addr, port);
 };
 
 pub func:socket_udp_sendto = int64(int64:fd, string:data, int64:len, string:host, int64:port) {
-    pass aria_libc_net_sendto(fd, data, len, host, port);
+    pass nitpick_libc_net_sendto(fd, data, len, host, port);
 };
 
 pub func:socket_udp_recvfrom = string(int64:fd) {
-    pass aria_libc_net_recvfrom(fd);
+    pass nitpick_libc_net_recvfrom(fd);
 };
 
 // ── Send / Recv ─────────────────────────────────────────────────────────────
 
 pub func:socket_send = int64(int64:fd, string:data, int64:len) {
-    pass aria_libc_net_send(fd, data, len);
+    pass nitpick_libc_net_send(fd, data, len);
 };
 
 pub func:socket_send_str = int64(int64:fd, string:data) {
-    pass aria_libc_net_send_str(fd, data);
+    pass nitpick_libc_net_send_str(fd, data);
 };
 
 pub func:socket_recv = string(int64:fd, int64:max_len) {
-    pass aria_libc_net_recv(fd, max_len);
+    pass nitpick_libc_net_recv(fd, max_len);
 };
 
 pub func:socket_recv_length = int64() {
-    pass aria_libc_net_recv_length();
+    pass nitpick_libc_net_recv_length();
 };
 
 // ── Poll / Options ──────────────────────────────────────────────────────────
 
 pub func:socket_poll_read = int64(int64:fd, int64:timeout_ms) {
-    pass aria_libc_net_poll_read(fd, timeout_ms);
+    pass nitpick_libc_net_poll_read(fd, timeout_ms);
 };
 
 pub func:socket_poll_write = int64(int64:fd, int64:timeout_ms) {
-    pass aria_libc_net_poll_write(fd, timeout_ms);
+    pass nitpick_libc_net_poll_write(fd, timeout_ms);
 };
 
 pub func:socket_set_nonblocking = int64(int64:fd) {
-    pass aria_libc_net_set_nonblocking(fd);
+    pass nitpick_libc_net_set_nonblocking(fd);
 };
 
 pub func:socket_set_blocking = int64(int64:fd) {
-    pass aria_libc_net_set_blocking(fd);
+    pass nitpick_libc_net_set_blocking(fd);
 };
 
 pub func:socket_set_timeout = int64(int64:fd, int64:seconds) {
-    pass aria_libc_net_set_timeout(fd, seconds);
+    pass nitpick_libc_net_set_timeout(fd, seconds);
 };
 
 // ── Close / Error / DNS ─────────────────────────────────────────────────────
 
 pub func:socket_close = int64(int64:fd) {
-    pass aria_libc_net_close(fd);
+    pass nitpick_libc_net_close(fd);
 };
 
 pub func:socket_err_code = int64() {
-    pass aria_libc_net_errno();
+    pass nitpick_libc_net_errno();
 };
 
 pub func:socket_err_msg = string() {
-    pass aria_libc_net_strerror();
+    pass nitpick_libc_net_strerror();
 };
 
 pub func:socket_resolve = string(string:hostname) {
-    pass aria_libc_net_resolve(hostname);
+    pass nitpick_libc_net_resolve(hostname);
 };
 
 pub func:socket_getpeername = string(int64:fd) {
-    pass aria_libc_net_getpeername(fd);
+    pass nitpick_libc_net_getpeername(fd);
 };
 
 pub func:socket_getpeerport = int64(int64:fd) {
-    pass aria_libc_net_getpeerport(fd);
+    pass nitpick_libc_net_getpeerport(fd);
 };
 
 // ── Type wrapper ───────────────────────────────────────────────────────────

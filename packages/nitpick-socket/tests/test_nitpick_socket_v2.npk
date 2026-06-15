@@ -1,7 +1,7 @@
 // test_nitpick_socket_v2.npk — 12-test suite for nitpick-socket v0.12.0
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+extern "libc" { func:nitpick_libc_exit = NIL(int32:code); }
 
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+extern "libc" { func:nitpick_libc_exit = NIL(int32:code); }
 use "../src/nitpick_socket_v2.npk".*;
 
 func:failsafe = int32(tbb32:err) { exit 1; };

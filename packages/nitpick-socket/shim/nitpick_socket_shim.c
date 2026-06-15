@@ -4,21 +4,21 @@
 #include <stdlib.h>
 
 // V2 functions
-int64_t aria_libc_net_sendto(int64_t fd, const char* data, const char* host, int64_t port) { return 9; }
-const char* aria_libc_net_recvfrom(int64_t fd) { return strdup("hello net"); }
-int64_t aria_libc_net_send(int64_t fd, const char* data) { return 9; }
-const char* aria_libc_net_recv_length(int64_t fd, int64_t len) { return strdup("hello tcp"); }
-int64_t aria_libc_net_poll_read(int64_t fd, int64_t ms) {
+int64_t nitpick_libc_net_sendto(int64_t fd, const char* data, const char* host, int64_t port) { return 9; }
+const char* nitpick_libc_net_recvfrom(int64_t fd) { return strdup("hello net"); }
+int64_t nitpick_libc_net_send(int64_t fd, const char* data) { return 9; }
+const char* nitpick_libc_net_recv_length(int64_t fd, int64_t len) { return strdup("hello tcp"); }
+int64_t nitpick_libc_net_poll_read(int64_t fd, int64_t ms) {
     static int calls = 0;
     calls++;
     if (calls % 2 != 0) return 1;
     return 0;
 }
-int64_t aria_libc_net_poll_write(int64_t fd, int64_t ms) { return 1; }
-int64_t aria_libc_net_set_timeout(int64_t fd, int64_t ms) { return 1; }
-const char* aria_libc_net_strerror(int64_t err) { return strdup("error"); }
-const char* aria_libc_net_getpeername(int64_t fd) { return strdup("127.0.0.1"); }
-int64_t aria_libc_net_getpeerport(int64_t fd) { return 8080; }
+int64_t nitpick_libc_net_poll_write(int64_t fd, int64_t ms) { return 1; }
+int64_t nitpick_libc_net_set_timeout(int64_t fd, int64_t ms) { return 1; }
+const char* nitpick_libc_net_strerror(int64_t err) { return strdup("error"); }
+const char* nitpick_libc_net_getpeername(int64_t fd) { return strdup("127.0.0.1"); }
+int64_t nitpick_libc_net_getpeerport(int64_t fd) { return 8080; }
 
 // V1 (legacy) functions
 int32_t nitpick_socket_last_result() { return 0; }
