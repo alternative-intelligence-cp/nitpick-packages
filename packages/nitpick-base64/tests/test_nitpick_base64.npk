@@ -6,7 +6,7 @@ extern "libc" {
     func:nitpick_base64_assert_encode_len_eq = int32(string:input, int32:len, string:expected, string:msg); func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_base64.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:_err) { exit 1i32; };
 
 
 

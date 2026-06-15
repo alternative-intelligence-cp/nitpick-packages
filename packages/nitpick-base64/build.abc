@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-base64"
+version = "0.1.0"
+
+[target.nitpick-base64]
+type = "library"
+sources = ["src/nitpick_base64.npk"]
+deps = []
+flags = ["-L", "shim", "-lnitpick_base64_shim"]
+
+[target.test-nitpick-base64]
+type = "binary"
+sources = ["tests/test_nitpick_base64.npk"]
+deps = []
+flags = ["-L", "shim", "-lnitpick_base64_shim", "-I", "src"]
