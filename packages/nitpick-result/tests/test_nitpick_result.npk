@@ -1,94 +1,108 @@
 // test_nitpick_result.npk — 12-test suite for nitpick-result (v0.11.3)
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+extern "libc" { func:printf = int32(string:fmt); }
 use "../src/nitpick_result.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+int64:fail_cnt = 0i64;
 
-func:main = int32() {
-    
-    
+func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
 
-    // T01: ok creates result with is_ok=true
+func:assert_eq_i32 = int32(int32:actual, int32:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i32);
+};
+
+func:assert_eq_i64 = int32(int64:actual, int64:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i32);
+};
+
+func:test_result = int32() {
     int64:r1 = raw Res.success(42i64);
     int32:ok1 = raw Res.is_ok(r1);
-    if (ok1 == 1i32) { println("[PASS] T01 ok is_ok");  }
-    if (ok1 != 1i32) { println("[FAIL] T01"); }
+    drop assert_eq_i32(ok1, 1i32, "T01 ok is_ok\0");
 
-    // T02: err creates result with is_err=true
     int64:r2 = raw Res.err(99i64);
     int32:er2 = raw Res.is_err(r2);
-    if (er2 == 1i32) { println("[PASS] T02 err is_err");  }
-    if (er2 != 1i32) { println("[FAIL] T02"); }
+    drop assert_eq_i32(er2, 1i32, "T02 err is_err\0");
 
-    // T03: unwrap ok returns value
     int64:v3 = raw Res.unwrap(r1);
-    if (v3 == 42i64) { println("[PASS] T03 unwrap ok=42");  }
-    if (v3 != 42i64) { println("[FAIL] T03"); }
+    drop assert_eq_i64(v3, 42i64, "T03 unwrap ok=42\0");
 
-    // T04: unwrap err returns -1
     int64:v4 = raw Res.unwrap(r2);
-    if (v4 == -1i64) { println("[PASS] T04 unwrap err=-1");  }
-    if (v4 != -1i64) { println("[FAIL] T04"); }
+    drop assert_eq_i64(v4, 0i64 - 1i64, "T04 unwrap err=-1\0");
 
-    // T05: unwrap_or ok returns value
     int64:v5 = raw Res.unwrap_or(r1, 0i64);
-    if (v5 == 42i64) { println("[PASS] T05 unwrap_or ok");  }
-    if (v5 != 42i64) { println("[FAIL] T05"); }
+    drop assert_eq_i64(v5, 42i64, "T05 unwrap_or ok\0");
 
-    // T06: unwrap_or err returns fallback
     int64:v6 = raw Res.unwrap_or(r2, 777i64);
-    if (v6 == 777i64) { println("[PASS] T06 unwrap_or err");  }
-    if (v6 != 777i64) { println("[FAIL] T06"); }
+    drop assert_eq_i64(v6, 777i64, "T06 unwrap_or err\0");
 
-    // T07: error_code
     int64:ec7 = raw Res.error_code(r2);
-    if (ec7 == 99i64) { println("[PASS] T07 error_code=99");  }
-    if (ec7 != 99i64) { println("[FAIL] T07"); }
+    drop assert_eq_i64(ec7, 99i64, "T07 error_code=99\0");
 
-    // T08: and_both — ok AND ok returns second
     int64:ra8 = raw Res.success(10i64);
     int64:rb8 = raw Res.success(20i64);
     int64:and8 = raw Res.and_both(ra8, rb8);
     int64:v8 = raw Res.unwrap(and8);
-    if (v8 == 20i64) { println("[PASS] T08 and ok,ok");  }
-    if (v8 != 20i64) { println("[FAIL] T08"); }
+    drop assert_eq_i64(v8, 20i64, "T08 and ok,ok\0");
 
-    // T09: and_both — err AND ok returns err
     int64:re9 = raw Res.err(5i64);
     int64:ro9 = raw Res.success(10i64);
     int64:and9 = raw Res.and_both(re9, ro9);
     int32:ie9 = raw Res.is_err(and9);
-    if (ie9 == 1i32) { println("[PASS] T09 and err,ok");  }
-    if (ie9 != 1i32) { println("[FAIL] T09"); }
+    drop assert_eq_i32(ie9, 1i32, "T09 and err,ok\0");
 
-    // T10: or_either — err OR ok returns ok
     int64:or10 = raw Res.or_either(re9, ro9);
     int32:io10 = raw Res.is_ok(or10);
-    if (io10 == 1i32) { println("[PASS] T10 or err,ok");  }
-    if (io10 != 1i32) { println("[FAIL] T10"); }
+    drop assert_eq_i32(io10, 1i32, "T10 or err,ok\0");
 
-    // T11: map_or — ok maps to ok_val
     int64:m11 = raw Res.map_or(r1, 100i64, 200i64);
-    if (m11 == 100i64) { println("[PASS] T11 map_or ok");  }
-    if (m11 != 100i64) { println("[FAIL] T11"); }
+    drop assert_eq_i64(m11, 100i64, "T11 map_or ok\0");
 
-    // T12: clone
     int64:cl12 = raw Res.clone(r1);
     int64:v12 = raw Res.unwrap(cl12);
-    if (v12 == 42i64) { println("[PASS] T12 clone");  }
-    if (v12 != 42i64) { println("[FAIL] T12"); }
+    drop assert_eq_i64(v12, 42i64, "T12 clone\0");
 
-    int32:d1 = raw Res.destroy(r1);
-    int32:d2 = raw Res.destroy(r2);
-    int32:da8 = raw Res.destroy(ra8);
-    int32:db8 = raw Res.destroy(rb8);
-    int32:de9 = raw Res.destroy(re9);
-    int32:do9 = raw Res.destroy(ro9);
-    int32:dc12 = raw Res.destroy(cl12);
-    println("DONE");
-    
-    drop(println("---"));
-    
-        drop(println("PASS: all tests passed"));
-    exit 0;
+    drop raw Res.destroy(r1);
+    drop raw Res.destroy(r2);
+    drop raw Res.destroy(ra8);
+    drop raw Res.destroy(rb8);
+    drop raw Res.destroy(re9);
+    drop raw Res.destroy(ro9);
+    drop raw Res.destroy(cl12);
+
+    pass 0i32;
+};
+
+func:main = int32() {
+    drop test_result();
+
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+
+    drop(printf("SUCCESS: All tests passed.\n\0"));
+    exit 0i32;
 };

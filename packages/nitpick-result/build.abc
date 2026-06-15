@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-result"
+version = "0.11.3"
+
+[target.nitpick-result]
+type = "library"
+sources = ["src/nitpick_result.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem"]
+
+[target.test-nitpick-result]
+type = "binary"
+sources = ["tests/test_nitpick_result.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_mem"]
