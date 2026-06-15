@@ -1,8 +1,0 @@
-[package]
-name = "nitpick-cookie"
-version = "0.12.1"
-description = "HTTP cookie parsing and serialization for Nitpick — RFC 6265 compliant, pure Nitpick"
-license = "MIT"
-categories = ["networking", "middleware"]
-
-[dependencies]

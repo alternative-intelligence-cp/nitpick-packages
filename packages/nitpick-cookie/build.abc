@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-cookie"
+version = "0.12.1"
+
+[target.nitpick-cookie]
+type = "library"
+sources = ["src/nitpick_cookie.npk"]
+deps = []
+flags = ["-I", "../nitpick-str/src"]
+
+[target.test-nitpick-cookie]
+type = "binary"
+sources = ["tests/test_nitpick_cookie.npk"]
+deps = []
+flags = ["-I", "src", "-I", "../nitpick-str/src", "-L", "../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
