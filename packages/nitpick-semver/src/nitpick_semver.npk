@@ -15,25 +15,64 @@ extern "nitpick_semver_shim" {
     func:nitpick_semver_bump_patch     = string(string:version);
 }
 
-pub func:parse = int32(string:version) {
-    pass(nitpick_semver_parse(version));
+Type:SemVer = {
+    func:parse = int32(string:version) {
+        int32:r = nitpick_semver_parse(version);
+        pass r;
+    };
+
+    func:get_major = int32() {
+        int32:r = nitpick_semver_get_major();
+        pass r;
+    };
+
+    func:get_minor = int32() {
+        int32:r = nitpick_semver_get_minor();
+        pass r;
+    };
+
+    func:get_patch = int32() {
+        int32:r = nitpick_semver_get_patch();
+        pass r;
+    };
+
+    func:get_prerelease = string() {
+        string:r = nitpick_semver_get_prerelease();
+        pass r;
+    };
+
+    func:get_build = string() {
+        string:r = nitpick_semver_get_build();
+        pass r;
+    };
+
+    func:to_string = string() {
+        string:r = nitpick_semver_to_string();
+        pass r;
+    };
+
+    func:compare = int32(string:a, string:b) {
+        int32:r = nitpick_semver_compare(a, b);
+        pass r;
+    };
+
+    func:satisfies = int32(string:version, string:constraint) {
+        int32:r = nitpick_semver_satisfies(version, constraint);
+        pass r;
+    };
+
+    func:bump_major = string(string:version) {
+        string:r = nitpick_semver_bump_major(version);
+        pass r;
+    };
+
+    func:bump_minor = string(string:version) {
+        string:r = nitpick_semver_bump_minor(version);
+        pass r;
+    };
+
+    func:bump_patch = string(string:version) {
+        string:r = nitpick_semver_bump_patch(version);
+        pass r;
+    };
 };
-
-pub func:get_major = int32() { pass(nitpick_semver_get_major()); };
-pub func:get_minor = int32() { pass(nitpick_semver_get_minor()); };
-pub func:get_patch = int32() { pass(nitpick_semver_get_patch()); };
-pub func:get_prerelease = string() { pass(nitpick_semver_get_prerelease()); };
-pub func:get_build = string() { pass(nitpick_semver_get_build()); };
-pub func:to_string = string() { pass(nitpick_semver_to_string()); };
-
-pub func:compare = int32(string:a, string:b) {
-    pass(nitpick_semver_compare(a, b));
-};
-
-pub func:satisfies = int32(string:version, string:constraint) {
-    pass(nitpick_semver_satisfies(version, constraint));
-};
-
-pub func:bump_major = string(string:version) { pass(nitpick_semver_bump_major(version)); };
-pub func:bump_minor = string(string:version) { pass(nitpick_semver_bump_minor(version)); };
-pub func:bump_patch = string(string:version) { pass(nitpick_semver_bump_patch(version)); };

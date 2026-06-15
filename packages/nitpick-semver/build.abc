@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-semver"
+version = "0.1.0"
+
+[target.nitpick-semver]
+type = "library"
+sources = ["src/nitpick_semver.npk"]
+deps = []
+flags = ["-Lshim/.nitpick_make/lib", "-lnitpick_semver"]
+
+[target.test-nitpick-semver]
+type = "binary"
+sources = ["tests/test_nitpick_semver.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_semver", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io"]

@@ -1,56 +1,66 @@
 // test_nitpick_semver.npk — SemVer tests (8 tests)
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+extern "libc" { func:printf = int32(string:fmt); }
 use "../src/nitpick_semver.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+int64:fail_cnt = 0i64;
 
+func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
 
+func:assert_eq_i32 = int32(int32:actual, int32:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i32);
+};
 
 func:main = int32() {
-    int32:pass_count = 0i32;
     // T01: parse
-    int32:r1 = nitpick_semver_parse("1.2.3");
-    if (r1 == 1i32) { drop(println("[PASS] T01 parse")); }
-    if (r1 != 1i32) { drop(println("[FAIL] T01 parse")); }
+    int32:r1 = raw SemVer.parse("1.2.3\0");
+    drop assert_eq_i32(r1, 1i32, "T01 parse\0");
 
     // T02: major
-    int32:nitpick_maj = nitpick_semver_get_major();
-    if (nitpick_maj == 1i32) { drop(println("[PASS] T02 major")); }
-    if (nitpick_maj != 1i32) { drop(println("[FAIL] T02 major")); }
+    int32:maj = raw SemVer.get_major();
+    drop assert_eq_i32(maj, 1i32, "T02 major\0");
 
     // T03: minor
-    int32:nitpick_min = nitpick_semver_get_minor();
-    if (nitpick_min == 2i32) { drop(println("[PASS] T03 minor")); }
-    if (nitpick_min != 2i32) { drop(println("[FAIL] T03 minor")); }
+    int32:min = raw SemVer.get_minor();
+    drop assert_eq_i32(min, 2i32, "T03 minor\0");
 
     // T04: patch
-    int32:nitpick_pat = nitpick_semver_get_patch();
-    if (nitpick_pat == 3i32) { drop(println("[PASS] T04 patch")); }
-    if (nitpick_pat != 3i32) { drop(println("[FAIL] T04 patch")); }
+    int32:pat = raw SemVer.get_patch();
+    drop assert_eq_i32(pat, 3i32, "T04 patch\0");
 
     // T05: compare equal
-    int32:c1 = nitpick_semver_compare("1.0.0", "1.0.0");
-    if (c1 == 0i32) { drop(println("[PASS] T05 compare equal")); }
-    if (c1 != 0i32) { drop(println("[FAIL] T05 compare equal")); }
+    int32:c1 = raw SemVer.compare("1.0.0\0", "1.0.0\0");
+    drop assert_eq_i32(c1, 0i32, "T05 compare equal\0");
 
     // T06: compare less
-    int32:c2 = nitpick_semver_compare("1.0.0", "2.0.0");
-    if (c2 == -1i32) { drop(println("[PASS] T06 compare less")); }
-    if (c2 != -1i32) { drop(println("[FAIL] T06 compare less")); }
+    int32:c2 = raw SemVer.compare("1.0.0\0", "2.0.0\0");
+    drop assert_eq_i32(c2, -1i32, "T06 compare less\0");
 
     // T07: compare greater
-    int32:c3 = nitpick_semver_compare("2.1.0", "1.9.0");
-    if (c3 == 1i32) { drop(println("[PASS] T07 compare greater")); }
-    if (c3 != 1i32) { drop(println("[FAIL] T07 compare greater")); }
+    int32:c3 = raw SemVer.compare("2.1.0\0", "1.9.0\0");
+    drop assert_eq_i32(c3, 1i32, "T07 compare greater\0");
 
     // T08: satisfies
-    int32:s1 = nitpick_semver_satisfies("1.2.3", ">=1.0.0");
-    if (s1 == 1i32) { drop(println("[PASS] T08 satisfies")); }
-    if (s1 != 1i32) { drop(println("[FAIL] T08 satisfies")); }
+    int32:s1 = raw SemVer.satisfies("1.2.3\0", ">=1.0.0\0");
+    drop assert_eq_i32(s1, 1i32, "T08 satisfies\0");
 
-    
-    drop(println("---"));
-    
-        drop(println("PASS: all tests passed"));
-    exit 0;
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+
+    drop(printf("SUCCESS: All tests passed.\n\0"));
+    exit 0i32;
 };
