@@ -1,150 +1,151 @@
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
-use "../src/nitpick_vec.npk".*;
+extern "libc" { func:printf = int32(string:fmt); }
+use "nitpick_vec.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+int32:fail_cnt = 0i32;
+func:failsafe = int32(tbb32:err) { drop(err); exit 1i32; };
 
 func:main = int32() {
     int32:pass_count = 0i32;
     float64:eps = 0.000001;
 
     // T1: vec2_dot(1,2,3,4) = 1*3+2*4 = 11
-    float64:r1 = raw vec2_dot(1.0, 2.0, 3.0, 4.0);
+    float64:r1 = raw Vec2.dot(1.0, 2.0, 3.0, 4.0);
     float64:d1a = r1 - 11.0; float64:d1b = 11.0 - r1;
     int64:c1 = 1i64;
     if (eps < d1a) { c1 = 0i64; }
     if (eps < d1b) { c1 = 0i64; }
-    if (c1 == 1i64) { drop(println("[PASS] T01 vec2_dot(1,2,3,4)=11")); }
-    if (c1 == 0i64) { drop(println("[FAIL] T01 vec2_dot(1,2,3,4)=11")); }
+    if (c1 == 1i64) { drop(printf("[PASS] T01 vec2_dot(1,2,3,4)=11\n\0")); }
+    if (c1 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T01 vec2_dot(1,2,3,4)=11\n\0")); }
 
     // T2: vec2_dot(3,4,3,4) = 9+16 = 25
-    float64:r2 = raw vec2_dot(3.0, 4.0, 3.0, 4.0);
+    float64:r2 = raw Vec2.dot(3.0, 4.0, 3.0, 4.0);
     float64:d2a = r2 - 25.0; float64:d2b = 25.0 - r2;
     int64:c2 = 1i64;
     if (eps < d2a) { c2 = 0i64; }
     if (eps < d2b) { c2 = 0i64; }
-    if (c2 == 1i64) { drop(println("[PASS] T02 vec2_dot(3,4,3,4)=25")); }
-    if (c2 == 0i64) { drop(println("[FAIL] T02 vec2_dot(3,4,3,4)=25")); }
+    if (c2 == 1i64) { drop(printf("[PASS] T02 vec2_dot(3,4,3,4)=25\n\0")); }
+    if (c2 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T02 vec2_dot(3,4,3,4)=25\n\0")); }
 
     // T3: vec2_len_sq(3,4) = 9+16 = 25
-    float64:r3 = raw vec2_len_sq(3.0, 4.0);
+    float64:r3 = raw Vec2.len_sq(3.0, 4.0);
     float64:d3a = r3 - 25.0; float64:d3b = 25.0 - r3;
     int64:c3 = 1i64;
     if (eps < d3a) { c3 = 0i64; }
     if (eps < d3b) { c3 = 0i64; }
-    if (c3 == 1i64) { drop(println("[PASS] T03 vec2_len_sq(3,4)=25")); }
-    if (c3 == 0i64) { drop(println("[FAIL] T03 vec2_len_sq(3,4)=25")); }
+    if (c3 == 1i64) { drop(printf("[PASS] T03 vec2_len_sq(3,4)=25\n\0")); }
+    if (c3 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T03 vec2_len_sq(3,4)=25\n\0")); }
 
     // T4: vec2_len_sq(5,12) = 25+144 = 169
-    float64:r4 = raw vec2_len_sq(5.0, 12.0);
+    float64:r4 = raw Vec2.len_sq(5.0, 12.0);
     float64:d4a = r4 - 169.0; float64:d4b = 169.0 - r4;
     int64:c4 = 1i64;
     if (eps < d4a) { c4 = 0i64; }
     if (eps < d4b) { c4 = 0i64; }
-    if (c4 == 1i64) { drop(println("[PASS] T04 vec2_len_sq(5,12)=169")); }
-    if (c4 == 0i64) { drop(println("[FAIL] T04 vec2_len_sq(5,12)=169")); }
+    if (c4 == 1i64) { drop(printf("[PASS] T04 vec2_len_sq(5,12)=169\n\0")); }
+    if (c4 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T04 vec2_len_sq(5,12)=169\n\0")); }
 
     // T5: vec2_cross(1,0,0,1) = 1*1-0*0 = 1
-    float64:r5 = raw vec2_cross(1.0, 0.0, 0.0, 1.0);
+    float64:r5 = raw Vec2.cross(1.0, 0.0, 0.0, 1.0);
     float64:d5a = r5 - 1.0; float64:d5b = 1.0 - r5;
     int64:c5 = 1i64;
     if (eps < d5a) { c5 = 0i64; }
     if (eps < d5b) { c5 = 0i64; }
-    if (c5 == 1i64) { drop(println("[PASS] T05 vec2_cross(1,0,0,1)=1")); }
-    if (c5 == 0i64) { drop(println("[FAIL] T05 vec2_cross(1,0,0,1)=1")); }
+    if (c5 == 1i64) { drop(printf("[PASS] T05 vec2_cross(1,0,0,1)=1\n\0")); }
+    if (c5 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T05 vec2_cross(1,0,0,1)=1\n\0")); }
 
     // T6: vec2_cross(2,3,4,5) = 2*5-3*4 = 10-12 = -2; compare r6+2 to 0
-    float64:r6 = raw vec2_cross(2.0, 3.0, 4.0, 5.0);
+    float64:r6 = raw Vec2.cross(2.0, 3.0, 4.0, 5.0);
     float64:d6a = r6 + 2.0; float64:d6b = 0.0 - r6 - 2.0;
     int64:c6 = 1i64;
     if (eps < d6a) { c6 = 0i64; }
     if (eps < d6b) { c6 = 0i64; }
-    if (c6 == 1i64) { drop(println("[PASS] T06 vec2_cross(2,3,4,5)=-2")); }
-    if (c6 == 0i64) { drop(println("[FAIL] T06 vec2_cross(2,3,4,5)=-2")); }
+    if (c6 == 1i64) { drop(printf("[PASS] T06 vec2_cross(2,3,4,5)=-2\n\0")); }
+    if (c6 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T06 vec2_cross(2,3,4,5)=-2\n\0")); }
 
     // T7: vec3_dot(1,2,3,4,5,6) = 4+10+18 = 32
-    float64:r7 = raw vec3_dot(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+    float64:r7 = raw Vec3.dot(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
     float64:d7a = r7 - 32.0; float64:d7b = 32.0 - r7;
     int64:c7 = 1i64;
     if (eps < d7a) { c7 = 0i64; }
     if (eps < d7b) { c7 = 0i64; }
-    if (c7 == 1i64) { drop(println("[PASS] T07 vec3_dot(1,2,3,4,5,6)=32")); }
-    if (c7 == 0i64) { drop(println("[FAIL] T07 vec3_dot(1,2,3,4,5,6)=32")); }
+    if (c7 == 1i64) { drop(printf("[PASS] T07 vec3_dot(1,2,3,4,5,6)=32\n\0")); }
+    if (c7 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T07 vec3_dot(1,2,3,4,5,6)=32\n\0")); }
 
     // T8: vec3_dot(1,0,0,0,1,0) = 0 (orthogonal unit vecs)
-    float64:r8 = raw vec3_dot(1.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    float64:r8 = raw Vec3.dot(1.0, 0.0, 0.0, 0.0, 1.0, 0.0);
     float64:d8a = r8 - 0.0; float64:d8b = 0.0 - r8;
     int64:c8 = 1i64;
     if (eps < d8a) { c8 = 0i64; }
     if (eps < d8b) { c8 = 0i64; }
-    if (c8 == 1i64) { drop(println("[PASS] T08 vec3_dot(1,0,0,0,1,0)=0")); }
-    if (c8 == 0i64) { drop(println("[FAIL] T08 vec3_dot(1,0,0,0,1,0)=0")); }
+    if (c8 == 1i64) { drop(printf("[PASS] T08 vec3_dot(1,0,0,0,1,0)=0\n\0")); }
+    if (c8 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T08 vec3_dot(1,0,0,0,1,0)=0\n\0")); }
 
     // T9: vec3_len_sq(1,2,2) = 1+4+4 = 9
-    float64:r9 = raw vec3_len_sq(1.0, 2.0, 2.0);
+    float64:r9 = raw Vec3.len_sq(1.0, 2.0, 2.0);
     float64:d9a = r9 - 9.0; float64:d9b = 9.0 - r9;
     int64:c9 = 1i64;
     if (eps < d9a) { c9 = 0i64; }
     if (eps < d9b) { c9 = 0i64; }
-    if (c9 == 1i64) { drop(println("[PASS] T09 vec3_len_sq(1,2,2)=9")); }
-    if (c9 == 0i64) { drop(println("[FAIL] T09 vec3_len_sq(1,2,2)=9")); }
+    if (c9 == 1i64) { drop(printf("[PASS] T09 vec3_len_sq(1,2,2)=9\n\0")); }
+    if (c9 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T09 vec3_len_sq(1,2,2)=9\n\0")); }
 
     // T10: vec3_len_sq(2,3,6) = 4+9+36 = 49
-    float64:r10 = raw vec3_len_sq(2.0, 3.0, 6.0);
+    float64:r10 = raw Vec3.len_sq(2.0, 3.0, 6.0);
     float64:d10a = r10 - 49.0; float64:d10b = 49.0 - r10;
     int64:c10 = 1i64;
     if (eps < d10a) { c10 = 0i64; }
     if (eps < d10b) { c10 = 0i64; }
-    if (c10 == 1i64) { drop(println("[PASS] T10 vec3_len_sq(2,3,6)=49")); }
-    if (c10 == 0i64) { drop(println("[FAIL] T10 vec3_len_sq(2,3,6)=49")); }
+    if (c10 == 1i64) { drop(printf("[PASS] T10 vec3_len_sq(2,3,6)=49\n\0")); }
+    if (c10 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T10 vec3_len_sq(2,3,6)=49\n\0")); }
 
     // T11: vec3_cross_x(y1=0,z1=0,y2=1,z2=0) for (1,0,0)x(0,1,0): y1*z2-z1*y2 = 0*0-0*1 = 0
-    float64:r11 = raw vec3_cross_x(0.0, 0.0, 1.0, 0.0);
+    float64:r11 = raw Vec3.cross_x(0.0, 0.0, 1.0, 0.0);
     float64:d11a = r11 - 0.0; float64:d11b = 0.0 - r11;
     int64:c11 = 1i64;
     if (eps < d11a) { c11 = 0i64; }
     if (eps < d11b) { c11 = 0i64; }
-    if (c11 == 1i64) { drop(println("[PASS] T11 vec3_cross_x(0,0,1,0)=0")); }
-    if (c11 == 0i64) { drop(println("[FAIL] T11 vec3_cross_x(0,0,1,0)=0")); }
+    if (c11 == 1i64) { drop(printf("[PASS] T11 vec3_cross_x(0,0,1,0)=0\n\0")); }
+    if (c11 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T11 vec3_cross_x(0,0,1,0)=0\n\0")); }
 
     // T12: vec3_cross_y(z1=0,x1=1,z2=0,x2=0) for (1,0,0)x(0,1,0): z1*x2-x1*z2 = 0*0-1*0 = 0
-    float64:r12 = raw vec3_cross_y(0.0, 1.0, 0.0, 0.0);
+    float64:r12 = raw Vec3.cross_y(0.0, 1.0, 0.0, 0.0);
     float64:d12a = r12 - 0.0; float64:d12b = 0.0 - r12;
     int64:c12 = 1i64;
     if (eps < d12a) { c12 = 0i64; }
     if (eps < d12b) { c12 = 0i64; }
-    if (c12 == 1i64) { drop(println("[PASS] T12 vec3_cross_y(0,1,0,0)=0")); }
-    if (c12 == 0i64) { drop(println("[FAIL] T12 vec3_cross_y(0,1,0,0)=0")); }
+    if (c12 == 1i64) { drop(printf("[PASS] T12 vec3_cross_y(0,1,0,0)=0\n\0")); }
+    if (c12 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T12 vec3_cross_y(0,1,0,0)=0\n\0")); }
 
     // T13: vec3_cross_z(x1=1,y1=0,x2=0,y2=1) for (1,0,0)x(0,1,0): x1*y2-y1*x2 = 1*1-0*0 = 1
-    float64:r13 = raw vec3_cross_z(1.0, 0.0, 0.0, 1.0);
+    float64:r13 = raw Vec3.cross_z(1.0, 0.0, 0.0, 1.0);
     float64:d13a = r13 - 1.0; float64:d13b = 1.0 - r13;
     int64:c13 = 1i64;
     if (eps < d13a) { c13 = 0i64; }
     if (eps < d13b) { c13 = 0i64; }
-    if (c13 == 1i64) { drop(println("[PASS] T13 vec3_cross_z(1,0,0,1)=1")); }
-    if (c13 == 0i64) { drop(println("[FAIL] T13 vec3_cross_z(1,0,0,1)=1")); }
+    if (c13 == 1i64) { drop(printf("[PASS] T13 vec3_cross_z(1,0,0,1)=1\n\0")); }
+    if (c13 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T13 vec3_cross_z(1,0,0,1)=1\n\0")); }
 
     // T14: vec3_cross_y for (1,0,0)x(0,0,1): z1*x2-x1*z2 = 0*0-1*1 = -1; compare r14+1 to 0
-    float64:r14 = raw vec3_cross_y(0.0, 1.0, 1.0, 0.0);
+    float64:r14 = raw Vec3.cross_y(0.0, 1.0, 1.0, 0.0);
     float64:d14a = r14 + 1.0; float64:d14b = 0.0 - r14 - 1.0;
     int64:c14 = 1i64;
     if (eps < d14a) { c14 = 0i64; }
     if (eps < d14b) { c14 = 0i64; }
-    if (c14 == 1i64) { drop(println("[PASS] T14 vec3_cross_y(0,1,1,0)=-1")); }
-    if (c14 == 0i64) { drop(println("[FAIL] T14 vec3_cross_y(0,1,1,0)=-1")); }
+    if (c14 == 1i64) { drop(printf("[PASS] T14 vec3_cross_y(0,1,1,0)=-1\n\0")); }
+    if (c14 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T14 vec3_cross_y(0,1,1,0)=-1\n\0")); }
 
     // T15: vec3_dot self = len_sq: (2,2,1)·(2,2,1) = 4+4+1 = 9
-    float64:r15 = raw vec3_dot(2.0, 2.0, 1.0, 2.0, 2.0, 1.0);
+    float64:r15 = raw Vec3.dot(2.0, 2.0, 1.0, 2.0, 2.0, 1.0);
     float64:d15a = r15 - 9.0; float64:d15b = 9.0 - r15;
     int64:c15 = 1i64;
     if (eps < d15a) { c15 = 0i64; }
     if (eps < d15b) { c15 = 0i64; }
-    if (c15 == 1i64) { drop(println("[PASS] T15 vec3_dot(2,2,1,2,2,1)=9")); }
-    if (c15 == 0i64) { drop(println("[FAIL] T15 vec3_dot(2,2,1,2,2,1)=9")); }
+    if (c15 == 1i64) { drop(printf("[PASS] T15 vec3_dot(2,2,1,2,2,1)=9\n\0")); }
+    if (c15 == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T15 vec3_dot(2,2,1,2,2,1)=9\n\0")); }
 
     
-    drop(println("---"));
+    drop(printf("---\n\0"));
     
-        drop(println("PASS: all tests passed"));
-    exit 0;
+        drop(printf("PASS: all tests passed\n\0"));
+    if (fail_cnt > 0i32) { drop(printf("FAIL\n\0")); } exit fail_cnt;
 };
