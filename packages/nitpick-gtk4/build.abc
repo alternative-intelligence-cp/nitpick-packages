@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-gtk4"
+version = "0.2.2"
+
+[target.nitpick-gtk4]
+type = "library"
+sources = ["src/nitpick_gtk4.npk"]
+deps = []
+flags = ["-L.", "-lnitpick_gtk4_shim"]
+
+[target.test-nitpick-gtk4]
+type = "binary"
+sources = ["tests/test_nitpick_gtk4.npk"]
+deps = []
+flags = ["-I", "src", "-L.", "-lnitpick_gtk4_shim", "-lgtk-4", "-lgio-2.0", "-lglib-2.0", "-lgobject-2.0"]
