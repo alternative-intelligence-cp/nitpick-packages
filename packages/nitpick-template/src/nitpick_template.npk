@@ -4,36 +4,53 @@ extern "nitpick_template_shim" {
     func:nitpick_template_set    = int32(string:key, string:value);
     func:nitpick_template_get    = string(string:key);
     func:nitpick_template_render = string(string:tmpl);
-    func:nitpick_template_clear  = void();
+    func:nitpick_template_clear  = NIL();
     func:nitpick_template_count  = int32();
     func:nitpick_template_has    = int32(string:key);
     func:nitpick_template_remove = int32(string:key);
 }
 
-pub func:set = int32(string:key, string:value) {
-    pass(nitpick_template_set(key, value));
+func:tmpl_set = int32(string:key, string:value) {
+    int32:res = nitpick_template_set(key, value);
+    pass res;
 };
 
-pub func:get = string(string:key) {
-    pass(nitpick_template_get(key));
+func:tmpl_get = string(string:key) {
+    string:res = nitpick_template_get(key);
+    pass res;
 };
 
-pub func:render = string(string:tmpl) {
-    pass(nitpick_template_render(tmpl));
+func:tmpl_render = string(string:tmpl) {
+    string:res = nitpick_template_render(tmpl);
+    pass res;
 };
 
-pub func:clear = void() {
-    nitpick_template_clear();
+func:tmpl_clear = NIL() {
+    NIL:ign = nitpick_template_clear();
+    pass NIL;
 };
 
-pub func:count = int32() {
-    pass(nitpick_template_count());
+func:tmpl_count = int32() {
+    int32:res = nitpick_template_count();
+    pass res;
 };
 
-pub func:has = int32(string:key) {
-    pass(nitpick_template_has(key));
+func:tmpl_has = int32(string:key) {
+    int32:res = nitpick_template_has(key);
+    pass res;
 };
 
-pub func:remove = int32(string:key) {
-    pass(nitpick_template_remove(key));
+func:tmpl_remove = int32(string:key) {
+    int32:res = nitpick_template_remove(key);
+    pass res;
+};
+
+pub Type:Template = {
+    func:set = int32(string:key, string:value) { pass raw tmpl_set(key, value); };
+    func:get = string(string:key) { pass raw tmpl_get(key); };
+    func:render = string(string:tmpl) { pass raw tmpl_render(tmpl); };
+    func:clear = NIL() { drop raw tmpl_clear(); pass NIL; };
+    func:count = int32() { pass raw tmpl_count(); };
+    func:has = int32(string:key) { pass raw tmpl_has(key); };
+    func:remove = int32(string:key) { pass raw tmpl_remove(key); };
 };

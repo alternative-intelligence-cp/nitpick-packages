@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-template"
+version = "0.1.0"
+
+[target.nitpick-template]
+type = "library"
+sources = ["src/nitpick_template.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-template]
+type = "binary"
+sources = ["tests/test_nitpick_template.npk"]
+deps = ["nitpick-template"]
+flags = ["-I", "src", "-Lshim", "-lnitpick_template_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_string", "-lnitpick_libc_io", "-lnitpick_libc_mem"]

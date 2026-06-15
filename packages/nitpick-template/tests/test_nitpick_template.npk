@@ -1,55 +1,66 @@
-// test_nitpick_template.npk — Template engine tests (7 tests)
+use "nitpick_template.npk".*;
 
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+extern "libc" { func:printf = int32(string:fmt); }
+extern "libc" { func:nitpick_libc_exit = NIL(int32:code); }
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+int64:fail_cnt = 0i64;
 
-extern "nitpick_template_shim" {
-    func:nitpick_template_set    = int32(string:key, string:value);
-    func:nitpick_template_get    = string(string:key);
-    func:nitpick_template_render = string(string:tmpl);
-    func:nitpick_template_clear  = void();
-    func:nitpick_template_count  = int32();
-    func:nitpick_template_has    = int32(string:key);
-    func:nitpick_template_remove = int32(string:key);
-}
+func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+func:assert_eq_i32 = int64(int32:actual, int32:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i64);
+};
 
 func:main = int32() {
+    drop(printf("--- nitpick-template tests ---\n\0"));
     // T01: set variable
-    int32:s1 = nitpick_template_set("name", "Aria");
-    if (s1 == 1i32) { drop(println("[PASS] T01 set")); }
-    if (s1 != 1i32) { drop(println("[FAIL] T01 set")); }
+    int32:s1 = raw Template.set("name", "Aria");
+    drop raw assert_eq_i32(s1, 1i32, "T01 set");
 
     // T02: has variable
-    int32:h1 = nitpick_template_has("name");
-    if (h1 == 1i32) { drop(println("[PASS] T02 has")); }
-    if (h1 != 1i32) { drop(println("[FAIL] T02 has")); }
+    int32:h1 = raw Template.has("name");
+    drop raw assert_eq_i32(h1, 1i32, "T02 has");
 
     // T03: count
-    int32:s2 = nitpick_template_set("version", "0.2.6");
-    int32:cnt = nitpick_template_count();
-    if (cnt == 2i32) { drop(println("[PASS] T03 count")); }
-    if (cnt != 2i32) { drop(println("[FAIL] T03 count")); }
+    int32:s2 = raw Template.set("version", "0.2.6");
+    int32:cnt = raw Template.count();
+    drop raw assert_eq_i32(cnt, 2i32, "T03 count");
 
     // T04: render
-    string:r1 = nitpick_template_render("Hello {{name}}!");
-    drop(println("[PASS] T04 render"));
+    string:r1 = raw Template.render("Hello {{name}}!");
+    drop(printf("[PASS] T04 render\n\0"));
 
     // T05: render with multiple vars
-    string:r2 = nitpick_template_render("{{name}} v{{version}}");
-    drop(println("[PASS] T05 render multi"));
+    string:r2 = raw Template.render("{{name}} v{{version}}");
+    drop(printf("[PASS] T05 render multi\n\0"));
 
     // T06: remove
-    int32:rm = nitpick_template_remove("version");
-    int32:cnt2 = nitpick_template_count();
-    if (cnt2 == 1i32) { drop(println("[PASS] T06 remove")); }
-    if (cnt2 != 1i32) { drop(println("[FAIL] T06 remove")); }
+    int32:rm = raw Template.remove("version");
+    int32:cnt2 = raw Template.count();
+    drop raw assert_eq_i32(cnt2, 1i32, "T06 remove");
 
     // T07: clear
-    nitpick_template_clear();
-    int32:cnt3 = nitpick_template_count();
-    if (cnt3 == 0i32) { drop(println("[PASS] T07 clear")); }
-    if (cnt3 != 0i32) { drop(println("[FAIL] T07 clear")); }
+    NIL:ign = raw Template.clear();
+    int32:cnt3 = raw Template.count();
+    drop raw assert_eq_i32(cnt3, 0i32, "T07 clear");
 
-    exit 0;
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+    drop(printf("--- ALL TESTS PASSED ---\n\0"));
+    exit(0i32);
 };
