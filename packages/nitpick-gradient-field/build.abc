@@ -1,5 +1,15 @@
-// build.abc — nitpick-gradient-field
-build test {
-    src  = "tests/test_nitpick_gradient_field.npk"
-    out  = "/tmp/test_agf"
-}
+[project]
+name = "nitpick-gradient-field"
+version = "0.2.0"
+
+[target.nitpick-gradient-field]
+type = "library"
+sources = ["src/nitpick_gradient_field.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-gradient-field]
+type = "binary"
+sources = ["tests/test_nitpick_gradient_field.npk"]
+deps = []
+flags = ["-I", "src"]

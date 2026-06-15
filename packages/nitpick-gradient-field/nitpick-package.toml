@@ -1,9 +1,0 @@
-[package]
-name = "nitpick-gradient-field"
-version = "0.2.0"
-description = "GradientField — spatial decision field driven by a single DGT emitter (LIB-27)"
-author = "Randy Hoggard"
-license = "MIT"
-
-[dependencies]
-nitpick-decision-t = { path = "../nitpick-decision-t" }
