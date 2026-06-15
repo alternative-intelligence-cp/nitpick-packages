@@ -9,8 +9,8 @@ libnitpick_gtk4_shim.a: nitpick_gtk4_shim.o
 	ar rcs $@ $^
 
 build: libnitpick_gtk4_shim.a
-	npkbld build nitpick-gtk4
-	npkbld build test-nitpick-gtk4
+	/home/randy/Workspace/REPOS/nitpick-build/build/npkbld build nitpick-gtk4
+	/home/randy/Workspace/REPOS/nitpick-build/build/npkbld build test-nitpick-gtk4
 
 clean:
 	rm -f *.o *.a out.ll

@@ -31,13 +31,16 @@ static int             g_running = 0;
 #define EVT_FILE_CHOSEN     5
 #define EVT_KEY_PRESS       6
 #define EVT_KEY_RELEASE     7
+#define EVT_LIST_BOX_ROW_ACTIVATED 8
 
 static int32_t g_last_event = EVT_NONE;
 static int32_t g_last_clicked_button = -1;
 static guint g_last_keyval = 0;
 static guint g_last_keycode = 0;
 static GdkModifierType g_last_modifier = 0;
+static int32_t g_last_activated_list_box_row_child = -1;
 static char g_clipboard_text[8192] = {0};
+static char g_label_text_buffer[8192] = {0};
 
 static char g_dialog_response[256] = {0};
 static char g_chosen_file[1024] = {0};
@@ -103,6 +106,19 @@ static void on_window_destroy(GtkWidget *widget, gpointer user_data) {
     (void)user_data;
     g_running = 0;
     g_last_event = EVT_DESTROY;
+}
+
+static void on_list_box_row_activated(GtkListBox *box, GtkListBoxRow *row, gpointer user_data) {
+    (void)box; (void)user_data;
+    g_last_event = EVT_LIST_BOX_ROW_ACTIVATED;
+    GtkWidget *child = gtk_list_box_row_get_child(row);
+    g_last_activated_list_box_row_child = -1;
+    for (int i = 0; i < g_widget_count; i++) {
+        if (g_widgets[i] == child) {
+            g_last_activated_list_box_row_child = i;
+            break;
+        }
+    }
 }
 
 /* ── init / quit ─────────────────────────────────────────────────────── */
@@ -266,6 +282,18 @@ void nitpick_gtk4_label_set_text(int32_t id, const char *text) {
     if (id >= 0 && id < g_widget_count && g_widgets[id]) {
         gtk_label_set_text(GTK_LABEL(g_widgets[id]), text);
     }
+}
+
+const char* nitpick_gtk4_label_get_text(int32_t id) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        const char *txt = gtk_label_get_text(GTK_LABEL(g_widgets[id]));
+        if (txt) {
+            strncpy(g_label_text_buffer, txt, sizeof(g_label_text_buffer) - 1);
+            g_label_text_buffer[sizeof(g_label_text_buffer) - 1] = '\0';
+            return g_label_text_buffer;
+        }
+    }
+    return "";
 }
 
 /* Button */
@@ -501,7 +529,12 @@ int32_t nitpick_gtk4_add_list_box(void) {
     if (!g_box) return -1;
     GtkWidget *lb = gtk_list_box_new();
     gtk_box_append(GTK_BOX(g_box), lb);
+    g_signal_connect(lb, "row-activated", G_CALLBACK(on_list_box_row_activated), NULL);
     return register_widget(lb);
+}
+
+int32_t nitpick_gtk4_get_last_activated_list_box_row_child(void) {
+    return g_last_activated_list_box_row_child;
 }
 
 void nitpick_gtk4_list_box_append(int32_t lb_id, int32_t child_id) {

@@ -22,6 +22,7 @@ extern "nitpick_gtk4_shim" {
     func:nitpick_gtk4_get_last_keyval = int32();
     func:nitpick_gtk4_get_last_keycode = int32();
     func:nitpick_gtk4_get_last_modifier = int32();
+    func:nitpick_gtk4_get_last_activated_list_box_row_child = int32();
 
     // clipboard
     func:nitpick_gtk4_clipboard_set_text = void(string:text);
@@ -42,6 +43,7 @@ extern "nitpick_gtk4_shim" {
     // widgets: label
     func:nitpick_gtk4_add_label      = int32(string:text);
     func:nitpick_gtk4_label_set_text = void(int32:id, string:text);
+    func:nitpick_gtk4_label_get_text = string(int32:id);
 
     // widgets: button
     func:nitpick_gtk4_add_button = int32(string:label);
@@ -139,6 +141,7 @@ pub func:GTK_EVT_DIALOG_RESPONSE = int32() { pass(4i32); };
 pub func:GTK_EVT_FILE_CHOSEN     = int32() { pass(5i32); };
 pub func:GTK_EVT_KEY_PRESS       = int32() { pass(6i32); };
 pub func:GTK_EVT_KEY_RELEASE     = int32() { pass(7i32); };
+pub func:GTK_EVT_LIST_BOX_ROW_ACTIVATED = int32() { pass(8i32); };
 
 pub func:GTK_ORIENTATION_HORIZONTAL = int32() { pass(0i32); };
 pub func:GTK_ORIENTATION_VERTICAL   = int32() { pass(1i32); };
@@ -196,6 +199,11 @@ pub func:gtk4_get_last_keycode = int32() {
 
 pub func:gtk4_get_last_modifier = int32() {
     int32:r = nitpick_gtk4_get_last_modifier();
+    pass(r);
+};
+
+pub func:gtk4_get_last_activated_list_box_row_child = int32() {
+    int32:r = nitpick_gtk4_get_last_activated_list_box_row_child();
     pass(r);
 };
 
@@ -273,6 +281,11 @@ pub func:gtk4_add_label = int32(string:text) {
 pub func:gtk4_label_set_text = NIL(int32:id, string:text) {
     nitpick_gtk4_label_set_text(id, text);
     pass(NIL);
+};
+
+pub func:gtk4_label_get_text = string(int32:id) {
+    string:r = nitpick_gtk4_label_get_text(id);
+    pass(r);
 };
 
 pub func:gtk4_add_button = int32(string:label) {
