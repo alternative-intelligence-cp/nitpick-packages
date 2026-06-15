@@ -1,0 +1,17 @@
+[package]
+name = "nitpick-body-parser"
+version = "0.12.1"
+description = "HTTP body parser — URL-encoded and content-type detection — pure Nitpick"
+type = "pure"
+
+[target.nitpick-body-parser]
+type = "library"
+sources = ["src/nitpick_body_parser.npk"]
+deps = []
+flags = ["-I", "../nitpick-str/src"]
+
+[target.test-nitpick-body-parser]
+type = "binary"
+sources = ["tests/test_nitpick_body_parser.npk"]
+deps = []
+flags = ["-I", "src", "-I", "../nitpick-str/src", "-L", "../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
