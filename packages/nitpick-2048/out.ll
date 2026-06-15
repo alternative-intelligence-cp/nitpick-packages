@@ -2520,6 +2520,206 @@ entry:
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
+define { i32, ptr, i8 } @rl_create_camera_3d(float %pos_x, float %pos_y, float %pos_z, float %tar_x, float %tar_y, float %tar_z, float %up_x, float %up_y, float %up_z, float %fovy, i32 %projection) {
+entry:
+  %pos_x.addr = alloca float, align 4
+  store float %pos_x, ptr %pos_x.addr, align 4
+  %pos_y.addr = alloca float, align 4
+  store float %pos_y, ptr %pos_y.addr, align 4
+  %pos_z.addr = alloca float, align 4
+  store float %pos_z, ptr %pos_z.addr, align 4
+  %tar_x.addr = alloca float, align 4
+  store float %tar_x, ptr %tar_x.addr, align 4
+  %tar_y.addr = alloca float, align 4
+  store float %tar_y, ptr %tar_y.addr, align 4
+  %tar_z.addr = alloca float, align 4
+  store float %tar_z, ptr %tar_z.addr, align 4
+  %up_x.addr = alloca float, align 4
+  store float %up_x, ptr %up_x.addr, align 4
+  %up_y.addr = alloca float, align 4
+  store float %up_y, ptr %up_y.addr, align 4
+  %up_z.addr = alloca float, align 4
+  store float %up_z, ptr %up_z.addr, align 4
+  %fovy.addr = alloca float, align 4
+  store float %fovy, ptr %fovy.addr, align 4
+  %projection.addr = alloca i32, align 4
+  store i32 %projection, ptr %projection.addr, align 4
+  %r = alloca i32, align 4
+  %pos_x1 = load float, ptr %pos_x.addr, align 4
+  %pos_y2 = load float, ptr %pos_y.addr, align 4
+  %pos_z3 = load float, ptr %pos_z.addr, align 4
+  %tar_x4 = load float, ptr %tar_x.addr, align 4
+  %tar_y5 = load float, ptr %tar_y.addr, align 4
+  %tar_z6 = load float, ptr %tar_z.addr, align 4
+  %up_x7 = load float, ptr %up_x.addr, align 4
+  %up_y8 = load float, ptr %up_y.addr, align 4
+  %up_z9 = load float, ptr %up_z.addr, align 4
+  %fovy10 = load float, ptr %fovy.addr, align 4
+  %projection11 = load i32, ptr %projection.addr, align 4
+  %calltmp = call i32 @aria_rl_create_camera_3d(float %pos_x1, float %pos_y2, float %pos_z3, float %tar_x4, float %tar_y5, float %tar_z6, float %up_x7, float %up_y8, float %up_z9, float %fovy10, i32 %projection11)
+  store i32 %calltmp, ptr %r, align 4
+  %r12 = load i32, ptr %r, align 4
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r12, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define { %struct.NIL, ptr, i8 } @rl_destroy_camera_3d(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call ptr @aria_rl_destroy_camera_3d(i32 %handle1)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_update_camera_3d(i32 %handle, i32 %mode) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %mode.addr = alloca i32, align 4
+  store i32 %mode, ptr %mode.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %mode2 = load i32, ptr %mode.addr, align 4
+  %calltmp = call ptr @aria_rl_update_camera_3d(i32 %handle1, i32 %mode2)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_begin_mode_3d_camera(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call ptr @aria_rl_begin_mode_3d_camera(i32 %handle1)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { float, ptr, i8 } @rl_get_camera_3d_pos_x(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %r = alloca float, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call float @aria_rl_get_camera_3d_pos_x(i32 %handle1)
+  store float %calltmp, ptr %r, align 4
+  %r2 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r2, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_camera_3d_pos_y(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %r = alloca float, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call float @aria_rl_get_camera_3d_pos_y(i32 %handle1)
+  store float %calltmp, ptr %r, align 4
+  %r2 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r2, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_camera_3d_pos_z(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %r = alloca float, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call float @aria_rl_get_camera_3d_pos_z(i32 %handle1)
+  store float %calltmp, ptr %r, align 4
+  %r2 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r2, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_camera_3d_target_x(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %r = alloca float, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call float @aria_rl_get_camera_3d_target_x(i32 %handle1)
+  store float %calltmp, ptr %r, align 4
+  %r2 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r2, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_camera_3d_target_y(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %r = alloca float, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call float @aria_rl_get_camera_3d_target_y(i32 %handle1)
+  store float %calltmp, ptr %r, align 4
+  %r2 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r2, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_camera_3d_target_z(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %r = alloca float, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call float @aria_rl_get_camera_3d_target_z(i32 %handle1)
+  store float %calltmp, ptr %r, align 4
+  %r2 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r2, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { i32, ptr, i8 } @CAMERA_CUSTOM() {
+entry:
+  ret { i32, ptr, i8 } zeroinitializer
+}
+
+define { i32, ptr, i8 } @CAMERA_FREE() {
+entry:
+  ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
+}
+
+define { i32, ptr, i8 } @CAMERA_ORBITAL() {
+entry:
+  ret { i32, ptr, i8 } { i32 2, ptr null, i8 0 }
+}
+
+define { i32, ptr, i8 } @CAMERA_FIRST_PERSON() {
+entry:
+  ret { i32, ptr, i8 } { i32 3, ptr null, i8 0 }
+}
+
+define { i32, ptr, i8 } @CAMERA_THIRD_PERSON() {
+entry:
+  ret { i32, ptr, i8 } { i32 4, ptr null, i8 0 }
+}
+
+define { i32, ptr, i8 } @CAMERA_PERSPECTIVE() {
+entry:
+  ret { i32, ptr, i8 } zeroinitializer
+}
+
+define { i32, ptr, i8 } @CAMERA_ORTHOGRAPHIC() {
+entry:
+  ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
+}
+
 define { %struct.NIL, ptr, i8 } @rl_begin_mode_3d(float %pos_x, float %pos_y, float %pos_z, float %tar_x, float %tar_y, float %tar_z, float %up_x, float %up_y, float %up_z, float %fovy, i32 %projection) {
 entry:
   %pos_x.addr = alloca float, align 4
@@ -2769,6 +2969,44 @@ entry:
   %a9 = load i32, ptr %a.addr, align 4
   %calltmp = call ptr @aria_rl_draw_model(i32 %handle1, float %x2, float %y3, float %z4, float %scale5, i32 %r6, i32 %g7, i32 %b8, i32 %a9)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_set_model_material_texture(i32 %model_handle, i32 %material_idx, i32 %map_type, i32 %tex_handle) {
+entry:
+  %model_handle.addr = alloca i32, align 4
+  store i32 %model_handle, ptr %model_handle.addr, align 4
+  %material_idx.addr = alloca i32, align 4
+  store i32 %material_idx, ptr %material_idx.addr, align 4
+  %map_type.addr = alloca i32, align 4
+  store i32 %map_type, ptr %map_type.addr, align 4
+  %tex_handle.addr = alloca i32, align 4
+  store i32 %tex_handle, ptr %tex_handle.addr, align 4
+  %model_handle1 = load i32, ptr %model_handle.addr, align 4
+  %material_idx2 = load i32, ptr %material_idx.addr, align 4
+  %map_type3 = load i32, ptr %map_type.addr, align 4
+  %tex_handle4 = load i32, ptr %tex_handle.addr, align 4
+  %calltmp = call ptr @aria_rl_set_model_material_texture(i32 %model_handle1, i32 %material_idx2, i32 %map_type3, i32 %tex_handle4)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { i32, ptr, i8 } @MATERIAL_MAP_ALBEDO() {
+entry:
+  ret { i32, ptr, i8 } zeroinitializer
+}
+
+define { i32, ptr, i8 } @MATERIAL_MAP_METALNESS() {
+entry:
+  ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
+}
+
+define { i32, ptr, i8 } @MATERIAL_MAP_NORMAL() {
+entry:
+  ret { i32, ptr, i8 } { i32 2, ptr null, i8 0 }
+}
+
+define { i32, ptr, i8 } @MATERIAL_MAP_ROUGHNESS() {
+entry:
+  ret { i32, ptr, i8 } { i32 3, ptr null, i8 0 }
 }
 
 define { %struct.NIL, ptr, i8 } @rl_draw_text(ptr %text, i32 %x, i32 %y, i32 %font_size, i32 %r, i32 %g, i32 %b, i32 %a) {
@@ -3795,6 +4033,635 @@ entry:
   ret { i32, ptr, i8 } { i32 3, ptr null, i8 0 }
 }
 
+define { %struct.NIL, ptr, i8 } @rl_draw_line_ex(float %x1, float %y1, float %x2, float %y2, float %thick, i32 %r, i32 %g, i32 %b, i32 %a) {
+entry:
+  %x1.addr = alloca float, align 4
+  store float %x1, ptr %x1.addr, align 4
+  %y1.addr = alloca float, align 4
+  store float %y1, ptr %y1.addr, align 4
+  %x2.addr = alloca float, align 4
+  store float %x2, ptr %x2.addr, align 4
+  %y2.addr = alloca float, align 4
+  store float %y2, ptr %y2.addr, align 4
+  %thick.addr = alloca float, align 4
+  store float %thick, ptr %thick.addr, align 4
+  %r.addr = alloca i32, align 4
+  store i32 %r, ptr %r.addr, align 4
+  %g.addr = alloca i32, align 4
+  store i32 %g, ptr %g.addr, align 4
+  %b.addr = alloca i32, align 4
+  store i32 %b, ptr %b.addr, align 4
+  %a.addr = alloca i32, align 4
+  store i32 %a, ptr %a.addr, align 4
+  %x11 = load float, ptr %x1.addr, align 4
+  %y12 = load float, ptr %y1.addr, align 4
+  %x23 = load float, ptr %x2.addr, align 4
+  %y24 = load float, ptr %y2.addr, align 4
+  %thick5 = load float, ptr %thick.addr, align 4
+  %r6 = load i32, ptr %r.addr, align 4
+  %g7 = load i32, ptr %g.addr, align 4
+  %b8 = load i32, ptr %b.addr, align 4
+  %a9 = load i32, ptr %a.addr, align 4
+  %calltmp = call ptr @aria_rl_draw_line_ex(float %x11, float %y12, float %x23, float %y24, float %thick5, i32 %r6, i32 %g7, i32 %b8, i32 %a9)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_draw_rectangle_rounded(float %x, float %y, float %w, float %h, float %roundness, i32 %segments, i32 %r, i32 %g, i32 %b, i32 %a) {
+entry:
+  %x.addr = alloca float, align 4
+  store float %x, ptr %x.addr, align 4
+  %y.addr = alloca float, align 4
+  store float %y, ptr %y.addr, align 4
+  %w.addr = alloca float, align 4
+  store float %w, ptr %w.addr, align 4
+  %h.addr = alloca float, align 4
+  store float %h, ptr %h.addr, align 4
+  %roundness.addr = alloca float, align 4
+  store float %roundness, ptr %roundness.addr, align 4
+  %segments.addr = alloca i32, align 4
+  store i32 %segments, ptr %segments.addr, align 4
+  %r.addr = alloca i32, align 4
+  store i32 %r, ptr %r.addr, align 4
+  %g.addr = alloca i32, align 4
+  store i32 %g, ptr %g.addr, align 4
+  %b.addr = alloca i32, align 4
+  store i32 %b, ptr %b.addr, align 4
+  %a.addr = alloca i32, align 4
+  store i32 %a, ptr %a.addr, align 4
+  %x1 = load float, ptr %x.addr, align 4
+  %y2 = load float, ptr %y.addr, align 4
+  %w3 = load float, ptr %w.addr, align 4
+  %h4 = load float, ptr %h.addr, align 4
+  %roundness5 = load float, ptr %roundness.addr, align 4
+  %segments6 = load i32, ptr %segments.addr, align 4
+  %r7 = load i32, ptr %r.addr, align 4
+  %g8 = load i32, ptr %g.addr, align 4
+  %b9 = load i32, ptr %b.addr, align 4
+  %a10 = load i32, ptr %a.addr, align 4
+  %calltmp = call ptr @aria_rl_draw_rectangle_rounded(float %x1, float %y2, float %w3, float %h4, float %roundness5, i32 %segments6, i32 %r7, i32 %g8, i32 %b9, i32 %a10)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_draw_rectangle_rounded_lines(float %x, float %y, float %w, float %h, float %roundness, i32 %segments, i32 %r, i32 %g, i32 %b, i32 %a) {
+entry:
+  %x.addr = alloca float, align 4
+  store float %x, ptr %x.addr, align 4
+  %y.addr = alloca float, align 4
+  store float %y, ptr %y.addr, align 4
+  %w.addr = alloca float, align 4
+  store float %w, ptr %w.addr, align 4
+  %h.addr = alloca float, align 4
+  store float %h, ptr %h.addr, align 4
+  %roundness.addr = alloca float, align 4
+  store float %roundness, ptr %roundness.addr, align 4
+  %segments.addr = alloca i32, align 4
+  store i32 %segments, ptr %segments.addr, align 4
+  %r.addr = alloca i32, align 4
+  store i32 %r, ptr %r.addr, align 4
+  %g.addr = alloca i32, align 4
+  store i32 %g, ptr %g.addr, align 4
+  %b.addr = alloca i32, align 4
+  store i32 %b, ptr %b.addr, align 4
+  %a.addr = alloca i32, align 4
+  store i32 %a, ptr %a.addr, align 4
+  %x1 = load float, ptr %x.addr, align 4
+  %y2 = load float, ptr %y.addr, align 4
+  %w3 = load float, ptr %w.addr, align 4
+  %h4 = load float, ptr %h.addr, align 4
+  %roundness5 = load float, ptr %roundness.addr, align 4
+  %segments6 = load i32, ptr %segments.addr, align 4
+  %r7 = load i32, ptr %r.addr, align 4
+  %g8 = load i32, ptr %g.addr, align 4
+  %b9 = load i32, ptr %b.addr, align 4
+  %a10 = load i32, ptr %a.addr, align 4
+  %calltmp = call ptr @aria_rl_draw_rectangle_rounded_lines(float %x1, float %y2, float %w3, float %h4, float %roundness5, i32 %segments6, i32 %r7, i32 %g8, i32 %b9, i32 %a10)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_begin_mode_2d(float %offset_x, float %offset_y, float %target_x, float %target_y, float %rotation, float %zoom) {
+entry:
+  %offset_x.addr = alloca float, align 4
+  store float %offset_x, ptr %offset_x.addr, align 4
+  %offset_y.addr = alloca float, align 4
+  store float %offset_y, ptr %offset_y.addr, align 4
+  %target_x.addr = alloca float, align 4
+  store float %target_x, ptr %target_x.addr, align 4
+  %target_y.addr = alloca float, align 4
+  store float %target_y, ptr %target_y.addr, align 4
+  %rotation.addr = alloca float, align 4
+  store float %rotation, ptr %rotation.addr, align 4
+  %zoom.addr = alloca float, align 4
+  store float %zoom, ptr %zoom.addr, align 4
+  %offset_x1 = load float, ptr %offset_x.addr, align 4
+  %offset_y2 = load float, ptr %offset_y.addr, align 4
+  %target_x3 = load float, ptr %target_x.addr, align 4
+  %target_y4 = load float, ptr %target_y.addr, align 4
+  %rotation5 = load float, ptr %rotation.addr, align 4
+  %zoom6 = load float, ptr %zoom.addr, align 4
+  %calltmp = call ptr @aria_rl_begin_mode_2d(float %offset_x1, float %offset_y2, float %target_x3, float %target_y4, float %rotation5, float %zoom6)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_end_mode_2d() {
+entry:
+  %calltmp = call ptr @aria_rl_end_mode_2d()
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { float, ptr, i8 } @rl_get_screen_to_world_2d_x(float %pos_x, float %pos_y, float %offset_x, float %offset_y, float %target_x, float %target_y, float %rotation, float %zoom) {
+entry:
+  %pos_x.addr = alloca float, align 4
+  store float %pos_x, ptr %pos_x.addr, align 4
+  %pos_y.addr = alloca float, align 4
+  store float %pos_y, ptr %pos_y.addr, align 4
+  %offset_x.addr = alloca float, align 4
+  store float %offset_x, ptr %offset_x.addr, align 4
+  %offset_y.addr = alloca float, align 4
+  store float %offset_y, ptr %offset_y.addr, align 4
+  %target_x.addr = alloca float, align 4
+  store float %target_x, ptr %target_x.addr, align 4
+  %target_y.addr = alloca float, align 4
+  store float %target_y, ptr %target_y.addr, align 4
+  %rotation.addr = alloca float, align 4
+  store float %rotation, ptr %rotation.addr, align 4
+  %zoom.addr = alloca float, align 4
+  store float %zoom, ptr %zoom.addr, align 4
+  %r = alloca float, align 4
+  %pos_x1 = load float, ptr %pos_x.addr, align 4
+  %pos_y2 = load float, ptr %pos_y.addr, align 4
+  %offset_x3 = load float, ptr %offset_x.addr, align 4
+  %offset_y4 = load float, ptr %offset_y.addr, align 4
+  %target_x5 = load float, ptr %target_x.addr, align 4
+  %target_y6 = load float, ptr %target_y.addr, align 4
+  %rotation7 = load float, ptr %rotation.addr, align 4
+  %zoom8 = load float, ptr %zoom.addr, align 4
+  %calltmp = call float @aria_rl_get_screen_to_world_2d_x(float %pos_x1, float %pos_y2, float %offset_x3, float %offset_y4, float %target_x5, float %target_y6, float %rotation7, float %zoom8)
+  store float %calltmp, ptr %r, align 4
+  %r9 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r9, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_screen_to_world_2d_y(float %pos_x, float %pos_y, float %offset_x, float %offset_y, float %target_x, float %target_y, float %rotation, float %zoom) {
+entry:
+  %pos_x.addr = alloca float, align 4
+  store float %pos_x, ptr %pos_x.addr, align 4
+  %pos_y.addr = alloca float, align 4
+  store float %pos_y, ptr %pos_y.addr, align 4
+  %offset_x.addr = alloca float, align 4
+  store float %offset_x, ptr %offset_x.addr, align 4
+  %offset_y.addr = alloca float, align 4
+  store float %offset_y, ptr %offset_y.addr, align 4
+  %target_x.addr = alloca float, align 4
+  store float %target_x, ptr %target_x.addr, align 4
+  %target_y.addr = alloca float, align 4
+  store float %target_y, ptr %target_y.addr, align 4
+  %rotation.addr = alloca float, align 4
+  store float %rotation, ptr %rotation.addr, align 4
+  %zoom.addr = alloca float, align 4
+  store float %zoom, ptr %zoom.addr, align 4
+  %r = alloca float, align 4
+  %pos_x1 = load float, ptr %pos_x.addr, align 4
+  %pos_y2 = load float, ptr %pos_y.addr, align 4
+  %offset_x3 = load float, ptr %offset_x.addr, align 4
+  %offset_y4 = load float, ptr %offset_y.addr, align 4
+  %target_x5 = load float, ptr %target_x.addr, align 4
+  %target_y6 = load float, ptr %target_y.addr, align 4
+  %rotation7 = load float, ptr %rotation.addr, align 4
+  %zoom8 = load float, ptr %zoom.addr, align 4
+  %calltmp = call float @aria_rl_get_screen_to_world_2d_y(float %pos_x1, float %pos_y2, float %offset_x3, float %offset_y4, float %target_x5, float %target_y6, float %rotation7, float %zoom8)
+  store float %calltmp, ptr %r, align 4
+  %r9 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r9, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_world_to_screen_2d_x(float %pos_x, float %pos_y, float %offset_x, float %offset_y, float %target_x, float %target_y, float %rotation, float %zoom) {
+entry:
+  %pos_x.addr = alloca float, align 4
+  store float %pos_x, ptr %pos_x.addr, align 4
+  %pos_y.addr = alloca float, align 4
+  store float %pos_y, ptr %pos_y.addr, align 4
+  %offset_x.addr = alloca float, align 4
+  store float %offset_x, ptr %offset_x.addr, align 4
+  %offset_y.addr = alloca float, align 4
+  store float %offset_y, ptr %offset_y.addr, align 4
+  %target_x.addr = alloca float, align 4
+  store float %target_x, ptr %target_x.addr, align 4
+  %target_y.addr = alloca float, align 4
+  store float %target_y, ptr %target_y.addr, align 4
+  %rotation.addr = alloca float, align 4
+  store float %rotation, ptr %rotation.addr, align 4
+  %zoom.addr = alloca float, align 4
+  store float %zoom, ptr %zoom.addr, align 4
+  %r = alloca float, align 4
+  %pos_x1 = load float, ptr %pos_x.addr, align 4
+  %pos_y2 = load float, ptr %pos_y.addr, align 4
+  %offset_x3 = load float, ptr %offset_x.addr, align 4
+  %offset_y4 = load float, ptr %offset_y.addr, align 4
+  %target_x5 = load float, ptr %target_x.addr, align 4
+  %target_y6 = load float, ptr %target_y.addr, align 4
+  %rotation7 = load float, ptr %rotation.addr, align 4
+  %zoom8 = load float, ptr %zoom.addr, align 4
+  %calltmp = call float @aria_rl_get_world_to_screen_2d_x(float %pos_x1, float %pos_y2, float %offset_x3, float %offset_y4, float %target_x5, float %target_y6, float %rotation7, float %zoom8)
+  store float %calltmp, ptr %r, align 4
+  %r9 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r9, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_world_to_screen_2d_y(float %pos_x, float %pos_y, float %offset_x, float %offset_y, float %target_x, float %target_y, float %rotation, float %zoom) {
+entry:
+  %pos_x.addr = alloca float, align 4
+  store float %pos_x, ptr %pos_x.addr, align 4
+  %pos_y.addr = alloca float, align 4
+  store float %pos_y, ptr %pos_y.addr, align 4
+  %offset_x.addr = alloca float, align 4
+  store float %offset_x, ptr %offset_x.addr, align 4
+  %offset_y.addr = alloca float, align 4
+  store float %offset_y, ptr %offset_y.addr, align 4
+  %target_x.addr = alloca float, align 4
+  store float %target_x, ptr %target_x.addr, align 4
+  %target_y.addr = alloca float, align 4
+  store float %target_y, ptr %target_y.addr, align 4
+  %rotation.addr = alloca float, align 4
+  store float %rotation, ptr %rotation.addr, align 4
+  %zoom.addr = alloca float, align 4
+  store float %zoom, ptr %zoom.addr, align 4
+  %r = alloca float, align 4
+  %pos_x1 = load float, ptr %pos_x.addr, align 4
+  %pos_y2 = load float, ptr %pos_y.addr, align 4
+  %offset_x3 = load float, ptr %offset_x.addr, align 4
+  %offset_y4 = load float, ptr %offset_y.addr, align 4
+  %target_x5 = load float, ptr %target_x.addr, align 4
+  %target_y6 = load float, ptr %target_y.addr, align 4
+  %rotation7 = load float, ptr %rotation.addr, align 4
+  %zoom8 = load float, ptr %zoom.addr, align 4
+  %calltmp = call float @aria_rl_get_world_to_screen_2d_y(float %pos_x1, float %pos_y2, float %offset_x3, float %offset_y4, float %target_x5, float %target_y6, float %rotation7, float %zoom8)
+  store float %calltmp, ptr %r, align 4
+  %r9 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r9, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { i32, ptr, i8 } @rl_load_font(ptr %path) {
+entry:
+  %r = alloca i32, align 4
+  %str_struct_ffi = load %struct.NpkString, ptr %path, align 8
+  %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
+  %calltmp = call i32 @aria_rl_load_font(ptr %str_data_ffi)
+  store i32 %calltmp, ptr %r, align 4
+  %r1 = load i32, ptr %r, align 4
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define { %struct.NIL, ptr, i8 } @rl_unload_font(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call ptr @aria_rl_unload_font(i32 %handle1)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_draw_text_ex(i32 %font_handle, ptr %text, float %x, float %y, float %font_size, float %spacing, i32 %r, i32 %g, i32 %b, i32 %a) {
+entry:
+  %font_handle.addr = alloca i32, align 4
+  store i32 %font_handle, ptr %font_handle.addr, align 4
+  %x.addr = alloca float, align 4
+  store float %x, ptr %x.addr, align 4
+  %y.addr = alloca float, align 4
+  store float %y, ptr %y.addr, align 4
+  %font_size.addr = alloca float, align 4
+  store float %font_size, ptr %font_size.addr, align 4
+  %spacing.addr = alloca float, align 4
+  store float %spacing, ptr %spacing.addr, align 4
+  %r.addr = alloca i32, align 4
+  store i32 %r, ptr %r.addr, align 4
+  %g.addr = alloca i32, align 4
+  store i32 %g, ptr %g.addr, align 4
+  %b.addr = alloca i32, align 4
+  store i32 %b, ptr %b.addr, align 4
+  %a.addr = alloca i32, align 4
+  store i32 %a, ptr %a.addr, align 4
+  %font_handle1 = load i32, ptr %font_handle.addr, align 4
+  %str_struct_ffi = load %struct.NpkString, ptr %text, align 8
+  %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
+  %x2 = load float, ptr %x.addr, align 4
+  %y3 = load float, ptr %y.addr, align 4
+  %font_size4 = load float, ptr %font_size.addr, align 4
+  %spacing5 = load float, ptr %spacing.addr, align 4
+  %r6 = load i32, ptr %r.addr, align 4
+  %g7 = load i32, ptr %g.addr, align 4
+  %b8 = load i32, ptr %b.addr, align 4
+  %a9 = load i32, ptr %a.addr, align 4
+  %calltmp = call ptr @aria_rl_draw_text_ex(i32 %font_handle1, ptr %str_data_ffi, float %x2, float %y3, float %font_size4, float %spacing5, i32 %r6, i32 %g7, i32 %b8, i32 %a9)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { float, ptr, i8 } @rl_measure_text_ex_x(i32 %font_handle, ptr %text, float %font_size, float %spacing) {
+entry:
+  %font_handle.addr = alloca i32, align 4
+  store i32 %font_handle, ptr %font_handle.addr, align 4
+  %font_size.addr = alloca float, align 4
+  store float %font_size, ptr %font_size.addr, align 4
+  %spacing.addr = alloca float, align 4
+  store float %spacing, ptr %spacing.addr, align 4
+  %r = alloca float, align 4
+  %font_handle1 = load i32, ptr %font_handle.addr, align 4
+  %str_struct_ffi = load %struct.NpkString, ptr %text, align 8
+  %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
+  %font_size2 = load float, ptr %font_size.addr, align 4
+  %spacing3 = load float, ptr %spacing.addr, align 4
+  %calltmp = call float @aria_rl_measure_text_ex_x(i32 %font_handle1, ptr %str_data_ffi, float %font_size2, float %spacing3)
+  store float %calltmp, ptr %r, align 4
+  %r4 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r4, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_measure_text_ex_y(i32 %font_handle, ptr %text, float %font_size, float %spacing) {
+entry:
+  %font_handle.addr = alloca i32, align 4
+  store i32 %font_handle, ptr %font_handle.addr, align 4
+  %font_size.addr = alloca float, align 4
+  store float %font_size, ptr %font_size.addr, align 4
+  %spacing.addr = alloca float, align 4
+  store float %spacing, ptr %spacing.addr, align 4
+  %r = alloca float, align 4
+  %font_handle1 = load i32, ptr %font_handle.addr, align 4
+  %str_struct_ffi = load %struct.NpkString, ptr %text, align 8
+  %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
+  %font_size2 = load float, ptr %font_size.addr, align 4
+  %spacing3 = load float, ptr %spacing.addr, align 4
+  %calltmp = call float @aria_rl_measure_text_ex_y(i32 %font_handle1, ptr %str_data_ffi, float %font_size2, float %spacing3)
+  store float %calltmp, ptr %r, align 4
+  %r4 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r4, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { i32, ptr, i8 } @rl_check_collision_recs(float %x1, float %y1, float %w1, float %h1, float %x2, float %y2, float %w2, float %h2) {
+entry:
+  %x1.addr = alloca float, align 4
+  store float %x1, ptr %x1.addr, align 4
+  %y1.addr = alloca float, align 4
+  store float %y1, ptr %y1.addr, align 4
+  %w1.addr = alloca float, align 4
+  store float %w1, ptr %w1.addr, align 4
+  %h1.addr = alloca float, align 4
+  store float %h1, ptr %h1.addr, align 4
+  %x2.addr = alloca float, align 4
+  store float %x2, ptr %x2.addr, align 4
+  %y2.addr = alloca float, align 4
+  store float %y2, ptr %y2.addr, align 4
+  %w2.addr = alloca float, align 4
+  store float %w2, ptr %w2.addr, align 4
+  %h2.addr = alloca float, align 4
+  store float %h2, ptr %h2.addr, align 4
+  %r = alloca i32, align 4
+  %x11 = load float, ptr %x1.addr, align 4
+  %y12 = load float, ptr %y1.addr, align 4
+  %w13 = load float, ptr %w1.addr, align 4
+  %h14 = load float, ptr %h1.addr, align 4
+  %x25 = load float, ptr %x2.addr, align 4
+  %y26 = load float, ptr %y2.addr, align 4
+  %w27 = load float, ptr %w2.addr, align 4
+  %h28 = load float, ptr %h2.addr, align 4
+  %calltmp = call i32 @aria_rl_check_collision_recs(float %x11, float %y12, float %w13, float %h14, float %x25, float %y26, float %w27, float %h28)
+  store i32 %calltmp, ptr %r, align 4
+  %r9 = load i32, ptr %r, align 4
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r9, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define { i32, ptr, i8 } @rl_check_collision_circles(float %x1, float %y1, float %r1, float %x2, float %y2, float %r2) {
+entry:
+  %x1.addr = alloca float, align 4
+  store float %x1, ptr %x1.addr, align 4
+  %y1.addr = alloca float, align 4
+  store float %y1, ptr %y1.addr, align 4
+  %r1.addr = alloca float, align 4
+  store float %r1, ptr %r1.addr, align 4
+  %x2.addr = alloca float, align 4
+  store float %x2, ptr %x2.addr, align 4
+  %y2.addr = alloca float, align 4
+  store float %y2, ptr %y2.addr, align 4
+  %r2.addr = alloca float, align 4
+  store float %r2, ptr %r2.addr, align 4
+  %r = alloca i32, align 4
+  %x11 = load float, ptr %x1.addr, align 4
+  %y12 = load float, ptr %y1.addr, align 4
+  %r13 = load float, ptr %r1.addr, align 4
+  %x24 = load float, ptr %x2.addr, align 4
+  %y25 = load float, ptr %y2.addr, align 4
+  %r26 = load float, ptr %r2.addr, align 4
+  %calltmp = call i32 @aria_rl_check_collision_circles(float %x11, float %y12, float %r13, float %x24, float %y25, float %r26)
+  store i32 %calltmp, ptr %r, align 4
+  %r7 = load i32, ptr %r, align 4
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r7, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define { i32, ptr, i8 } @rl_check_collision_point_rec(float %px, float %py, float %rx, float %ry, float %rw, float %rh) {
+entry:
+  %px.addr = alloca float, align 4
+  store float %px, ptr %px.addr, align 4
+  %py.addr = alloca float, align 4
+  store float %py, ptr %py.addr, align 4
+  %rx.addr = alloca float, align 4
+  store float %rx, ptr %rx.addr, align 4
+  %ry.addr = alloca float, align 4
+  store float %ry, ptr %ry.addr, align 4
+  %rw.addr = alloca float, align 4
+  store float %rw, ptr %rw.addr, align 4
+  %rh.addr = alloca float, align 4
+  store float %rh, ptr %rh.addr, align 4
+  %r = alloca i32, align 4
+  %px1 = load float, ptr %px.addr, align 4
+  %py2 = load float, ptr %py.addr, align 4
+  %rx3 = load float, ptr %rx.addr, align 4
+  %ry4 = load float, ptr %ry.addr, align 4
+  %rw5 = load float, ptr %rw.addr, align 4
+  %rh6 = load float, ptr %rh.addr, align 4
+  %calltmp = call i32 @aria_rl_check_collision_point_rec(float %px1, float %py2, float %rx3, float %ry4, float %rw5, float %rh6)
+  store i32 %calltmp, ptr %r, align 4
+  %r7 = load i32, ptr %r, align 4
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r7, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define { i32, ptr, i8 } @rl_load_shader(ptr %vs_path, ptr %fs_path) {
+entry:
+  %r = alloca i32, align 4
+  %str_struct_ffi = load %struct.NpkString, ptr %vs_path, align 8
+  %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
+  %str_struct_ffi1 = load %struct.NpkString, ptr %fs_path, align 8
+  %str_data_ffi2 = extractvalue %struct.NpkString %str_struct_ffi1, 0
+  %calltmp = call i32 @aria_rl_load_shader(ptr %str_data_ffi, ptr %str_data_ffi2)
+  store i32 %calltmp, ptr %r, align 4
+  %r3 = load i32, ptr %r, align 4
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r3, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define { %struct.NIL, ptr, i8 } @rl_unload_shader(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call ptr @aria_rl_unload_shader(i32 %handle1)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_begin_shader_mode(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call ptr @aria_rl_begin_shader_mode(i32 %handle1)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_end_shader_mode() {
+entry:
+  %calltmp = call ptr @aria_rl_end_shader_mode()
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { i32, ptr, i8 } @rl_get_shader_location(i32 %handle, ptr %uniform_name) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %r = alloca i32, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %str_struct_ffi = load %struct.NpkString, ptr %uniform_name, align 8
+  %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
+  %calltmp = call i32 @aria_rl_get_shader_location(i32 %handle1, ptr %str_data_ffi)
+  store i32 %calltmp, ptr %r, align 4
+  %r2 = load i32, ptr %r, align 4
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r2, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define { %struct.NIL, ptr, i8 } @rl_set_shader_value_float(i32 %handle, i32 %locIndex, float %val) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %locIndex.addr = alloca i32, align 4
+  store i32 %locIndex, ptr %locIndex.addr, align 4
+  %val.addr = alloca float, align 4
+  store float %val, ptr %val.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %locIndex2 = load i32, ptr %locIndex.addr, align 4
+  %val3 = load float, ptr %val.addr, align 4
+  %calltmp = call ptr @aria_rl_set_shader_value_float(i32 %handle1, i32 %locIndex2, float %val3)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_set_shader_value_int(i32 %handle, i32 %locIndex, i32 %val) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %locIndex.addr = alloca i32, align 4
+  store i32 %locIndex, ptr %locIndex.addr, align 4
+  %val.addr = alloca i32, align 4
+  store i32 %val, ptr %val.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %locIndex2 = load i32, ptr %locIndex.addr, align 4
+  %val3 = load i32, ptr %val.addr, align 4
+  %calltmp = call ptr @aria_rl_set_shader_value_int(i32 %handle1, i32 %locIndex2, i32 %val3)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_set_shader_value_vec2(i32 %handle, i32 %locIndex, float %x, float %y) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %locIndex.addr = alloca i32, align 4
+  store i32 %locIndex, ptr %locIndex.addr, align 4
+  %x.addr = alloca float, align 4
+  store float %x, ptr %x.addr, align 4
+  %y.addr = alloca float, align 4
+  store float %y, ptr %y.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %locIndex2 = load i32, ptr %locIndex.addr, align 4
+  %x3 = load float, ptr %x.addr, align 4
+  %y4 = load float, ptr %y.addr, align 4
+  %calltmp = call ptr @aria_rl_set_shader_value_vec2(i32 %handle1, i32 %locIndex2, float %x3, float %y4)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_set_shader_value_vec3(i32 %handle, i32 %locIndex, float %x, float %y, float %z) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %locIndex.addr = alloca i32, align 4
+  store i32 %locIndex, ptr %locIndex.addr, align 4
+  %x.addr = alloca float, align 4
+  store float %x, ptr %x.addr, align 4
+  %y.addr = alloca float, align 4
+  store float %y, ptr %y.addr, align 4
+  %z.addr = alloca float, align 4
+  store float %z, ptr %z.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %locIndex2 = load i32, ptr %locIndex.addr, align 4
+  %x3 = load float, ptr %x.addr, align 4
+  %y4 = load float, ptr %y.addr, align 4
+  %z5 = load float, ptr %z.addr, align 4
+  %calltmp = call ptr @aria_rl_set_shader_value_vec3(i32 %handle1, i32 %locIndex2, float %x3, float %y4, float %z5)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_set_shader_value_vec4(i32 %handle, i32 %locIndex, float %x, float %y, float %z, float %w) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %locIndex.addr = alloca i32, align 4
+  store i32 %locIndex, ptr %locIndex.addr, align 4
+  %x.addr = alloca float, align 4
+  store float %x, ptr %x.addr, align 4
+  %y.addr = alloca float, align 4
+  store float %y, ptr %y.addr, align 4
+  %z.addr = alloca float, align 4
+  store float %z, ptr %z.addr, align 4
+  %w.addr = alloca float, align 4
+  store float %w, ptr %w.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %locIndex2 = load i32, ptr %locIndex.addr, align 4
+  %x3 = load float, ptr %x.addr, align 4
+  %y4 = load float, ptr %y.addr, align 4
+  %z5 = load float, ptr %z.addr, align 4
+  %w6 = load float, ptr %w.addr, align 4
+  %calltmp = call ptr @aria_rl_set_shader_value_vec4(i32 %handle1, i32 %locIndex2, float %x3, float %y4, float %z5, float %w6)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
 declare ptr @aria_rl_init_window(i32, i32, ptr)
 
 declare ptr @aria_rl_close_window()
@@ -3847,6 +4714,26 @@ declare ptr @aria_rl_draw_triangle(float, float, float, float, float, float, i32
 
 declare ptr @aria_rl_draw_triangle_lines(float, float, float, float, float, float, i32, i32, i32, i32)
 
+declare i32 @aria_rl_create_camera_3d(float, float, float, float, float, float, float, float, float, float, i32)
+
+declare ptr @aria_rl_destroy_camera_3d(i32)
+
+declare ptr @aria_rl_update_camera_3d(i32, i32)
+
+declare ptr @aria_rl_begin_mode_3d_camera(i32)
+
+declare float @aria_rl_get_camera_3d_pos_x(i32)
+
+declare float @aria_rl_get_camera_3d_pos_y(i32)
+
+declare float @aria_rl_get_camera_3d_pos_z(i32)
+
+declare float @aria_rl_get_camera_3d_target_x(i32)
+
+declare float @aria_rl_get_camera_3d_target_y(i32)
+
+declare float @aria_rl_get_camera_3d_target_z(i32)
+
 declare ptr @aria_rl_begin_mode_3d(float, float, float, float, float, float, float, float, float, float, i32)
 
 declare ptr @aria_rl_end_mode_3d()
@@ -3866,6 +4753,8 @@ declare i32 @aria_rl_load_model(ptr)
 declare ptr @aria_rl_unload_model(i32)
 
 declare ptr @aria_rl_draw_model(i32, float, float, float, float, i32, i32, i32, i32)
+
+declare ptr @aria_rl_set_model_material_texture(i32, i32, i32, i32)
 
 declare ptr @aria_rl_draw_text(ptr, i32, i32, i32, i32, i32, i32, i32)
 
@@ -3970,6 +4859,60 @@ declare i32 @aria_rl_is_gamepad_button_released(i32, i32)
 declare float @aria_rl_get_gamepad_axis_movement(i32, i32)
 
 declare i32 @aria_rl_gen_beep(i32, i32, i32, float)
+
+declare ptr @aria_rl_draw_line_ex(float, float, float, float, float, i32, i32, i32, i32)
+
+declare ptr @aria_rl_draw_rectangle_rounded(float, float, float, float, float, i32, i32, i32, i32, i32)
+
+declare ptr @aria_rl_draw_rectangle_rounded_lines(float, float, float, float, float, i32, i32, i32, i32, i32)
+
+declare ptr @aria_rl_begin_mode_2d(float, float, float, float, float, float)
+
+declare ptr @aria_rl_end_mode_2d()
+
+declare float @aria_rl_get_screen_to_world_2d_x(float, float, float, float, float, float, float, float)
+
+declare float @aria_rl_get_screen_to_world_2d_y(float, float, float, float, float, float, float, float)
+
+declare float @aria_rl_get_world_to_screen_2d_x(float, float, float, float, float, float, float, float)
+
+declare float @aria_rl_get_world_to_screen_2d_y(float, float, float, float, float, float, float, float)
+
+declare i32 @aria_rl_load_font(ptr)
+
+declare ptr @aria_rl_unload_font(i32)
+
+declare ptr @aria_rl_draw_text_ex(i32, ptr, float, float, float, float, i32, i32, i32, i32)
+
+declare float @aria_rl_measure_text_ex_x(i32, ptr, float, float)
+
+declare float @aria_rl_measure_text_ex_y(i32, ptr, float, float)
+
+declare i32 @aria_rl_check_collision_recs(float, float, float, float, float, float, float, float)
+
+declare i32 @aria_rl_check_collision_circles(float, float, float, float, float, float)
+
+declare i32 @aria_rl_check_collision_point_rec(float, float, float, float, float, float)
+
+declare i32 @aria_rl_load_shader(ptr, ptr)
+
+declare ptr @aria_rl_unload_shader(i32)
+
+declare ptr @aria_rl_begin_shader_mode(i32)
+
+declare ptr @aria_rl_end_shader_mode()
+
+declare i32 @aria_rl_get_shader_location(i32, ptr)
+
+declare ptr @aria_rl_set_shader_value_float(i32, i32, float)
+
+declare ptr @aria_rl_set_shader_value_int(i32, i32, i32)
+
+declare ptr @aria_rl_set_shader_value_vec2(i32, i32, float, float)
+
+declare ptr @aria_rl_set_shader_value_vec3(i32, i32, float, float, float)
+
+declare ptr @aria_rl_set_shader_value_vec4(i32, i32, float, float, float, float)
 
 define i32 @__nitpick_raylib_init() {
 entry:
@@ -6752,10 +7695,10 @@ entry:
   ret i32 0
 }
 
-define { i32, ptr, i8 } @failsafe(i32 %err) {
+define { i32, ptr, i8 } @failsafe(i32 %_err) {
 entry:
-  %err.addr = alloca i32, align 4
-  store i32 %err, ptr %err.addr, align 4
+  %_err.addr = alloca i32, align 4
+  store i32 %_err, ptr %_err.addr, align 4
   %calltmp = call { %struct.NIL, ptr, i8 } @rl_close_window()
   %raw.value = extractvalue { %struct.NIL, ptr, i8 } %calltmp, 0
   call void @exit(i32 1) #0

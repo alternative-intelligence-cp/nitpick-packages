@@ -4,7 +4,7 @@ use "nitpick_mongo.npk".*;
 use "nitpick_orm.npk".*;
 use "nitpick_json.npk".*;
 
-func:failsafe = int32(tbb32:err) {
+func:failsafe = int32(tbb32:_err) {
     raw rl_close_window();
     exit 1i32;
 };
@@ -177,8 +177,8 @@ func:main = int32() {
                 int32:tg = raw get_cell_color_g(val);
                 int32:tb = raw get_cell_color_b(val);
                 
-                int32:tx = grid_x + 10i32 + (@cast<int32>(col) * 110i32);
-                int32:ty = grid_y + 10i32 + (@cast<int32>(row) * 110i32);
+                int32:tx = grid_x + 10i32 + (@cast_unchecked<int32>(col) * 110i32);
+                int32:ty = grid_y + 10i32 + (@cast_unchecked<int32>(row) * 110i32);
                 
                 raw rl_draw_rectangle(tx, ty, 100i32, 100i32, tr, tg, tb, 255i32);
                 
