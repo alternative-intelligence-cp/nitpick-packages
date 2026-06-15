@@ -1,4 +1,15 @@
-[build]
-name = "nitpick-ascii-tests"
-entry = "tests/test_nitpick_ascii.npk"
-output = "/tmp/test_ascii_bin"
+[project]
+name = "nitpick-ascii"
+version = "0.2.0"
+
+[target.nitpick-ascii]
+type = "library"
+sources = ["src/nitpick_ascii.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-ascii]
+type = "binary"
+sources = ["tests/test_nitpick_ascii.npk"]
+deps = []
+flags = []
