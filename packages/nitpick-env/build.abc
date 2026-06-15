@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-env"
+version = "0.2.6"
+
+[target.nitpick-env]
+type = "library"
+sources = ["src/nitpick_env.npk"]
+deps = []
+flags = ["-L.", "-lnitpick_env_shim"]
+
+[target.test-nitpick-env]
+type = "binary"
+sources = ["tests/test_nitpick_env.npk"]
+deps = []
+flags = ["-I", "src", "-L.", "-lnitpick_env_shim"]

@@ -2,12 +2,12 @@
 extern "libc" { func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_env.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:_err) { exit 1; };
 
 
 
 func:main = int32() {
-    int32:pass_count = 0i32;
+    int32:_pass_count = 0i32;
     // T01: set env var
     int32:s1 = nitpick_env_set("ARIA_TEST_VAR", "hello_aria");
     if (s1 == 1i32) { drop(println("[PASS] T01 set")); }
