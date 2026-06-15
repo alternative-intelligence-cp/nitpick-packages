@@ -1,0 +1,3030 @@
+// nitpick_ssh.npk — Native SSH-2 protocol implementation for Nitpick (v0.2.0)
+//
+// Pure Nitpick protocol logic + C shim for binary packet operations.
+// Import with: use "nitpick_ssh.npk".*;
+//
+// Binary data uses opaque buffer handles (int64 pointers) with layout:
+//   [cap:i64 @ 0][len:i64 @ 8][data @ 16...]
+// This avoids null-byte truncation in Nitpick strings.
+
+// ── C Shim: Buffer + Binary Packet Operations ──────────────────────────────
+
+extern "nitpick_ssh_shim" {
+    // Buffer management
+    func:nitpick_ssh_buf_create       = int64(int64:cap);
+    func:nitpick_ssh_buf_free         = void(int64:handle);
+    func:nitpick_ssh_buf_len          = int64(int64:handle);
+    func:nitpick_ssh_buf_clear        = void(int64:handle);
+    func:nitpick_ssh_buf_write_byte   = int64(int64:handle, int32:val);
+    func:nitpick_ssh_buf_read_byte    = int32(int64:handle, int64:pos);
+    func:nitpick_ssh_buf_write_bytes  = int64(int64:handle, string:src, int32:count);
+    func:nitpick_ssh_buf_write_from   = int64(int64:dst, int64:src);
+    func:nitpick_ssh_buf_extract_str  = string(int64:handle, int64:offset, int64:count);
+    func:nitpick_ssh_buf_equals_str   = int32(int64:handle, string:expected);
+
+    // Wire format encoding (write to buffer, return possibly-reallocated handle)
+    func:nitpick_ssh_encode_uint32      = int64(int64:handle, int64:val);
+    func:nitpick_ssh_decode_uint32      = int64(int64:handle, int64:offset);
+    func:nitpick_ssh_encode_string      = int64(int64:handle, string:data);
+    func:nitpick_ssh_decode_string_len  = int64(int64:handle, int64:offset);
+    func:nitpick_ssh_decode_string_data = string(int64:handle, int64:offset);
+    func:nitpick_ssh_encode_byte        = int64(int64:handle, int32:val);
+    func:nitpick_ssh_encode_bool        = int64(int64:handle, int32:val);
+    func:nitpick_ssh_encode_name_list   = int64(int64:handle, string:csv);
+
+    // Packet operations
+    func:nitpick_ssh_packet_pad_length  = int32(int64:payload_len, int64:block_size);
+    func:nitpick_ssh_packet_encode      = int64(int64:payload_handle);
+    func:nitpick_ssh_packet_decode      = int64(int64:raw_handle);
+
+    // mpint (RFC 4251 §5) — big integer wire format
+    func:nitpick_ssh_encode_mpint       = int64(int64:dst, int64:src_buf);
+    func:nitpick_ssh_decode_mpint       = int64(int64:handle, int64:offset);
+    func:nitpick_ssh_mpint_size         = int64(int64:handle, int64:offset);
+
+    // Binary buffer operations
+    func:nitpick_ssh_buf_write_buf_as_string = int64(int64:dst, int64:src);
+    func:nitpick_ssh_buf_compare        = int32(int64:a, int64:b);
+    func:nitpick_ssh_buf_clone          = int64(int64:handle);
+    func:nitpick_ssh_buf_extract_range  = int64(int64:handle, int64:offset, int64:count);
+
+    // Type conversion (int64 <-> decimal string)
+    func:nitpick_ssh_int64_to_str       = string(int64:val);
+    func:nitpick_ssh_str_to_int64       = int64(string:s);
+}
+
+extern "libc" { func:string_length = int64(string:s); }
+
+// ── C Shim: Cryptographic Primitives ────────────────────────────────────────
+
+extern "nitpick_ssh_crypto_shim" {
+    // CSPRNG
+    func:ssh_crypto_random_fill     = int64(int64:handle, int32:count);
+    func:ssh_crypto_random_uint32   = int64();
+
+    // AES-CTR mode
+    func:ssh_crypto_aes_ctr_create  = int64(int64:key_buf, int64:iv_buf);
+    func:ssh_crypto_aes_ctr_process = int64(int64:state, int64:in_buf);
+    func:ssh_crypto_aes_ctr_free    = void(int64:state);
+
+    // SHA-256 / HMAC-SHA256 (raw 32-byte output buffers)
+    func:ssh_crypto_sha256_raw      = int64(int64:in_buf);
+    func:ssh_crypto_hmac_sha256_raw = int64(int64:key_buf, int64:data_buf);
+
+    // Diffie-Hellman Group 14
+    func:ssh_crypto_dh_generate     = int64(int32:group);
+    func:ssh_crypto_dh_public_key   = int64(int64:dh_handle);
+    func:ssh_crypto_dh_shared_secret = int64(int64:dh_handle, int64:peer_pub_buf);
+    func:ssh_crypto_dh_free         = void(int64:dh_handle);
+
+    // Public key / signature verification
+    func:ssh_crypto_rsa_verify        = int64(int64:pubkey_buf, int64:sig_buf, int64:hash_buf);
+    func:ssh_crypto_ed25519_verify    = int64(int64:pubkey_buf, int64:sig_buf, int64:msg_buf);
+    func:ssh_crypto_key_type          = string(int64:pubkey_buf);
+    func:ssh_crypto_extract_sig_blob  = int64(int64:sig_buf);
+    func:ssh_crypto_base64_decode     = int64(string:input);
+
+    // Known hosts management
+    func:ssh_crypto_known_hosts_load  = int64(string:path);
+    func:ssh_crypto_known_hosts_check = int64(int64:kh_buf, string:host, string:key_type, int64:key_blob);
+    func:ssh_crypto_known_hosts_add   = int64(string:path, string:host, string:key_type, string:key_b64);
+}
+
+// ── C Shim: Network I/O ─────────────────────────────────────────────────────
+
+extern "nitpick_ssh_shim" {
+    func:nitpick_ssh_net_connect      = int64(string:host, int64:port);
+    func:nitpick_ssh_net_close        = void(int64:fd);
+    func:nitpick_ssh_net_send_buf     = int64(int64:fd, int64:buf_handle);
+    func:nitpick_ssh_net_send_str     = int64(int64:fd, string:str);
+    func:nitpick_ssh_net_recv_exact   = int64(int64:fd, int64:count);
+    func:nitpick_ssh_net_recv_line    = string(int64:fd);
+    func:nitpick_ssh_net_set_timeout  = int64(int64:fd, int64:seconds);
+
+    // Security hardening (Phase 1.0.0)
+    func:nitpick_ssh_buf_compare_ct   = int32(int64:a, int64:b);
+    func:nitpick_ssh_buf_secure_wipe  = void(int64:handle);
+    func:nitpick_ssh_packet_size_valid = int32(int64:packet_len);
+    func:nitpick_ssh_seq_next         = int64(int64:seq);
+}
+
+// ── Constants: SSH message types (RFC 4253 §12) ─────────────────────────────
+
+func:SSH_MSG_DISCONNECT         = int32() { pass 1i32; };
+func:SSH_MSG_IGNORE             = int32() { pass 2i32; };
+func:SSH_MSG_UNIMPLEMENTED      = int32() { pass 3i32; };
+func:SSH_MSG_DEBUG              = int32() { pass 4i32; };
+func:SSH_MSG_SERVICE_REQUEST    = int32() { pass 5i32; };
+func:SSH_MSG_SERVICE_ACCEPT     = int32() { pass 6i32; };
+func:SSH_MSG_KEXINIT            = int32() { pass 20i32; };
+func:SSH_MSG_NEWKEYS            = int32() { pass 21i32; };
+func:SSH_MSG_KEXDH_INIT         = int32() { pass 30i32; };
+func:SSH_MSG_KEXDH_REPLY        = int32() { pass 31i32; };
+
+// SSH auth message types (RFC 4252)
+func:SSH_MSG_USERAUTH_REQUEST   = int32() { pass 50i32; };
+func:SSH_MSG_USERAUTH_FAILURE   = int32() { pass 51i32; };
+func:SSH_MSG_USERAUTH_SUCCESS   = int32() { pass 52i32; };
+func:SSH_MSG_USERAUTH_BANNER    = int32() { pass 53i32; };
+
+// SSH channel message types (RFC 4254)
+func:SSH_MSG_CHANNEL_OPEN            = int32() { pass 90i32; };
+func:SSH_MSG_CHANNEL_OPEN_CONFIRM    = int32() { pass 91i32; };
+func:SSH_MSG_CHANNEL_WINDOW_ADJUST   = int32() { pass 93i32; };
+func:SSH_MSG_CHANNEL_DATA            = int32() { pass 94i32; };
+func:SSH_MSG_CHANNEL_EOF             = int32() { pass 96i32; };
+func:SSH_MSG_CHANNEL_CLOSE           = int32() { pass 97i32; };
+func:SSH_MSG_CHANNEL_REQUEST         = int32() { pass 98i32; };
+func:SSH_MSG_CHANNEL_SUCCESS         = int32() { pass 99i32; };
+func:SSH_MSG_CHANNEL_FAILURE         = int32() { pass 100i32; };
+
+// ── Constants: Session States ───────────────────────────────────────────────
+
+func:SSH_STATE_CREATED            = string() { pass "created"; };
+func:SSH_STATE_VERSION_SENT       = string() { pass "version_sent"; };
+func:SSH_STATE_VERSION_RECEIVED   = string() { pass "version_received"; };
+func:SSH_STATE_KEXINIT_SENT       = string() { pass "kexinit_sent"; };
+func:SSH_STATE_KEXINIT_RECEIVED   = string() { pass "kexinit_received"; };
+func:SSH_STATE_KEX_DH_SENT        = string() { pass "kex_dh_sent"; };
+func:SSH_STATE_KEX_DH_DONE        = string() { pass "kex_dh_done"; };
+func:SSH_STATE_NEWKEYS_SENT       = string() { pass "newkeys_sent"; };
+func:SSH_STATE_KEYS_ESTABLISHED   = string() { pass "keys_established"; };
+func:SSH_STATE_AUTHENTICATED      = string() { pass "authenticated"; };
+func:SSH_STATE_CONNECTED          = string() { pass "connected"; };
+func:SSH_STATE_DISCONNECTED       = string() { pass "disconnected"; };
+func:SSH_STATE_ERROR              = string() { pass "error"; };
+
+// ── SSH Version String ──────────────────────────────────────────────────────
+
+func:ssh_version_string = string() {
+    pass "SSH-2.0-NitpickSSH_1.0";
+};
+
+// ── Buffer Management (pub wrappers) ────────────────────────────────────────
+
+func:ssh_buf_create = int64(int64:cap) {
+    pass nitpick_ssh_buf_create(cap);
+};
+
+func:ssh_buf_free = NIL(int64:handle) {
+    nitpick_ssh_buf_free(handle);
+    pass(NIL);
+};
+
+func:ssh_buf_len = int64(int64:handle) {
+    pass nitpick_ssh_buf_len(handle);
+};
+
+func:ssh_buf_clear = NIL(int64:handle) {
+    nitpick_ssh_buf_clear(handle);
+    pass(NIL);
+};
+
+func:ssh_buf_write_byte = int64(int64:handle, int32:val) {
+    pass nitpick_ssh_buf_write_byte(handle, val);
+};
+
+func:ssh_buf_read_byte = int32(int64:handle, int64:pos) {
+    pass nitpick_ssh_buf_read_byte(handle, pos);
+};
+
+func:ssh_buf_write_str = int64(int64:handle, string:src) {
+    int64:slen = string_length(src);
+    pass nitpick_ssh_buf_write_bytes(handle, src, @cast_unchecked<int32>(slen));
+};
+
+func:ssh_buf_write_from = int64(int64:dst, int64:src) {
+    pass nitpick_ssh_buf_write_from(dst, src);
+};
+
+func:ssh_buf_extract_str = string(int64:handle, int64:offset, int64:count) {
+    pass nitpick_ssh_buf_extract_str(handle, offset, count);
+};
+
+func:ssh_buf_equals_str = int32(int64:handle, string:expected) {
+    pass nitpick_ssh_buf_equals_str(handle, expected);
+};
+
+// ── Wire Format Primitives (pub wrappers) ───────────────────────────────────
+
+func:ssh_encode_uint32 = int64(int64:handle, int64:val) {
+    pass nitpick_ssh_encode_uint32(handle, val);
+};
+
+func:ssh_decode_uint32 = int64(int64:handle, int64:offset) {
+    pass nitpick_ssh_decode_uint32(handle, offset);
+};
+
+func:ssh_encode_string = int64(int64:handle, string:data) {
+    pass nitpick_ssh_encode_string(handle, data);
+};
+
+func:ssh_decode_string_len = int64(int64:handle, int64:offset) {
+    pass nitpick_ssh_decode_string_len(handle, offset);
+};
+
+func:ssh_decode_string_data = string(int64:handle, int64:offset) {
+    pass nitpick_ssh_decode_string_data(handle, offset);
+};
+
+func:ssh_encode_byte = int64(int64:handle, int32:val) {
+    pass nitpick_ssh_encode_byte(handle, val);
+};
+
+func:ssh_encode_bool = int64(int64:handle, int32:val) {
+    pass nitpick_ssh_encode_bool(handle, val);
+};
+
+func:ssh_encode_name_list = int64(int64:handle, string:csv) {
+    pass nitpick_ssh_encode_name_list(handle, csv);
+};
+
+// ── Packet Operations (pub wrappers) ────────────────────────────────────────
+
+func:ssh_packet_pad_length = int32(int64:payload_len, int64:block_size) {
+    pass nitpick_ssh_packet_pad_length(payload_len, block_size);
+};
+
+// Encode payload buffer into a framed SSH packet buffer. Returns new buffer handle.
+func:ssh_packet_encode = int64(int64:payload_handle) {
+    pass nitpick_ssh_packet_encode(payload_handle);
+};
+
+// Decode raw packet buffer, extract payload. Returns payload buffer handle (0 on error).
+func:ssh_packet_decode = int64(int64:raw_handle) {
+    pass nitpick_ssh_packet_decode(raw_handle);
+};
+
+// ── Session Management ──────────────────────────────────────────────────────
+
+func:ssh_session_create = int64() {
+    int64:h = ahash(256);
+    ahset(h, "_state", "created");
+    ahset(h, "_host", "");
+    ahset(h, "_port", "22");
+    ahset(h, "_version_remote", "");
+    ahset(h, "_version_software", "");
+    ahset(h, "_error", "");
+    ahset(h, "_compression", "none");
+    pass h;
+};
+
+func:ssh_session_error = string(int64:h) {
+    string:v = ahget(h, "_error");
+    pass v;
+};
+
+func:ssh_session_state = string(int64:h) {
+    string:v = ahget(h, "_state");
+    pass v;
+};
+
+func:ssh_session_set_state = NIL(int64:h, string:new_state) {
+    ahset(h, "_state", new_state);
+    pass(NIL);
+};
+
+func:ssh_session_set_error = NIL(int64:h, string:msg) {
+    ahset(h, "_error", msg);
+    ahset(h, "_state", "error");
+    pass(NIL);
+};
+
+func:ssh_session_transition = int32(int64:h, string:expected_from, string:to_state) {
+    string:current = ahget(h, "_state");
+    int32:matched = 0i32;
+    if (string_contains(current, expected_from)) { matched = 1i32; }
+    if (matched == 0i32) { pass 0i32; }
+    ahset(h, "_state", to_state);
+    pass 1i32;
+};
+
+func:ssh_session_version_remote = string(int64:h) {
+    string:v = ahget(h, "_version_remote");
+    pass v;
+};
+
+func:ssh_session_version_software = string(int64:h) {
+    string:v = ahget(h, "_version_software");
+    pass v;
+};
+
+// ── mpint / buffer wrappers (pub) ───────────────────────────────────────────
+
+func:ssh_encode_mpint = int64(int64:dst, int64:src_buf) {
+    pass nitpick_ssh_encode_mpint(dst, src_buf);
+};
+
+func:ssh_decode_mpint = int64(int64:handle, int64:offset) {
+    pass nitpick_ssh_decode_mpint(handle, offset);
+};
+
+func:ssh_mpint_size = int64(int64:handle, int64:offset) {
+    pass nitpick_ssh_mpint_size(handle, offset);
+};
+
+func:ssh_buf_write_buf_as_string = int64(int64:dst, int64:src) {
+    pass nitpick_ssh_buf_write_buf_as_string(dst, src);
+};
+
+func:ssh_buf_compare = int32(int64:a, int64:b) {
+    pass nitpick_ssh_buf_compare(a, b);
+};
+
+func:ssh_buf_clone = int64(int64:handle) {
+    pass nitpick_ssh_buf_clone(handle);
+};
+
+func:ssh_buf_extract_range = int64(int64:handle, int64:offset, int64:count) {
+    pass nitpick_ssh_buf_extract_range(handle, offset, count);
+};
+
+// ── Type Conversion (pub wrappers) ──────────────────────────────────────────
+
+func:ssh_handle_to_str = string(int64:val) {
+    pass nitpick_ssh_int64_to_str(val);
+};
+
+func:ssh_str_to_handle = int64(string:s) {
+    pass nitpick_ssh_str_to_int64(s);
+};
+
+// ── Version Exchange (RFC 4253 §4.2) ────────────────────────────────────────
+
+// Build our version string with CRLF terminator
+func:ssh_build_version_line = string() {
+    string:line = string_concat("SSH-2.0-NitpickSSH_1.0", "\r\n");
+    pass line;
+};
+
+// Parse a server version line like "SSH-2.0-OpenSSH_9.6\r\n"
+// Stores version info in session. Returns 1 on success, 0 on failure.
+func:ssh_parse_version_line = int32(int64:h, string:line_str) {
+    // Must contain "SSH-2.0-"
+    int32:has_prefix = 0i32;
+    if (string_contains(line_str, "SSH-2.0-")) { has_prefix = 1i32; }
+    if (has_prefix == 0i32) { pass 0i32; }
+
+    // Store the raw version string
+    ahset(h, "_version_remote", line_str);
+
+    // Extract software name (everything after "SSH-2.0-")
+    // string_substring(s, start, end) — end is exclusive position
+    int64:slen = string_length(line_str);
+    if (slen > 8i64) {
+        string:rest = string_substring(line_str, 8i64, slen);
+        ahset(h, "_version_software", rest);
+    }
+
+    pass 1i32;
+};
+
+// ── Key Exchange: KEXINIT (RFC 4253 §7.1) ───────────────────────────────────
+
+// Build our KEXINIT message payload. Returns buffer handle.
+// Stores a clone in session as "_kexinit_local" for hash computation.
+func:ssh_kexinit_build = int64(int64:session) {
+    int64:buf = raw ssh_buf_create(512i64);
+
+    // Message type: SSH_MSG_KEXINIT (20)
+    buf = raw ssh_encode_byte(buf, 20i32);
+
+    // 16 random cookie bytes
+    buf = ssh_crypto_random_fill(buf, 16i32);
+
+    // Algorithm name-lists
+    buf = raw ssh_encode_name_list(buf, "diffie-hellman-group14-sha256");
+    buf = raw ssh_encode_name_list(buf, "ssh-rsa,ssh-ed25519");
+    buf = raw ssh_encode_name_list(buf, "aes256-ctr,aes128-ctr");
+    buf = raw ssh_encode_name_list(buf, "aes256-ctr,aes128-ctr");
+    buf = raw ssh_encode_name_list(buf, "hmac-sha2-256");
+    buf = raw ssh_encode_name_list(buf, "hmac-sha2-256");
+    buf = raw ssh_encode_name_list(buf, "none");
+    buf = raw ssh_encode_name_list(buf, "none");
+    buf = raw ssh_encode_name_list(buf, "");
+    buf = raw ssh_encode_name_list(buf, "");
+
+    // first_kex_packet_follows = false, reserved = 0
+    buf = raw ssh_encode_bool(buf, 0i32);
+    buf = raw ssh_encode_uint32(buf, 0i64);
+
+    // Store a clone of the payload for exchange hash computation
+    int64:clone = raw ssh_buf_clone(buf);
+    ahset(session, "_kexinit_local_buf", raw ssh_handle_to_str(clone));
+
+    pass buf;
+};
+
+// Parse server's KEXINIT payload. Stores it for hash computation.
+// payload_buf: buffer handle containing the raw KEXINIT payload.
+// Returns 1 on success, 0 on parse error.
+func:ssh_kexinit_parse = int32(int64:session, int64:payload_buf) {
+    int64:buf_len = raw ssh_buf_len(payload_buf);
+    // Minimum: 1(type) + 16(cookie) + 10*4(empty namelists) + 1(bool) + 4(reserved) = 62
+    if (buf_len < 62i64) { pass 0i32; }
+
+    // Verify message type is 20
+    int32:msg_type = raw ssh_buf_read_byte(payload_buf, 0i64);
+    if (msg_type != 20i32) { pass 0i32; }
+
+    // Store clone for exchange hash
+    int64:clone = raw ssh_buf_clone(payload_buf);
+    ahset(session, "_kexinit_server_buf", raw ssh_handle_to_str(clone));
+
+    // Parse name-lists starting after type(1) + cookie(16) = offset 17
+    int64:off = 17i64;
+
+    // kex_algorithms
+    int64:slen1 = raw ssh_decode_string_len(payload_buf, off);
+    string:kex_algs = raw ssh_decode_string_data(payload_buf, off);
+    ahset(session, "_server_kex_algs", kex_algs);
+    off = off + 4i64 + slen1;
+
+    // server_host_key_algorithms
+    int64:slen2 = raw ssh_decode_string_len(payload_buf, off);
+    string:hostkey_algs = raw ssh_decode_string_data(payload_buf, off);
+    ahset(session, "_server_hostkey_algs", hostkey_algs);
+    off = off + 4i64 + slen2;
+
+    // encryption_algorithms_client_to_server
+    int64:slen3 = raw ssh_decode_string_len(payload_buf, off);
+    string:enc_c2s = raw ssh_decode_string_data(payload_buf, off);
+    ahset(session, "_server_enc_c2s", enc_c2s);
+    off = off + 4i64 + slen3;
+
+    // encryption_algorithms_server_to_client
+    int64:slen4 = raw ssh_decode_string_len(payload_buf, off);
+    string:enc_s2c = raw ssh_decode_string_data(payload_buf, off);
+    ahset(session, "_server_enc_s2c", enc_s2c);
+    off = off + 4i64 + slen4;
+
+    // mac_algorithms_client_to_server
+    int64:slen5 = raw ssh_decode_string_len(payload_buf, off);
+    string:mac_c2s = raw ssh_decode_string_data(payload_buf, off);
+    ahset(session, "_server_mac_c2s", mac_c2s);
+    off = off + 4i64 + slen5;
+
+    // mac_algorithms_server_to_client
+    int64:slen6 = raw ssh_decode_string_len(payload_buf, off);
+    string:mac_s2c = raw ssh_decode_string_data(payload_buf, off);
+    ahset(session, "_server_mac_s2c", mac_s2c);
+    off = off + 4i64 + slen6;
+
+    // compression_algorithms (skip, we only support none)
+    int64:slen7 = raw ssh_decode_string_len(payload_buf, off);
+    off = off + 4i64 + slen7;
+    int64:slen8 = raw ssh_decode_string_len(payload_buf, off);
+    off = off + 4i64 + slen8;
+
+    // languages (skip)
+    int64:slen9 = raw ssh_decode_string_len(payload_buf, off);
+    off = off + 4i64 + slen9;
+    int64:slen10 = raw ssh_decode_string_len(payload_buf, off);
+    off = off + 4i64 + slen10;
+
+    pass 1i32;
+};
+
+// Algorithm negotiation: find first matching algorithm in client/server lists.
+// Returns 1 on success (all categories matched), 0 if no common algorithm.
+func:ssh_kex_negotiate = int32(int64:session) {
+    // For now, we support exactly one option in each category,
+    // so we just check if our preferred is in the server's list.
+    string:server_kex = ahget(session, "_server_kex_algs");
+    string:server_enc_c2s = ahget(session, "_server_enc_c2s");
+    string:server_enc_s2c = ahget(session, "_server_enc_s2c");
+    string:server_mac_c2s = ahget(session, "_server_mac_c2s");
+    string:server_mac_s2c = ahget(session, "_server_mac_s2c");
+    int32:result_ok = 1i32;
+
+    // KEX: diffie-hellman-group14-sha256
+    int32:has_kex = 0i32;
+    if (string_contains(server_kex, "diffie-hellman-group14-sha256")) { has_kex = 1i32; }
+    if (has_kex == 0i32) { result_ok = 0i32; }
+    if (has_kex == 1i32) { ahset(session, "_neg_kex", "diffie-hellman-group14-sha256"); }
+
+    // Encryption: prefer aes256-ctr, fallback aes128-ctr
+    int32:has_enc = 0i32;
+    if (string_contains(server_enc_c2s, "aes256-ctr")) {
+        ahset(session, "_neg_enc_c2s", "aes256-ctr");
+        has_enc = 1i32;
+    }
+    if (has_enc == 0i32) {
+        if (string_contains(server_enc_c2s, "aes128-ctr")) {
+            ahset(session, "_neg_enc_c2s", "aes128-ctr");
+            has_enc = 1i32;
+        }
+    }
+    if (has_enc == 0i32) { result_ok = 0i32; }
+
+    int32:has_enc2 = 0i32;
+    if (string_contains(server_enc_s2c, "aes256-ctr")) {
+        ahset(session, "_neg_enc_s2c", "aes256-ctr");
+        has_enc2 = 1i32;
+    }
+    if (has_enc2 == 0i32) {
+        if (string_contains(server_enc_s2c, "aes128-ctr")) {
+            ahset(session, "_neg_enc_s2c", "aes128-ctr");
+            has_enc2 = 1i32;
+        }
+    }
+    if (has_enc2 == 0i32) { result_ok = 0i32; }
+
+    // MAC: hmac-sha2-256
+    int32:has_mac = 0i32;
+    if (string_contains(server_mac_c2s, "hmac-sha2-256")) { has_mac = 1i32; }
+    if (has_mac == 0i32) { result_ok = 0i32; }
+    if (has_mac == 1i32) { ahset(session, "_neg_mac_c2s", "hmac-sha2-256"); }
+
+    int32:has_mac2 = 0i32;
+    if (string_contains(server_mac_s2c, "hmac-sha2-256")) { has_mac2 = 1i32; }
+    if (has_mac2 == 0i32) { result_ok = 0i32; }
+    if (has_mac2 == 1i32) { ahset(session, "_neg_mac_s2c", "hmac-sha2-256"); }
+
+    pass result_ok;
+};
+
+// ── Key Exchange: DH Init/Reply (RFC 4253 §8) ──────────────────────────────
+
+// Build SSH_MSG_KEXDH_INIT (type 30). Returns buffer handle.
+// Generates DH keypair, stores handle in session.
+func:ssh_kex_dh_init = int64(int64:session) {
+    // Generate DH keypair for Group 14
+    int64:dh = ssh_crypto_dh_generate(14i32);
+    ahset(session, "_dh_handle", raw ssh_handle_to_str(dh));
+
+    // Get public key as buffer
+    int64:pub_key = ssh_crypto_dh_public_key(dh);
+    ahset(session, "_dh_pub_local", raw ssh_handle_to_str(pub_key));
+
+    // Build message: byte(30) + mpint(e)
+    int64:msg = raw ssh_buf_create(300i64);
+    msg = raw ssh_encode_byte(msg, 30i32);
+    msg = raw ssh_encode_mpint(msg, pub_key);
+
+    pass msg;
+};
+
+// Process SSH_MSG_KEXDH_REPLY (type 31).
+// Parses K_S, f, signature. Computes shared secret and exchange hash.
+// Returns 1 on success, 0 on error.
+func:ssh_kex_dh_reply = int32(int64:session, int64:payload_buf) {
+    // Variables must be declared at top (Nitpick scoping)
+    int64:off = 0i64;
+    int32:msg_type = 0i32;
+    int64:ks_len = 0i64;
+    int64:ks_buf = 0i64;
+    int64:f_buf = 0i64;
+    int64:f_mpint_size = 0i64;
+    int64:sig_len = 0i64;
+    int64:sig_buf = 0i64;
+    int64:dh_handle = 0i64;
+    int64:shared_secret = 0i64;
+    int64:exchange_hash = 0i64;
+    string:sid_existing = "";
+
+    // Verify message type is 31
+    msg_type = raw ssh_buf_read_byte(payload_buf, 0i64);
+    if (msg_type != 31i32) { pass 0i32; }
+    off = 1i64;
+
+    // Parse K_S (server host key blob) as SSH string
+    ks_len = raw ssh_decode_string_len(payload_buf, off);
+    ks_buf = raw ssh_buf_extract_range(payload_buf, off + 4i64, ks_len);
+    ahset(session, "_server_host_key_buf", raw ssh_handle_to_str(ks_buf));
+    off = off + 4i64 + ks_len;
+
+    // Parse f (server DH public key) as mpint
+    f_buf = raw ssh_decode_mpint(payload_buf, off);
+    ahset(session, "_dh_pub_server", raw ssh_handle_to_str(f_buf));
+    f_mpint_size = raw ssh_mpint_size(payload_buf, off);
+    off = off + f_mpint_size;
+
+    // Parse signature as SSH string
+    sig_len = raw ssh_decode_string_len(payload_buf, off);
+    sig_buf = raw ssh_buf_extract_range(payload_buf, off + 4i64, sig_len);
+    ahset(session, "_server_signature", raw ssh_handle_to_str(sig_buf));
+
+    // Compute shared secret K = f^x mod p
+    string:_dh_s = ahget(session, "_dh_handle");
+    dh_handle = raw ssh_str_to_handle(_dh_s);
+    shared_secret = ssh_crypto_dh_shared_secret(dh_handle, f_buf);
+    ahset(session, "_shared_secret", raw ssh_handle_to_str(shared_secret));
+
+    // Compute exchange hash H
+    exchange_hash = raw ssh_compute_exchange_hash(session);
+    ahset(session, "_exchange_hash", raw ssh_handle_to_str(exchange_hash));
+
+    // Store as session_id if this is the first key exchange
+    sid_existing = ahget(session, "_session_id");
+    if (string_contains(sid_existing, "")) {
+        ahset(session, "_session_id", raw ssh_handle_to_str(exchange_hash));
+    }
+
+    pass 1i32;
+};
+
+// ── Exchange Hash Computation ───────────────────────────────────────────────
+
+// Compute H = SHA-256(V_C || V_S || I_C || I_S || K_S || e || f || K)
+// All values encoded as SSH strings/mpints per RFC 4253 §8.
+func:ssh_compute_exchange_hash = int64(int64:session) {
+    int64:hash_input = raw ssh_buf_create(4096i64);
+
+    // V_C: client version string (without CRLF)
+    string:eh_vc = raw ssh_version_string();
+    hash_input = raw ssh_encode_string(hash_input, eh_vc);
+
+    // V_S: server version string (without CRLF)
+    string:eh_vs = ahget(session, "_version_remote");
+    hash_input = raw ssh_encode_string(hash_input, eh_vs);
+
+    // I_C: client KEXINIT payload
+    string:_ic_s = ahget(session, "_kexinit_local_buf");
+    int64:ic_buf = raw ssh_str_to_handle(_ic_s);
+    hash_input = raw ssh_buf_write_buf_as_string(hash_input, ic_buf);
+
+    // I_S: server KEXINIT payload
+    string:_is_s = ahget(session, "_kexinit_server_buf");
+    int64:is_buf = raw ssh_str_to_handle(_is_s);
+    hash_input = raw ssh_buf_write_buf_as_string(hash_input, is_buf);
+
+    // K_S: server host key blob
+    string:_ks_s = ahget(session, "_server_host_key_buf");
+    int64:ks_buf2 = raw ssh_str_to_handle(_ks_s);
+    hash_input = raw ssh_buf_write_buf_as_string(hash_input, ks_buf2);
+
+    // e: client DH public key (mpint)
+    string:_e_s = ahget(session, "_dh_pub_local");
+    int64:e_buf = raw ssh_str_to_handle(_e_s);
+    hash_input = raw ssh_encode_mpint(hash_input, e_buf);
+
+    // f: server DH public key (mpint)
+    string:_f_s = ahget(session, "_dh_pub_server");
+    int64:f_buf2 = raw ssh_str_to_handle(_f_s);
+    hash_input = raw ssh_encode_mpint(hash_input, f_buf2);
+
+    // K: shared secret (mpint)
+    string:_k_s = ahget(session, "_shared_secret");
+    int64:k_buf = raw ssh_str_to_handle(_k_s);
+    hash_input = raw ssh_encode_mpint(hash_input, k_buf);
+
+    // H = SHA-256(hash_input)
+    int64:eh_h = ssh_crypto_sha256_raw(hash_input);
+
+    // Free temp
+    drop(raw ssh_buf_free(hash_input));
+
+    pass eh_h;
+};
+
+// ── Host Key Verification (TOFU placeholder) ────────────────────────────────
+
+// Verify the server's host key. Currently always accepts (trust-on-first-use).
+func:ssh_verify_host_key = int32(int64:session) {
+    // TODO: Implement known_hosts checking
+    // For now, accept any key (TOFU)
+    pass 1i32;
+};
+
+// ── Key Derivation (RFC 4253 §7.2) ──────────────────────────────────────────
+
+// Derive a single key component:
+// key = SHA-256(K_mpint || H || letter || session_id)
+func:ssh_derive_key_component = int64(int64:session, int32:letter) {
+    int64:dk_buf = raw ssh_buf_create(512i64);
+
+    // K as mpint
+    string:_dk_k_s = ahget(session, "_shared_secret");
+    int64:dk_k = raw ssh_str_to_handle(_dk_k_s);
+    dk_buf = raw ssh_encode_mpint(dk_buf, dk_k);
+
+    // H (exchange hash, 32 bytes raw)
+    string:_dk_h_s = ahget(session, "_exchange_hash");
+    int64:dk_h = raw ssh_str_to_handle(_dk_h_s);
+    dk_buf = raw ssh_buf_write_from(dk_buf, dk_h);
+
+    // Single letter byte
+    dk_buf = raw ssh_buf_write_byte(dk_buf, letter);
+
+    // session_id (32 bytes raw)
+    string:_dk_sid_s = ahget(session, "_session_id");
+    int64:dk_sid = raw ssh_str_to_handle(_dk_sid_s);
+    dk_buf = raw ssh_buf_write_from(dk_buf, dk_sid);
+
+    int64:dk_key = ssh_crypto_sha256_raw(dk_buf);
+    drop(raw ssh_buf_free(dk_buf));
+    pass dk_key;
+};
+
+// Derive all 6 session keys.
+// Returns 1 on success.
+func:ssh_derive_keys = int32(int64:session) {
+    // A: IV client→server (16 bytes for AES-CTR)
+    int64:iv_c2s = raw ssh_derive_key_component(session, 65i32);
+    ahset(session, "_key_iv_c2s", raw ssh_handle_to_str(iv_c2s));
+
+    // B: IV server→client
+    int64:iv_s2c = raw ssh_derive_key_component(session, 66i32);
+    ahset(session, "_key_iv_s2c", raw ssh_handle_to_str(iv_s2c));
+
+    // C: Encryption key client→server
+    int64:enc_c2s = raw ssh_derive_key_component(session, 67i32);
+    ahset(session, "_key_enc_c2s", raw ssh_handle_to_str(enc_c2s));
+
+    // D: Encryption key server→client
+    int64:enc_s2c = raw ssh_derive_key_component(session, 68i32);
+    ahset(session, "_key_enc_s2c", raw ssh_handle_to_str(enc_s2c));
+
+    // E: Integrity key client→server
+    int64:mac_c2s = raw ssh_derive_key_component(session, 69i32);
+    ahset(session, "_key_mac_c2s", raw ssh_handle_to_str(mac_c2s));
+
+    // F: Integrity key server→client
+    int64:mac_s2c = raw ssh_derive_key_component(session, 70i32);
+    ahset(session, "_key_mac_s2c", raw ssh_handle_to_str(mac_s2c));
+
+    pass 1i32;
+};
+
+// ── NEWKEYS (RFC 4253 §7.3) ─────────────────────────────────────────────────
+
+// Build SSH_MSG_NEWKEYS (type 21). Single byte message.
+func:ssh_send_newkeys = int64(int64:session) {
+    int64:msg = raw ssh_buf_create(8i64);
+    msg = raw ssh_encode_byte(msg, 21i32);
+    pass msg;
+};
+
+// Process received SSH_MSG_NEWKEYS. Returns 1 on success, 0 on error.
+func:ssh_recv_newkeys = int32(int64:session, int64:payload_buf) {
+    int32:msg_type = raw ssh_buf_read_byte(payload_buf, 0i64);
+    if (msg_type != 21i32) { pass 0i32; }
+    pass 1i32;
+};
+
+// ── Encrypted Transport (RFC 4253 §6) ───────────────────────────────────────
+
+// ── Sequence Numbers ────────────────────────────────────────────────────────
+
+// Initialize sequence counters in session state (call after session_create).
+func:ssh_seq_init = NIL(int64:session) {
+    ahset(session, "_seq_send", "0");
+    ahset(session, "_seq_recv", "0");
+    ahset(session, "_encrypted", "0");
+    ahset(session, "_bytes_sent", "0");
+    pass(NIL);
+};
+
+// Get current send sequence number and increment. Wraps at 2^32.
+func:ssh_seq_send_next = int64(int64:session) {
+    string:_sq_s = ahget(session, "_seq_send");
+    int64:seq = raw ssh_str_to_handle(_sq_s);
+    int64:next = seq + 1i64;
+    // Wrap at 2^32 (4294967296)
+    if (next >= 4294967296i64) { next = 0i64; }
+    ahset(session, "_seq_send", raw ssh_handle_to_str(next));
+    pass seq;
+};
+
+// Get current recv sequence number and increment. Wraps at 2^32.
+func:ssh_seq_recv_next = int64(int64:session) {
+    string:_rq_s = ahget(session, "_seq_recv");
+    int64:seq = raw ssh_str_to_handle(_rq_s);
+    int64:next = seq + 1i64;
+    if (next >= 4294967296i64) { next = 0i64; }
+    ahset(session, "_seq_recv", raw ssh_handle_to_str(next));
+    pass seq;
+};
+
+// ── Cipher State Initialization ─────────────────────────────────────────────
+
+// Activate encryption using derived keys. Creates AES-CTR cipher states.
+// Call after ssh_derive_keys and NEWKEYS exchange.
+func:ssh_activate_encryption = int32(int64:session) {
+    // Get encryption keys (32 bytes each from SHA-256)
+    string:_enc_c2s_s = ahget(session, "_key_enc_c2s");
+    int64:enc_c2s_key = raw ssh_str_to_handle(_enc_c2s_s);
+    string:_iv_c2s_s = ahget(session, "_key_iv_c2s");
+    int64:iv_c2s = raw ssh_str_to_handle(_iv_c2s_s);
+
+    string:_enc_s2c_s = ahget(session, "_key_enc_s2c");
+    int64:enc_s2c_key = raw ssh_str_to_handle(_enc_s2c_s);
+    string:_iv_s2c_s = ahget(session, "_key_iv_s2c");
+    int64:iv_s2c = raw ssh_str_to_handle(_iv_s2c_s);
+
+    // Create AES-CTR cipher states
+    // We need the first 16 bytes of the IV for AES-CTR counter
+    int64:iv_c2s_16 = raw ssh_buf_extract_range(iv_c2s, 0i64, 16i64);
+    int64:iv_s2c_16 = raw ssh_buf_extract_range(iv_s2c, 0i64, 16i64);
+
+    int64:cipher_c2s = ssh_crypto_aes_ctr_create(enc_c2s_key, iv_c2s_16);
+    int64:cipher_s2c = ssh_crypto_aes_ctr_create(enc_s2c_key, iv_s2c_16);
+
+    if (cipher_c2s == 0i64) { pass 0i32; }
+    if (cipher_s2c == 0i64) { pass 0i32; }
+
+    ahset(session, "_cipher_c2s", raw ssh_handle_to_str(cipher_c2s));
+    ahset(session, "_cipher_s2c", raw ssh_handle_to_str(cipher_s2c));
+    ahset(session, "_encrypted", "1");
+
+    drop(raw ssh_buf_free(iv_c2s_16));
+    drop(raw ssh_buf_free(iv_s2c_16));
+
+    pass 1i32;
+};
+
+// ── MAC Computation (RFC 4253 §6.4) ─────────────────────────────────────────
+
+// Compute MAC = HMAC-SHA256(key, seq_uint32 || unencrypted_packet)
+// direction: 0 = client→server (use mac_c2s key), 1 = server→client (mac_s2c)
+func:ssh_mac_compute = int64(int64:session, int64:seq, int64:packet_buf, int32:direction) {
+    // Get the appropriate MAC key
+    string:key_name = "_key_mac_c2s";
+    if (direction == 1i32) { key_name = "_key_mac_s2c"; }
+    string:_mk_s = ahget(session, key_name);
+    int64:mac_key = raw ssh_str_to_handle(_mk_s);
+
+    // Build HMAC input: sequence_number(uint32 BE) || unencrypted_packet
+    int64:mac_input = raw ssh_buf_create(512i64);
+    mac_input = raw ssh_encode_uint32(mac_input, seq);
+    mac_input = raw ssh_buf_write_from(mac_input, packet_buf);
+
+    // Compute HMAC-SHA256
+    int64:mac_result = ssh_crypto_hmac_sha256_raw(mac_key, mac_input);
+
+    drop(raw ssh_buf_free(mac_input));
+    pass mac_result;
+};
+
+// Verify MAC: compute expected MAC and compare with received MAC.
+// Returns 1 on match, 0 on mismatch.
+func:ssh_mac_verify = int32(int64:session, int64:seq, int64:packet_buf, int64:received_mac, int32:direction) {
+    int64:expected_mac = raw ssh_mac_compute(session, seq, packet_buf, direction);
+    int32:match = raw ssh_buf_compare(expected_mac, received_mac);
+    drop(raw ssh_buf_free(expected_mac));
+    pass match;
+};
+
+// ── Encrypted Packet Encoder (RFC 4253 §6.3) ────────────────────────────────
+
+// Encode and encrypt a payload into an SSH packet.
+// If encryption is active: builds packet, computes MAC, encrypts body.
+// If not: passes through to unencrypted encoder.
+// Returns buffer handle containing the complete wire packet.
+func:ssh_packet_encode_encrypted = int64(int64:session, int64:payload_buf) {
+    // Check if encryption is active
+    string:_enc_flag = ahget(session, "_encrypted");
+    int32:is_encrypted = 0i32;
+    if (string_contains(_enc_flag, "1")) { is_encrypted = 1i32; }
+
+    // Pre-NEWKEYS: use unencrypted encoding
+    if (is_encrypted == 0i32) {
+        int64:pkt = raw ssh_packet_encode(payload_buf);
+        // Still increment sequence number
+        int64:_seq = raw ssh_seq_send_next(session);
+        pass pkt;
+    }
+
+    // Build unencrypted packet: packet_length(4) + padding_length(1) + payload + padding
+    int64:payload_len = raw ssh_buf_len(payload_buf);
+    // Block size is 16 for AES
+    int32:pad_len = raw ssh_packet_pad_length(payload_len, 16i64);
+    int64:packet_length = 1i64 + payload_len + @cast_unchecked<int64>(pad_len);
+
+    // Build the unencrypted packet buffer
+    int64:unenc_pkt = raw ssh_buf_create(512i64);
+    unenc_pkt = raw ssh_encode_uint32(unenc_pkt, packet_length);
+    unenc_pkt = raw ssh_encode_byte(unenc_pkt, pad_len);
+    unenc_pkt = raw ssh_buf_write_from(unenc_pkt, payload_buf);
+
+    // CSPRNG random padding
+    unenc_pkt = ssh_crypto_random_fill(unenc_pkt, pad_len);
+
+    // Get sequence number (before incrementing)
+    int64:seq = raw ssh_seq_send_next(session);
+
+    // Compute MAC over unencrypted packet (direction=0: client→server)
+    int64:mac = raw ssh_mac_compute(session, seq, unenc_pkt, 0i32);
+
+    // Encrypt the packet body (everything after packet_length field)
+    // Extract: padding_length(1) + payload + padding
+    int64:body_len = 1i64 + payload_len + @cast_unchecked<int64>(pad_len);
+    int64:body_buf = raw ssh_buf_extract_range(unenc_pkt, 4i64, body_len);
+
+    // Get cipher state
+    string:_c2s_s = ahget(session, "_cipher_c2s");
+    int64:cipher = raw ssh_str_to_handle(_c2s_s);
+    int64:enc_body = ssh_crypto_aes_ctr_process(cipher, body_buf);
+
+    // Build output: packet_length(4, unencrypted) + encrypted_body + MAC(32)
+    int64:wire_pkt = raw ssh_buf_create(512i64);
+    wire_pkt = raw ssh_encode_uint32(wire_pkt, packet_length);
+    wire_pkt = raw ssh_buf_write_from(wire_pkt, enc_body);
+    wire_pkt = raw ssh_buf_write_from(wire_pkt, mac);
+
+    // Track bytes sent for re-key check
+    string:_bs_s = ahget(session, "_bytes_sent");
+    int64:bytes_sent = raw ssh_str_to_handle(_bs_s);
+    int64:pkt_size = raw ssh_buf_len(wire_pkt);
+    bytes_sent = bytes_sent + pkt_size;
+    ahset(session, "_bytes_sent", raw ssh_handle_to_str(bytes_sent));
+
+    // Cleanup
+    drop(raw ssh_buf_free(unenc_pkt));
+    drop(raw ssh_buf_free(body_buf));
+    drop(raw ssh_buf_free(enc_body));
+    drop(raw ssh_buf_free(mac));
+
+    pass wire_pkt;
+};
+
+// ── Encrypted Packet Decoder (RFC 4253 §6.3) ────────────────────────────────
+
+// Decode and decrypt an incoming SSH packet.
+// If encryption is active: decrypts body, verifies MAC, extracts payload.
+// If not: passes through to unencrypted decoder.
+// Returns payload buffer handle (0 on error).
+func:ssh_packet_decode_encrypted = int64(int64:session, int64:raw_buf) {
+    // Check if encryption is active
+    string:_enc_flag2 = ahget(session, "_encrypted");
+    int32:is_encrypted2 = 0i32;
+    if (string_contains(_enc_flag2, "1")) { is_encrypted2 = 1i32; }
+
+    // Pre-NEWKEYS: use unencrypted decoding
+    if (is_encrypted2 == 0i32) {
+        int64:payload = raw ssh_packet_decode(raw_buf);
+        int64:_seq2 = raw ssh_seq_recv_next(session);
+        pass payload;
+    }
+
+    int64:raw_len = raw ssh_buf_len(raw_buf);
+    // Minimum: 4 (packet_length) + 1 (min body: pad_len byte) + 32 (MAC)
+    if (raw_len < 37i64) { pass 0i64; }
+
+    // Read packet_length (first 4 bytes, unencrypted)
+    int64:packet_length = raw ssh_decode_uint32(raw_buf, 0i64);
+
+    // Validate sizes
+    int64:expected_total = 4i64 + packet_length + 32i64;
+    if (expected_total > raw_len) { pass 0i64; }
+
+    // Extract encrypted body: bytes 4..4+packet_length
+    int64:enc_body2 = raw ssh_buf_extract_range(raw_buf, 4i64, packet_length);
+
+    // Extract received MAC: last 32 bytes
+    int64:mac_offset = 4i64 + packet_length;
+    int64:received_mac = raw ssh_buf_extract_range(raw_buf, mac_offset, 32i64);
+
+    // Decrypt body
+    string:_s2c_s = ahget(session, "_cipher_s2c");
+    int64:cipher2 = raw ssh_str_to_handle(_s2c_s);
+    int64:dec_body = ssh_crypto_aes_ctr_process(cipher2, enc_body2);
+
+    // Reconstruct unencrypted packet for MAC verification
+    int64:unenc_pkt2 = raw ssh_buf_create(512i64);
+    unenc_pkt2 = raw ssh_encode_uint32(unenc_pkt2, packet_length);
+    unenc_pkt2 = raw ssh_buf_write_from(unenc_pkt2, dec_body);
+
+    // Get sequence number and verify MAC (direction=1: server→client)
+    int64:seq2 = raw ssh_seq_recv_next(session);
+    int32:mac_ok = raw ssh_mac_verify(session, seq2, unenc_pkt2, received_mac, 1i32);
+
+    if (mac_ok == 0i32) {
+        drop(raw ssh_buf_free(enc_body2));
+        drop(raw ssh_buf_free(received_mac));
+        drop(raw ssh_buf_free(dec_body));
+        drop(raw ssh_buf_free(unenc_pkt2));
+        pass 0i64;
+    }
+
+    // Extract payload from decrypted body
+    // dec_body = padding_length(1) + payload + padding
+    int32:pad_len2 = raw ssh_buf_read_byte(dec_body, 0i64);
+    int64:payload_len2 = packet_length - 1i64 - @cast_unchecked<int64>(pad_len2);
+    if (payload_len2 < 0i64) {
+        drop(raw ssh_buf_free(enc_body2));
+        drop(raw ssh_buf_free(received_mac));
+        drop(raw ssh_buf_free(dec_body));
+        drop(raw ssh_buf_free(unenc_pkt2));
+        pass 0i64;
+    }
+
+    int64:payload2 = raw ssh_buf_extract_range(dec_body, 1i64, payload_len2);
+
+    // Cleanup
+    drop(raw ssh_buf_free(enc_body2));
+    drop(raw ssh_buf_free(received_mac));
+    drop(raw ssh_buf_free(dec_body));
+    drop(raw ssh_buf_free(unenc_pkt2));
+
+    pass payload2;
+};
+
+// ── Re-keying Check (RFC 4253 §9) ───────────────────────────────────────────
+
+// Check if re-keying is needed (data limit: 1 GB = 1073741824 bytes).
+// Returns 1 if re-key recommended, 0 otherwise.
+func:ssh_should_rekey = int32(int64:session) {
+    string:_bs_s2 = ahget(session, "_bytes_sent");
+    int64:bytes_sent2 = raw ssh_str_to_handle(_bs_s2);
+    // 1 GB threshold
+    if (bytes_sent2 > 1073741824i64) { pass 1i32; }
+    pass 0i32;
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Phase 0.5.0 — User Authentication (RFC 4252)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Service Request (RFC 4253 §10) ──────────────────────────────────────────
+
+// Build SSH_MSG_SERVICE_REQUEST (type 5): byte(5) + string(service_name)
+func:ssh_service_request = int64(int64:session, string:service) {
+    int64:msg = raw ssh_buf_create(64i64);
+    msg = raw ssh_encode_byte(msg, 5i32);
+    msg = nitpick_ssh_encode_string(msg, service);
+    pass msg;
+};
+
+// Parse SSH_MSG_SERVICE_ACCEPT (type 6).
+// Verifies service name matches expected. Returns 1 on success, 0 on error.
+func:ssh_service_accept = int32(int64:session, int64:payload_buf, string:expected_service) {
+    int32:msg_type = raw ssh_buf_read_byte(payload_buf, 0i64);
+    if (msg_type != 6i32) { pass 0i32; }
+
+    // Extract accepted service name (at offset 1: string)
+    string:accepted = nitpick_ssh_decode_string_data(payload_buf, 1i64);
+
+    // Verify it matches
+    if (string_contains(accepted, expected_service)) { pass 1i32; }
+    pass 0i32;
+};
+
+// ── "none" Authentication (RFC 4252 §5.2) ───────────────────────────────────
+
+// Build SSH_MSG_USERAUTH_REQUEST with method "none" for method discovery.
+// byte(50) + string(username) + string("ssh-connection") + string("none")
+func:ssh_auth_none = int64(int64:session, string:username) {
+    int64:msg = raw ssh_buf_create(128i64);
+    msg = raw ssh_encode_byte(msg, 50i32);
+    msg = nitpick_ssh_encode_string(msg, username);
+    msg = nitpick_ssh_encode_string(msg, "ssh-connection");
+    msg = nitpick_ssh_encode_string(msg, "none");
+    pass msg;
+};
+
+// ── Password Authentication (RFC 4252 §8) ───────────────────────────────────
+
+// Build SSH_MSG_USERAUTH_REQUEST with method "password".
+// byte(50) + string(username) + string("ssh-connection") + string("password")
+// + boolean(FALSE) + string(password)
+func:ssh_auth_password = int64(int64:session, string:username, string:password) {
+    int64:msg = raw ssh_buf_create(256i64);
+    msg = raw ssh_encode_byte(msg, 50i32);
+    msg = nitpick_ssh_encode_string(msg, username);
+    msg = nitpick_ssh_encode_string(msg, "ssh-connection");
+    msg = nitpick_ssh_encode_string(msg, "password");
+    msg = nitpick_ssh_encode_bool(msg, 0i32);
+    msg = nitpick_ssh_encode_string(msg, password);
+    pass msg;
+};
+
+// ── Public Key Authentication Query (RFC 4252 §7, skeleton) ─────────────────
+
+// Build SSH_MSG_USERAUTH_REQUEST with method "publickey" and boolean FALSE.
+// This queries the server: "Would you accept this key?"
+// Full signing flow deferred to v0.7.0.
+// byte(50) + string(username) + string("ssh-connection") + string("publickey")
+// + boolean(FALSE) + string(key_algorithm) + string(public_key_blob)
+func:ssh_auth_publickey_query = int64(int64:session, string:username, string:key_type, int64:pubkey_blob) {
+    int64:msg = raw ssh_buf_create(512i64);
+    msg = raw ssh_encode_byte(msg, 50i32);
+    msg = nitpick_ssh_encode_string(msg, username);
+    msg = nitpick_ssh_encode_string(msg, "ssh-connection");
+    msg = nitpick_ssh_encode_string(msg, "publickey");
+    msg = nitpick_ssh_encode_bool(msg, 0i32);
+    msg = nitpick_ssh_encode_string(msg, key_type);
+    // Write public key blob as SSH string (uint32 len + raw bytes)
+    msg = nitpick_ssh_buf_write_buf_as_string(msg, pubkey_blob);
+    pass msg;
+};
+
+// ── Auth Response Parsing (RFC 4252 §5.1) ───────────────────────────────────
+
+// Parse authentication response from server.
+// Returns:  1 = SUCCESS (type 52)
+//           0 = FAILURE (type 51, stores available methods)
+//          -1 = BANNER  (type 53, stores banner, caller should continue)
+func:ssh_auth_parse_response = int32(int64:session, int64:payload_buf) {
+    int32:msg_type = raw ssh_buf_read_byte(payload_buf, 0i64);
+
+    // SSH_MSG_USERAUTH_SUCCESS (52)
+    if (msg_type == 52i32) {
+        drop(raw ssh_session_set_state(session, "AUTHENTICATED"));
+        pass 1i32;
+    }
+
+    // SSH_MSG_USERAUTH_FAILURE (51)
+    // Format: byte(51) + name-list(authentications) + boolean(partial_success)
+    if (msg_type == 51i32) {
+        // Decode the available methods name-list (at offset 1)
+        string:methods = nitpick_ssh_decode_string_data(payload_buf, 1i64);
+        ahset(session, "_auth_methods", methods);
+
+        // Decode partial success flag
+        int64:methods_str_len = nitpick_ssh_decode_string_len(payload_buf, 1i64);
+        int64:bool_offset = 5i64 + methods_str_len;
+        int32:partial = raw ssh_buf_read_byte(payload_buf, bool_offset);
+        if (partial == 1i32) {
+            ahset(session, "_auth_partial", "1");
+        }
+        if (partial != 1i32) {
+            ahset(session, "_auth_partial", "0");
+        }
+
+        pass 0i32;
+    }
+
+    // SSH_MSG_USERAUTH_BANNER (53)
+    // Format: byte(53) + string(message) + string(language_tag)
+    if (msg_type == 53i32) {
+        string:banner = nitpick_ssh_decode_string_data(payload_buf, 1i64);
+        ahset(session, "_auth_banner", banner);
+        pass -1i32;
+    }
+
+    // Unknown message type
+    pass 0i32;
+};
+
+// ── Auth State Queries ──────────────────────────────────────────────────────
+
+// Get comma-separated list of methods the server accepts (after FAILURE).
+func:ssh_auth_failure_methods = string(int64:session) {
+    string:methods = ahget(session, "_auth_methods");
+    pass methods;
+};
+
+// Get banner text (after BANNER response).
+func:ssh_auth_banner = string(int64:session) {
+    string:banner = ahget(session, "_auth_banner");
+    pass banner;
+};
+
+// Check if a specific method is available.
+func:ssh_auth_method_available = int32(int64:session, string:method) {
+    string:methods = ahget(session, "_auth_methods");
+    if (string_contains(methods, method)) { pass 1i32; }
+    pass 0i32;
+};
+
+// ── Authentication Orchestrator ─────────────────────────────────────────────
+
+// Initialize authentication state (call before auth flow).
+func:ssh_auth_init = NIL(int64:session) {
+    ahset(session, "_auth_methods", "");
+    ahset(session, "_auth_banner", "");
+    ahset(session, "_auth_partial", "0");
+    ahset(session, "_auth_retries", "0");
+    ahset(session, "_auth_max_retries", "3");
+    pass(NIL);
+};
+
+// Set max retry count for authentication.
+func:ssh_auth_set_max_retries = NIL(int64:session, int32:max_retries) {
+    ahset(session, "_auth_max_retries", raw ssh_handle_to_str(@cast_unchecked<int64>(max_retries)));
+    pass(NIL);
+};
+
+// Increment retry counter. Returns 1 if retries remaining, 0 if exhausted.
+func:ssh_auth_retry = int32(int64:session) {
+    string:_r_s = ahget(session, "_auth_retries");
+    int64:retries = raw ssh_str_to_handle(_r_s);
+    string:_m_s = ahget(session, "_auth_max_retries");
+    int64:max_r = raw ssh_str_to_handle(_m_s);
+    retries = retries + 1i64;
+    ahset(session, "_auth_retries", raw ssh_handle_to_str(retries));
+    if (retries >= max_r) { pass 0i32; }
+    pass 1i32;
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Phase 0.6.0 — Channels & Command Execution (RFC 4254)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Channel Lifecycle ───────────────────────────────────────────────────────
+
+// Initialize channel subsystem (call once after auth).
+func:ssh_channel_init = NIL(int64:session) {
+    ahset(session, "_chan_next_id", "0");
+    pass(NIL);
+};
+
+// Allocate next channel ID (internal).
+func:ssh_channel_alloc_id = int64(int64:session) {
+    string:_nid_s = ahget(session, "_chan_next_id");
+    int64:cid = raw ssh_str_to_handle(_nid_s);
+    int64:next = cid + 1i64;
+    ahset(session, "_chan_next_id", raw ssh_handle_to_str(next));
+    pass cid;
+};
+
+// Build channel-specific key name: "_chan_{id}_{suffix}"
+func:ssh_chan_key = string(int64:channel_id, string:suffix) {
+    string:prefix = "_chan_";
+    string:id_str = raw ssh_handle_to_str(channel_id);
+    string:k1 = string_concat(prefix, id_str);
+    string:k2 = string_concat(k1, "_");
+    string:key = string_concat(k2, suffix);
+    pass key;
+};
+
+// Build SSH_MSG_CHANNEL_OPEN (type 90) for a "session" channel.
+// Returns channel ID (>= 0) via session state. Returns the message payload.
+func:ssh_channel_open = int64(int64:session, string:channel_type) {
+    int64:cid = raw ssh_channel_alloc_id(session);
+
+    // Initialize channel state
+    string:k_state = raw ssh_chan_key(cid, "state");
+    ahset(session, k_state, "opening");
+    string:k_remote = raw ssh_chan_key(cid, "remote_id");
+    ahset(session, k_remote, "-1");
+    string:k_wlocal = raw ssh_chan_key(cid, "window_local");
+    ahset(session, k_wlocal, "2097152");
+    string:k_wremote = raw ssh_chan_key(cid, "window_remote");
+    ahset(session, k_wremote, "0");
+    string:k_maxpkt = raw ssh_chan_key(cid, "max_packet");
+    ahset(session, k_maxpkt, "32768");
+    string:k_buf = raw ssh_chan_key(cid, "buffer");
+    ahset(session, k_buf, "0");
+    string:k_exit = raw ssh_chan_key(cid, "exit_status");
+    ahset(session, k_exit, "-1");
+
+    // Store channel ID for retrieval
+    ahset(session, "_last_channel_id", raw ssh_handle_to_str(cid));
+
+    // Build message: type(90) + string(channel_type) + uint32(sender_channel)
+    //              + uint32(initial_window=2MB) + uint32(max_packet=32768)
+    int64:msg = raw ssh_buf_create(128i64);
+    msg = raw ssh_encode_byte(msg, 90i32);
+    msg = nitpick_ssh_encode_string(msg, channel_type);
+    msg = raw ssh_encode_uint32(msg, cid);
+    msg = raw ssh_encode_uint32(msg, 2097152i64);
+    msg = raw ssh_encode_uint32(msg, 32768i64);
+
+    pass msg;
+};
+
+// Get the channel ID from the last ssh_channel_open call.
+func:ssh_channel_last_id = int64(int64:session) {
+    string:_cid_s = ahget(session, "_last_channel_id");
+    int64:cid = raw ssh_str_to_handle(_cid_s);
+    pass cid;
+};
+
+// Parse SSH_MSG_CHANNEL_OPEN_CONFIRMATION (type 91).
+// Returns local channel ID on success, -1 on failure.
+func:ssh_channel_open_confirm = int32(int64:session, int64:payload_buf) {
+    int32:msg_type = raw ssh_buf_read_byte(payload_buf, 0i64);
+    if (msg_type != 91i32) { pass -1i32; }
+
+    // Parse: byte(1) + uint32(recipient_channel) + uint32(sender_channel)
+    //      + uint32(initial_window) + uint32(max_packet)
+    int64:local_id = raw ssh_decode_uint32(payload_buf, 1i64);
+    int64:remote_id = raw ssh_decode_uint32(payload_buf, 5i64);
+    int64:remote_window = raw ssh_decode_uint32(payload_buf, 9i64);
+    int64:remote_max_pkt = raw ssh_decode_uint32(payload_buf, 13i64);
+
+    // Store in channel state
+    string:k_remote = raw ssh_chan_key(local_id, "remote_id");
+    ahset(session, k_remote, raw ssh_handle_to_str(remote_id));
+    string:k_wremote = raw ssh_chan_key(local_id, "window_remote");
+    ahset(session, k_wremote, raw ssh_handle_to_str(remote_window));
+    string:k_maxpkt = raw ssh_chan_key(local_id, "max_packet");
+    ahset(session, k_maxpkt, raw ssh_handle_to_str(remote_max_pkt));
+    string:k_state = raw ssh_chan_key(local_id, "state");
+    ahset(session, k_state, "open");
+
+    pass @cast_unchecked<int32>(local_id);
+};
+
+// Build SSH_MSG_CHANNEL_CLOSE (type 97).
+func:ssh_channel_close = int64(int64:session, int64:channel_id) {
+    // Get remote channel ID
+    string:k_remote = raw ssh_chan_key(channel_id, "remote_id");
+    string:_rid_s = ahget(session, k_remote);
+    int64:remote_id = raw ssh_str_to_handle(_rid_s);
+
+    // Mark state as closed
+    string:k_state = raw ssh_chan_key(channel_id, "state");
+    ahset(session, k_state, "closed");
+
+    // Build: byte(97) + uint32(recipient_channel)
+    int64:msg = raw ssh_buf_create(16i64);
+    msg = raw ssh_encode_byte(msg, 97i32);
+    msg = raw ssh_encode_uint32(msg, remote_id);
+    pass msg;
+};
+
+// ── Data Transfer ───────────────────────────────────────────────────────────
+
+// Build SSH_MSG_CHANNEL_DATA (type 94).
+// Sends data on a channel. Returns the message payload.
+// Caller must check window size before calling.
+func:ssh_channel_data_msg = int64(int64:session, int64:channel_id, int64:data_buf) {
+    string:k_remote = raw ssh_chan_key(channel_id, "remote_id");
+    string:_rid_s = ahget(session, k_remote);
+    int64:remote_id = raw ssh_str_to_handle(_rid_s);
+
+    // Build: byte(94) + uint32(recipient_channel) + string(data)
+    int64:msg = raw ssh_buf_create(512i64);
+    msg = raw ssh_encode_byte(msg, 94i32);
+    msg = raw ssh_encode_uint32(msg, remote_id);
+    msg = nitpick_ssh_buf_write_buf_as_string(msg, data_buf);
+
+    // Decrease remote window
+    int64:data_len = raw ssh_buf_len(data_buf);
+    string:k_wremote = raw ssh_chan_key(channel_id, "window_remote");
+    string:_wr_s = ahget(session, k_wremote);
+    int64:wremote = raw ssh_str_to_handle(_wr_s);
+    wremote = wremote - data_len;
+    if (wremote < 0i64) { wremote = 0i64; }
+    ahset(session, k_wremote, raw ssh_handle_to_str(wremote));
+
+    pass msg;
+};
+
+// Parse SSH_MSG_CHANNEL_DATA (type 94) from server.
+// Appends data to channel buffer. Returns local channel ID.
+func:ssh_channel_recv_data = int32(int64:session, int64:payload_buf) {
+    int32:msg_type = raw ssh_buf_read_byte(payload_buf, 0i64);
+    if (msg_type != 94i32) { pass -1i32; }
+
+    int64:local_id = raw ssh_decode_uint32(payload_buf, 1i64);
+    // Data is at offset 5 as SSH string: uint32(len) + bytes
+    int64:data_len = raw ssh_decode_uint32(payload_buf, 5i64);
+
+    // Get existing buffer handle
+    string:k_buf = raw ssh_chan_key(local_id, "buffer");
+    string:_buf_s = ahget(session, k_buf);
+    int64:buf_handle = raw ssh_str_to_handle(_buf_s);
+
+    if (buf_handle == 0i64) {
+        buf_handle = raw ssh_buf_create(4096i64);
+    }
+
+    // Extract data bytes and append to buffer
+    int64:data_part = raw ssh_buf_extract_range(payload_buf, 9i64, data_len);
+    buf_handle = raw ssh_buf_write_from(buf_handle, data_part);
+    ahset(session, k_buf, raw ssh_handle_to_str(buf_handle));
+
+    // Decrease local window
+    string:k_wlocal = raw ssh_chan_key(local_id, "window_local");
+    string:_wl_s = ahget(session, k_wlocal);
+    int64:wlocal = raw ssh_str_to_handle(_wl_s);
+    wlocal = wlocal - data_len;
+    if (wlocal < 0i64) { wlocal = 0i64; }
+    ahset(session, k_wlocal, raw ssh_handle_to_str(wlocal));
+
+    drop(raw ssh_buf_free(data_part));
+
+    pass @cast_unchecked<int32>(local_id);
+};
+
+// Read accumulated data from channel buffer as a string.
+// Clears the buffer after read.
+func:ssh_channel_read = string(int64:session, int64:channel_id) {
+    string:k_buf = raw ssh_chan_key(channel_id, "buffer");
+    string:_buf_s = ahget(session, k_buf);
+    int64:buf_handle = raw ssh_str_to_handle(_buf_s);
+
+    if (buf_handle == 0i64) { pass ""; }
+
+    int64:buf_len = raw ssh_buf_len(buf_handle);
+    if (buf_len == 0i64) { pass ""; }
+
+    // Extract as string
+    string:data = raw ssh_buf_extract_str(buf_handle, 0i64, buf_len);
+
+    // Reset buffer
+    int64:new_buf = raw ssh_buf_create(4096i64);
+    ahset(session, k_buf, raw ssh_handle_to_str(new_buf));
+
+    pass data;
+};
+
+// Read accumulated data as a buffer handle (for binary data).
+// Returns buffer handle (caller owns). Creates fresh buffer for channel.
+func:ssh_channel_read_buf = int64(int64:session, int64:channel_id) {
+    string:k_buf = raw ssh_chan_key(channel_id, "buffer");
+    string:_buf_s = ahget(session, k_buf);
+    int64:buf_handle = raw ssh_str_to_handle(_buf_s);
+
+    if (buf_handle == 0i64) {
+        pass raw ssh_buf_create(16i64);
+    }
+
+    // Give caller the current buffer, create fresh one for channel
+    int64:new_buf = raw ssh_buf_create(4096i64);
+    ahset(session, k_buf, raw ssh_handle_to_str(new_buf));
+
+    pass buf_handle;
+};
+
+// Build SSH_MSG_CHANNEL_WINDOW_ADJUST (type 93).
+func:ssh_channel_window_adjust = int64(int64:session, int64:channel_id, int64:bytes_to_add) {
+    string:k_remote = raw ssh_chan_key(channel_id, "remote_id");
+    string:_rid_s = ahget(session, k_remote);
+    int64:remote_id = raw ssh_str_to_handle(_rid_s);
+
+    // Update local window
+    string:k_wlocal = raw ssh_chan_key(channel_id, "window_local");
+    string:_wl_s = ahget(session, k_wlocal);
+    int64:wlocal = raw ssh_str_to_handle(_wl_s);
+    wlocal = wlocal + bytes_to_add;
+    ahset(session, k_wlocal, raw ssh_handle_to_str(wlocal));
+
+    // Build: byte(93) + uint32(recipient_channel) + uint32(bytes_to_add)
+    int64:msg = raw ssh_buf_create(16i64);
+    msg = raw ssh_encode_byte(msg, 93i32);
+    msg = raw ssh_encode_uint32(msg, remote_id);
+    msg = raw ssh_encode_uint32(msg, bytes_to_add);
+    pass msg;
+};
+
+// Handle incoming SSH_MSG_CHANNEL_WINDOW_ADJUST (type 93) from server.
+func:ssh_channel_recv_window_adjust = int32(int64:session, int64:payload_buf) {
+    int32:msg_type = raw ssh_buf_read_byte(payload_buf, 0i64);
+    if (msg_type != 93i32) { pass -1i32; }
+
+    int64:local_id = raw ssh_decode_uint32(payload_buf, 1i64);
+    int64:bytes_to_add = raw ssh_decode_uint32(payload_buf, 5i64);
+
+    string:k_wremote = raw ssh_chan_key(local_id, "window_remote");
+    string:_wr_s = ahget(session, k_wremote);
+    int64:wremote = raw ssh_str_to_handle(_wr_s);
+    wremote = wremote + bytes_to_add;
+    ahset(session, k_wremote, raw ssh_handle_to_str(wremote));
+
+    pass @cast_unchecked<int32>(local_id);
+};
+
+// Handle incoming SSH_MSG_CHANNEL_EOF (type 96).
+func:ssh_channel_recv_eof = int32(int64:session, int64:payload_buf) {
+    int32:msg_type = raw ssh_buf_read_byte(payload_buf, 0i64);
+    if (msg_type != 96i32) { pass -1i32; }
+
+    int64:local_id = raw ssh_decode_uint32(payload_buf, 1i64);
+    string:k_state = raw ssh_chan_key(local_id, "state");
+    ahset(session, k_state, "eof");
+
+    pass @cast_unchecked<int32>(local_id);
+};
+
+// Handle incoming SSH_MSG_CHANNEL_CLOSE (type 97).
+func:ssh_channel_recv_close = int32(int64:session, int64:payload_buf) {
+    int32:msg_type = raw ssh_buf_read_byte(payload_buf, 0i64);
+    if (msg_type != 97i32) { pass -1i32; }
+
+    int64:local_id = raw ssh_decode_uint32(payload_buf, 1i64);
+    string:k_state = raw ssh_chan_key(local_id, "state");
+    ahset(session, k_state, "closed");
+
+    pass @cast_unchecked<int32>(local_id);
+};
+
+// ── Session Channel Requests ────────────────────────────────────────────────
+
+// Build SSH_MSG_CHANNEL_REQUEST "exec" (type 98).
+func:ssh_channel_request_exec = int64(int64:session, int64:channel_id, string:command) {
+    string:k_remote = raw ssh_chan_key(channel_id, "remote_id");
+    string:_rid_s = ahget(session, k_remote);
+    int64:remote_id = raw ssh_str_to_handle(_rid_s);
+
+    // byte(98) + uint32(recipient) + string("exec") + boolean(TRUE) + string(command)
+    int64:msg = raw ssh_buf_create(256i64);
+    msg = raw ssh_encode_byte(msg, 98i32);
+    msg = raw ssh_encode_uint32(msg, remote_id);
+    msg = nitpick_ssh_encode_string(msg, "exec");
+    msg = nitpick_ssh_encode_bool(msg, 1i32);
+    msg = nitpick_ssh_encode_string(msg, command);
+    pass msg;
+};
+
+// Build SSH_MSG_CHANNEL_REQUEST "shell" (type 98).
+func:ssh_channel_request_shell = int64(int64:session, int64:channel_id) {
+    string:k_remote = raw ssh_chan_key(channel_id, "remote_id");
+    string:_rid_s = ahget(session, k_remote);
+    int64:remote_id = raw ssh_str_to_handle(_rid_s);
+
+    // byte(98) + uint32(recipient) + string("shell") + boolean(TRUE)
+    int64:msg = raw ssh_buf_create(64i64);
+    msg = raw ssh_encode_byte(msg, 98i32);
+    msg = raw ssh_encode_uint32(msg, remote_id);
+    msg = nitpick_ssh_encode_string(msg, "shell");
+    msg = nitpick_ssh_encode_bool(msg, 1i32);
+    pass msg;
+};
+
+// Build SSH_MSG_CHANNEL_REQUEST "pty-req" (type 98).
+func:ssh_channel_request_pty = int64(int64:session, int64:channel_id, string:term, int32:cols, int32:rows) {
+    string:k_remote = raw ssh_chan_key(channel_id, "remote_id");
+    string:_rid_s = ahget(session, k_remote);
+    int64:remote_id = raw ssh_str_to_handle(_rid_s);
+
+    // byte(98) + uint32(recipient) + string("pty-req") + boolean(TRUE)
+    // + string(TERM) + uint32(cols) + uint32(rows) + uint32(0) + uint32(0)
+    // + string("") [empty terminal modes]
+    int64:msg = raw ssh_buf_create(128i64);
+    msg = raw ssh_encode_byte(msg, 98i32);
+    msg = raw ssh_encode_uint32(msg, remote_id);
+    msg = nitpick_ssh_encode_string(msg, "pty-req");
+    msg = nitpick_ssh_encode_bool(msg, 1i32);
+    msg = nitpick_ssh_encode_string(msg, term);
+    msg = raw ssh_encode_uint32(msg, @cast_unchecked<int64>(cols));
+    msg = raw ssh_encode_uint32(msg, @cast_unchecked<int64>(rows));
+    msg = raw ssh_encode_uint32(msg, 0i64);
+    msg = raw ssh_encode_uint32(msg, 0i64);
+    msg = nitpick_ssh_encode_string(msg, "");
+    pass msg;
+};
+
+// Parse SSH_MSG_CHANNEL_SUCCESS (99) / SSH_MSG_CHANNEL_FAILURE (100).
+// Returns 1 for success, 0 for failure, -1 for unknown.
+func:ssh_channel_request_response = int32(int64:session, int64:payload_buf) {
+    int32:msg_type = raw ssh_buf_read_byte(payload_buf, 0i64);
+    if (msg_type == 99i32) { pass 1i32; }
+    if (msg_type == 100i32) { pass 0i32; }
+    pass -1i32;
+};
+
+// Parse exit-status from SSH_MSG_CHANNEL_REQUEST (type 98, "exit-status").
+// Server sends: byte(98) + uint32(channel) + string("exit-status") + bool(FALSE) + uint32(status)
+func:ssh_channel_recv_request = int32(int64:session, int64:payload_buf) {
+    int32:msg_type = raw ssh_buf_read_byte(payload_buf, 0i64);
+    if (msg_type != 98i32) { pass -1i32; }
+
+    int64:local_id = raw ssh_decode_uint32(payload_buf, 1i64);
+    string:req_type = nitpick_ssh_decode_string_data(payload_buf, 5i64);
+
+    if (string_contains(req_type, "exit-status")) {
+        // Skip: byte(1) + uint32(4) + string_hdr(4) + "exit-status"(11) + bool(1) = 21
+        int64:exit_code = raw ssh_decode_uint32(payload_buf, 21i64);
+        string:k_exit = raw ssh_chan_key(local_id, "exit_status");
+        ahset(session, k_exit, raw ssh_handle_to_str(exit_code));
+    }
+
+    pass @cast_unchecked<int32>(local_id);
+};
+
+// ── Channel State Queries ───────────────────────────────────────────────────
+
+// Get channel state: "opening", "open", "eof", "closed"
+func:ssh_channel_state = string(int64:session, int64:channel_id) {
+    string:k_state = raw ssh_chan_key(channel_id, "state");
+    string:state = ahget(session, k_state);
+    pass state;
+};
+
+// Get exit status of channel (-1 if not yet received).
+func:ssh_channel_exit_status = int32(int64:session, int64:channel_id) {
+    string:k_exit = raw ssh_chan_key(channel_id, "exit_status");
+    string:_exit_s = ahget(session, k_exit);
+    int64:status = raw ssh_str_to_handle(_exit_s);
+    pass @cast_unchecked<int32>(status);
+};
+
+// Get remote window size.
+func:ssh_channel_remote_window = int64(int64:session, int64:channel_id) {
+    string:k_wremote = raw ssh_chan_key(channel_id, "window_remote");
+    string:_wr_s = ahget(session, k_wremote);
+    int64:wremote = raw ssh_str_to_handle(_wr_s);
+    pass wremote;
+};
+
+// Get local window size.
+func:ssh_channel_local_window = int64(int64:session, int64:channel_id) {
+    string:k_wlocal = raw ssh_chan_key(channel_id, "window_local");
+    string:_wl_s = ahget(session, k_wlocal);
+    int64:wlocal = raw ssh_str_to_handle(_wl_s);
+    pass wlocal;
+};
+
+// ── Channel Message Dispatcher ──────────────────────────────────────────────
+
+// Route an incoming channel message to the appropriate handler.
+// Returns the affected channel ID, or -1 if unknown message type.
+func:ssh_channel_dispatch = int32(int64:session, int64:payload_buf) {
+    int32:msg_type = raw ssh_buf_read_byte(payload_buf, 0i64);
+
+    if (msg_type == 91i32) { pass raw ssh_channel_open_confirm(session, payload_buf); }
+    if (msg_type == 93i32) { pass raw ssh_channel_recv_window_adjust(session, payload_buf); }
+    if (msg_type == 94i32) { pass raw ssh_channel_recv_data(session, payload_buf); }
+    if (msg_type == 96i32) { pass raw ssh_channel_recv_eof(session, payload_buf); }
+    if (msg_type == 97i32) { pass raw ssh_channel_recv_close(session, payload_buf); }
+    if (msg_type == 98i32) { pass raw ssh_channel_recv_request(session, payload_buf); }
+    if (msg_type == 99i32) { pass raw ssh_channel_request_response(session, payload_buf); }
+    if (msg_type == 100i32) { pass raw ssh_channel_request_response(session, payload_buf); }
+
+    pass -1i32;
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Phase 0.7.0 — Network Integration & End-to-End Client
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Network I/O (pub wrappers) ──────────────────────────────────────────────
+
+func:ssh_net_connect = int64(string:host, int64:port) {
+    pass nitpick_ssh_net_connect(host, port);
+};
+
+func:ssh_net_close = NIL(int64:fd) {
+    nitpick_ssh_net_close(fd);
+    pass(NIL);
+};
+
+func:ssh_net_send_buf = int64(int64:fd, int64:buf_handle) {
+    pass nitpick_ssh_net_send_buf(fd, buf_handle);
+};
+
+func:ssh_net_send_str = int64(int64:fd, string:str) {
+    pass nitpick_ssh_net_send_str(fd, str);
+};
+
+func:ssh_net_recv_exact = int64(int64:fd, int64:count) {
+    pass nitpick_ssh_net_recv_exact(fd, count);
+};
+
+func:ssh_net_recv_line = string(int64:fd) {
+    pass nitpick_ssh_net_recv_line(fd);
+};
+
+func:ssh_net_set_timeout = int64(int64:fd, int64:seconds) {
+    pass nitpick_ssh_net_set_timeout(fd, seconds);
+};
+
+// ── TCP Transport Layer ─────────────────────────────────────────────────────
+
+// Build SSH_MSG_DISCONNECT (type 1).
+// Format: byte(1) + uint32(reason_code) + string(description) + string(language)
+func:ssh_disconnect_msg = int64(int64:reason_code, string:description) {
+    int64:msg = raw ssh_buf_create(128i64);
+    msg = raw ssh_encode_byte(msg, 1i32);
+    msg = raw ssh_encode_uint32(msg, reason_code);
+    msg = nitpick_ssh_encode_string(msg, description);
+    msg = nitpick_ssh_encode_string(msg, "");
+    pass msg;
+};
+
+// Build SSH_MSG_IGNORE (type 2) for keepalive.
+func:ssh_ignore_msg = int64() {
+    int64:msg = raw ssh_buf_create(16i64);
+    msg = raw ssh_encode_byte(msg, 2i32);
+    msg = nitpick_ssh_encode_string(msg, "");
+    pass msg;
+};
+
+// Send SSH packet over socket (handles encryption if active).
+// Returns bytes sent, or -1 on error.
+func:ssh_send_packet = int64(int64:session, int64:payload_buf) {
+    // Get socket fd
+    string:_fd_s = ahget(session, "_socket_fd");
+    int64:fd = raw ssh_str_to_handle(_fd_s);
+    if (fd < 0i64) { pass -1i64; }
+
+    // Check if encryption is active
+    string:_enc_s = ahget(session, "_encrypted");
+    int64:encrypted = raw ssh_str_to_handle(_enc_s);
+
+    int64:wire_pkt = 0i64;
+    if (encrypted == 1i64) {
+        wire_pkt = raw ssh_packet_encode_encrypted(session, payload_buf);
+    }
+    if (encrypted != 1i64) {
+        wire_pkt = raw ssh_packet_encode(payload_buf);
+    }
+
+    int64:sent = nitpick_ssh_net_send_buf(fd, wire_pkt);
+    drop(raw ssh_buf_free(wire_pkt));
+    pass sent;
+};
+
+// Receive one SSH packet from socket (handles decryption if active).
+// Returns payload buffer handle, or 0 on error.
+func:ssh_recv_packet = int64(int64:session) {
+    // Get socket fd
+    string:_fd_s = ahget(session, "_socket_fd");
+    int64:fd = raw ssh_str_to_handle(_fd_s);
+    if (fd < 0i64) { pass 0i64; }
+
+    // Read first 4 bytes: packet_length
+    int64:hdr_buf = nitpick_ssh_net_recv_exact(fd, 4i64);
+    if (hdr_buf == 0i64) { pass 0i64; }
+
+    int64:packet_length = raw ssh_decode_uint32(hdr_buf, 0i64);
+
+    // Check if encryption is active
+    string:_enc_s = ahget(session, "_encrypted");
+    int64:encrypted = raw ssh_str_to_handle(_enc_s);
+
+    int64:body_len = packet_length;
+    if (encrypted == 1i64) {
+        // Need to read body + 32 bytes MAC
+        body_len = packet_length + 32i64;
+    }
+
+    // Read the rest of the packet
+    int64:body_buf = nitpick_ssh_net_recv_exact(fd, body_len);
+    if (body_buf == 0i64) {
+        drop(raw ssh_buf_free(hdr_buf));
+        pass 0i64;
+    }
+
+    // Reassemble: hdr(4) + body
+    int64:raw_pkt = raw ssh_buf_create(4i64 + body_len + 16i64);
+    raw_pkt = raw ssh_buf_write_from(raw_pkt, hdr_buf);
+    raw_pkt = raw ssh_buf_write_from(raw_pkt, body_buf);
+    drop(raw ssh_buf_free(hdr_buf));
+    drop(raw ssh_buf_free(body_buf));
+
+    // Decode
+    int64:payload = 0i64;
+    if (encrypted == 1i64) {
+        payload = raw ssh_packet_decode_encrypted(session, raw_pkt);
+    }
+    if (encrypted != 1i64) {
+        payload = raw ssh_packet_decode(raw_pkt);
+        // Advance recv sequence if seq tracking is active
+        string:_seq_check = ahget(session, "_seq_recv");
+        int64:seq_check = raw ssh_str_to_handle(_seq_check);
+        if (seq_check >= 0i64) {
+            int64:_seq_adv = raw ssh_seq_recv_next(session);
+        }
+    }
+
+    drop(raw ssh_buf_free(raw_pkt));
+    pass payload;
+};
+
+// ── Protocol Dispatcher ─────────────────────────────────────────────────────
+
+// Dispatch incoming message to appropriate handler.
+// Returns: >0 for handled message channel/status, 0 for ignored, -1 for error/disconnect
+func:ssh_dispatch = int32(int64:session, int64:payload_buf) {
+    if (payload_buf == 0i64) { pass -1i32; }
+    int32:msg_type = raw ssh_buf_read_byte(payload_buf, 0i64);
+
+    // Transport layer messages
+    if (msg_type == 1i32) {
+        // DISCONNECT — server is disconnecting
+        drop(raw ssh_session_set_state(session, "disconnected"));
+        pass -1i32;
+    }
+    if (msg_type == 2i32) { pass 0i32; }
+    if (msg_type == 3i32) { pass 0i32; }
+    if (msg_type == 4i32) { pass 0i32; }
+
+    // Service accept
+    if (msg_type == 6i32) {
+        int32:_sa = raw ssh_service_accept(session, payload_buf, "ssh-userauth");
+        pass @cast_unchecked<int32>(_sa);
+    }
+
+    // Key exchange
+    if (msg_type == 21i32) {
+        // NEWKEYS — server confirms key transition
+        pass 1i32;
+    }
+
+    // Authentication
+    if (msg_type == 51i32) {
+        int32:_af = raw ssh_auth_parse_response(session, payload_buf);
+        pass _af;
+    }
+    if (msg_type == 52i32) {
+        int32:_as = raw ssh_auth_parse_response(session, payload_buf);
+        pass _as;
+    }
+    if (msg_type == 53i32) {
+        int32:_ab = raw ssh_auth_parse_response(session, payload_buf);
+        pass _ab;
+    }
+
+    // Channel messages (91-100)
+    if (msg_type >= 91i32) {
+        if (msg_type <= 100i32) {
+            pass raw ssh_channel_dispatch(session, payload_buf);
+        }
+    }
+
+    // Unknown
+    pass 0i32;
+};
+
+// ── Connection Lifecycle ────────────────────────────────────────────────────
+
+// Connect to SSH server: establish TCP, exchange versions.
+// Returns session handle (>0) on success, 0 on failure.
+func:ssh_connect = int64(string:host, int64:port) {
+    // Create session
+    int64:session = raw ssh_session_create();
+    drop(raw ssh_seq_init(session));
+    drop(raw ssh_auth_init(session));
+    drop(raw ssh_channel_init(session));
+    ahset(session, "_encrypted", "0");
+    ahset(session, "_socket_fd", "-1");
+
+    // TCP connect
+    int64:fd = nitpick_ssh_net_connect(host, port);
+    if (fd < 0i64) {
+        drop(raw ssh_session_set_error(session, "TCP connect failed"));
+        pass 0i64;
+    }
+    ahset(session, "_socket_fd", raw ssh_handle_to_str(fd));
+
+    // Set timeout (30 seconds)
+    int64:_to = nitpick_ssh_net_set_timeout(fd, 30i64);
+
+    // Send our version string
+    string:ver_line = raw ssh_build_version_line();
+    int64:_vs = nitpick_ssh_net_send_str(fd, ver_line);
+
+    // Receive server version (CRLF-terminated line)
+    string:server_ver = nitpick_ssh_net_recv_line(fd);
+    ahset(session, "_server_version", server_ver);
+
+    // Validate server version starts with "SSH-2.0-"
+    int32:ver_ok = 0i32;
+    if (string_contains(server_ver, "SSH-2.0-")) { ver_ok = 1i32; }
+    if (ver_ok == 0i32) {
+        drop(raw ssh_session_set_error(session, "Invalid server version"));
+        nitpick_ssh_net_close(fd);
+        pass 0i64;
+    }
+
+    drop(raw ssh_session_set_state(session, "version_exchanged"));
+    pass session;
+};
+
+// Graceful disconnect: send disconnect message and close socket.
+func:ssh_disconnect = NIL(int64:session) {
+    string:_fd_s = ahget(session, "_socket_fd");
+    int64:fd = raw ssh_str_to_handle(_fd_s);
+
+    // Send disconnect message
+    int64:disc_msg = raw ssh_disconnect_msg(11i64, "Normal disconnect");
+    if (fd >= 0i64) {
+        int64:_sent = raw ssh_send_packet(session, disc_msg);
+    }
+    drop(raw ssh_buf_free(disc_msg));
+
+    // Close socket
+    if (fd >= 0i64) {
+        nitpick_ssh_net_close(fd);
+    }
+    ahset(session, "_socket_fd", "-1");
+    drop(raw ssh_session_set_state(session, "disconnected"));
+
+    pass(NIL);
+};
+
+// Get server version string.
+func:ssh_server_version = string(int64:session) {
+    string:ver = ahget(session, "_server_version");
+    pass ver;
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Phase 0.8.0 — Public Key Authentication & Key Management
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── RSA Verification ────────────────────────────────────────────────────────
+
+// Verify RSA signature on data.
+// pubkey_buf: SSH RSA public key blob
+// sig_buf: raw signature blob (stripped from SSH wrapper)
+// hash_buf: 32-byte SHA-256 hash
+// Returns 1 if valid, 0 if invalid.
+func:ssh_rsa_verify = int64(int64:pubkey_buf, int64:sig_buf, int64:hash_buf) {
+    pass ssh_crypto_rsa_verify(pubkey_buf, sig_buf, hash_buf);
+};
+
+// ── Ed25519 Verification ────────────────────────────────────────────────────
+
+// Verify Ed25519 signature (stub — returns 0 until implementation complete).
+func:ssh_ed25519_verify = int64(int64:pubkey_buf, int64:sig_buf, int64:msg_buf) {
+    pass ssh_crypto_ed25519_verify(pubkey_buf, sig_buf, msg_buf);
+};
+
+// ── Key Type Detection ──────────────────────────────────────────────────────
+
+// Get key type from SSH public key blob ("ssh-rsa", "ssh-ed25519", etc).
+func:ssh_key_type = string(int64:pubkey_buf) {
+    pass ssh_crypto_key_type(pubkey_buf);
+};
+
+// ── Signature Parsing ───────────────────────────────────────────────────────
+
+// Extract raw signature blob from SSH signature wrapper.
+func:ssh_extract_sig_blob = int64(int64:sig_buf) {
+    pass ssh_crypto_extract_sig_blob(sig_buf);
+};
+
+// ── Base64 ──────────────────────────────────────────────────────────────────
+
+func:ssh_base64_decode = int64(string:input) {
+    pass ssh_crypto_base64_decode(input);
+};
+
+// ── Host Key Verification ───────────────────────────────────────────────────
+
+// Verify host key signature from KEXDH_REPLY.
+// Dispatches to RSA or Ed25519 based on key type.
+// Returns 1 if valid, 0 if invalid.
+func:ssh_verify_host_key_sig = int64(int64:session, int64:host_key_buf, int64:sig_buf, int64:hash_buf) {
+    string:kt = ssh_crypto_key_type(host_key_buf);
+
+    // Extract raw signature from SSH wrapper
+    int64:raw_sig = ssh_crypto_extract_sig_blob(sig_buf);
+    if (raw_sig == 0i64) { pass 0i64; }
+
+    int64:result = 0i64;
+    if (string_contains(kt, "ssh-rsa")) {
+        result = ssh_crypto_rsa_verify(host_key_buf, raw_sig, hash_buf);
+    }
+    if (string_contains(kt, "ssh-ed25519")) {
+        result = ssh_crypto_ed25519_verify(host_key_buf, raw_sig, hash_buf);
+    }
+
+    drop(raw ssh_buf_free(raw_sig));
+    pass result;
+};
+
+// ── Known Hosts ─────────────────────────────────────────────────────────────
+
+// Load known_hosts file.
+func:ssh_known_hosts_load = int64(string:path) {
+    pass ssh_crypto_known_hosts_load(path);
+};
+
+// Check host key in known_hosts.
+// Returns: 1 = known+matches, 0 = unknown, -1 = mismatch
+func:ssh_known_hosts_check = int64(int64:kh_buf, string:host, string:key_type, int64:key_blob) {
+    pass ssh_crypto_known_hosts_check(kh_buf, host, key_type, key_blob);
+};
+
+// Add host key to known_hosts file.
+func:ssh_known_hosts_add = int64(string:path, string:host, string:key_type, string:key_b64) {
+    pass ssh_crypto_known_hosts_add(path, host, key_type, key_b64);
+};
+
+// ── Public Key Authentication (RFC 4252 §7) ─────────────────────────────────
+
+// Build USERAUTH_REQUEST with method "publickey" and boolean=FALSE (query).
+// This asks the server if it would accept this key type + public key.
+// Format: byte(50) + string(user) + string("ssh-connection") +
+//         string("publickey") + boolean(FALSE) + string(key_type) + string(pubkey_blob)
+func:ssh_auth_publickey_query = int64(int64:session, string:username, string:key_type, int64:pubkey_blob) {
+    int64:msg = raw ssh_buf_create(512i64);
+    msg = raw ssh_encode_byte(msg, 50i32);
+    msg = nitpick_ssh_encode_string(msg, username);
+    msg = nitpick_ssh_encode_string(msg, "ssh-connection");
+    msg = nitpick_ssh_encode_string(msg, "publickey");
+    msg = nitpick_ssh_encode_bool(msg, 0i32);
+    msg = nitpick_ssh_encode_string(msg, key_type);
+
+    // Encode pubkey_blob as SSH string (length-prefixed)
+    int64:pk_len = raw ssh_buf_len(pubkey_blob);
+    msg = raw ssh_encode_uint32(msg, pk_len);
+    msg = raw ssh_buf_write_from(msg, pubkey_blob);
+
+    pass msg;
+};
+
+// Build USERAUTH_REQUEST with method "publickey" and boolean=TRUE (actual auth).
+// This includes the signature over (session_id || msg_without_sig).
+// sig_blob: pre-computed signature buffer (SSH signature format)
+func:ssh_auth_publickey_sign = int64(int64:session, string:username, string:key_type, int64:pubkey_blob, int64:sig_blob) {
+    int64:msg = raw ssh_buf_create(1024i64);
+    msg = raw ssh_encode_byte(msg, 50i32);
+    msg = nitpick_ssh_encode_string(msg, username);
+    msg = nitpick_ssh_encode_string(msg, "ssh-connection");
+    msg = nitpick_ssh_encode_string(msg, "publickey");
+    msg = nitpick_ssh_encode_bool(msg, 1i32);
+    msg = nitpick_ssh_encode_string(msg, key_type);
+
+    // Encode pubkey_blob as SSH string (length-prefixed)
+    int64:pk_len = raw ssh_buf_len(pubkey_blob);
+    msg = raw ssh_encode_uint32(msg, pk_len);
+    msg = raw ssh_buf_write_from(msg, pubkey_blob);
+
+    // Encode signature as SSH string (length-prefixed)
+    int64:sig_len = raw ssh_buf_len(sig_blob);
+    msg = raw ssh_encode_uint32(msg, sig_len);
+    msg = raw ssh_buf_write_from(msg, sig_blob);
+
+    pass msg;
+};
+
+// Build data-to-sign for publickey auth (RFC 4252 §7):
+// string(session_id) || byte(50) || string(user) || string("ssh-connection") ||
+// string("publickey") || TRUE || string(algo) || string(pubkey_blob)
+func:ssh_auth_publickey_sign_data = int64(int64:session, string:username, string:key_type, int64:pubkey_blob) {
+    int64:data = raw ssh_buf_create(1024i64);
+
+    // session_id is stored in session state from kex
+    string:_sid_s = ahget(session, "_session_id");
+    int64:sid_handle = raw ssh_str_to_handle(_sid_s);
+    if (sid_handle != 0i64) {
+        int64:sid_len = raw ssh_buf_len(sid_handle);
+        data = raw ssh_encode_uint32(data, sid_len);
+        data = raw ssh_buf_write_from(data, sid_handle);
+    }
+
+    // Rest of USERAUTH_REQUEST
+    data = raw ssh_encode_byte(data, 50i32);
+    data = nitpick_ssh_encode_string(data, username);
+    data = nitpick_ssh_encode_string(data, "ssh-connection");
+    data = nitpick_ssh_encode_string(data, "publickey");
+    data = nitpick_ssh_encode_bool(data, 1i32);
+    data = nitpick_ssh_encode_string(data, key_type);
+
+    int64:pk_len = raw ssh_buf_len(pubkey_blob);
+    data = raw ssh_encode_uint32(data, pk_len);
+    data = raw ssh_buf_write_from(data, pubkey_blob);
+
+    pass data;
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Phase 0.9.0 — SCP & SFTP File Transfer
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── SFTP Constants (draft-ietf-secsh-filexfer) ──────────────────────────────
+
+// SFTP packet types
+func:SSH_FXP_INIT      = int32() { pass 1i32; };
+func:SSH_FXP_VERSION    = int32() { pass 2i32; };
+func:SSH_FXP_OPEN       = int32() { pass 3i32; };
+func:SSH_FXP_CLOSE      = int32() { pass 4i32; };
+func:SSH_FXP_READ       = int32() { pass 5i32; };
+func:SSH_FXP_WRITE      = int32() { pass 6i32; };
+func:SSH_FXP_LSTAT      = int32() { pass 7i32; };
+func:SSH_FXP_FSTAT      = int32() { pass 8i32; };
+func:SSH_FXP_SETSTAT    = int32() { pass 9i32; };
+func:SSH_FXP_OPENDIR    = int32() { pass 11i32; };
+func:SSH_FXP_READDIR    = int32() { pass 12i32; };
+func:SSH_FXP_REMOVE     = int32() { pass 13i32; };
+func:SSH_FXP_MKDIR      = int32() { pass 14i32; };
+func:SSH_FXP_RMDIR      = int32() { pass 15i32; };
+func:SSH_FXP_STAT       = int32() { pass 17i32; };
+func:SSH_FXP_RENAME     = int32() { pass 18i32; };
+func:SSH_FXP_STATUS     = int32() { pass 101i32; };
+func:SSH_FXP_HANDLE     = int32() { pass 102i32; };
+func:SSH_FXP_DATA       = int32() { pass 103i32; };
+func:SSH_FXP_NAME       = int32() { pass 104i32; };
+func:SSH_FXP_ATTRS      = int32() { pass 105i32; };
+
+// SFTP open flags
+func:SSH_FXF_READ       = int32() { pass 1i32; };
+func:SSH_FXF_WRITE      = int32() { pass 2i32; };
+func:SSH_FXF_APPEND     = int32() { pass 4i32; };
+func:SSH_FXF_CREAT      = int32() { pass 8i32; };
+func:SSH_FXF_TRUNC      = int32() { pass 16i32; };
+
+// SFTP status codes
+func:SSH_FX_OK           = int32() { pass 0i32; };
+func:SSH_FX_EOF          = int32() { pass 1i32; };
+func:SSH_FX_NO_SUCH_FILE = int32() { pass 2i32; };
+func:SSH_FX_PERMISSION   = int32() { pass 3i32; };
+func:SSH_FX_FAILURE      = int32() { pass 4i32; };
+
+// ── SFTP Packet Encoding/Decoding ───────────────────────────────────────────
+
+// Build SFTP packet: uint32(length) + byte(type) + payload
+// Returns buffer ready to send over channel.
+func:ssh_sftp_packet_encode = int64(int32:pkt_type, int64:payload_buf) {
+    int64:payload_len = raw ssh_buf_len(payload_buf);
+    // length = 1 (type byte) + payload_len
+    int64:total_len = 1i64 + payload_len;
+
+    int64:pkt = raw ssh_buf_create(total_len + 4i64 + 16i64);
+    pkt = raw ssh_encode_uint32(pkt, total_len);
+    pkt = raw ssh_encode_byte(pkt, pkt_type);
+    pkt = raw ssh_buf_write_from(pkt, payload_buf);
+    pass pkt;
+};
+
+// Decode SFTP packet: returns payload after stripping length+type.
+// Sets pkt_type via the return value convention (caller reads type separately).
+// Returns payload buffer, or 0 on error.
+func:ssh_sftp_packet_decode = int64(int64:raw_buf) {
+    if (raw_buf == 0i64) { pass 0i64; }
+    int64:raw_len = raw ssh_buf_len(raw_buf);
+    if (raw_len < 5i64) { pass 0i64; }
+
+    // Skip uint32(length) + byte(type) = 5 bytes
+    int64:payload_len = raw_len - 5i64;
+    if (payload_len <= 0i64) {
+        pass raw ssh_buf_create(4i64);
+    }
+    int64:payload = raw ssh_buf_extract_range(raw_buf, 5i64, payload_len);
+    pass payload;
+};
+
+// Get SFTP packet type from raw buffer (byte at offset 4).
+func:ssh_sftp_packet_type = int32(int64:raw_buf) {
+    if (raw_buf == 0i64) { pass -1i32; }
+    if (raw ssh_buf_len(raw_buf) < 5i64) { pass -1i32; }
+    pass raw ssh_buf_read_byte(raw_buf, 4i64);
+};
+
+// ── SFTP Session Management ─────────────────────────────────────────────────
+
+// Initialize SFTP: store channel_id, request_id counter.
+func:ssh_sftp_init = int64(int64:session) {
+    int64:sftp = ahash(64);
+    ahset(sftp, "_session", raw ssh_handle_to_str(session));
+    ahset(sftp, "_channel_id", "-1");
+    ahset(sftp, "_request_id", "1");
+    ahset(sftp, "_version", "3");
+    ahset(sftp, "_state", "created");
+    pass sftp;
+};
+
+// Get next request ID and increment counter.
+func:ssh_sftp_next_id = int64(int64:sftp) {
+    string:_id_s = ahget(sftp, "_request_id");
+    int64:id = raw ssh_str_to_handle(_id_s);
+    int64:next_id = id + 1i64;
+    ahset(sftp, "_request_id", raw ssh_handle_to_str(next_id));
+    pass id;
+};
+
+// Build SSH_FXP_INIT packet (version 3).
+func:ssh_sftp_init_msg = int64() {
+    int64:payload = raw ssh_buf_create(8i64);
+    payload = raw ssh_encode_uint32(payload, 3i64);
+    pass raw ssh_sftp_packet_encode(1i32, payload);
+};
+
+// Parse SSH_FXP_VERSION response. Returns version number.
+func:ssh_sftp_parse_version = int64(int64:raw_buf) {
+    if (raw_buf == 0i64) { pass 0i64; }
+    int64:payload = raw ssh_sftp_packet_decode(raw_buf);
+    if (payload == 0i64) { pass 0i64; }
+    int64:version = raw ssh_decode_uint32(payload, 0i64);
+    drop(raw ssh_buf_free(payload));
+    pass version;
+};
+
+// ── SFTP File Operations ────────────────────────────────────────────────────
+
+// Build SSH_FXP_OPEN message.
+// flags: SSH_FXF_READ | SSH_FXF_WRITE | etc.
+func:ssh_sftp_open_msg = int64(int64:sftp, string:path, int32:flags) {
+    int64:req_id = raw ssh_sftp_next_id(sftp);
+    int64:payload = raw ssh_buf_create(256i64);
+    payload = raw ssh_encode_uint32(payload, req_id);
+    payload = nitpick_ssh_encode_string(payload, path);
+    payload = raw ssh_encode_uint32(payload, @cast_unchecked<int64>(flags));
+    // Empty ATTRS (no attributes, flags=0)
+    payload = raw ssh_encode_uint32(payload, 0i64);
+    pass raw ssh_sftp_packet_encode(3i32, payload);
+};
+
+// Build SSH_FXP_CLOSE message.
+func:ssh_sftp_close_msg = int64(int64:sftp, int64:handle_buf) {
+    int64:req_id = raw ssh_sftp_next_id(sftp);
+    int64:payload = raw ssh_buf_create(64i64);
+    payload = raw ssh_encode_uint32(payload, req_id);
+    int64:h_len = raw ssh_buf_len(handle_buf);
+    payload = raw ssh_encode_uint32(payload, h_len);
+    payload = raw ssh_buf_write_from(payload, handle_buf);
+    pass raw ssh_sftp_packet_encode(4i32, payload);
+};
+
+// Build SSH_FXP_READ message.
+func:ssh_sftp_read_msg = int64(int64:sftp, int64:handle_buf, int64:offset, int64:length) {
+    int64:req_id = raw ssh_sftp_next_id(sftp);
+    int64:payload = raw ssh_buf_create(64i64);
+    payload = raw ssh_encode_uint32(payload, req_id);
+    int64:h_len = raw ssh_buf_len(handle_buf);
+    payload = raw ssh_encode_uint32(payload, h_len);
+    payload = raw ssh_buf_write_from(payload, handle_buf);
+    // offset as uint64 (two uint32s: high, low)
+    payload = raw ssh_encode_uint32(payload, 0i64);
+    payload = raw ssh_encode_uint32(payload, offset);
+    payload = raw ssh_encode_uint32(payload, length);
+    pass raw ssh_sftp_packet_encode(5i32, payload);
+};
+
+// Build SSH_FXP_WRITE message.
+func:ssh_sftp_write_msg = int64(int64:sftp, int64:handle_buf, int64:offset, int64:data_buf) {
+    int64:req_id = raw ssh_sftp_next_id(sftp);
+    int64:payload = raw ssh_buf_create(256i64);
+    payload = raw ssh_encode_uint32(payload, req_id);
+    int64:h_len = raw ssh_buf_len(handle_buf);
+    payload = raw ssh_encode_uint32(payload, h_len);
+    payload = raw ssh_buf_write_from(payload, handle_buf);
+    // offset as uint64
+    payload = raw ssh_encode_uint32(payload, 0i64);
+    payload = raw ssh_encode_uint32(payload, offset);
+    // data as string (length-prefixed)
+    int64:d_len = raw ssh_buf_len(data_buf);
+    payload = raw ssh_encode_uint32(payload, d_len);
+    payload = raw ssh_buf_write_from(payload, data_buf);
+    pass raw ssh_sftp_packet_encode(6i32, payload);
+};
+
+// Build SSH_FXP_STAT message.
+func:ssh_sftp_stat_msg = int64(int64:sftp, string:path) {
+    int64:req_id = raw ssh_sftp_next_id(sftp);
+    int64:payload = raw ssh_buf_create(128i64);
+    payload = raw ssh_encode_uint32(payload, req_id);
+    payload = nitpick_ssh_encode_string(payload, path);
+    pass raw ssh_sftp_packet_encode(17i32, payload);
+};
+
+// Build SSH_FXP_OPENDIR message.
+func:ssh_sftp_opendir_msg = int64(int64:sftp, string:path) {
+    int64:req_id = raw ssh_sftp_next_id(sftp);
+    int64:payload = raw ssh_buf_create(128i64);
+    payload = raw ssh_encode_uint32(payload, req_id);
+    payload = nitpick_ssh_encode_string(payload, path);
+    pass raw ssh_sftp_packet_encode(11i32, payload);
+};
+
+// Build SSH_FXP_READDIR message.
+func:ssh_sftp_readdir_msg = int64(int64:sftp, int64:handle_buf) {
+    int64:req_id = raw ssh_sftp_next_id(sftp);
+    int64:payload = raw ssh_buf_create(64i64);
+    payload = raw ssh_encode_uint32(payload, req_id);
+    int64:h_len = raw ssh_buf_len(handle_buf);
+    payload = raw ssh_encode_uint32(payload, h_len);
+    payload = raw ssh_buf_write_from(payload, handle_buf);
+    pass raw ssh_sftp_packet_encode(12i32, payload);
+};
+
+// Build SSH_FXP_MKDIR message.
+func:ssh_sftp_mkdir_msg = int64(int64:sftp, string:path) {
+    int64:req_id = raw ssh_sftp_next_id(sftp);
+    int64:payload = raw ssh_buf_create(128i64);
+    payload = raw ssh_encode_uint32(payload, req_id);
+    payload = nitpick_ssh_encode_string(payload, path);
+    // Empty ATTRS
+    payload = raw ssh_encode_uint32(payload, 0i64);
+    pass raw ssh_sftp_packet_encode(14i32, payload);
+};
+
+// Build SSH_FXP_REMOVE message.
+func:ssh_sftp_remove_msg = int64(int64:sftp, string:path) {
+    int64:req_id = raw ssh_sftp_next_id(sftp);
+    int64:payload = raw ssh_buf_create(128i64);
+    payload = raw ssh_encode_uint32(payload, req_id);
+    payload = nitpick_ssh_encode_string(payload, path);
+    pass raw ssh_sftp_packet_encode(13i32, payload);
+};
+
+// Build SSH_FXP_RENAME message.
+func:ssh_sftp_rename_msg = int64(int64:sftp, string:old_path, string:new_path) {
+    int64:req_id = raw ssh_sftp_next_id(sftp);
+    int64:payload = raw ssh_buf_create(256i64);
+    payload = raw ssh_encode_uint32(payload, req_id);
+    payload = nitpick_ssh_encode_string(payload, old_path);
+    payload = nitpick_ssh_encode_string(payload, new_path);
+    pass raw ssh_sftp_packet_encode(18i32, payload);
+};
+
+// Parse SSH_FXP_STATUS response. Returns status code.
+func:ssh_sftp_parse_status = int32(int64:raw_buf) {
+    if (raw_buf == 0i64) { pass -1i32; }
+    int64:payload = raw ssh_sftp_packet_decode(raw_buf);
+    if (payload == 0i64) { pass -1i32; }
+    // Skip request_id (4 bytes), read status code
+    int64:status = raw ssh_decode_uint32(payload, 4i64);
+    drop(raw ssh_buf_free(payload));
+    pass @cast_unchecked<int32>(status);
+};
+
+// Parse SSH_FXP_HANDLE response. Returns handle buffer.
+func:ssh_sftp_parse_handle = int64(int64:raw_buf) {
+    if (raw_buf == 0i64) { pass 0i64; }
+    int64:payload = raw ssh_sftp_packet_decode(raw_buf);
+    if (payload == 0i64) { pass 0i64; }
+    // Skip request_id (4 bytes), read handle string
+    int64:h_len = raw ssh_decode_uint32(payload, 4i64);
+    int64:handle = raw ssh_buf_extract_range(payload, 8i64, h_len);
+    drop(raw ssh_buf_free(payload));
+    pass handle;
+};
+
+// Parse SSH_FXP_DATA response. Returns data buffer.
+func:ssh_sftp_parse_data = int64(int64:raw_buf) {
+    if (raw_buf == 0i64) { pass 0i64; }
+    int64:payload = raw ssh_sftp_packet_decode(raw_buf);
+    if (payload == 0i64) { pass 0i64; }
+    // Skip request_id (4 bytes), read data string
+    int64:d_len = raw ssh_decode_uint32(payload, 4i64);
+    int64:data = raw ssh_buf_extract_range(payload, 8i64, d_len);
+    drop(raw ssh_buf_free(payload));
+    pass data;
+};
+
+// ── SCP Protocol ────────────────────────────────────────────────────────────
+
+// Build SCP upload command string: "scp -t <remote_path>"
+func:ssh_scp_upload_cmd = string(string:remote_path) {
+    string:cmd = string_concat("scp -t ", remote_path);
+    pass cmd;
+};
+
+// Build SCP download command string: "scp -f <remote_path>"
+func:ssh_scp_download_cmd = string(string:remote_path) {
+    string:cmd = string_concat("scp -f ", remote_path);
+    pass cmd;
+};
+
+// Build SCP file header: "C<mode> <size> <filename>\n"
+// mode: e.g. "0644", size: file size in bytes, filename: basename
+func:ssh_scp_file_header = string(string:mode, int64:size, string:filename) {
+    string:hdr = string_concat("C", mode);
+    hdr = string_concat(hdr, " ");
+    hdr = string_concat(hdr, raw ssh_handle_to_str(size));
+    hdr = string_concat(hdr, " ");
+    hdr = string_concat(hdr, filename);
+    hdr = string_concat(hdr, "\n");
+    pass hdr;
+};
+
+// Parse SCP file header from response string.
+// Format: "C<mode> <size> <filename>\n"
+// Returns file size as int64, stores mode/filename in session.
+func:ssh_scp_parse_header = int64(int64:sftp_state, string:header) {
+    // Store raw header for inspection
+    ahset(sftp_state, "_scp_header", header);
+
+    // Parse: skip "C", extract mode (4 chars), size, filename
+    // For now, store the header and return 0 (parsed ok)
+    // Real parsing requires string splitting which we'll handle at integration
+    pass 0i64;
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Phase 1.0.0 — Production Hardening, Port Forwarding & Documentation
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Port Forwarding (RFC 4254 §7) ───────────────────────────────────────────
+
+// Build SSH_MSG_CHANNEL_OPEN for "direct-tcpip" (local port forwarding).
+// Format: byte(90) + string("direct-tcpip") + uint32(sender_channel) +
+//         uint32(initial_window) + uint32(max_packet) +
+//         string(connect_host) + uint32(connect_port) +
+//         string(originator_ip) + uint32(originator_port)
+func:ssh_forward_local_open = int64(int64:session, int32:channel_id,
+        string:remote_host, int32:remote_port, string:local_addr, int32:local_port) {
+    int64:msg = raw ssh_buf_create(256i64);
+    msg = raw ssh_encode_byte(msg, 90i32);
+    msg = nitpick_ssh_encode_string(msg, "direct-tcpip");
+    msg = raw ssh_encode_uint32(msg, @cast_unchecked<int64>(channel_id));
+    msg = raw ssh_encode_uint32(msg, 2097152i64);
+    msg = raw ssh_encode_uint32(msg, 32768i64);
+    msg = nitpick_ssh_encode_string(msg, remote_host);
+    msg = raw ssh_encode_uint32(msg, @cast_unchecked<int64>(remote_port));
+    msg = nitpick_ssh_encode_string(msg, local_addr);
+    msg = raw ssh_encode_uint32(msg, @cast_unchecked<int64>(local_port));
+    pass msg;
+};
+
+// Build SSH_MSG_GLOBAL_REQUEST for "tcpip-forward" (remote port forwarding).
+// Format: byte(80) + string("tcpip-forward") + boolean(want_reply) +
+//         string(bind_addr) + uint32(bind_port)
+func:ssh_forward_remote_request = int64(string:bind_addr, int32:bind_port) {
+    int64:msg = raw ssh_buf_create(128i64);
+    msg = raw ssh_encode_byte(msg, 80i32);
+    msg = nitpick_ssh_encode_string(msg, "tcpip-forward");
+    msg = nitpick_ssh_encode_bool(msg, 1i32);
+    msg = nitpick_ssh_encode_string(msg, bind_addr);
+    msg = raw ssh_encode_uint32(msg, @cast_unchecked<int64>(bind_port));
+    pass msg;
+};
+
+// Build SSH_MSG_GLOBAL_REQUEST for "cancel-tcpip-forward".
+func:ssh_forward_cancel_request = int64(string:bind_addr, int32:bind_port) {
+    int64:msg = raw ssh_buf_create(128i64);
+    msg = raw ssh_encode_byte(msg, 80i32);
+    msg = nitpick_ssh_encode_string(msg, "cancel-tcpip-forward");
+    msg = nitpick_ssh_encode_bool(msg, 1i32);
+    msg = nitpick_ssh_encode_string(msg, bind_addr);
+    msg = raw ssh_encode_uint32(msg, @cast_unchecked<int64>(bind_port));
+    pass msg;
+};
+
+// Build dynamic forwarding channel open (SOCKS5 proxy → direct-tcpip).
+func:ssh_forward_dynamic_open = int64(int64:session, int32:channel_id,
+        string:dest_host, int32:dest_port) {
+    // Dynamic forwarding reuses direct-tcpip with SOCKS-resolved destination
+    pass raw ssh_forward_local_open(session, channel_id,
+        dest_host, dest_port, "127.0.0.1", 0i32);
+};
+
+// ── Security Hardening ──────────────────────────────────────────────────────
+
+// Constant-time buffer comparison (for MAC verification).
+func:ssh_buf_compare_ct = int32(int64:a, int64:b) {
+    pass nitpick_ssh_buf_compare_ct(a, b);
+};
+
+// Securely wipe buffer (zeroes key material).
+func:ssh_buf_secure_wipe = NIL(int64:handle) {
+    drop(nitpick_ssh_buf_secure_wipe(handle));
+};
+
+// Validate packet size (RFC 4253 max 35000 bytes).
+func:ssh_packet_size_valid = int32(int64:packet_len) {
+    pass nitpick_ssh_packet_size_valid(packet_len);
+};
+
+// Sequence number increment with uint32 wraparound.
+func:ssh_seq_next = int64(int64:seq) {
+    pass nitpick_ssh_seq_next(seq);
+};
+
+// Strict host key checking mode.
+// Returns: 1=accept, 0=reject, -1=new key (prompt user)
+func:ssh_strict_host_check = int32(int64:kh_buf, string:host,
+        string:key_type, int64:key_blob, int32:strict_mode) {
+    int64:result = raw ssh_known_hosts_check(kh_buf, host, key_type, key_blob);
+    // In strict mode, unknown keys are rejected (return 0)
+    if (strict_mode == 1i32) {
+        if (result == 0i64) { pass 0i32; }
+    }
+    // Otherwise, return check result
+    pass @cast_unchecked<int32>(result);
+};
+
+// ── Compression Negotiation ─────────────────────────────────────────────────
+
+// Get compression algorithm names for KEXINIT.
+func:ssh_compression_algorithms = string() {
+    pass "none,zlib@openssh.com";
+};
+
+// Check if compression is enabled for current session.
+func:ssh_compression_enabled = int32(int64:session) {
+    string:comp = ahget(session, "_compression");
+    if (string_contains(comp, "zlib")) { pass 1i32; }
+    pass 0i32;
+};
+
+// Set compression algorithm after negotiation.
+func:ssh_compression_set = NIL(int64:session, string:algo) {
+    ahset(session, "_compression", algo);
+};
+
+// ── Interactive Shell (RFC 4254 §6.2, §6.5) ─────────────────────────────────
+
+// Build PTY request: channel request with "pty-req".
+// term: terminal type (e.g. "xterm-256color")
+// cols/rows: terminal dimensions
+func:ssh_pty_request = int64(int64:channel_id, string:term,
+        int32:cols, int32:rows) {
+    int64:msg = raw ssh_buf_create(128i64);
+    msg = raw ssh_encode_byte(msg, 98i32);
+    msg = raw ssh_encode_uint32(msg, channel_id);
+    msg = nitpick_ssh_encode_string(msg, "pty-req");
+    msg = nitpick_ssh_encode_bool(msg, 1i32);
+    msg = nitpick_ssh_encode_string(msg, term);
+    msg = raw ssh_encode_uint32(msg, @cast_unchecked<int64>(cols));
+    msg = raw ssh_encode_uint32(msg, @cast_unchecked<int64>(rows));
+    // Pixel dimensions (0 = unused)
+    msg = raw ssh_encode_uint32(msg, 0i64);
+    msg = raw ssh_encode_uint32(msg, 0i64);
+    // Empty encoded terminal modes string
+    msg = raw ssh_encode_uint32(msg, 1i64);
+    msg = raw ssh_encode_byte(msg, 0i32);
+    pass msg;
+};
+
+// Build shell request: channel request with "shell".
+func:ssh_shell_request = int64(int64:channel_id) {
+    int64:msg = raw ssh_buf_create(64i64);
+    msg = raw ssh_encode_byte(msg, 98i32);
+    msg = raw ssh_encode_uint32(msg, channel_id);
+    msg = nitpick_ssh_encode_string(msg, "shell");
+    msg = nitpick_ssh_encode_bool(msg, 1i32);
+    pass msg;
+};
+
+// Build window-change request: channel request with "window-change".
+func:ssh_window_change = int64(int64:channel_id, int32:cols, int32:rows) {
+    int64:msg = raw ssh_buf_create(64i64);
+    msg = raw ssh_encode_byte(msg, 98i32);
+    msg = raw ssh_encode_uint32(msg, channel_id);
+    msg = nitpick_ssh_encode_string(msg, "window-change");
+    msg = nitpick_ssh_encode_bool(msg, 0i32);
+    msg = raw ssh_encode_uint32(msg, @cast_unchecked<int64>(cols));
+    msg = raw ssh_encode_uint32(msg, @cast_unchecked<int64>(rows));
+    msg = raw ssh_encode_uint32(msg, 0i64);
+    msg = raw ssh_encode_uint32(msg, 0i64);
+    pass msg;
+};
+
+// ── SSH Config Parsing ──────────────────────────────────────────────────────
+
+// Create an SSH config store.
+func:ssh_config_create = int64() {
+    int64:conf = ahash(64);
+    ahset(conf, "_entries", "0");
+    pass conf;
+};
+
+// Add a host config entry.
+func:ssh_config_add_entry = NIL(int64:conf, string:host_pattern,
+        string:hostname, string:port, string:user, string:identity_file) {
+    string:idx = ahget(conf, "_entries");
+    int64:n = raw ssh_str_to_handle(idx);
+
+    // Store each field with indexed key
+    string:pfx = string_concat("_h", idx);
+    ahset(conf, string_concat(pfx, "_pattern"), host_pattern);
+    ahset(conf, string_concat(pfx, "_hostname"), hostname);
+    ahset(conf, string_concat(pfx, "_port"), port);
+    ahset(conf, string_concat(pfx, "_user"), user);
+    ahset(conf, string_concat(pfx, "_identity"), identity_file);
+
+    int64:next = n + 1i64;
+    ahset(conf, "_entries", raw ssh_handle_to_str(next));
+};
+
+// Look up a host in config, returning a hash with resolved values.
+// Simple exact-match lookup (wildcard matching deferred).
+func:ssh_config_lookup = int64(int64:conf, string:host) {
+    int64:result = ahash(16);
+    ahset(result, "hostname", host);
+    ahset(result, "port", "22");
+    ahset(result, "user", "");
+    ahset(result, "identity_file", "");
+
+    string:count_s = ahget(conf, "_entries");
+    int64:count = raw ssh_str_to_handle(count_s);
+    int64:i = 0i64;
+    while (i < count) {
+        string:pfx = string_concat("_h", raw ssh_handle_to_str(i));
+        string:pattern = ahget(conf, string_concat(pfx, "_pattern"));
+        if (string_contains(host, pattern)) {
+            // Match found — resolve values
+            string:hn = ahget(conf, string_concat(pfx, "_hostname"));
+            string:pt = ahget(conf, string_concat(pfx, "_port"));
+            string:us = ahget(conf, string_concat(pfx, "_user"));
+            string:id_f = ahget(conf, string_concat(pfx, "_identity"));
+            if (string_length(hn) > 0i64) { ahset(result, "hostname", hn); }
+            if (string_length(pt) > 0i64) { ahset(result, "port", pt); }
+            if (string_length(us) > 0i64) { ahset(result, "user", us); }
+            if (string_length(id_f) > 0i64) { ahset(result, "identity_file", id_f); }
+            pass result;
+        }
+        i = i + 1i64;
+    }
+    pass result;
+};
+
+// ── Type wrapper ────────────────────────────────────────────────────────────
+
+Type:SSH = {
+    // Session
+    func:create              = int64()                                    { pass raw ssh_session_create(); };
+    func:error               = string(int64:h)                           { pass raw ssh_session_error(h); };
+    func:state               = string(int64:h)                           { pass raw ssh_session_state(h); };
+    func:set_state           = NIL(int64:h, string:s)                    { pass raw ssh_session_set_state(h, s); };
+    func:set_error           = NIL(int64:h, string:m)                    { pass raw ssh_session_set_error(h, m); };
+    func:transition          = int32(int64:h, string:f, string:t)        { pass raw ssh_session_transition(h, f, t); };
+    func:version_remote      = string(int64:h)                           { pass raw ssh_session_version_remote(h); };
+    func:version_software    = string(int64:h)                           { pass raw ssh_session_version_software(h); };
+
+    // Version exchange
+    func:version             = string()                                  { pass raw ssh_version_string(); };
+    func:version_line        = string()                                  { pass raw ssh_build_version_line(); };
+    func:parse_version       = int32(int64:h, string:l)                  { pass raw ssh_parse_version_line(h, l); };
+
+    // Buffer operations
+    func:buf_new             = int64(int64:c)                            { pass raw ssh_buf_create(c); };
+    func:buf_del             = NIL(int64:h)                              { pass raw ssh_buf_free(h); };
+    func:buf_len             = int64(int64:h)                            { pass raw ssh_buf_len(h); };
+
+    // Wire format (buffer-based)
+    func:enc_uint32          = int64(int64:h, int64:v)                   { pass raw ssh_encode_uint32(h, v); };
+    func:dec_uint32          = int64(int64:h, int64:o)                   { pass raw ssh_decode_uint32(h, o); };
+    func:enc_string          = int64(int64:h, string:d)                  { pass raw ssh_encode_string(h, d); };
+    func:dec_string_len      = int64(int64:h, int64:o)                   { pass raw ssh_decode_string_len(h, o); };
+    func:dec_string_data     = string(int64:h, int64:o)                  { pass raw ssh_decode_string_data(h, o); };
+    func:enc_byte            = int64(int64:h, int32:v)                   { pass raw ssh_encode_byte(h, v); };
+    func:enc_bool            = int64(int64:h, int32:v)                   { pass raw ssh_encode_bool(h, v); };
+    func:enc_name_list       = int64(int64:h, string:c)                  { pass raw ssh_encode_name_list(h, c); };
+
+    // Packet operations
+    func:pad_length          = int32(int64:p, int64:b)                   { pass raw ssh_packet_pad_length(p, b); };
+    func:pkt_encode          = int64(int64:p)                            { pass raw ssh_packet_encode(p); };
+    func:pkt_decode          = int64(int64:r)                            { pass raw ssh_packet_decode(r); };
+
+    // Crypto: CSPRNG
+    func:random_fill         = int64(int64:h, int32:c)                   { pass ssh_crypto_random_fill(h, c); };
+    func:random_uint32       = int64()                                   { pass ssh_crypto_random_uint32(); };
+
+    // Crypto: AES-CTR
+    func:aes_ctr_create      = int64(int64:k, int64:iv)                  { pass ssh_crypto_aes_ctr_create(k, iv); };
+    func:aes_ctr_process     = int64(int64:s, int64:d)                   { pass ssh_crypto_aes_ctr_process(s, d); };
+    func:aes_ctr_free        = NIL(int64:s)                              { ssh_crypto_aes_ctr_free(s); pass(NIL); };
+
+    // Crypto: SHA-256 / HMAC-SHA256 (raw bytes)
+    func:sha256_raw          = int64(int64:d)                            { pass ssh_crypto_sha256_raw(d); };
+    func:hmac_sha256_raw     = int64(int64:k, int64:d)                   { pass ssh_crypto_hmac_sha256_raw(k, d); };
+
+    // Crypto: Diffie-Hellman
+    func:dh_generate         = int64(int32:g)                            { pass ssh_crypto_dh_generate(g); };
+    func:dh_public_key       = int64(int64:h)                            { pass ssh_crypto_dh_public_key(h); };
+    func:dh_shared_secret    = int64(int64:h, int64:p)                   { pass ssh_crypto_dh_shared_secret(h, p); };
+    func:dh_free             = NIL(int64:h)                              { ssh_crypto_dh_free(h); pass(NIL); };
+
+    // mpint / binary buffer
+    func:enc_mpint           = int64(int64:d, int64:s)                   { pass ssh_encode_mpint(d, s); };
+    func:dec_mpint           = int64(int64:h, int64:o)                   { pass ssh_decode_mpint(h, o); };
+    func:mpint_size          = int64(int64:h, int64:o)                   { pass ssh_mpint_size(h, o); };
+    func:buf_as_string       = int64(int64:d, int64:s)                   { pass ssh_buf_write_buf_as_string(d, s); };
+    func:buf_compare         = int32(int64:a, int64:b)                   { pass ssh_buf_compare(a, b); };
+    func:buf_clone           = int64(int64:h)                            { pass ssh_buf_clone(h); };
+    func:buf_range           = int64(int64:h, int64:o, int64:c)          { pass ssh_buf_extract_range(h, o, c); };
+
+    // Key Exchange
+    func:kexinit_build       = int64(int64:s)                            { pass ssh_kexinit_build(s); };
+    func:kexinit_parse       = int32(int64:s, int64:p)                   { pass raw ssh_kexinit_parse(s, p); };
+    func:kex_negotiate       = int32(int64:s)                            { pass raw ssh_kex_negotiate(s); };
+    func:kex_dh_init         = int64(int64:s)                            { pass ssh_kex_dh_init(s); };
+    func:kex_dh_reply        = int32(int64:s, int64:p)                   { pass raw ssh_kex_dh_reply(s, p); };
+    func:verify_host_key     = int32(int64:s)                            { pass raw ssh_verify_host_key(s); };
+    func:derive_keys         = int32(int64:s)                            { pass raw ssh_derive_keys(s); };
+    func:send_newkeys        = int64(int64:s)                            { pass ssh_send_newkeys(s); };
+    func:recv_newkeys        = int32(int64:s, int64:p)                   { pass raw ssh_recv_newkeys(s, p); };
+
+    // Encrypted Transport
+    func:seq_init            = NIL(int64:s)                              { pass raw ssh_seq_init(s); };
+    func:seq_send_next       = int64(int64:s)                            { pass raw ssh_seq_send_next(s); };
+    func:seq_recv_next       = int64(int64:s)                            { pass raw ssh_seq_recv_next(s); };
+    func:activate_encryption = int32(int64:s)                            { pass raw ssh_activate_encryption(s); };
+    func:mac_compute         = int64(int64:s, int64:q, int64:p, int32:d) { pass raw ssh_mac_compute(s, q, p, d); };
+    func:mac_verify          = int32(int64:s, int64:q, int64:p, int64:m, int32:d) { pass raw ssh_mac_verify(s, q, p, m, d); };
+    func:pkt_encode_enc      = int64(int64:s, int64:p)                   { pass raw ssh_packet_encode_encrypted(s, p); };
+    func:pkt_decode_enc      = int64(int64:s, int64:r)                   { pass raw ssh_packet_decode_encrypted(s, r); };
+    func:should_rekey        = int32(int64:s)                            { pass raw ssh_should_rekey(s); };
+
+    // User Authentication
+    func:service_request     = int64(int64:s, string:svc)                { pass raw ssh_service_request(s, svc); };
+    func:service_accept      = int32(int64:s, int64:p, string:e)         { pass raw ssh_service_accept(s, p, e); };
+    func:auth_none           = int64(int64:s, string:u)                  { pass raw ssh_auth_none(s, u); };
+    func:auth_password       = int64(int64:s, string:u, string:p)        { pass raw ssh_auth_password(s, u, p); };
+    func:auth_pubkey_query   = int64(int64:s, string:u, string:t, int64:k) { pass raw ssh_auth_publickey_query(s, u, t, k); };
+    func:auth_parse_response = int32(int64:s, int64:p)                   { pass raw ssh_auth_parse_response(s, p); };
+    func:auth_methods        = string(int64:s)                           { pass raw ssh_auth_failure_methods(s); };
+    func:auth_banner         = string(int64:s)                           { pass raw ssh_auth_banner(s); };
+    func:auth_method_avail   = int32(int64:s, string:m)                  { pass raw ssh_auth_method_available(s, m); };
+    func:auth_init           = NIL(int64:s)                              { pass raw ssh_auth_init(s); };
+    func:auth_set_max_retry  = NIL(int64:s, int32:n)                     { pass raw ssh_auth_set_max_retries(s, n); };
+    func:auth_retry          = int32(int64:s)                            { pass raw ssh_auth_retry(s); };
+
+    // Channels
+    func:chan_init            = NIL(int64:s)                              { pass raw ssh_channel_init(s); };
+    func:chan_open            = int64(int64:s, string:t)                  { pass raw ssh_channel_open(s, t); };
+    func:chan_last_id         = int64(int64:s)                            { pass raw ssh_channel_last_id(s); };
+    func:chan_open_confirm    = int32(int64:s, int64:p)                   { pass raw ssh_channel_open_confirm(s, p); };
+    func:chan_close           = int64(int64:s, int64:c)                   { pass raw ssh_channel_close(s, c); };
+    func:chan_data_msg        = int64(int64:s, int64:c, int64:d)          { pass raw ssh_channel_data_msg(s, c, d); };
+    func:chan_recv_data       = int32(int64:s, int64:p)                   { pass raw ssh_channel_recv_data(s, p); };
+    func:chan_read            = string(int64:s, int64:c)                  { pass raw ssh_channel_read(s, c); };
+    func:chan_read_buf        = int64(int64:s, int64:c)                   { pass raw ssh_channel_read_buf(s, c); };
+    func:chan_window_adjust   = int64(int64:s, int64:c, int64:b)          { pass raw ssh_channel_window_adjust(s, c, b); };
+    func:chan_recv_wadj       = int32(int64:s, int64:p)                   { pass raw ssh_channel_recv_window_adjust(s, p); };
+    func:chan_recv_eof        = int32(int64:s, int64:p)                   { pass raw ssh_channel_recv_eof(s, p); };
+    func:chan_recv_close      = int32(int64:s, int64:p)                   { pass raw ssh_channel_recv_close(s, p); };
+    func:chan_req_exec        = int64(int64:s, int64:c, string:cmd)       { pass raw ssh_channel_request_exec(s, c, cmd); };
+    func:chan_req_shell       = int64(int64:s, int64:c)                   { pass raw ssh_channel_request_shell(s, c); };
+    func:chan_req_pty         = int64(int64:s, int64:c, string:t, int32:w, int32:h) { pass raw ssh_channel_request_pty(s, c, t, w, h); };
+    func:chan_req_response    = int32(int64:s, int64:p)                   { pass raw ssh_channel_request_response(s, p); };
+    func:chan_recv_request    = int32(int64:s, int64:p)                   { pass raw ssh_channel_recv_request(s, p); };
+    func:chan_state           = string(int64:s, int64:c)                  { pass raw ssh_channel_state(s, c); };
+    func:chan_exit_status     = int32(int64:s, int64:c)                   { pass raw ssh_channel_exit_status(s, c); };
+    func:chan_remote_window   = int64(int64:s, int64:c)                   { pass raw ssh_channel_remote_window(s, c); };
+    func:chan_local_window    = int64(int64:s, int64:c)                   { pass raw ssh_channel_local_window(s, c); };
+    func:chan_dispatch        = int32(int64:s, int64:p)                   { pass raw ssh_channel_dispatch(s, p); };
+
+    // Network & Protocol
+    func:connect             = int64(string:h, int64:p)                  { pass raw ssh_connect(h, p); };
+    func:disconnect          = NIL(int64:s)                              { pass raw ssh_disconnect(s); };
+    func:send_pkt            = int64(int64:s, int64:p)                   { pass raw ssh_send_packet(s, p); };
+    func:recv_pkt            = int64(int64:s)                            { pass raw ssh_recv_packet(s); };
+    func:dispatch            = int32(int64:s, int64:p)                   { pass raw ssh_dispatch(s, p); };
+    func:disconnect_msg      = int64(int64:r, string:d)                  { pass raw ssh_disconnect_msg(r, d); };
+    func:ignore_msg          = int64()                                   { pass raw ssh_ignore_msg(); };
+    func:server_version      = string(int64:s)                           { pass raw ssh_server_version(s); };
+
+    // Public Key Authentication & Key Management
+    func:rsa_verify          = int64(int64:pk, int64:sig, int64:h)       { pass raw ssh_rsa_verify(pk, sig, h); };
+    func:ed25519_verify      = int64(int64:pk, int64:sig, int64:m)       { pass raw ssh_ed25519_verify(pk, sig, m); };
+    func:key_type            = string(int64:pk)                          { pass raw ssh_key_type(pk); };
+    func:extract_sig_blob    = int64(int64:sig)                          { pass raw ssh_extract_sig_blob(sig); };
+    func:base64_decode       = int64(string:i)                           { pass raw ssh_base64_decode(i); };
+    func:verify_host_key_sig = int64(int64:s, int64:hk, int64:sig, int64:h) { pass raw ssh_verify_host_key_sig(s, hk, sig, h); };
+    func:known_hosts_load    = int64(string:p)                           { pass raw ssh_known_hosts_load(p); };
+    func:known_hosts_check   = int64(int64:kh, string:h, string:kt, int64:kb) { pass raw ssh_known_hosts_check(kh, h, kt, kb); };
+    func:known_hosts_add     = int64(string:p, string:h, string:kt, string:kb) { pass raw ssh_known_hosts_add(p, h, kt, kb); };
+    func:auth_pubkey_query   = int64(int64:s, string:u, string:kt, int64:pk) { pass raw ssh_auth_publickey_query(s, u, kt, pk); };
+    func:auth_pubkey_sign    = int64(int64:s, string:u, string:kt, int64:pk, int64:sig) { pass raw ssh_auth_publickey_sign(s, u, kt, pk, sig); };
+    func:auth_pubkey_sign_data = int64(int64:s, string:u, string:kt, int64:pk) { pass raw ssh_auth_publickey_sign_data(s, u, kt, pk); };
+
+    // SFTP & SCP
+    func:sftp_init           = int64(int64:s)                                  { pass raw ssh_sftp_init(s); };
+    func:sftp_next_id        = int64(int64:sf)                                 { pass raw ssh_sftp_next_id(sf); };
+    func:sftp_init_msg       = int64()                                         { pass raw ssh_sftp_init_msg(); };
+    func:sftp_pkt_encode     = int64(int32:t, int64:p)                         { pass raw ssh_sftp_packet_encode(t, p); };
+    func:sftp_pkt_decode     = int64(int64:r)                                  { pass raw ssh_sftp_packet_decode(r); };
+    func:sftp_pkt_type       = int32(int64:r)                                  { pass raw ssh_sftp_packet_type(r); };
+    func:sftp_parse_version  = int64(int64:r)                                  { pass raw ssh_sftp_parse_version(r); };
+    func:sftp_open_msg       = int64(int64:sf, string:p, int32:f)              { pass raw ssh_sftp_open_msg(sf, p, f); };
+    func:sftp_close_msg      = int64(int64:sf, int64:h)                        { pass raw ssh_sftp_close_msg(sf, h); };
+    func:sftp_read_msg       = int64(int64:sf, int64:h, int64:o, int64:l)      { pass raw ssh_sftp_read_msg(sf, h, o, l); };
+    func:sftp_write_msg      = int64(int64:sf, int64:h, int64:o, int64:d)      { pass raw ssh_sftp_write_msg(sf, h, o, d); };
+    func:sftp_stat_msg       = int64(int64:sf, string:p)                       { pass raw ssh_sftp_stat_msg(sf, p); };
+    func:sftp_opendir_msg    = int64(int64:sf, string:p)                       { pass raw ssh_sftp_opendir_msg(sf, p); };
+    func:sftp_readdir_msg    = int64(int64:sf, int64:h)                        { pass raw ssh_sftp_readdir_msg(sf, h); };
+    func:sftp_mkdir_msg      = int64(int64:sf, string:p)                       { pass raw ssh_sftp_mkdir_msg(sf, p); };
+    func:sftp_remove_msg     = int64(int64:sf, string:p)                       { pass raw ssh_sftp_remove_msg(sf, p); };
+    func:sftp_rename_msg     = int64(int64:sf, string:o, string:n)             { pass raw ssh_sftp_rename_msg(sf, o, n); };
+    func:sftp_parse_status   = int32(int64:r)                                  { pass raw ssh_sftp_parse_status(r); };
+    func:sftp_parse_handle   = int64(int64:r)                                  { pass raw ssh_sftp_parse_handle(r); };
+    func:sftp_parse_data     = int64(int64:r)                                  { pass raw ssh_sftp_parse_data(r); };
+    func:scp_upload_cmd      = string(string:p)                                { pass raw ssh_scp_upload_cmd(p); };
+    func:scp_download_cmd    = string(string:p)                                { pass raw ssh_scp_download_cmd(p); };
+    func:scp_file_header     = string(string:m, int64:s, string:f)             { pass raw ssh_scp_file_header(m, s, f); };
+
+    // Port Forwarding
+    func:forward_local       = int64(int64:s, int32:ch, string:rh, int32:rp, string:la, int32:lp) { pass raw ssh_forward_local_open(s, ch, rh, rp, la, lp); };
+    func:forward_remote      = int64(string:ba, int32:bp)                      { pass raw ssh_forward_remote_request(ba, bp); };
+    func:forward_cancel      = int64(string:ba, int32:bp)                      { pass raw ssh_forward_cancel_request(ba, bp); };
+    func:forward_dynamic     = int64(int64:s, int32:ch, string:dh, int32:dp)   { pass raw ssh_forward_dynamic_open(s, ch, dh, dp); };
+
+    // Security Hardening
+    func:compare_ct          = int32(int64:a, int64:b)                         { pass raw ssh_buf_compare_ct(a, b); };
+    func:secure_wipe         = NIL(int64:h)                                    { raw ssh_buf_secure_wipe(h); };
+    func:pkt_size_valid      = int32(int64:l)                                  { pass raw ssh_packet_size_valid(l); };
+    func:seq_next            = int64(int64:s)                                  { pass raw ssh_seq_next(s); };
+    func:strict_host_check   = int32(int64:kh, string:h, string:kt, int64:kb, int32:sm) { pass raw ssh_strict_host_check(kh, h, kt, kb, sm); };
+
+    // Compression
+    func:compression_algos   = string()                                        { pass raw ssh_compression_algorithms(); };
+    func:compression_enabled = int32(int64:s)                                  { pass raw ssh_compression_enabled(s); };
+    func:compression_set     = NIL(int64:s, string:a)                          { raw ssh_compression_set(s, a); };
+
+    // Interactive Shell
+    func:pty_request         = int64(int64:ch, string:t, int32:c, int32:r)     { pass raw ssh_pty_request(ch, t, c, r); };
+    func:shell_request       = int64(int64:ch)                                 { pass raw ssh_shell_request(ch); };
+    func:window_change       = int64(int64:ch, int32:c, int32:r)               { pass raw ssh_window_change(ch, c, r); };
+
+    // Config
+    func:config_create       = int64()                                         { pass raw ssh_config_create(); };
+    func:config_add_entry    = NIL(int64:c, string:hp, string:hn, string:p, string:u, string:id) { raw ssh_config_add_entry(c, hp, hn, p, u, id); };
+    func:config_lookup       = int64(int64:c, string:h)                        { pass raw ssh_config_lookup(c, h); };
+};
+
+
+pub Type:SSH = {
+    func:MSG_DISCONNECT = int32() { pass raw SSH_MSG_DISCONNECT(); };
+    func:MSG_IGNORE = int32() { pass raw SSH_MSG_IGNORE(); };
+    func:MSG_UNIMPLEMENTED = int32() { pass raw SSH_MSG_UNIMPLEMENTED(); };
+    func:MSG_DEBUG = int32() { pass raw SSH_MSG_DEBUG(); };
+    func:MSG_SERVICE_REQUEST = int32() { pass raw SSH_MSG_SERVICE_REQUEST(); };
+    func:MSG_SERVICE_ACCEPT = int32() { pass raw SSH_MSG_SERVICE_ACCEPT(); };
+    func:MSG_KEXINIT = int32() { pass raw SSH_MSG_KEXINIT(); };
+    func:MSG_NEWKEYS = int32() { pass raw SSH_MSG_NEWKEYS(); };
+    func:MSG_KEXDH_INIT = int32() { pass raw SSH_MSG_KEXDH_INIT(); };
+    func:MSG_KEXDH_REPLY = int32() { pass raw SSH_MSG_KEXDH_REPLY(); };
+    func:MSG_USERAUTH_REQUEST = int32() { pass raw SSH_MSG_USERAUTH_REQUEST(); };
+    func:MSG_USERAUTH_FAILURE = int32() { pass raw SSH_MSG_USERAUTH_FAILURE(); };
+    func:MSG_USERAUTH_SUCCESS = int32() { pass raw SSH_MSG_USERAUTH_SUCCESS(); };
+    func:MSG_USERAUTH_BANNER = int32() { pass raw SSH_MSG_USERAUTH_BANNER(); };
+    func:MSG_CHANNEL_OPEN = int32() { pass raw SSH_MSG_CHANNEL_OPEN(); };
+    func:MSG_CHANNEL_OPEN_CONFIRM = int32() { pass raw SSH_MSG_CHANNEL_OPEN_CONFIRM(); };
+    func:MSG_CHANNEL_WINDOW_ADJUST = int32() { pass raw SSH_MSG_CHANNEL_WINDOW_ADJUST(); };
+    func:MSG_CHANNEL_DATA = int32() { pass raw SSH_MSG_CHANNEL_DATA(); };
+    func:MSG_CHANNEL_EOF = int32() { pass raw SSH_MSG_CHANNEL_EOF(); };
+    func:MSG_CHANNEL_CLOSE = int32() { pass raw SSH_MSG_CHANNEL_CLOSE(); };
+    func:MSG_CHANNEL_REQUEST = int32() { pass raw SSH_MSG_CHANNEL_REQUEST(); };
+    func:MSG_CHANNEL_SUCCESS = int32() { pass raw SSH_MSG_CHANNEL_SUCCESS(); };
+    func:MSG_CHANNEL_FAILURE = int32() { pass raw SSH_MSG_CHANNEL_FAILURE(); };
+    func:STATE_CREATED = string() { pass raw SSH_STATE_CREATED(); };
+    func:STATE_VERSION_SENT = string() { pass raw SSH_STATE_VERSION_SENT(); };
+    func:STATE_VERSION_RECEIVED = string() { pass raw SSH_STATE_VERSION_RECEIVED(); };
+    func:STATE_KEXINIT_SENT = string() { pass raw SSH_STATE_KEXINIT_SENT(); };
+    func:STATE_KEXINIT_RECEIVED = string() { pass raw SSH_STATE_KEXINIT_RECEIVED(); };
+    func:STATE_KEX_DH_SENT = string() { pass raw SSH_STATE_KEX_DH_SENT(); };
+    func:STATE_KEX_DH_DONE = string() { pass raw SSH_STATE_KEX_DH_DONE(); };
+    func:STATE_NEWKEYS_SENT = string() { pass raw SSH_STATE_NEWKEYS_SENT(); };
+    func:STATE_KEYS_ESTABLISHED = string() { pass raw SSH_STATE_KEYS_ESTABLISHED(); };
+    func:STATE_AUTHENTICATED = string() { pass raw SSH_STATE_AUTHENTICATED(); };
+    func:STATE_CONNECTED = string() { pass raw SSH_STATE_CONNECTED(); };
+    func:STATE_DISCONNECTED = string() { pass raw SSH_STATE_DISCONNECTED(); };
+    func:STATE_ERROR = string() { pass raw SSH_STATE_ERROR(); };
+    func:version_string = string() { pass raw ssh_version_string(); };
+    func:buf_create = int64(int64:cap) { pass raw ssh_buf_create(cap); };
+    func:buf_free = NIL(int64:handle) { pass raw ssh_buf_free(handle); };
+    func:buf_len = int64(int64:handle) { pass raw ssh_buf_len(handle); };
+    func:buf_clear = NIL(int64:handle) { pass raw ssh_buf_clear(handle); };
+    func:buf_write_byte = int64(int64:handle, int32:val) { pass raw ssh_buf_write_byte(handle, val); };
+    func:buf_read_byte = int32(int64:handle, int64:pos) { pass raw ssh_buf_read_byte(handle, pos); };
+    func:buf_write_str = int64(int64:handle, string:src) { pass raw ssh_buf_write_str(handle, src); };
+    func:buf_write_from = int64(int64:dst, int64:src) { pass raw ssh_buf_write_from(dst, src); };
+    func:buf_extract_str = string(int64:handle, int64:offset, int64:count) { pass raw ssh_buf_extract_str(handle, offset, count); };
+    func:buf_equals_str = int32(int64:handle, string:expected) { pass raw ssh_buf_equals_str(handle, expected); };
+    func:encode_uint32 = int64(int64:handle, int64:val) { pass raw ssh_encode_uint32(handle, val); };
+    func:decode_uint32 = int64(int64:handle, int64:offset) { pass raw ssh_decode_uint32(handle, offset); };
+    func:encode_string = int64(int64:handle, string:data) { pass raw ssh_encode_string(handle, data); };
+    func:decode_string_len = int64(int64:handle, int64:offset) { pass raw ssh_decode_string_len(handle, offset); };
+    func:decode_string_data = string(int64:handle, int64:offset) { pass raw ssh_decode_string_data(handle, offset); };
+    func:encode_byte = int64(int64:handle, int32:val) { pass raw ssh_encode_byte(handle, val); };
+    func:encode_bool = int64(int64:handle, int32:val) { pass raw ssh_encode_bool(handle, val); };
+    func:encode_name_list = int64(int64:handle, string:csv) { pass raw ssh_encode_name_list(handle, csv); };
+    func:packet_pad_length = int32(int64:payload_len, int64:block_size) { pass raw ssh_packet_pad_length(payload_len, block_size); };
+    func:packet_encode = int64(int64:payload_handle) { pass raw ssh_packet_encode(payload_handle); };
+    func:packet_decode = int64(int64:raw_handle) { pass raw ssh_packet_decode(raw_handle); };
+    func:session_create = int64() { pass raw ssh_session_create(); };
+    func:session_error = string(int64:h) { pass raw ssh_session_error(h); };
+    func:session_state = string(int64:h) { pass raw ssh_session_state(h); };
+    func:session_set_state = NIL(int64:h, string:new_state) { pass raw ssh_session_set_state(h, new_state); };
+    func:session_set_error = NIL(int64:h, string:msg) { pass raw ssh_session_set_error(h, msg); };
+    func:session_transition = int32(int64:h, string:expected_from, string:to_state) { pass raw ssh_session_transition(h, expected_from, to_state); };
+    func:session_version_remote = string(int64:h) { pass raw ssh_session_version_remote(h); };
+    func:session_version_software = string(int64:h) { pass raw ssh_session_version_software(h); };
+    func:encode_mpint = int64(int64:dst, int64:src_buf) { pass raw ssh_encode_mpint(dst, src_buf); };
+    func:decode_mpint = int64(int64:handle, int64:offset) { pass raw ssh_decode_mpint(handle, offset); };
+    func:mpint_size = int64(int64:handle, int64:offset) { pass raw ssh_mpint_size(handle, offset); };
+    func:buf_write_buf_as_string = int64(int64:dst, int64:src) { pass raw ssh_buf_write_buf_as_string(dst, src); };
+    func:buf_compare = int32(int64:a, int64:b) { pass raw ssh_buf_compare(a, b); };
+    func:buf_clone = int64(int64:handle) { pass raw ssh_buf_clone(handle); };
+    func:buf_extract_range = int64(int64:handle, int64:offset, int64:count) { pass raw ssh_buf_extract_range(handle, offset, count); };
+    func:handle_to_str = string(int64:val) { pass raw ssh_handle_to_str(val); };
+    func:str_to_handle = int64(string:s) { pass raw ssh_str_to_handle(s); };
+    func:build_version_line = string() { pass raw ssh_build_version_line(); };
+    func:parse_version_line = int32(int64:h, string:line_str) { pass raw ssh_parse_version_line(h, line_str); };
+    func:kexinit_build = int64(int64:session) { pass raw ssh_kexinit_build(session); };
+    func:kexinit_parse = int32(int64:session, int64:payload_buf) { pass raw ssh_kexinit_parse(session, payload_buf); };
+    func:kex_negotiate = int32(int64:session) { pass raw ssh_kex_negotiate(session); };
+    func:kex_dh_init = int64(int64:session) { pass raw ssh_kex_dh_init(session); };
+    func:kex_dh_reply = int32(int64:session, int64:payload_buf) { pass raw ssh_kex_dh_reply(session, payload_buf); };
+    func:compute_exchange_hash = int64(int64:session) { pass raw ssh_compute_exchange_hash(session); };
+    func:verify_host_key = int32(int64:session) { pass raw ssh_verify_host_key(session); };
+    func:derive_key_component = int64(int64:session, int32:letter) { pass raw ssh_derive_key_component(session, letter); };
+    func:derive_keys = int32(int64:session) { pass raw ssh_derive_keys(session); };
+    func:send_newkeys = int64(int64:session) { pass raw ssh_send_newkeys(session); };
+    func:recv_newkeys = int32(int64:session, int64:payload_buf) { pass raw ssh_recv_newkeys(session, payload_buf); };
+    func:seq_init = NIL(int64:session) { pass raw ssh_seq_init(session); };
+    func:seq_send_next = int64(int64:session) { pass raw ssh_seq_send_next(session); };
+    func:seq_recv_next = int64(int64:session) { pass raw ssh_seq_recv_next(session); };
+    func:activate_encryption = int32(int64:session) { pass raw ssh_activate_encryption(session); };
+    func:mac_compute = int64(int64:session, int64:seq, int64:packet_buf, int32:direction) { pass raw ssh_mac_compute(session, seq, packet_buf, direction); };
+    func:mac_verify = int32(int64:session, int64:seq, int64:packet_buf, int64:received_mac, int32:direction) { pass raw ssh_mac_verify(session, seq, packet_buf, received_mac, direction); };
+    func:packet_encode_encrypted = int64(int64:session, int64:payload_buf) { pass raw ssh_packet_encode_encrypted(session, payload_buf); };
+    func:packet_decode_encrypted = int64(int64:session, int64:raw_buf) { pass raw ssh_packet_decode_encrypted(session, raw_buf); };
+    func:should_rekey = int32(int64:session) { pass raw ssh_should_rekey(session); };
+    func:service_request = int64(int64:session, string:service) { pass raw ssh_service_request(session, service); };
+    func:service_accept = int32(int64:session, int64:payload_buf, string:expected_service) { pass raw ssh_service_accept(session, payload_buf, expected_service); };
+    func:auth_none = int64(int64:session, string:username) { pass raw ssh_auth_none(session, username); };
+    func:auth_password = int64(int64:session, string:username, string:password) { pass raw ssh_auth_password(session, username, password); };
+    func:auth_publickey_query = int64(int64:session, string:username, string:key_type, int64:pubkey_blob) { pass raw ssh_auth_publickey_query(session, username, key_type, pubkey_blob); };
+    func:auth_parse_response = int32(int64:session, int64:payload_buf) { pass raw ssh_auth_parse_response(session, payload_buf); };
+    func:auth_failure_methods = string(int64:session) { pass raw ssh_auth_failure_methods(session); };
+    func:auth_banner = string(int64:session) { pass raw ssh_auth_banner(session); };
+    func:auth_method_available = int32(int64:session, string:method) { pass raw ssh_auth_method_available(session, method); };
+    func:auth_init = NIL(int64:session) { pass raw ssh_auth_init(session); };
+    func:auth_set_max_retries = NIL(int64:session, int32:max_retries) { pass raw ssh_auth_set_max_retries(session, max_retries); };
+    func:auth_retry = int32(int64:session) { pass raw ssh_auth_retry(session); };
+    func:channel_init = NIL(int64:session) { pass raw ssh_channel_init(session); };
+    func:channel_alloc_id = int64(int64:session) { pass raw ssh_channel_alloc_id(session); };
+    func:chan_key = string(int64:channel_id, string:suffix) { pass raw ssh_chan_key(channel_id, suffix); };
+    func:channel_open = int64(int64:session, string:channel_type) { pass raw ssh_channel_open(session, channel_type); };
+    func:channel_last_id = int64(int64:session) { pass raw ssh_channel_last_id(session); };
+    func:channel_open_confirm = int32(int64:session, int64:payload_buf) { pass raw ssh_channel_open_confirm(session, payload_buf); };
+    func:channel_close = int64(int64:session, int64:channel_id) { pass raw ssh_channel_close(session, channel_id); };
+    func:channel_data_msg = int64(int64:session, int64:channel_id, int64:data_buf) { pass raw ssh_channel_data_msg(session, channel_id, data_buf); };
+    func:channel_recv_data = int32(int64:session, int64:payload_buf) { pass raw ssh_channel_recv_data(session, payload_buf); };
+    func:channel_read = string(int64:session, int64:channel_id) { pass raw ssh_channel_read(session, channel_id); };
+    func:channel_read_buf = int64(int64:session, int64:channel_id) { pass raw ssh_channel_read_buf(session, channel_id); };
+    func:channel_window_adjust = int64(int64:session, int64:channel_id, int64:bytes_to_add) { pass raw ssh_channel_window_adjust(session, channel_id, bytes_to_add); };
+    func:channel_recv_window_adjust = int32(int64:session, int64:payload_buf) { pass raw ssh_channel_recv_window_adjust(session, payload_buf); };
+    func:channel_recv_eof = int32(int64:session, int64:payload_buf) { pass raw ssh_channel_recv_eof(session, payload_buf); };
+    func:channel_recv_close = int32(int64:session, int64:payload_buf) { pass raw ssh_channel_recv_close(session, payload_buf); };
+    func:channel_request_exec = int64(int64:session, int64:channel_id, string:command) { pass raw ssh_channel_request_exec(session, channel_id, command); };
+    func:channel_request_shell = int64(int64:session, int64:channel_id) { pass raw ssh_channel_request_shell(session, channel_id); };
+    func:channel_request_pty = int64(int64:session, int64:channel_id, string:term, int32:cols, int32:rows) { pass raw ssh_channel_request_pty(session, channel_id, term, cols, rows); };
+    func:channel_request_response = int32(int64:session, int64:payload_buf) { pass raw ssh_channel_request_response(session, payload_buf); };
+    func:channel_recv_request = int32(int64:session, int64:payload_buf) { pass raw ssh_channel_recv_request(session, payload_buf); };
+    func:channel_state = string(int64:session, int64:channel_id) { pass raw ssh_channel_state(session, channel_id); };
+    func:channel_exit_status = int32(int64:session, int64:channel_id) { pass raw ssh_channel_exit_status(session, channel_id); };
+    func:channel_remote_window = int64(int64:session, int64:channel_id) { pass raw ssh_channel_remote_window(session, channel_id); };
+    func:channel_local_window = int64(int64:session, int64:channel_id) { pass raw ssh_channel_local_window(session, channel_id); };
+    func:channel_dispatch = int32(int64:session, int64:payload_buf) { pass raw ssh_channel_dispatch(session, payload_buf); };
+    func:net_connect = int64(string:host, int64:port) { pass raw ssh_net_connect(host, port); };
+    func:net_close = NIL(int64:fd) { pass raw ssh_net_close(fd); };
+    func:net_send_buf = int64(int64:fd, int64:buf_handle) { pass raw ssh_net_send_buf(fd, buf_handle); };
+    func:net_send_str = int64(int64:fd, string:str) { pass raw ssh_net_send_str(fd, str); };
+    func:net_recv_exact = int64(int64:fd, int64:count) { pass raw ssh_net_recv_exact(fd, count); };
+    func:net_recv_line = string(int64:fd) { pass raw ssh_net_recv_line(fd); };
+    func:net_set_timeout = int64(int64:fd, int64:seconds) { pass raw ssh_net_set_timeout(fd, seconds); };
+    func:disconnect_msg = int64(int64:reason_code, string:description) { pass raw ssh_disconnect_msg(reason_code, description); };
+    func:ignore_msg = int64() { pass raw ssh_ignore_msg(); };
+    func:send_packet = int64(int64:session, int64:payload_buf) { pass raw ssh_send_packet(session, payload_buf); };
+    func:recv_packet = int64(int64:session) { pass raw ssh_recv_packet(session); };
+    func:dispatch = int32(int64:session, int64:payload_buf) { pass raw ssh_dispatch(session, payload_buf); };
+    func:connect = int64(string:host, int64:port) { pass raw ssh_connect(host, port); };
+    func:disconnect = NIL(int64:session) { pass raw ssh_disconnect(session); };
+    func:server_version = string(int64:session) { pass raw ssh_server_version(session); };
+    func:rsa_verify = int64(int64:pubkey_buf, int64:sig_buf, int64:hash_buf) { pass raw ssh_rsa_verify(pubkey_buf, sig_buf, hash_buf); };
+    func:ed25519_verify = int64(int64:pubkey_buf, int64:sig_buf, int64:msg_buf) { pass raw ssh_ed25519_verify(pubkey_buf, sig_buf, msg_buf); };
+    func:key_type = string(int64:pubkey_buf) { pass raw ssh_key_type(pubkey_buf); };
+    func:extract_sig_blob = int64(int64:sig_buf) { pass raw ssh_extract_sig_blob(sig_buf); };
+    func:base64_decode = int64(string:input) { pass raw ssh_base64_decode(input); };
+    func:verify_host_key_sig = int64(int64:session, int64:host_key_buf, int64:sig_buf, int64:hash_buf) { pass raw ssh_verify_host_key_sig(session, host_key_buf, sig_buf, hash_buf); };
+    func:known_hosts_load = int64(string:path) { pass raw ssh_known_hosts_load(path); };
+    func:known_hosts_check = int64(int64:kh_buf, string:host, string:key_type, int64:key_blob) { pass raw ssh_known_hosts_check(kh_buf, host, key_type, key_blob); };
+    func:known_hosts_add = int64(string:path, string:host, string:key_type, string:key_b64) { pass raw ssh_known_hosts_add(path, host, key_type, key_b64); };
+    func:auth_publickey_query = int64(int64:session, string:username, string:key_type, int64:pubkey_blob) { pass raw ssh_auth_publickey_query(session, username, key_type, pubkey_blob); };
+    func:auth_publickey_sign = int64(int64:session, string:username, string:key_type, int64:pubkey_blob, int64:sig_blob) { pass raw ssh_auth_publickey_sign(session, username, key_type, pubkey_blob, sig_blob); };
+    func:auth_publickey_sign_data = int64(int64:session, string:username, string:key_type, int64:pubkey_blob) { pass raw ssh_auth_publickey_sign_data(session, username, key_type, pubkey_blob); };
+    func:FXP_INIT = int32() { pass raw SSH_FXP_INIT(); };
+    func:FXP_VERSION = int32() { pass raw SSH_FXP_VERSION(); };
+    func:FXP_OPEN = int32() { pass raw SSH_FXP_OPEN(); };
+    func:FXP_CLOSE = int32() { pass raw SSH_FXP_CLOSE(); };
+    func:FXP_READ = int32() { pass raw SSH_FXP_READ(); };
+    func:FXP_WRITE = int32() { pass raw SSH_FXP_WRITE(); };
+    func:FXP_LSTAT = int32() { pass raw SSH_FXP_LSTAT(); };
+    func:FXP_FSTAT = int32() { pass raw SSH_FXP_FSTAT(); };
+    func:FXP_SETSTAT = int32() { pass raw SSH_FXP_SETSTAT(); };
+    func:FXP_OPENDIR = int32() { pass raw SSH_FXP_OPENDIR(); };
+    func:FXP_READDIR = int32() { pass raw SSH_FXP_READDIR(); };
+    func:FXP_REMOVE = int32() { pass raw SSH_FXP_REMOVE(); };
+    func:FXP_MKDIR = int32() { pass raw SSH_FXP_MKDIR(); };
+    func:FXP_RMDIR = int32() { pass raw SSH_FXP_RMDIR(); };
+    func:FXP_STAT = int32() { pass raw SSH_FXP_STAT(); };
+    func:FXP_RENAME = int32() { pass raw SSH_FXP_RENAME(); };
+    func:FXP_STATUS = int32() { pass raw SSH_FXP_STATUS(); };
+    func:FXP_HANDLE = int32() { pass raw SSH_FXP_HANDLE(); };
+    func:FXP_DATA = int32() { pass raw SSH_FXP_DATA(); };
+    func:FXP_NAME = int32() { pass raw SSH_FXP_NAME(); };
+    func:FXP_ATTRS = int32() { pass raw SSH_FXP_ATTRS(); };
+    func:FXF_READ = int32() { pass raw SSH_FXF_READ(); };
+    func:FXF_WRITE = int32() { pass raw SSH_FXF_WRITE(); };
+    func:FXF_APPEND = int32() { pass raw SSH_FXF_APPEND(); };
+    func:FXF_CREAT = int32() { pass raw SSH_FXF_CREAT(); };
+    func:FXF_TRUNC = int32() { pass raw SSH_FXF_TRUNC(); };
+    func:FX_OK = int32() { pass raw SSH_FX_OK(); };
+    func:FX_EOF = int32() { pass raw SSH_FX_EOF(); };
+    func:FX_NO_SUCH_FILE = int32() { pass raw SSH_FX_NO_SUCH_FILE(); };
+    func:FX_PERMISSION = int32() { pass raw SSH_FX_PERMISSION(); };
+    func:FX_FAILURE = int32() { pass raw SSH_FX_FAILURE(); };
+    func:sftp_packet_encode = int64(int32:pkt_type, int64:payload_buf) { pass raw ssh_sftp_packet_encode(pkt_type, payload_buf); };
+    func:sftp_packet_decode = int64(int64:raw_buf) { pass raw ssh_sftp_packet_decode(raw_buf); };
+    func:sftp_packet_type = int32(int64:raw_buf) { pass raw ssh_sftp_packet_type(raw_buf); };
+    func:sftp_init = int64(int64:session) { pass raw ssh_sftp_init(session); };
+    func:sftp_next_id = int64(int64:sftp) { pass raw ssh_sftp_next_id(sftp); };
+    func:sftp_init_msg = int64() { pass raw ssh_sftp_init_msg(); };
+    func:sftp_parse_version = int64(int64:raw_buf) { pass raw ssh_sftp_parse_version(raw_buf); };
+    func:sftp_open_msg = int64(int64:sftp, string:path, int32:flags) { pass raw ssh_sftp_open_msg(sftp, path, flags); };
+    func:sftp_close_msg = int64(int64:sftp, int64:handle_buf) { pass raw ssh_sftp_close_msg(sftp, handle_buf); };
+    func:sftp_read_msg = int64(int64:sftp, int64:handle_buf, int64:offset, int64:length) { pass raw ssh_sftp_read_msg(sftp, handle_buf, offset, length); };
+    func:sftp_write_msg = int64(int64:sftp, int64:handle_buf, int64:offset, int64:data_buf) { pass raw ssh_sftp_write_msg(sftp, handle_buf, offset, data_buf); };
+    func:sftp_stat_msg = int64(int64:sftp, string:path) { pass raw ssh_sftp_stat_msg(sftp, path); };
+    func:sftp_opendir_msg = int64(int64:sftp, string:path) { pass raw ssh_sftp_opendir_msg(sftp, path); };
+    func:sftp_readdir_msg = int64(int64:sftp, int64:handle_buf) { pass raw ssh_sftp_readdir_msg(sftp, handle_buf); };
+    func:sftp_mkdir_msg = int64(int64:sftp, string:path) { pass raw ssh_sftp_mkdir_msg(sftp, path); };
+    func:sftp_remove_msg = int64(int64:sftp, string:path) { pass raw ssh_sftp_remove_msg(sftp, path); };
+    func:sftp_rename_msg = int64(int64:sftp, string:old_path, string:new_path) { pass raw ssh_sftp_rename_msg(sftp, old_path, new_path); };
+    func:sftp_parse_status = int32(int64:raw_buf) { pass raw ssh_sftp_parse_status(raw_buf); };
+    func:sftp_parse_handle = int64(int64:raw_buf) { pass raw ssh_sftp_parse_handle(raw_buf); };
+    func:sftp_parse_data = int64(int64:raw_buf) { pass raw ssh_sftp_parse_data(raw_buf); };
+    func:scp_upload_cmd = string(string:remote_path) { pass raw ssh_scp_upload_cmd(remote_path); };
+    func:scp_download_cmd = string(string:remote_path) { pass raw ssh_scp_download_cmd(remote_path); };
+    func:scp_file_header = string(string:mode, int64:size, string:filename) { pass raw ssh_scp_file_header(mode, size, filename); };
+    func:scp_parse_header = int64(int64:sftp_state, string:header) { pass raw ssh_scp_parse_header(sftp_state, header); };
+    func:forward_remote_request = int64(string:bind_addr, int32:bind_port) { pass raw ssh_forward_remote_request(bind_addr, bind_port); };
+    func:forward_cancel_request = int64(string:bind_addr, int32:bind_port) { pass raw ssh_forward_cancel_request(bind_addr, bind_port); };
+    func:buf_compare_ct = int32(int64:a, int64:b) { pass raw ssh_buf_compare_ct(a, b); };
+    func:buf_secure_wipe = NIL(int64:handle) { pass raw ssh_buf_secure_wipe(handle); };
+    func:packet_size_valid = int32(int64:packet_len) { pass raw ssh_packet_size_valid(packet_len); };
+    func:seq_next = int64(int64:seq) { pass raw ssh_seq_next(seq); };
+    func:compression_algorithms = string() { pass raw ssh_compression_algorithms(); };
+    func:compression_enabled = int32(int64:session) { pass raw ssh_compression_enabled(session); };
+    func:compression_set = NIL(int64:session, string:algo) { pass raw ssh_compression_set(session, algo); };
+    func:shell_request = int64(int64:channel_id) { pass raw ssh_shell_request(channel_id); };
+    func:window_change = int64(int64:channel_id, int32:cols, int32:rows) { pass raw ssh_window_change(channel_id, cols, rows); };
+    func:config_create = int64() { pass raw ssh_config_create(); };
+    func:config_lookup = int64(int64:conf, string:host) { pass raw ssh_config_lookup(conf, host); };
+};

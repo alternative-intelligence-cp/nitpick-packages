@@ -1,0 +1,119 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-ssh": {
+      "artifact_path": ".nitpick_make/build/libnitpick-ssh.a",
+      "source_hash": "fnv1a:1382524833640975",
+      "command_hash": 13490287812262742931,
+      "source_timestamp": 18446744069053432150,
+      "build_timestamp": 1781544569,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-ssh-pubkey": {
+      "artifact_path": ".nitpick_make/build/test-ssh-pubkey",
+      "source_hash": "fnv1a:756234807969849710",
+      "command_hash": 12495938897616591053,
+      "source_timestamp": 18446744069053424207,
+      "build_timestamp": 1781536801,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-ssh-auth": {
+      "artifact_path": ".nitpick_make/build/test-ssh-auth",
+      "source_hash": "fnv1a:1929014126158697338",
+      "command_hash": 12495938897616591053,
+      "source_timestamp": 18446744069053422382,
+      "build_timestamp": 1781536801,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-ssh-comprehensive": {
+      "artifact_path": ".nitpick_make/build/test-ssh-comprehensive",
+      "source_hash": "fnv1a:18020955569997659178",
+      "command_hash": 12495938897616591053,
+      "source_timestamp": 18446744069053424277,
+      "build_timestamp": 1781536801,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-ssh-channels": {
+      "artifact_path": ".nitpick_make/build/test-ssh-channels",
+      "source_hash": "fnv1a:6173719896633542986",
+      "command_hash": 12495938897616591053,
+      "source_timestamp": 18446744069053422690,
+      "build_timestamp": 1781536801,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-ssh-crypto": {
+      "artifact_path": ".nitpick_make/build/test-ssh-crypto",
+      "source_hash": "fnv1a:13834744956294774054",
+      "command_hash": 12495938897616591053,
+      "source_timestamp": 18446744069053419517,
+      "build_timestamp": 1781536801,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-nitpick-ssh": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-ssh",
+      "source_hash": "fnv1a:3344022678269180278",
+      "command_hash": 12495938897616591053,
+      "source_timestamp": 18446744069053432173,
+      "build_timestamp": 1781544568,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-ssh-network": {
+      "artifact_path": ".nitpick_make/build/test-ssh-network",
+      "source_hash": "fnv1a:14984182529247939490",
+      "command_hash": 12495938897616591053,
+      "source_timestamp": 18446744069053424207,
+      "build_timestamp": 1781536801,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-ssh-kex": {
+      "artifact_path": ".nitpick_make/build/test-ssh-kex",
+      "source_hash": "fnv1a:9955519170095246432",
+      "command_hash": 12495938897616591053,
+      "source_timestamp": 18446744069053421304,
+      "build_timestamp": 1781536801,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-ssh-sftp": {
+      "artifact_path": ".nitpick_make/build/test-ssh-sftp",
+      "source_hash": "fnv1a:3924768099908396184",
+      "command_hash": 12495938897616591053,
+      "source_timestamp": 18446744069053424207,
+      "build_timestamp": 1781536801,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-ssh-encrypted": {
+      "artifact_path": ".nitpick_make/build/test-ssh-encrypted",
+      "source_hash": "fnv1a:7444940499483419696",
+      "command_hash": 12495938897616591053,
+      "source_timestamp": 18446744069053422077,
+      "build_timestamp": 1781536801,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

@@ -1,0 +1,69 @@
+[project]
+name = "nitpick-ssh"
+version = "1.0.0"
+
+[target.nitpick-ssh]
+type = "library"
+sources = ["src/nitpick_ssh.npk"]
+deps = []
+flags = ["-Lshim/.nitpick_make/lib", "-lnitpick_ssh_shim"]
+
+[target.test-nitpick-ssh]
+type = "binary"
+sources = ["tests/test_nitpick_ssh.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_ssh_shim"]
+
+[target.test-ssh-crypto]
+type = "binary"
+sources = ["tests/test_ssh_crypto.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_ssh_shim"]
+
+[target.test-ssh-kex]
+type = "binary"
+sources = ["tests/test_ssh_kex.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_ssh_shim"]
+
+[target.test-ssh-encrypted]
+type = "binary"
+sources = ["tests/test_ssh_encrypted.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_ssh_shim"]
+
+[target.test-ssh-auth]
+type = "binary"
+sources = ["tests/test_ssh_auth.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_ssh_shim"]
+
+[target.test-ssh-channels]
+type = "binary"
+sources = ["tests/test_ssh_channels.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_ssh_shim"]
+
+[target.test-ssh-network]
+type = "binary"
+sources = ["tests/test_ssh_network.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_ssh_shim"]
+
+[target.test-ssh-pubkey]
+type = "binary"
+sources = ["tests/test_ssh_pubkey.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_ssh_shim"]
+
+[target.test-ssh-sftp]
+type = "binary"
+sources = ["tests/test_ssh_sftp.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_ssh_shim"]
+
+[target.test-ssh-comprehensive]
+type = "binary"
+sources = ["tests/test_ssh_comprehensive.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_ssh_shim"]
