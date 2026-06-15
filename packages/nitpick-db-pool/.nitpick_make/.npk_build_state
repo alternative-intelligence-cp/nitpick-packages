@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-db-pool": {
+      "artifact_path": ".nitpick_make/build/libnitpick-db-pool.a",
+      "source_hash": "fnv1a:12674789759779992951",
+      "command_hash": 5731661600773576006,
+      "source_timestamp": 18446744069053197934,
+      "build_timestamp": 1781508067,
+      "build_duration_ms": 72,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}
