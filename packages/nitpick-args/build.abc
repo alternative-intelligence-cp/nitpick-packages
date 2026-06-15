@@ -10,16 +10,16 @@
 [project]
 name = "nitpick-args"
 version = "0.1.0"
-compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
+compiler = "/home/randy/Workspace/REPOS/nitpick/build/nitpickc"
 
 [target.nitpick-args]
 type = "library"
 sources = ["src/nitpick_args.npk"]
 deps = []
-flags = []
+flags = ["-I", "../nitpick-cli/src", "-L", "../nitpick-cli/shim", "-lnitpick_cli_shim"]
 
 [target.test-nitpick-args]
 type = "binary"
 sources = ["tests/test_nitpick_args.npk"]
 deps = []
-flags = []
+flags = ["-I", "../nitpick-cli/src", "-L", "../nitpick-cli/shim", "-lnitpick_cli_shim"]
