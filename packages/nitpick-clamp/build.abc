@@ -3,7 +3,7 @@
 [project]
 name = "nitpick-clamp"
 version = "0.1.0"
-compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
+compiler = "/home/randy/Workspace/REPOS/nitpick/build/nitpickc"
 
 [target.nitpick-clamp]
 type = "library"
@@ -15,4 +15,4 @@ flags = []
 type = "binary"
 sources = ["tests/test_nitpick_clamp.npk"]
 deps = []
-flags = []
+flags = ["-I", "src", "-L", "../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
