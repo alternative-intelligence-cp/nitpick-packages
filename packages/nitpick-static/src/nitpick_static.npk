@@ -4,11 +4,11 @@
 // Import with: use "nitpick_static.npk".*;
 //
 // Resolves URL paths to safe filesystem paths and detects MIME types.
-// File I/O requires aria-libc; this module handles routing and types.
+// File I/O requires nitpick-libc; this module handles routing and types.
 
 // ── Configuration ───────────────────────────────────────────────────────────
 
-pub func:static_reset = int64() {
+func:static_reset = int64() {
     int64:h = ahash(256);
     ahset(h, "_root", "/var/www");
     ahset(h, "_index", "index.html");
@@ -20,24 +20,24 @@ pub func:static_reset = int64() {
     pass h;
 };
 
-pub func:static_set_root = int32(int64:h, string:root_path) {
+func:static_set_root = int32(int64:h, string:root_path) {
     ahset(h, "_root", root_path);
     pass 0i32;
 };
 
-pub func:static_get_root = string(int64:h) {
+func:static_get_root = string(int64:h) {
     string:val = ahget(h, "_root");
     pass val;
 };
 
-pub func:static_set_index = int32(int64:h, string:idx_file) {
+func:static_set_index = int32(int64:h, string:idx_file) {
     ahset(h, "_index", idx_file);
     pass 0i32;
 };
 
 // ── MIME detection ──────────────────────────────────────────────────────────
 
-pub func:static_detect_mime = string(string:fpath) {
+func:static_detect_mime = string(string:fpath) {
     if (string_contains(fpath, ".html")) { pass "text/html"; }
     if (string_contains(fpath, ".htm")) { pass "text/html"; }
     if (string_contains(fpath, ".css")) { pass "text/css"; }
@@ -63,7 +63,7 @@ pub func:static_detect_mime = string(string:fpath) {
 
 // ── Path resolution ─────────────────────────────────────────────────────────
 
-pub func:static_resolve = int32(int64:h, string:url_path) {
+func:static_resolve = int32(int64:h, string:url_path) {
     ahset(h, "_error", "");
     ahset(h, "_resolved", "");
     ahset(h, "_mime", "");
@@ -96,27 +96,27 @@ pub func:static_resolve = int32(int64:h, string:url_path) {
     pass 0i32;
 };
 
-pub func:static_resolved_path = string(int64:h) {
+func:static_resolved_path = string(int64:h) {
     string:val = ahget(h, "_resolved");
     pass val;
 };
 
-pub func:static_mime_type = string(int64:h) {
+func:static_mime_type = string(int64:h) {
     string:val = ahget(h, "_mime");
     pass val;
 };
 
-pub func:static_error = string(int64:h) {
+func:static_error = string(int64:h) {
     string:val = ahget(h, "_error");
     pass val;
 };
 
-pub func:static_content = string(int64:h) {
+func:static_content = string(int64:h) {
     string:val = ahget(h, "_content");
     pass val;
 };
 
-pub func:static_length = int64(int64:h) {
+func:static_length = int64(int64:h) {
     string:c = ahget(h, "_clen");
     if (c == "0") { pass 0i64; }
     if (c == "1") { pass 1i64; }
@@ -129,7 +129,7 @@ pub func:static_length = int64(int64:h) {
 
 // ── Type wrapper ────────────────────────────────────────────────────────────
 
-Type:Static = {
+pub Type:Static = {
     func:init        = int64() { pass raw static_reset(); };
     func:set_root    = int32(int64:h, string:p) { pass raw static_set_root(h, p); };
     func:get_root    = string(int64:h) { pass raw static_get_root(h); };

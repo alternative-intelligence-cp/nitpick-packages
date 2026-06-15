@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-static"
+version = "0.1.0"
+
+[target.nitpick-static]
+type = "library"
+sources = ["src/nitpick_static.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-static]
+type = "binary"
+sources = ["tests/test_nitpick_static.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io"]

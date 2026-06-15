@@ -1,112 +1,127 @@
 // test_nitpick_static.npk — 12-test suite for nitpick-static (v0.12.1)
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+extern "libc" { func:printf = int32(string:fmt); }
 use "../src/nitpick_static.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+int64:fail_cnt = 0i64;
+
+func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+func:assert_eq_i64 = int64(int64:actual, int64:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i64);
+};
 
 func:test_config = int32() {
-    int32:pc = 0i32;
+    int64:h1 = raw Static.init();
+    string:r1 = raw Static.get_root(h1);
+    int64:t1 = 0i64;
+    if (r1 == "/var/www") { t1 = 1i64; }
+    drop assert_eq_i64(t1, 1i64, "T01 default root\0");
 
-    int64:h1 = raw static_reset();
-    string:r1 = raw static_get_root(h1);
-    if (r1 == "/var/www") { println("[PASS] T01 default root"); pc += 1i32; }
-    if (r1 != "/var/www") { println("[FAIL] T01"); }
+    drop raw Static.set_root(h1, "/srv/static");
+    string:r2 = raw Static.get_root(h1);
+    int64:t2 = 0i64;
+    if (r2 == "/srv/static") { t2 = 1i64; }
+    drop assert_eq_i64(t2, 1i64, "T02 set root\0");
 
-    int32:_sr = raw static_set_root(h1, "/srv/static");
-    string:r2 = raw static_get_root(h1);
-    if (r2 == "/srv/static") { println("[PASS] T02 set root"); pc += 1i32; }
-    if (r2 != "/srv/static") { println("[FAIL] T02"); }
-
-    pass pc;
+    pass 0i32;
 };
 
 func:test_mime = int32() {
-    int32:pc = 0i32;
+    string:m3 = raw Static.detect("style.css");
+    int64:t3 = 0i64;
+    if (m3 == "text/css") { t3 = 1i64; }
+    drop assert_eq_i64(t3, 1i64, "T03 mime css\0");
 
-    string:m3 = raw static_detect_mime("style.css");
-    if (m3 == "text/css") { println("[PASS] T03 mime css"); pc += 1i32; }
-    if (m3 != "text/css") { println("[FAIL] T03"); }
+    string:m4 = raw Static.detect("logo.png");
+    int64:t4 = 0i64;
+    if (m4 == "image/png") { t4 = 1i64; }
+    drop assert_eq_i64(t4, 1i64, "T04 mime png\0");
 
-    string:m4 = raw static_detect_mime("logo.png");
-    if (m4 == "image/png") { println("[PASS] T04 mime png"); pc += 1i32; }
-    if (m4 != "image/png") { println("[FAIL] T04"); }
+    string:m5 = raw Static.detect("app.js");
+    int64:t5 = 0i64;
+    if (m5 == "application/javascript") { t5 = 1i64; }
+    drop assert_eq_i64(t5, 1i64, "T05 mime js\0");
 
-    string:m5 = raw static_detect_mime("app.js");
-    if (m5 == "application/javascript") { println("[PASS] T05 mime js"); pc += 1i32; }
-    if (m5 != "application/javascript") { println("[FAIL] T05"); }
+    string:m6 = raw Static.detect("data.bin");
+    int64:t6 = 0i64;
+    if (m6 == "application/octet-stream") { t6 = 1i64; }
+    drop assert_eq_i64(t6, 1i64, "T06 mime octet fallback\0");
 
-    string:m6 = raw static_detect_mime("data.bin");
-    if (m6 == "application/octet-stream") { println("[PASS] T06 mime octet fallback"); pc += 1i32; }
-    if (m6 != "application/octet-stream") { println("[FAIL] T06"); }
-
-    pass pc;
+    pass 0i32;
 };
 
 func:test_resolve = int32() {
-    int32:pc = 0i32;
+    int64:h7 = raw Static.init();
+    drop raw Static.set_idx(h7, "home.html");
+    drop raw Static.resolve_url(h7, "/");
+    
+    string:p7 = raw Static.path(h7);
+    int64:t7 = 0i64;
+    if (string_contains(p7, "home.html")) { t7 = 1i64; }
+    drop assert_eq_i64(t7, 1i64, "T07 resolve / → index\0");
 
-    int64:h7 = raw static_reset();
-    int32:_si = raw static_set_index(h7, "home.html");
-    int32:res7 = raw static_resolve(h7, "/");
-    string:p7 = raw static_resolved_path(h7);
-    int32:t7 = 0i32;
-    if (string_contains(p7, "home.html")) { t7 = 1i32; }
-    if (t7 == 1i32) { println("[PASS] T07 resolve / → index"); pc += 1i32; }
-    if (t7 == 0i32) { println("[FAIL] T07"); }
+    drop raw Static.resolve_url(h7, "/about.html");
+    string:p8 = raw Static.path(h7);
+    int64:t8 = 0i64;
+    if (string_contains(p8, "/about.html")) { t8 = 1i64; }
+    drop assert_eq_i64(t8, 1i64, "T08 resolve /about.html\0");
 
-    int32:res8 = raw static_resolve(h7, "/about.html");
-    string:p8 = raw static_resolved_path(h7);
-    int32:t8 = 0i32;
-    if (string_contains(p8, "/about.html")) { t8 = 1i32; }
-    if (t8 == 1i32) { println("[PASS] T08 resolve /about.html"); pc += 1i32; }
-    if (t8 == 0i32) { println("[FAIL] T08"); }
+    string:m9 = raw Static.mime(h7);
+    int64:t9 = 0i64;
+    if (m9 == "text/html") { t9 = 1i64; }
+    drop assert_eq_i64(t9, 1i64, "T09 resolved mime html\0");
 
-    string:m9 = raw static_mime_type(h7);
-    if (m9 == "text/html") { println("[PASS] T09 resolved mime html"); pc += 1i32; }
-    if (m9 != "text/html") { println("[FAIL] T09"); }
-
-    pass pc;
+    pass 0i32;
 };
 
 func:test_security = int32() {
-    int32:pc = 0i32;
+    int64:h10 = raw Static.init();
 
-    int64:h10 = raw static_reset();
+    drop raw Static.resolve_url(h10, "/../etc/passwd");
+    string:e10 = raw Static.err(h10);
+    int64:t10 = 0i64;
+    if (string_contains(e10, "traversal")) { t10 = 1i64; }
+    drop assert_eq_i64(t10, 1i64, "T10 block .. traversal\0");
 
-    int32:res10 = raw static_resolve(h10, "/../etc/passwd");
-    string:e10 = raw static_error(h10);
-    int32:t10 = 0i32;
-    if (string_contains(e10, "traversal")) { t10 = 1i32; }
-    if (t10 == 1i32) { println("[PASS] T10 block .. traversal"); pc += 1i32; }
-    if (t10 == 0i32) { println("[FAIL] T10"); }
+    drop raw Static.resolve_url(h10, "/~admin");
+    string:e11 = raw Static.err(h10);
+    int64:t11 = 0i64;
+    if (string_contains(e11, "tilde")) { t11 = 1i64; }
+    drop assert_eq_i64(t11, 1i64, "T11 block tilde\0");
 
-    int32:res11 = raw static_resolve(h10, "/~admin");
-    string:e11 = raw static_error(h10);
-    int32:t11 = 0i32;
-    if (string_contains(e11, "tilde")) { t11 = 1i32; }
-    if (t11 == 1i32) { println("[PASS] T11 block tilde"); pc += 1i32; }
-    if (t11 == 0i32) { println("[FAIL] T11"); }
+    drop raw Static.resolve_url(h10, "/assets/app.js");
+    string:p12 = raw Static.path(h10);
+    int64:t12 = 0i64;
+    if (string_contains(p12, "/var/www/assets/app.js")) { t12 = 1i64; }
+    drop assert_eq_i64(t12, 1i64, "T12 clean path resolves\0");
 
-    int32:res12 = raw static_resolve(h10, "/assets/app.js");
-    string:p12 = raw static_resolved_path(h10);
-    int32:t12 = 0i32;
-    if (string_contains(p12, "/var/www/assets/app.js")) { t12 = 1i32; }
-    if (t12 == 1i32) { println("[PASS] T12 clean path resolves"); pc += 1i32; }
-    if (t12 == 0i32) { println("[FAIL] T12"); }
-
-    pass pc;
+    pass 0i32;
 };
 
 func:main = int32() {
-    int32:pass_count = 0i32;
-    int32:p1 = raw test_config();
-    int32:p2 = raw test_mime();
-    int32:p3 = raw test_resolve();
-    int32:p4 = raw test_security();
-    println("DONE");
+    drop raw test_config();
+    drop raw test_mime();
+    drop raw test_resolve();
+    drop raw test_security();
+
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
     
-    drop(println("---"));
-    
-        drop(println("PASS: all tests passed"));
-    exit 0;
+    drop(printf("SUCCESS: All tests passed.\n\0"));
+    exit 0i32;
 };
