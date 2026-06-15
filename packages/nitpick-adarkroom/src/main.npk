@@ -9,7 +9,7 @@ extern "libc" {
     func:usleep = int32(int32:usec);
 }
 
-func:failsafe = int32(tbb32:err) {
+func:failsafe = int32(tbb32:_err) {
     raw Tui_shutdown();
     exit 1i32;
 };

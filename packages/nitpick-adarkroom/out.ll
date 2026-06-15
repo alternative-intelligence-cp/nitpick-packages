@@ -9,7 +9,7 @@ source_filename = "src/main.npk"
 %LayoutCursor = type { i32, i32, i32, i32, i32 }
 %Widget = type { i32, i32, i32, i32, i32, i32, ptr, i32, i32, i32, i32 }
 %struct.NIL = type {}
-%QueryBuilder = type { ptr, ptr, ptr, ptr, ptr, i32, i32 }
+%QueryBuilder = type { ptr, i32, ptr, ptr, ptr, ptr, ptr, ptr, ptr, ptr, i32, i32 }
 
 @.str.data = private constant [6 x i8] c"dead\00\00"
 @.str = private constant %struct.NpkString { ptr @.str.data, i64 5 }
@@ -355,160 +355,291 @@ source_filename = "src/main.npk"
 @.str.340 = private constant %struct.NpkString { ptr @.str.data.339, i64 0 }
 @.str.data.341 = private constant [1 x i8] zeroinitializer
 @.str.342 = private constant %struct.NpkString { ptr @.str.data.341, i64 0 }
-@.str.data.343 = private constant [3 x i8] c"[ \00"
-@.str.344 = private constant %struct.NpkString { ptr @.str.data.343, i64 2 }
-@.str.data.345 = private constant [3 x i8] c" ]\00"
-@.str.346 = private constant %struct.NpkString { ptr @.str.data.345, i64 2 }
-@.str.data.347 = private constant [5 x i8] c"[X] \00"
-@.str.348 = private constant %struct.NpkString { ptr @.str.data.347, i64 4 }
-@.str.data.349 = private constant [5 x i8] c"[ ] \00"
-@.str.350 = private constant %struct.NpkString { ptr @.str.data.349, i64 4 }
-@.str.data.351 = private constant [2 x i8] c"[\00"
-@.str.352 = private constant %struct.NpkString { ptr @.str.data.351, i64 1 }
-@.str.data.353 = private constant [2 x i8] c"#\00"
-@.str.354 = private constant %struct.NpkString { ptr @.str.data.353, i64 1 }
-@.str.data.355 = private constant [2 x i8] c".\00"
-@.str.356 = private constant %struct.NpkString { ptr @.str.data.355, i64 1 }
-@.str.data.357 = private constant [2 x i8] c"]\00"
-@.str.358 = private constant %struct.NpkString { ptr @.str.data.357, i64 1 }
-@.str.data.359 = private constant [2 x i8] c"[\00"
-@.str.360 = private constant %struct.NpkString { ptr @.str.data.359, i64 1 }
-@.str.data.361 = private constant [2 x i8] c"-\00"
-@.str.362 = private constant %struct.NpkString { ptr @.str.data.361, i64 1 }
-@.str.data.363 = private constant [2 x i8] c"O\00"
-@.str.364 = private constant %struct.NpkString { ptr @.str.data.363, i64 1 }
-@.str.data.365 = private constant [2 x i8] c"-\00"
-@.str.366 = private constant %struct.NpkString { ptr @.str.data.365, i64 1 }
-@.str.data.367 = private constant [2 x i8] c"]\00"
-@.str.368 = private constant %struct.NpkString { ptr @.str.data.367, i64 1 }
-@.str.data.369 = private constant [3 x i8] c"|\00\00"
-@.str.370 = private constant %struct.NpkString { ptr @.str.data.369, i64 2 }
-@cast_overflow_msg = private unnamed_addr constant [42 x i8] c"Integer overflow in checked cast to int32\00", align 1
-@.str.data.371 = private constant [3 x i8] c"|\00\00"
-@.str.372 = private constant %struct.NpkString { ptr @.str.data.371, i64 2 }
-@.str.data.373 = private constant [2 x i8] c" \00"
+@.str.data.343 = private constant [4 x i8] c"\E2\94\8C\00"
+@.str.344 = private constant %struct.NpkString { ptr @.str.data.343, i64 3 }
+@.str.data.345 = private constant [4 x i8] c"\E2\94\80\00"
+@.str.346 = private constant %struct.NpkString { ptr @.str.data.345, i64 3 }
+@.str.data.347 = private constant [4 x i8] c"\E2\94\90\00"
+@.str.348 = private constant %struct.NpkString { ptr @.str.data.347, i64 3 }
+@.str.data.349 = private constant [4 x i8] c"\E2\94\82\00"
+@.str.350 = private constant %struct.NpkString { ptr @.str.data.349, i64 3 }
+@.str.data.351 = private constant [4 x i8] c"\E2\94\82\00"
+@.str.352 = private constant %struct.NpkString { ptr @.str.data.351, i64 3 }
+@.str.data.353 = private constant [4 x i8] c"\E2\94\94\00"
+@.str.354 = private constant %struct.NpkString { ptr @.str.data.353, i64 3 }
+@.str.data.355 = private constant [4 x i8] c"\E2\94\80\00"
+@.str.356 = private constant %struct.NpkString { ptr @.str.data.355, i64 3 }
+@.str.data.357 = private constant [4 x i8] c"\E2\94\98\00"
+@.str.358 = private constant %struct.NpkString { ptr @.str.data.357, i64 3 }
+@.str.data.359 = private constant [4 x i8] c"\E2\96\88\00"
+@.str.360 = private constant %struct.NpkString { ptr @.str.data.359, i64 3 }
+@.str.data.361 = private constant [4 x i8] c"\E2\96\91\00"
+@.str.362 = private constant %struct.NpkString { ptr @.str.data.361, i64 3 }
+@.str.data.363 = private constant [4 x i8] c"\E2\96\91\00"
+@.str.364 = private constant %struct.NpkString { ptr @.str.data.363, i64 3 }
+@.str.data.365 = private constant [3 x i8] c"[ \00"
+@.str.366 = private constant %struct.NpkString { ptr @.str.data.365, i64 2 }
+@.str.data.367 = private constant [3 x i8] c" ]\00"
+@.str.368 = private constant %struct.NpkString { ptr @.str.data.367, i64 2 }
+@.str.data.369 = private constant [5 x i8] c"[X] \00"
+@.str.370 = private constant %struct.NpkString { ptr @.str.data.369, i64 4 }
+@.str.data.371 = private constant [5 x i8] c"[ ] \00"
+@.str.372 = private constant %struct.NpkString { ptr @.str.data.371, i64 4 }
+@.str.data.373 = private constant [2 x i8] c"[\00"
 @.str.374 = private constant %struct.NpkString { ptr @.str.data.373, i64 1 }
-@.str.data.375 = private constant [2 x i8] c" \00"
+@.str.data.375 = private constant [2 x i8] c"#\00"
 @.str.376 = private constant %struct.NpkString { ptr @.str.data.375, i64 1 }
-@.str.data.377 = private constant [3 x i8] c"|\00\00"
-@.str.378 = private constant %struct.NpkString { ptr @.str.data.377, i64 2 }
-@.str.data.379 = private constant [3 x i8] c"[ \00"
-@.str.380 = private constant %struct.NpkString { ptr @.str.data.379, i64 2 }
-@.str.data.381 = private constant [6 x i8] c"  v ]\00"
-@.str.382 = private constant %struct.NpkString { ptr @.str.data.381, i64 5 }
-@.str.data.383 = private constant [3 x i8] c"|\00\00"
-@.str.384 = private constant %struct.NpkString { ptr @.str.data.383, i64 2 }
-@cast_overflow_msg.385 = private unnamed_addr constant [42 x i8] c"Integer overflow in checked cast to int32\00", align 1
-@cast_overflow_msg.386 = private unnamed_addr constant [42 x i8] c"Integer overflow in checked cast to int32\00", align 1
-@.str.data.387 = private constant [3 x i8] c"|\00\00"
-@.str.388 = private constant %struct.NpkString { ptr @.str.data.387, i64 2 }
-@.str.data.389 = private constant [3 x i8] c"|\00\00"
-@.str.390 = private constant %struct.NpkString { ptr @.str.data.389, i64 2 }
+@.str.data.377 = private constant [2 x i8] c".\00"
+@.str.378 = private constant %struct.NpkString { ptr @.str.data.377, i64 1 }
+@.str.data.379 = private constant [2 x i8] c"]\00"
+@.str.380 = private constant %struct.NpkString { ptr @.str.data.379, i64 1 }
+@.str.data.381 = private constant [2 x i8] c"[\00"
+@.str.382 = private constant %struct.NpkString { ptr @.str.data.381, i64 1 }
+@.str.data.383 = private constant [2 x i8] c"-\00"
+@.str.384 = private constant %struct.NpkString { ptr @.str.data.383, i64 1 }
+@.str.data.385 = private constant [2 x i8] c"O\00"
+@.str.386 = private constant %struct.NpkString { ptr @.str.data.385, i64 1 }
+@.str.data.387 = private constant [2 x i8] c"-\00"
+@.str.388 = private constant %struct.NpkString { ptr @.str.data.387, i64 1 }
+@.str.data.389 = private constant [2 x i8] c"]\00"
+@.str.390 = private constant %struct.NpkString { ptr @.str.data.389, i64 1 }
 @.str.data.391 = private constant [3 x i8] c"|\00\00"
 @.str.392 = private constant %struct.NpkString { ptr @.str.data.391, i64 2 }
-@.str.data.393 = private constant [3 x i8] c"[ \00"
+@.str.data.393 = private constant [3 x i8] c"|\00\00"
 @.str.394 = private constant %struct.NpkString { ptr @.str.data.393, i64 2 }
-@.str.data.395 = private constant [3 x i8] c" ]\00"
-@.str.396 = private constant %struct.NpkString { ptr @.str.data.395, i64 2 }
-@.str.data.397 = private constant [7 x i8] c"[ OK ]\00"
-@.str.398 = private constant %struct.NpkString { ptr @.str.data.397, i64 6 }
-@.str.data.399 = private constant [7 x i8] c"[ OK ]\00"
-@.str.400 = private constant %struct.NpkString { ptr @.str.data.399, i64 6 }
-@.str.data.401 = private constant [11 x i8] c"[ Cancel ]\00"
-@.str.402 = private constant %struct.NpkString { ptr @.str.data.401, i64 10 }
-@.str.data.403 = private constant [3 x i8] c"|\00\00"
-@.str.404 = private constant %struct.NpkString { ptr @.str.data.403, i64 2 }
-@cast_overflow_msg.405 = private unnamed_addr constant [42 x i8] c"Integer overflow in checked cast to int32\00", align 1
-@.str.data.406 = private constant [3 x i8] c"|\00\00"
-@.str.407 = private constant %struct.NpkString { ptr @.str.data.406, i64 2 }
-@.str.data.408 = private constant [2 x i8] c" \00"
-@.str.409 = private constant %struct.NpkString { ptr @.str.data.408, i64 1 }
-@.str.data.410 = private constant [2 x i8] c" \00"
-@.str.411 = private constant %struct.NpkString { ptr @.str.data.410, i64 1 }
-@.str.data.412 = private constant [3 x i8] c"|\00\00"
-@.str.413 = private constant %struct.NpkString { ptr @.str.data.412, i64 2 }
-@.str.data.414 = private constant [3 x i8] c"|\00\00"
-@.str.415 = private constant %struct.NpkString { ptr @.str.data.414, i64 2 }
-@cast_overflow_msg.416 = private unnamed_addr constant [42 x i8] c"Integer overflow in checked cast to int32\00", align 1
-@.str.data.417 = private constant [3 x i8] c",\00\00"
-@.str.418 = private constant %struct.NpkString { ptr @.str.data.417, i64 2 }
-@.str.data.419 = private constant [3 x i8] c",\00\00"
-@.str.420 = private constant %struct.NpkString { ptr @.str.data.419, i64 2 }
-@.str.data.421 = private constant [4 x i8] c" | \00"
-@.str.422 = private constant %struct.NpkString { ptr @.str.data.421, i64 3 }
-@.str.data.423 = private constant [2 x i8] c"*\00"
-@.str.424 = private constant %struct.NpkString { ptr @.str.data.423, i64 1 }
-@.str.data.425 = private constant [1 x i8] zeroinitializer
-@.str.426 = private constant %struct.NpkString { ptr @.str.data.425, i64 0 }
-@.str.data.427 = private constant [1 x i8] zeroinitializer
-@.str.428 = private constant %struct.NpkString { ptr @.str.data.427, i64 0 }
-@.str.data.429 = private constant [1 x i8] zeroinitializer
-@.str.430 = private constant %struct.NpkString { ptr @.str.data.429, i64 0 }
-@.str.data.431 = private constant [1 x i8] zeroinitializer
-@.str.432 = private constant %struct.NpkString { ptr @.str.data.431, i64 0 }
-@.str.data.433 = private constant [6 x i8] c" AND \00"
-@.str.434 = private constant %struct.NpkString { ptr @.str.data.433, i64 5 }
-@.str.data.435 = private constant [5 x i8] c" = '\00"
-@.str.436 = private constant %struct.NpkString { ptr @.str.data.435, i64 4 }
-@.str.data.437 = private constant [2 x i8] c"'\00"
-@.str.438 = private constant %struct.NpkString { ptr @.str.data.437, i64 1 }
-@.str.data.439 = private constant [2 x i8] c"\22\00"
+@.str.data.395 = private constant [2 x i8] c" \00"
+@.str.396 = private constant %struct.NpkString { ptr @.str.data.395, i64 1 }
+@.str.data.397 = private constant [2 x i8] c" \00"
+@.str.398 = private constant %struct.NpkString { ptr @.str.data.397, i64 1 }
+@.str.data.399 = private constant [3 x i8] c"|\00\00"
+@.str.400 = private constant %struct.NpkString { ptr @.str.data.399, i64 2 }
+@.str.data.401 = private constant [3 x i8] c"[ \00"
+@.str.402 = private constant %struct.NpkString { ptr @.str.data.401, i64 2 }
+@.str.data.403 = private constant [6 x i8] c"  v ]\00"
+@.str.404 = private constant %struct.NpkString { ptr @.str.data.403, i64 5 }
+@.str.data.405 = private constant [3 x i8] c"|\00\00"
+@.str.406 = private constant %struct.NpkString { ptr @.str.data.405, i64 2 }
+@.str.data.407 = private constant [3 x i8] c"|\00\00"
+@.str.408 = private constant %struct.NpkString { ptr @.str.data.407, i64 2 }
+@.str.data.409 = private constant [3 x i8] c"|\00\00"
+@.str.410 = private constant %struct.NpkString { ptr @.str.data.409, i64 2 }
+@.str.data.411 = private constant [3 x i8] c"|\00\00"
+@.str.412 = private constant %struct.NpkString { ptr @.str.data.411, i64 2 }
+@.str.data.413 = private constant [5 x i8] c"\E2\94\A4 \00"
+@.str.414 = private constant %struct.NpkString { ptr @.str.data.413, i64 4 }
+@.str.data.415 = private constant [5 x i8] c" \E2\94\9C\00"
+@.str.416 = private constant %struct.NpkString { ptr @.str.data.415, i64 4 }
+@.str.data.417 = private constant [9 x i8] c"[  OK  ]\00"
+@.str.418 = private constant %struct.NpkString { ptr @.str.data.417, i64 8 }
+@.str.data.419 = private constant [9 x i8] c"[  OK  ]\00"
+@.str.420 = private constant %struct.NpkString { ptr @.str.data.419, i64 8 }
+@.str.data.421 = private constant [11 x i8] c"[ Cancel ]\00"
+@.str.422 = private constant %struct.NpkString { ptr @.str.data.421, i64 10 }
+@.str.data.423 = private constant [3 x i8] c"|\00\00"
+@.str.424 = private constant %struct.NpkString { ptr @.str.data.423, i64 2 }
+@.str.data.425 = private constant [3 x i8] c"|\00\00"
+@.str.426 = private constant %struct.NpkString { ptr @.str.data.425, i64 2 }
+@.str.data.427 = private constant [2 x i8] c" \00"
+@.str.428 = private constant %struct.NpkString { ptr @.str.data.427, i64 1 }
+@.str.data.429 = private constant [2 x i8] c" \00"
+@.str.430 = private constant %struct.NpkString { ptr @.str.data.429, i64 1 }
+@.str.data.431 = private constant [3 x i8] c"|\00\00"
+@.str.432 = private constant %struct.NpkString { ptr @.str.data.431, i64 2 }
+@.str.data.433 = private constant [3 x i8] c"|\00\00"
+@.str.434 = private constant %struct.NpkString { ptr @.str.data.433, i64 2 }
+@.str.data.435 = private constant [3 x i8] c",\00\00"
+@.str.436 = private constant %struct.NpkString { ptr @.str.data.435, i64 2 }
+@.str.data.437 = private constant [3 x i8] c",\00\00"
+@.str.438 = private constant %struct.NpkString { ptr @.str.data.437, i64 2 }
+@.str.data.439 = private constant [2 x i8] c" \00"
 @.str.440 = private constant %struct.NpkString { ptr @.str.data.439, i64 1 }
-@.str.data.441 = private constant [5 x i8] c"\22: \22\00"
-@.str.442 = private constant %struct.NpkString { ptr @.str.data.441, i64 4 }
-@.str.443 = private constant %struct.NpkString { ptr @.str.data.439, i64 1 }
-@.str.data.444 = private constant [1 x i8] zeroinitializer
-@.str.445 = private constant %struct.NpkString { ptr @.str.data.444, i64 0 }
-@.str.data.446 = private constant [3 x i8] c", \00"
-@.str.447 = private constant %struct.NpkString { ptr @.str.data.446, i64 2 }
-@.str.data.448 = private constant [8 x i8] c"SELECT \00"
-@.str.449 = private constant %struct.NpkString { ptr @.str.data.448, i64 7 }
-@.str.data.450 = private constant [7 x i8] c" FROM \00"
-@.str.451 = private constant %struct.NpkString { ptr @.str.data.450, i64 6 }
-@.str.data.452 = private constant [1 x i8] zeroinitializer
-@.str.453 = private constant %struct.NpkString { ptr @.str.data.452, i64 0 }
-@.str.data.454 = private constant [8 x i8] c" WHERE \00"
-@.str.455 = private constant %struct.NpkString { ptr @.str.data.454, i64 7 }
-@.str.data.456 = private constant [1 x i8] zeroinitializer
-@.str.457 = private constant %struct.NpkString { ptr @.str.data.456, i64 0 }
-@.str.data.458 = private constant [11 x i8] c" ORDER BY \00"
-@.str.459 = private constant %struct.NpkString { ptr @.str.data.458, i64 10 }
-@.str.data.460 = private constant [8 x i8] c" LIMIT \00"
-@.str.461 = private constant %struct.NpkString { ptr @.str.data.460, i64 7 }
-@.str.data.462 = private constant [9 x i8] c" OFFSET \00"
-@.str.463 = private constant %struct.NpkString { ptr @.str.data.462, i64 8 }
-@.str.data.464 = private constant [2 x i8] c";\00"
-@.str.465 = private constant %struct.NpkString { ptr @.str.data.464, i64 1 }
-@.str.data.466 = private constant [2 x i8] c"{\00"
-@.str.467 = private constant %struct.NpkString { ptr @.str.data.466, i64 1 }
-@.str.data.468 = private constant [1 x i8] zeroinitializer
-@.str.469 = private constant %struct.NpkString { ptr @.str.data.468, i64 0 }
-@.str.data.470 = private constant [2 x i8] c"}\00"
+@.str.data.441 = private constant [2 x i8] c" \00"
+@.str.442 = private constant %struct.NpkString { ptr @.str.data.441, i64 1 }
+@.str.data.443 = private constant [4 x i8] c"\E2\94\82\00"
+@.str.444 = private constant %struct.NpkString { ptr @.str.data.443, i64 3 }
+@.str.data.445 = private constant [2 x i8] c"*\00"
+@.str.446 = private constant %struct.NpkString { ptr @.str.data.445, i64 1 }
+@.str.data.447 = private constant [1 x i8] zeroinitializer
+@.str.448 = private constant %struct.NpkString { ptr @.str.data.447, i64 0 }
+@.str.data.449 = private constant [1 x i8] zeroinitializer
+@.str.450 = private constant %struct.NpkString { ptr @.str.data.449, i64 0 }
+@.str.data.451 = private constant [1 x i8] zeroinitializer
+@.str.452 = private constant %struct.NpkString { ptr @.str.data.451, i64 0 }
+@.str.data.453 = private constant [1 x i8] zeroinitializer
+@.str.454 = private constant %struct.NpkString { ptr @.str.data.453, i64 0 }
+@.str.data.455 = private constant [1 x i8] zeroinitializer
+@.str.456 = private constant %struct.NpkString { ptr @.str.data.455, i64 0 }
+@.str.data.457 = private constant [1 x i8] zeroinitializer
+@.str.458 = private constant %struct.NpkString { ptr @.str.data.457, i64 0 }
+@.str.data.459 = private constant [1 x i8] zeroinitializer
+@.str.460 = private constant %struct.NpkString { ptr @.str.data.459, i64 0 }
+@.str.data.461 = private constant [1 x i8] zeroinitializer
+@.str.462 = private constant %struct.NpkString { ptr @.str.data.461, i64 0 }
+@.str.data.463 = private constant [2 x i8] c"'\00"
+@.str.464 = private constant %struct.NpkString { ptr @.str.data.463, i64 1 }
+@.str.465 = private constant %struct.NpkString { ptr @.str.data.463, i64 1 }
+@.str.data.466 = private constant [3 x i8] c", \00"
+@.str.467 = private constant %struct.NpkString { ptr @.str.data.466, i64 2 }
+@.str.data.468 = private constant [4 x i8] c", '\00"
+@.str.469 = private constant %struct.NpkString { ptr @.str.data.468, i64 3 }
+@.str.data.470 = private constant [2 x i8] c"'\00"
 @.str.471 = private constant %struct.NpkString { ptr @.str.data.470, i64 1 }
-@.str.data.472 = private constant [2 x i8] c"{\00"
-@.str.473 = private constant %struct.NpkString { ptr @.str.data.472, i64 1 }
-@.str.data.474 = private constant [1 x i8] zeroinitializer
-@.str.475 = private constant %struct.NpkString { ptr @.str.data.474, i64 0 }
-@.str.data.476 = private constant [6 x i8] c" DESC\00"
-@.str.477 = private constant %struct.NpkString { ptr @.str.data.476, i64 5 }
-@.str.data.478 = private constant [6 x i8] c" DESC\00"
-@.str.479 = private constant %struct.NpkString { ptr @.str.data.478, i64 5 }
-@.str.data.480 = private constant [11 x i8] c"\22sort\22: {\22\00"
-@.str.481 = private constant %struct.NpkString { ptr @.str.data.480, i64 10 }
-@.str.data.482 = private constant [7 x i8] c"\22: -1}\00"
-@.str.483 = private constant %struct.NpkString { ptr @.str.data.482, i64 6 }
-@.str.data.484 = private constant [5 x i8] c" ASC\00"
-@.str.485 = private constant %struct.NpkString { ptr @.str.data.484, i64 4 }
-@.str.data.486 = private constant [11 x i8] c"\22sort\22: {\22\00"
-@.str.487 = private constant %struct.NpkString { ptr @.str.data.486, i64 10 }
-@.str.data.488 = private constant [6 x i8] c"\22: 1}\00"
-@.str.489 = private constant %struct.NpkString { ptr @.str.data.488, i64 5 }
-@.str.data.490 = private constant [3 x i8] c", \00"
-@.str.491 = private constant %struct.NpkString { ptr @.str.data.490, i64 2 }
-@.str.data.492 = private constant [10 x i8] c"\22limit\22: \00"
-@.str.493 = private constant %struct.NpkString { ptr @.str.data.492, i64 9 }
-@.str.data.494 = private constant [2 x i8] c"}\00"
-@.str.495 = private constant %struct.NpkString { ptr @.str.data.494, i64 1 }
+@.str.data.472 = private constant [5 x i8] c" = '\00"
+@.str.473 = private constant %struct.NpkString { ptr @.str.data.472, i64 4 }
+@.str.data.474 = private constant [2 x i8] c"'\00"
+@.str.475 = private constant %struct.NpkString { ptr @.str.data.474, i64 1 }
+@.str.data.476 = private constant [1 x i8] zeroinitializer
+@.str.477 = private constant %struct.NpkString { ptr @.str.data.476, i64 0 }
+@.str.data.478 = private constant [3 x i8] c", \00"
+@.str.479 = private constant %struct.NpkString { ptr @.str.data.478, i64 2 }
+@.str.data.480 = private constant [2 x i8] c"\22\00"
+@.str.481 = private constant %struct.NpkString { ptr @.str.data.480, i64 1 }
+@.str.data.482 = private constant [5 x i8] c"\22: \22\00"
+@.str.483 = private constant %struct.NpkString { ptr @.str.data.482, i64 4 }
+@.str.484 = private constant %struct.NpkString { ptr @.str.data.480, i64 1 }
+@.str.data.485 = private constant [1 x i8] zeroinitializer
+@.str.486 = private constant %struct.NpkString { ptr @.str.data.485, i64 0 }
+@.str.data.487 = private constant [3 x i8] c", \00"
+@.str.488 = private constant %struct.NpkString { ptr @.str.data.487, i64 2 }
+@.str.data.489 = private constant [1 x i8] zeroinitializer
+@.str.490 = private constant %struct.NpkString { ptr @.str.data.489, i64 0 }
+@.str.data.491 = private constant [3 x i8] c", \00"
+@.str.492 = private constant %struct.NpkString { ptr @.str.data.491, i64 2 }
+@.str.data.493 = private constant [3 x i8] c", \00"
+@.str.494 = private constant %struct.NpkString { ptr @.str.data.493, i64 2 }
+@.str.data.495 = private constant [4 x i8] c" = \00"
+@.str.496 = private constant %struct.NpkString { ptr @.str.data.495, i64 3 }
+@.str.data.497 = private constant [1 x i8] zeroinitializer
+@.str.498 = private constant %struct.NpkString { ptr @.str.data.497, i64 0 }
+@.str.data.499 = private constant [3 x i8] c", \00"
+@.str.500 = private constant %struct.NpkString { ptr @.str.data.499, i64 2 }
+@.str.data.501 = private constant [2 x i8] c"\22\00"
+@.str.502 = private constant %struct.NpkString { ptr @.str.data.501, i64 1 }
+@.str.data.503 = private constant [4 x i8] c"\22: \00"
+@.str.504 = private constant %struct.NpkString { ptr @.str.data.503, i64 3 }
+@.str.data.505 = private constant [1 x i8] zeroinitializer
+@.str.506 = private constant %struct.NpkString { ptr @.str.data.505, i64 0 }
+@.str.data.507 = private constant [3 x i8] c", \00"
+@.str.508 = private constant %struct.NpkString { ptr @.str.data.507, i64 2 }
+@.str.data.509 = private constant [1 x i8] zeroinitializer
+@.str.510 = private constant %struct.NpkString { ptr @.str.data.509, i64 0 }
+@.str.data.511 = private constant [6 x i8] c" AND \00"
+@.str.512 = private constant %struct.NpkString { ptr @.str.data.511, i64 5 }
+@.str.data.513 = private constant [5 x i8] c" = '\00"
+@.str.514 = private constant %struct.NpkString { ptr @.str.data.513, i64 4 }
+@.str.data.515 = private constant [2 x i8] c"'\00"
+@.str.516 = private constant %struct.NpkString { ptr @.str.data.515, i64 1 }
+@.str.data.517 = private constant [2 x i8] c"\22\00"
+@.str.518 = private constant %struct.NpkString { ptr @.str.data.517, i64 1 }
+@.str.data.519 = private constant [5 x i8] c"\22: \22\00"
+@.str.520 = private constant %struct.NpkString { ptr @.str.data.519, i64 4 }
+@.str.521 = private constant %struct.NpkString { ptr @.str.data.517, i64 1 }
+@.str.data.522 = private constant [1 x i8] zeroinitializer
+@.str.523 = private constant %struct.NpkString { ptr @.str.data.522, i64 0 }
+@.str.data.524 = private constant [3 x i8] c", \00"
+@.str.525 = private constant %struct.NpkString { ptr @.str.data.524, i64 2 }
+@.str.data.526 = private constant [4 x i8] c" = \00"
+@.str.527 = private constant %struct.NpkString { ptr @.str.data.526, i64 3 }
+@.str.data.528 = private constant [2 x i8] c"\22\00"
+@.str.529 = private constant %struct.NpkString { ptr @.str.data.528, i64 1 }
+@.str.data.530 = private constant [4 x i8] c"\22: \00"
+@.str.531 = private constant %struct.NpkString { ptr @.str.data.530, i64 3 }
+@.str.data.532 = private constant [1 x i8] zeroinitializer
+@.str.533 = private constant %struct.NpkString { ptr @.str.data.532, i64 0 }
+@.str.data.534 = private constant [3 x i8] c", \00"
+@.str.535 = private constant %struct.NpkString { ptr @.str.data.534, i64 2 }
+@.str.data.536 = private constant [13 x i8] c"INSERT INTO \00"
+@.str.537 = private constant %struct.NpkString { ptr @.str.data.536, i64 12 }
+@.str.data.538 = private constant [3 x i8] c" (\00"
+@.str.539 = private constant %struct.NpkString { ptr @.str.data.538, i64 2 }
+@.str.data.540 = private constant [11 x i8] c") VALUES (\00"
+@.str.541 = private constant %struct.NpkString { ptr @.str.data.540, i64 10 }
+@.str.data.542 = private constant [3 x i8] c");\00"
+@.str.543 = private constant %struct.NpkString { ptr @.str.data.542, i64 2 }
+@.str.data.544 = private constant [8 x i8] c"UPDATE \00"
+@.str.545 = private constant %struct.NpkString { ptr @.str.data.544, i64 7 }
+@.str.data.546 = private constant [6 x i8] c" SET \00"
+@.str.547 = private constant %struct.NpkString { ptr @.str.data.546, i64 5 }
+@.str.data.548 = private constant [1 x i8] zeroinitializer
+@.str.549 = private constant %struct.NpkString { ptr @.str.data.548, i64 0 }
+@.str.data.550 = private constant [8 x i8] c" WHERE \00"
+@.str.551 = private constant %struct.NpkString { ptr @.str.data.550, i64 7 }
+@.str.data.552 = private constant [2 x i8] c";\00"
+@.str.553 = private constant %struct.NpkString { ptr @.str.data.552, i64 1 }
+@.str.data.554 = private constant [13 x i8] c"DELETE FROM \00"
+@.str.555 = private constant %struct.NpkString { ptr @.str.data.554, i64 12 }
+@.str.data.556 = private constant [1 x i8] zeroinitializer
+@.str.557 = private constant %struct.NpkString { ptr @.str.data.556, i64 0 }
+@.str.data.558 = private constant [8 x i8] c" WHERE \00"
+@.str.559 = private constant %struct.NpkString { ptr @.str.data.558, i64 7 }
+@.str.data.560 = private constant [2 x i8] c";\00"
+@.str.561 = private constant %struct.NpkString { ptr @.str.data.560, i64 1 }
+@.str.data.562 = private constant [8 x i8] c"SELECT \00"
+@.str.563 = private constant %struct.NpkString { ptr @.str.data.562, i64 7 }
+@.str.data.564 = private constant [7 x i8] c" FROM \00"
+@.str.565 = private constant %struct.NpkString { ptr @.str.data.564, i64 6 }
+@.str.data.566 = private constant [1 x i8] zeroinitializer
+@.str.567 = private constant %struct.NpkString { ptr @.str.data.566, i64 0 }
+@.str.data.568 = private constant [8 x i8] c" WHERE \00"
+@.str.569 = private constant %struct.NpkString { ptr @.str.data.568, i64 7 }
+@.str.data.570 = private constant [1 x i8] zeroinitializer
+@.str.571 = private constant %struct.NpkString { ptr @.str.data.570, i64 0 }
+@.str.data.572 = private constant [11 x i8] c" ORDER BY \00"
+@.str.573 = private constant %struct.NpkString { ptr @.str.data.572, i64 10 }
+@.str.data.574 = private constant [8 x i8] c" LIMIT \00"
+@.str.575 = private constant %struct.NpkString { ptr @.str.data.574, i64 7 }
+@.str.data.576 = private constant [9 x i8] c" OFFSET \00"
+@.str.577 = private constant %struct.NpkString { ptr @.str.data.576, i64 8 }
+@.str.data.578 = private constant [2 x i8] c";\00"
+@.str.579 = private constant %struct.NpkString { ptr @.str.data.578, i64 1 }
+@.str.data.580 = private constant [2 x i8] c"{\00"
+@.str.581 = private constant %struct.NpkString { ptr @.str.data.580, i64 1 }
+@.str.data.582 = private constant [1 x i8] zeroinitializer
+@.str.583 = private constant %struct.NpkString { ptr @.str.data.582, i64 0 }
+@.str.data.584 = private constant [2 x i8] c"}\00"
+@.str.585 = private constant %struct.NpkString { ptr @.str.data.584, i64 1 }
+@.str.data.586 = private constant [11 x i8] c"{\22$set\22: {\00"
+@.str.587 = private constant %struct.NpkString { ptr @.str.data.586, i64 10 }
+@.str.data.588 = private constant [1 x i8] zeroinitializer
+@.str.589 = private constant %struct.NpkString { ptr @.str.data.588, i64 0 }
+@.str.data.590 = private constant [3 x i8] c"}}\00"
+@.str.591 = private constant %struct.NpkString { ptr @.str.data.590, i64 2 }
+@.str.data.592 = private constant [2 x i8] c"{\00"
+@.str.593 = private constant %struct.NpkString { ptr @.str.data.592, i64 1 }
+@.str.data.594 = private constant [1 x i8] zeroinitializer
+@.str.595 = private constant %struct.NpkString { ptr @.str.data.594, i64 0 }
+@.str.data.596 = private constant [2 x i8] c"}\00"
+@.str.597 = private constant %struct.NpkString { ptr @.str.data.596, i64 1 }
+@.str.data.598 = private constant [2 x i8] c"{\00"
+@.str.599 = private constant %struct.NpkString { ptr @.str.data.598, i64 1 }
+@.str.data.600 = private constant [1 x i8] zeroinitializer
+@.str.601 = private constant %struct.NpkString { ptr @.str.data.600, i64 0 }
+@.str.data.602 = private constant [2 x i8] c"}\00"
+@.str.603 = private constant %struct.NpkString { ptr @.str.data.602, i64 1 }
+@.str.data.604 = private constant [2 x i8] c"{\00"
+@.str.605 = private constant %struct.NpkString { ptr @.str.data.604, i64 1 }
+@.str.data.606 = private constant [1 x i8] zeroinitializer
+@.str.607 = private constant %struct.NpkString { ptr @.str.data.606, i64 0 }
+@.str.data.608 = private constant [6 x i8] c" DESC\00"
+@.str.609 = private constant %struct.NpkString { ptr @.str.data.608, i64 5 }
+@.str.data.610 = private constant [6 x i8] c" DESC\00"
+@.str.611 = private constant %struct.NpkString { ptr @.str.data.610, i64 5 }
+@.str.data.612 = private constant [11 x i8] c"\22sort\22: {\22\00"
+@.str.613 = private constant %struct.NpkString { ptr @.str.data.612, i64 10 }
+@.str.data.614 = private constant [7 x i8] c"\22: -1}\00"
+@.str.615 = private constant %struct.NpkString { ptr @.str.data.614, i64 6 }
+@.str.data.616 = private constant [5 x i8] c" ASC\00"
+@.str.617 = private constant %struct.NpkString { ptr @.str.data.616, i64 4 }
+@.str.data.618 = private constant [11 x i8] c"\22sort\22: {\22\00"
+@.str.619 = private constant %struct.NpkString { ptr @.str.data.618, i64 10 }
+@.str.data.620 = private constant [6 x i8] c"\22: 1}\00"
+@.str.621 = private constant %struct.NpkString { ptr @.str.data.620, i64 5 }
+@.str.data.622 = private constant [3 x i8] c", \00"
+@.str.623 = private constant %struct.NpkString { ptr @.str.data.622, i64 2 }
+@.str.data.624 = private constant [10 x i8] c"\22limit\22: \00"
+@.str.625 = private constant %struct.NpkString { ptr @.str.data.624, i64 9 }
+@.str.data.626 = private constant [2 x i8] c"}\00"
+@.str.627 = private constant %struct.NpkString { ptr @.str.data.626, i64 1 }
 @Numeric_vtable_int8 = internal constant %Numeric_vtable_t zeroinitializer
 @Numeric_vtable_int16 = internal constant %Numeric_vtable_t zeroinitializer
 @Numeric_vtable_int32 = internal constant %Numeric_vtable_t zeroinitializer
@@ -569,94 +700,94 @@ source_filename = "src/main.npk"
 @Display_vtable_nyte = internal constant %Display_vtable_t zeroinitializer
 @Display_vtable_bool = internal constant %Display_vtable_t zeroinitializer
 @Display_vtable_string = internal constant %Display_vtable_t zeroinitializer
-@.str.data.496 = private constant [27 x i8] c"mongodb://localhost:27017\00\00"
-@.str.497 = private constant %struct.NpkString { ptr @.str.data.496, i64 26 }
-@.str.data.498 = private constant [15 x i8] c"nitpick_games\00\00"
-@.str.499 = private constant %struct.NpkString { ptr @.str.data.498, i64 14 }
-@.str.data.500 = private constant [16 x i8] c"adarkroom_save\00\00"
-@.str.501 = private constant %struct.NpkString { ptr @.str.data.500, i64 15 }
-@.str.data.502 = private constant [16 x i8] c"{\22save_id\22: 1}\00\00"
-@.str.503 = private constant %struct.NpkString { ptr @.str.data.502, i64 15 }
-@.str.data.504 = private constant [2 x i8] zeroinitializer
-@.str.505 = private constant %struct.NpkString { ptr @.str.data.504, i64 1 }
-@.str.data.506 = private constant [1 x i8] zeroinitializer
-@.str.507 = private constant %struct.NpkString { ptr @.str.data.506, i64 0 }
-@.str.data.508 = private constant [6 x i8] c"wood\00\00"
-@.str.509 = private constant %struct.NpkString { ptr @.str.data.508, i64 5 }
-@.str.data.510 = private constant [12 x i8] c"fire_level\00\00"
-@.str.511 = private constant %struct.NpkString { ptr @.str.data.510, i64 11 }
-@.str.data.512 = private constant [11 x i8] c"room_temp\00\00"
-@.str.513 = private constant %struct.NpkString { ptr @.str.data.512, i64 10 }
-@.str.data.514 = private constant [27 x i8] c"Save loaded from MongoDB.\00\00"
-@.str.515 = private constant %struct.NpkString { ptr @.str.data.514, i64 26 }
-@.str.data.516 = private constant [19 x i8] c"the room is cold.\00\00"
-@.str.517 = private constant %struct.NpkString { ptr @.str.data.516, i64 18 }
-@.str.data.518 = private constant [31 x i8] c"A DARK ROOM - NITPICK EDITION\00\00"
-@.str.519 = private constant %struct.NpkString { ptr @.str.data.518, i64 30 }
-@.str.data.520 = private constant [11 x i8] c"INVENTORY\00\00"
-@.str.521 = private constant %struct.NpkString { ptr @.str.data.520, i64 10 }
-@.str.data.522 = private constant [8 x i8] c"Wood: \00\00"
-@.str.523 = private constant %struct.NpkString { ptr @.str.data.522, i64 7 }
-@.str.data.524 = private constant [12 x i8] c"          \00\00"
-@.str.525 = private constant %struct.NpkString { ptr @.str.data.524, i64 11 }
-@.str.data.526 = private constant [8 x i8] c"EVENTS\00\00"
-@.str.527 = private constant %struct.NpkString { ptr @.str.data.526, i64 7 }
-@.str.data.528 = private constant [42 x i8] c"                                        \00\00"
-@.str.529 = private constant %struct.NpkString { ptr @.str.data.528, i64 41 }
-@.str.data.530 = private constant [42 x i8] c"                                        \00\00"
-@.str.531 = private constant %struct.NpkString { ptr @.str.data.530, i64 41 }
-@.str.data.532 = private constant [42 x i8] c"                                        \00\00"
-@.str.533 = private constant %struct.NpkString { ptr @.str.data.532, i64 41 }
-@.str.data.534 = private constant [42 x i8] c"                                        \00\00"
-@.str.535 = private constant %struct.NpkString { ptr @.str.data.534, i64 41 }
-@.str.data.536 = private constant [42 x i8] c"                                        \00\00"
-@.str.537 = private constant %struct.NpkString { ptr @.str.data.536, i64 41 }
-@.str.data.538 = private constant [9 x i8] c"ACTIONS\00\00"
-@.str.539 = private constant %struct.NpkString { ptr @.str.data.538, i64 8 }
-@.str.data.540 = private constant [15 x i8] c"1] Stoke Fire\00\00"
-@.str.541 = private constant %struct.NpkString { ptr @.str.data.540, i64 14 }
-@.str.data.542 = private constant [16 x i8] c"2] Gather Wood\00\00"
-@.str.543 = private constant %struct.NpkString { ptr @.str.data.542, i64 15 }
-@.str.data.544 = private constant [14 x i8] c"S] Save Game\00\00"
-@.str.545 = private constant %struct.NpkString { ptr @.str.data.544, i64 13 }
-@.str.data.546 = private constant [9 x i8] c"Q] Quit\00\00"
-@.str.547 = private constant %struct.NpkString { ptr @.str.data.546, i64 8 }
-@.str.data.548 = private constant [8 x i8] c"Fire: \00\00"
-@.str.549 = private constant %struct.NpkString { ptr @.str.data.548, i64 7 }
-@.str.data.550 = private constant [12 x i8] c"          \00\00"
-@.str.551 = private constant %struct.NpkString { ptr @.str.data.550, i64 11 }
-@.str.data.552 = private constant [8 x i8] c"Room: \00\00"
-@.str.553 = private constant %struct.NpkString { ptr @.str.data.552, i64 7 }
-@.str.data.554 = private constant [12 x i8] c"          \00\00"
-@.str.555 = private constant %struct.NpkString { ptr @.str.data.554, i64 11 }
-@.str.data.556 = private constant [15 x i8] c"nitpick_games\00\00"
-@.str.557 = private constant %struct.NpkString { ptr @.str.data.556, i64 14 }
-@.str.data.558 = private constant [16 x i8] c"adarkroom_save\00\00"
-@.str.559 = private constant %struct.NpkString { ptr @.str.data.558, i64 15 }
-@.str.data.560 = private constant [16 x i8] c"{\22save_id\22: 1}\00\00"
-@.str.561 = private constant %struct.NpkString { ptr @.str.data.560, i64 15 }
-@.str.data.562 = private constant [25 x i8] c"{\22save_id\22: 1, \22wood\22: \00\00"
-@.str.563 = private constant %struct.NpkString { ptr @.str.data.562, i64 24 }
-@.str.data.564 = private constant [18 x i8] c", \22fire_level\22: \00\00"
-@.str.565 = private constant %struct.NpkString { ptr @.str.data.564, i64 17 }
-@.str.data.566 = private constant [17 x i8] c", \22room_temp\22: \00\00"
-@.str.567 = private constant %struct.NpkString { ptr @.str.data.566, i64 16 }
-@.str.data.568 = private constant [3 x i8] c"}\00\00"
-@.str.569 = private constant %struct.NpkString { ptr @.str.data.568, i64 2 }
-@.str.data.570 = private constant [15 x i8] c"nitpick_games\00\00"
-@.str.571 = private constant %struct.NpkString { ptr @.str.data.570, i64 14 }
-@.str.data.572 = private constant [16 x i8] c"adarkroom_save\00\00"
-@.str.573 = private constant %struct.NpkString { ptr @.str.data.572, i64 15 }
-@.str.data.574 = private constant [24 x i8] c"Game saved to MongoDB.\00\00"
-@.str.575 = private constant %struct.NpkString { ptr @.str.data.574, i64 23 }
-@.str.data.576 = private constant [24 x i8] c"No MongoDB connection.\00\00"
-@.str.577 = private constant %struct.NpkString { ptr @.str.data.576, i64 23 }
-@.str.data.578 = private constant [22 x i8] c"the fire is roaring.\00\00"
-@.str.579 = private constant %struct.NpkString { ptr @.str.data.578, i64 21 }
-@.str.data.580 = private constant [30 x i8] c"dry wood added to inventory.\00\00"
-@.str.581 = private constant %struct.NpkString { ptr @.str.data.580, i64 29 }
-@.str.data.582 = private constant [19 x i8] c"the fire is dead.\00\00"
-@.str.583 = private constant %struct.NpkString { ptr @.str.data.582, i64 18 }
+@.str.data.628 = private constant [27 x i8] c"mongodb://localhost:27017\00\00"
+@.str.629 = private constant %struct.NpkString { ptr @.str.data.628, i64 26 }
+@.str.data.630 = private constant [15 x i8] c"nitpick_games\00\00"
+@.str.631 = private constant %struct.NpkString { ptr @.str.data.630, i64 14 }
+@.str.data.632 = private constant [16 x i8] c"adarkroom_save\00\00"
+@.str.633 = private constant %struct.NpkString { ptr @.str.data.632, i64 15 }
+@.str.data.634 = private constant [16 x i8] c"{\22save_id\22: 1}\00\00"
+@.str.635 = private constant %struct.NpkString { ptr @.str.data.634, i64 15 }
+@.str.data.636 = private constant [2 x i8] zeroinitializer
+@.str.637 = private constant %struct.NpkString { ptr @.str.data.636, i64 1 }
+@.str.data.638 = private constant [1 x i8] zeroinitializer
+@.str.639 = private constant %struct.NpkString { ptr @.str.data.638, i64 0 }
+@.str.data.640 = private constant [6 x i8] c"wood\00\00"
+@.str.641 = private constant %struct.NpkString { ptr @.str.data.640, i64 5 }
+@.str.data.642 = private constant [12 x i8] c"fire_level\00\00"
+@.str.643 = private constant %struct.NpkString { ptr @.str.data.642, i64 11 }
+@.str.data.644 = private constant [11 x i8] c"room_temp\00\00"
+@.str.645 = private constant %struct.NpkString { ptr @.str.data.644, i64 10 }
+@.str.data.646 = private constant [27 x i8] c"Save loaded from MongoDB.\00\00"
+@.str.647 = private constant %struct.NpkString { ptr @.str.data.646, i64 26 }
+@.str.data.648 = private constant [19 x i8] c"the room is cold.\00\00"
+@.str.649 = private constant %struct.NpkString { ptr @.str.data.648, i64 18 }
+@.str.data.650 = private constant [31 x i8] c"A DARK ROOM - NITPICK EDITION\00\00"
+@.str.651 = private constant %struct.NpkString { ptr @.str.data.650, i64 30 }
+@.str.data.652 = private constant [11 x i8] c"INVENTORY\00\00"
+@.str.653 = private constant %struct.NpkString { ptr @.str.data.652, i64 10 }
+@.str.data.654 = private constant [8 x i8] c"Wood: \00\00"
+@.str.655 = private constant %struct.NpkString { ptr @.str.data.654, i64 7 }
+@.str.data.656 = private constant [12 x i8] c"          \00\00"
+@.str.657 = private constant %struct.NpkString { ptr @.str.data.656, i64 11 }
+@.str.data.658 = private constant [8 x i8] c"EVENTS\00\00"
+@.str.659 = private constant %struct.NpkString { ptr @.str.data.658, i64 7 }
+@.str.data.660 = private constant [42 x i8] c"                                        \00\00"
+@.str.661 = private constant %struct.NpkString { ptr @.str.data.660, i64 41 }
+@.str.data.662 = private constant [42 x i8] c"                                        \00\00"
+@.str.663 = private constant %struct.NpkString { ptr @.str.data.662, i64 41 }
+@.str.data.664 = private constant [42 x i8] c"                                        \00\00"
+@.str.665 = private constant %struct.NpkString { ptr @.str.data.664, i64 41 }
+@.str.data.666 = private constant [42 x i8] c"                                        \00\00"
+@.str.667 = private constant %struct.NpkString { ptr @.str.data.666, i64 41 }
+@.str.data.668 = private constant [42 x i8] c"                                        \00\00"
+@.str.669 = private constant %struct.NpkString { ptr @.str.data.668, i64 41 }
+@.str.data.670 = private constant [9 x i8] c"ACTIONS\00\00"
+@.str.671 = private constant %struct.NpkString { ptr @.str.data.670, i64 8 }
+@.str.data.672 = private constant [15 x i8] c"1] Stoke Fire\00\00"
+@.str.673 = private constant %struct.NpkString { ptr @.str.data.672, i64 14 }
+@.str.data.674 = private constant [16 x i8] c"2] Gather Wood\00\00"
+@.str.675 = private constant %struct.NpkString { ptr @.str.data.674, i64 15 }
+@.str.data.676 = private constant [14 x i8] c"S] Save Game\00\00"
+@.str.677 = private constant %struct.NpkString { ptr @.str.data.676, i64 13 }
+@.str.data.678 = private constant [9 x i8] c"Q] Quit\00\00"
+@.str.679 = private constant %struct.NpkString { ptr @.str.data.678, i64 8 }
+@.str.data.680 = private constant [8 x i8] c"Fire: \00\00"
+@.str.681 = private constant %struct.NpkString { ptr @.str.data.680, i64 7 }
+@.str.data.682 = private constant [12 x i8] c"          \00\00"
+@.str.683 = private constant %struct.NpkString { ptr @.str.data.682, i64 11 }
+@.str.data.684 = private constant [8 x i8] c"Room: \00\00"
+@.str.685 = private constant %struct.NpkString { ptr @.str.data.684, i64 7 }
+@.str.data.686 = private constant [12 x i8] c"          \00\00"
+@.str.687 = private constant %struct.NpkString { ptr @.str.data.686, i64 11 }
+@.str.data.688 = private constant [15 x i8] c"nitpick_games\00\00"
+@.str.689 = private constant %struct.NpkString { ptr @.str.data.688, i64 14 }
+@.str.data.690 = private constant [16 x i8] c"adarkroom_save\00\00"
+@.str.691 = private constant %struct.NpkString { ptr @.str.data.690, i64 15 }
+@.str.data.692 = private constant [16 x i8] c"{\22save_id\22: 1}\00\00"
+@.str.693 = private constant %struct.NpkString { ptr @.str.data.692, i64 15 }
+@.str.data.694 = private constant [25 x i8] c"{\22save_id\22: 1, \22wood\22: \00\00"
+@.str.695 = private constant %struct.NpkString { ptr @.str.data.694, i64 24 }
+@.str.data.696 = private constant [18 x i8] c", \22fire_level\22: \00\00"
+@.str.697 = private constant %struct.NpkString { ptr @.str.data.696, i64 17 }
+@.str.data.698 = private constant [17 x i8] c", \22room_temp\22: \00\00"
+@.str.699 = private constant %struct.NpkString { ptr @.str.data.698, i64 16 }
+@.str.data.700 = private constant [3 x i8] c"}\00\00"
+@.str.701 = private constant %struct.NpkString { ptr @.str.data.700, i64 2 }
+@.str.data.702 = private constant [15 x i8] c"nitpick_games\00\00"
+@.str.703 = private constant %struct.NpkString { ptr @.str.data.702, i64 14 }
+@.str.data.704 = private constant [16 x i8] c"adarkroom_save\00\00"
+@.str.705 = private constant %struct.NpkString { ptr @.str.data.704, i64 15 }
+@.str.data.706 = private constant [24 x i8] c"Game saved to MongoDB.\00\00"
+@.str.707 = private constant %struct.NpkString { ptr @.str.data.706, i64 23 }
+@.str.data.708 = private constant [24 x i8] c"No MongoDB connection.\00\00"
+@.str.709 = private constant %struct.NpkString { ptr @.str.data.708, i64 23 }
+@.str.data.710 = private constant [22 x i8] c"the fire is roaring.\00\00"
+@.str.711 = private constant %struct.NpkString { ptr @.str.data.710, i64 21 }
+@.str.data.712 = private constant [30 x i8] c"dry wood added to inventory.\00\00"
+@.str.713 = private constant %struct.NpkString { ptr @.str.data.712, i64 29 }
+@.str.data.714 = private constant [19 x i8] c"the fire is dead.\00\00"
+@.str.715 = private constant %struct.NpkString { ptr @.str.data.714, i64 18 }
 
 define { %GameState, ptr, i8 } @init_state() {
 entry:
@@ -4274,6 +4405,116 @@ entry:
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
+define { %Widget, ptr, i8 } @Layout_vbox_center(%LayoutCursor %cur, %Widget %wdg, i32 %container_w) {
+entry:
+  %cur_alloca = alloca %LayoutCursor, align 8
+  store %LayoutCursor %cur, ptr %cur_alloca, align 4
+  %wdg_alloca = alloca %Widget, align 8
+  store %Widget %wdg, ptr %wdg_alloca, align 8
+  %container_w.addr = alloca i32, align 4
+  store i32 %container_w, ptr %container_w.addr, align 4
+  %pos = alloca %Widget, align 8
+  %wdg1 = load %Widget, ptr %wdg_alloca, align 8
+  store %Widget %wdg1, ptr %pos, align 8
+  %start_x.ptr = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 2
+  %start_x = load i32, ptr %start_x.ptr, align 4
+  %container_w2 = load i32, ptr %container_w.addr, align 4
+  %divtmp = sdiv i32 %container_w2, 2
+  %safe.divtmp = select i1 false, i32 2147483647, i32 %divtmp
+  %addtmp = add i32 %start_x, %safe.divtmp
+  %w.ptr = getelementptr inbounds %Widget, ptr %pos, i32 0, i32 4
+  %w = load i32, ptr %w.ptr, align 4
+  %divtmp3 = sdiv i32 %w, 2
+  %safe.divtmp4 = select i1 false, i32 2147483647, i32 %divtmp3
+  %subtmp = sub i32 %addtmp, %safe.divtmp4
+  %x.ptr = getelementptr inbounds %Widget, ptr %pos, i32 0, i32 2
+  store i32 %subtmp, ptr %x.ptr, align 4
+  %y.ptr = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 1
+  %y = load i32, ptr %y.ptr, align 4
+  %y.ptr5 = getelementptr inbounds %Widget, ptr %pos, i32 0, i32 3
+  store i32 %y, ptr %y.ptr5, align 4
+  %y.ptr6 = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 1
+  %y7 = load i32, ptr %y.ptr6, align 4
+  %h.ptr = getelementptr inbounds %Widget, ptr %pos, i32 0, i32 5
+  %h = load i32, ptr %h.ptr, align 4
+  %addtmp8 = add i32 %y7, %h
+  %padding.ptr = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 3
+  %padding = load i32, ptr %padding.ptr, align 4
+  %addtmp9 = add i32 %addtmp8, %padding
+  %y.ptr10 = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 1
+  store i32 %addtmp9, ptr %y.ptr10, align 4
+  %start_x.ptr11 = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 2
+  %start_x12 = load i32, ptr %start_x.ptr11, align 4
+  %x.ptr13 = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 0
+  store i32 %start_x12, ptr %x.ptr13, align 4
+  %max_h_in_row.ptr = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 4
+  store i32 0, ptr %max_h_in_row.ptr, align 4
+  %pos14 = load %Widget, ptr %pos, align 8
+  %result.val = insertvalue { %Widget, ptr, i8 } undef, %Widget %pos14, 0
+  %result.err = insertvalue { %Widget, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { %Widget, ptr, i8 } %result.err, i8 0, 2
+  ret { %Widget, ptr, i8 } %result.is_error
+}
+
+define { %Widget, ptr, i8 } @Layout_vbox_right(%LayoutCursor %cur, %Widget %wdg, i32 %container_w) {
+entry:
+  %cur_alloca = alloca %LayoutCursor, align 8
+  store %LayoutCursor %cur, ptr %cur_alloca, align 4
+  %wdg_alloca = alloca %Widget, align 8
+  store %Widget %wdg, ptr %wdg_alloca, align 8
+  %container_w.addr = alloca i32, align 4
+  store i32 %container_w, ptr %container_w.addr, align 4
+  %pos = alloca %Widget, align 8
+  %wdg1 = load %Widget, ptr %wdg_alloca, align 8
+  store %Widget %wdg1, ptr %pos, align 8
+  %start_x.ptr = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 2
+  %start_x = load i32, ptr %start_x.ptr, align 4
+  %container_w2 = load i32, ptr %container_w.addr, align 4
+  %addtmp = add i32 %start_x, %container_w2
+  %w.ptr = getelementptr inbounds %Widget, ptr %pos, i32 0, i32 4
+  %w = load i32, ptr %w.ptr, align 4
+  %subtmp = sub i32 %addtmp, %w
+  %x.ptr = getelementptr inbounds %Widget, ptr %pos, i32 0, i32 2
+  store i32 %subtmp, ptr %x.ptr, align 4
+  %y.ptr = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 1
+  %y = load i32, ptr %y.ptr, align 4
+  %y.ptr3 = getelementptr inbounds %Widget, ptr %pos, i32 0, i32 3
+  store i32 %y, ptr %y.ptr3, align 4
+  %y.ptr4 = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 1
+  %y5 = load i32, ptr %y.ptr4, align 4
+  %h.ptr = getelementptr inbounds %Widget, ptr %pos, i32 0, i32 5
+  %h = load i32, ptr %h.ptr, align 4
+  %addtmp6 = add i32 %y5, %h
+  %padding.ptr = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 3
+  %padding = load i32, ptr %padding.ptr, align 4
+  %addtmp7 = add i32 %addtmp6, %padding
+  %y.ptr8 = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 1
+  store i32 %addtmp7, ptr %y.ptr8, align 4
+  %start_x.ptr9 = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 2
+  %start_x10 = load i32, ptr %start_x.ptr9, align 4
+  %x.ptr11 = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 0
+  store i32 %start_x10, ptr %x.ptr11, align 4
+  %max_h_in_row.ptr = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 4
+  store i32 0, ptr %max_h_in_row.ptr, align 4
+  %pos12 = load %Widget, ptr %pos, align 8
+  %result.val = insertvalue { %Widget, ptr, i8 } undef, %Widget %pos12, 0
+  %result.err = insertvalue { %Widget, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { %Widget, ptr, i8 } %result.err, i8 0, 2
+  ret { %Widget, ptr, i8 } %result.is_error
+}
+
+define { %struct.NIL, ptr, i8 } @Layout_set_padding(%LayoutCursor %cur, i32 %pad) {
+entry:
+  %cur_alloca = alloca %LayoutCursor, align 8
+  store %LayoutCursor %cur, ptr %cur_alloca, align 4
+  %pad.addr = alloca i32, align 4
+  store i32 %pad, ptr %pad.addr, align 4
+  %pad1 = load i32, ptr %pad.addr, align 4
+  %padding.ptr = getelementptr inbounds %LayoutCursor, ptr %cur_alloca, i32 0, i32 3
+  store i32 %pad1, ptr %padding.ptr, align 4
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
 define { %Widget, ptr, i8 } @Tui_panel(i32 %x, i32 %y, i32 %w, i32 %h, i32 %fg, i32 %bg) {
 entry:
   %x.addr = alloca i32, align 4
@@ -4868,6 +5109,245 @@ entry:
   ret { %Widget, ptr, i8 } %result.is_error
 }
 
+define { %struct.NIL, ptr, i8 } @Tui_draw_border(i32 %x, i32 %y, i32 %w, i32 %h, i32 %fg, i32 %bg) {
+entry:
+  %x.addr = alloca i32, align 4
+  store i32 %x, ptr %x.addr, align 4
+  %y.addr = alloca i32, align 4
+  store i32 %y, ptr %y.addr, align 4
+  %w.addr = alloca i32, align 4
+  store i32 %w, ptr %w.addr, align 4
+  %h.addr = alloca i32, align 4
+  store i32 %h, ptr %h.addr, align 4
+  %fg.addr = alloca i32, align 4
+  store i32 %fg, ptr %fg.addr, align 4
+  %bg.addr = alloca i32, align 4
+  store i32 %bg, ptr %bg.addr, align 4
+  %fg1 = load i32, ptr %fg.addr, align 4
+  %calltmp = call i32 @nitpick_display_set_fg(i32 %fg1)
+  %bg2 = load i32, ptr %bg.addr, align 4
+  %calltmp3 = call i32 @nitpick_display_set_bg(i32 %bg2)
+  %x4 = load i32, ptr %x.addr, align 4
+  %y5 = load i32, ptr %y.addr, align 4
+  %calltmp6 = call i32 @nitpick_display_move(i32 %x4, i32 %y5)
+  %str_data = load ptr, ptr @.str.344, align 8
+  %print_call = call i64 @npk_print_cstr(ptr %str_data)
+  %i = alloca i32, align 4
+  store i32 1, ptr %i, align 4
+  br label %whilecond
+
+whilecond:                                        ; preds = %whilebody, %entry
+  %i7 = load i32, ptr %i, align 4
+  %w8 = load i32, ptr %w.addr, align 4
+  %subtmp = sub i32 %w8, 1
+  %lttmp = icmp slt i32 %i7, %subtmp
+  %whilecond9 = icmp ne i1 %lttmp, false
+  br i1 %whilecond9, label %whilebody, label %afterwhile
+
+whilebody:                                        ; preds = %whilecond
+  %str_data10 = load ptr, ptr @.str.346, align 8
+  %print_call11 = call i64 @npk_print_cstr(ptr %str_data10)
+  %i12 = load i32, ptr %i, align 4
+  %addtmp = add i32 %i12, 1
+  store i32 %addtmp, ptr %i, align 4
+  call void @npk_gc_safepoint()
+  br label %whilecond
+
+afterwhile:                                       ; preds = %whilecond
+  %str_data13 = load ptr, ptr @.str.348, align 8
+  %print_call14 = call i64 @npk_print_cstr(ptr %str_data13)
+  store i32 1, ptr %i, align 4
+  br label %whilecond15
+
+whilecond15:                                      ; preds = %whilebody21, %afterwhile
+  %i16 = load i32, ptr %i, align 4
+  %h17 = load i32, ptr %h.addr, align 4
+  %subtmp18 = sub i32 %h17, 1
+  %lttmp19 = icmp slt i32 %i16, %subtmp18
+  %whilecond20 = icmp ne i1 %lttmp19, false
+  br i1 %whilecond20, label %whilebody21, label %afterwhile41
+
+whilebody21:                                      ; preds = %whilecond15
+  %x22 = load i32, ptr %x.addr, align 4
+  %y23 = load i32, ptr %y.addr, align 4
+  %i24 = load i32, ptr %i, align 4
+  %addtmp25 = add i32 %y23, %i24
+  %calltmp26 = call i32 @nitpick_display_move(i32 %x22, i32 %addtmp25)
+  %str_data27 = load ptr, ptr @.str.350, align 8
+  %print_call28 = call i64 @npk_print_cstr(ptr %str_data27)
+  %x29 = load i32, ptr %x.addr, align 4
+  %w30 = load i32, ptr %w.addr, align 4
+  %addtmp31 = add i32 %x29, %w30
+  %subtmp32 = sub i32 %addtmp31, 1
+  %y33 = load i32, ptr %y.addr, align 4
+  %i34 = load i32, ptr %i, align 4
+  %addtmp35 = add i32 %y33, %i34
+  %calltmp36 = call i32 @nitpick_display_move(i32 %subtmp32, i32 %addtmp35)
+  %str_data37 = load ptr, ptr @.str.352, align 8
+  %print_call38 = call i64 @npk_print_cstr(ptr %str_data37)
+  %i39 = load i32, ptr %i, align 4
+  %addtmp40 = add i32 %i39, 1
+  store i32 %addtmp40, ptr %i, align 4
+  call void @npk_gc_safepoint()
+  br label %whilecond15
+
+afterwhile41:                                     ; preds = %whilecond15
+  %x42 = load i32, ptr %x.addr, align 4
+  %y43 = load i32, ptr %y.addr, align 4
+  %h44 = load i32, ptr %h.addr, align 4
+  %addtmp45 = add i32 %y43, %h44
+  %subtmp46 = sub i32 %addtmp45, 1
+  %calltmp47 = call i32 @nitpick_display_move(i32 %x42, i32 %subtmp46)
+  %str_data48 = load ptr, ptr @.str.354, align 8
+  %print_call49 = call i64 @npk_print_cstr(ptr %str_data48)
+  store i32 1, ptr %i, align 4
+  br label %whilecond50
+
+whilecond50:                                      ; preds = %whilebody56, %afterwhile41
+  %i51 = load i32, ptr %i, align 4
+  %w52 = load i32, ptr %w.addr, align 4
+  %subtmp53 = sub i32 %w52, 1
+  %lttmp54 = icmp slt i32 %i51, %subtmp53
+  %whilecond55 = icmp ne i1 %lttmp54, false
+  br i1 %whilecond55, label %whilebody56, label %afterwhile61
+
+whilebody56:                                      ; preds = %whilecond50
+  %str_data57 = load ptr, ptr @.str.356, align 8
+  %print_call58 = call i64 @npk_print_cstr(ptr %str_data57)
+  %i59 = load i32, ptr %i, align 4
+  %addtmp60 = add i32 %i59, 1
+  store i32 %addtmp60, ptr %i, align 4
+  call void @npk_gc_safepoint()
+  br label %whilecond50
+
+afterwhile61:                                     ; preds = %whilecond50
+  %str_data62 = load ptr, ptr @.str.358, align 8
+  %print_call63 = call i64 @npk_print_cstr(ptr %str_data62)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @Tui_draw_scrollbar(i32 %x, i32 %y, i32 %h, i64 %count, i64 %max_vis, i64 %start_idx) {
+entry:
+  %x.addr = alloca i32, align 4
+  store i32 %x, ptr %x.addr, align 4
+  %y.addr = alloca i32, align 4
+  store i32 %y, ptr %y.addr, align 4
+  %h.addr = alloca i32, align 4
+  store i32 %h, ptr %h.addr, align 4
+  %count.addr = alloca i64, align 8
+  store i64 %count, ptr %count.addr, align 4
+  %max_vis.addr = alloca i64, align 8
+  store i64 %max_vis, ptr %max_vis.addr, align 4
+  %start_idx.addr = alloca i64, align 8
+  store i64 %start_idx, ptr %start_idx.addr, align 4
+  %count1 = load i64, ptr %count.addr, align 4
+  %max_vis2 = load i64, ptr %max_vis.addr, align 4
+  %letmp = icmp sle i64 %count1, %max_vis2
+  %ifcond = icmp ne i1 %letmp, false
+  br i1 %ifcond, label %then, label %ifcont
+
+then:                                             ; preds = %entry
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+
+ifcont:                                           ; preds = %entry
+  %track_h = alloca i64, align 8
+  %h3 = load i32, ptr %h.addr, align 4
+  %cast.sext = sext i32 %h3 to i64
+  %subtmp = sub i64 %cast.sext, 2
+  store i64 %subtmp, ptr %track_h, align 4
+  %knob_h = alloca i64, align 8
+  %track_h4 = load i64, ptr %track_h, align 4
+  %max_vis5 = load i64, ptr %max_vis.addr, align 4
+  %multmp = mul i64 %track_h4, %max_vis5
+  %count6 = load i64, ptr %count.addr, align 4
+  %div.iszero = icmp eq i64 %count6, 0
+  %divtmp = sdiv i64 %multmp, %count6
+  %safe.divtmp = select i1 %div.iszero, i64 9223372036854775807, i64 %divtmp
+  store i64 %safe.divtmp, ptr %knob_h, align 4
+  %knob_h7 = load i64, ptr %knob_h, align 4
+  %lttmp = icmp slt i64 %knob_h7, 1
+  %ifcond8 = icmp ne i1 %lttmp, false
+  br i1 %ifcond8, label %then9, label %ifcont10
+
+then9:                                            ; preds = %ifcont
+  store i64 1, ptr %knob_h, align 4
+  br label %ifcont10
+
+ifcont10:                                         ; preds = %then9, %ifcont
+  %knob_y = alloca i64, align 8
+  %track_h11 = load i64, ptr %track_h, align 4
+  %start_idx12 = load i64, ptr %start_idx.addr, align 4
+  %multmp13 = mul i64 %track_h11, %start_idx12
+  %count14 = load i64, ptr %count.addr, align 4
+  %div.iszero15 = icmp eq i64 %count14, 0
+  %divtmp16 = sdiv i64 %multmp13, %count14
+  %safe.divtmp17 = select i1 %div.iszero15, i64 9223372036854775807, i64 %divtmp16
+  store i64 %safe.divtmp17, ptr %knob_y, align 4
+  %i = alloca i32, align 4
+  store i32 0, ptr %i, align 4
+  br label %whilecond
+
+whilecond:                                        ; preds = %ifcont45, %ifcont10
+  %i18 = load i32, ptr %i, align 4
+  %track_h19 = load i64, ptr %track_h, align 4
+  %cast.trunc = trunc i64 %track_h19 to i32
+  %lttmp20 = icmp slt i32 %i18, %cast.trunc
+  %whilecond21 = icmp ne i1 %lttmp20, false
+  br i1 %whilecond21, label %whilebody, label %afterwhile
+
+whilebody:                                        ; preds = %whilecond
+  %x22 = load i32, ptr %x.addr, align 4
+  %y23 = load i32, ptr %y.addr, align 4
+  %addtmp = add i32 %y23, 1
+  %i24 = load i32, ptr %i, align 4
+  %addtmp25 = add i32 %addtmp, %i24
+  %calltmp = call i32 @nitpick_display_move(i32 %x22, i32 %addtmp25)
+  %i26 = load i32, ptr %i, align 4
+  %cast.sext27 = sext i32 %i26 to i64
+  %knob_y28 = load i64, ptr %knob_y, align 4
+  %getmp = icmp sge i64 %cast.sext27, %knob_y28
+  %ifcond29 = icmp ne i1 %getmp, false
+  br i1 %ifcond29, label %then30, label %else42
+
+then30:                                           ; preds = %whilebody
+  %i31 = load i32, ptr %i, align 4
+  %cast.sext32 = sext i32 %i31 to i64
+  %knob_y33 = load i64, ptr %knob_y, align 4
+  %knob_h34 = load i64, ptr %knob_h, align 4
+  %addtmp35 = add i64 %knob_y33, %knob_h34
+  %lttmp36 = icmp slt i64 %cast.sext32, %addtmp35
+  %ifcond37 = icmp ne i1 %lttmp36, false
+  br i1 %ifcond37, label %then38, label %else
+
+then38:                                           ; preds = %then30
+  %str_data = load ptr, ptr @.str.360, align 8
+  %print_call = call i64 @npk_print_cstr(ptr %str_data)
+  br label %ifcont41
+
+else:                                             ; preds = %then30
+  %str_data39 = load ptr, ptr @.str.362, align 8
+  %print_call40 = call i64 @npk_print_cstr(ptr %str_data39)
+  br label %ifcont41
+
+ifcont41:                                         ; preds = %else, %then38
+  br label %ifcont45
+
+else42:                                           ; preds = %whilebody
+  %str_data43 = load ptr, ptr @.str.364, align 8
+  %print_call44 = call i64 @npk_print_cstr(ptr %str_data43)
+  br label %ifcont45
+
+ifcont45:                                         ; preds = %else42, %ifcont41
+  %i46 = load i32, ptr %i, align 4
+  %addtmp47 = add i32 %i46, 1
+  store i32 %addtmp47, ptr %i, align 4
+  call void @npk_gc_safepoint()
+  br label %whilecond
+
+afterwhile:                                       ; preds = %whilecond
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
 define { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %wdg) {
 entry:
   %wdg_alloca = alloca %Widget, align 8
@@ -4892,1280 +5372,1410 @@ then:                                             ; preds = %entry
   %wdg6 = load %Widget, ptr %wdg_alloca, align 8
   %h = extractvalue %Widget %wdg6, 5
   %calltmp = call i32 @nitpick_display_box(i32 %x, i32 %y, i32 %fg, i32 %bg, i32 %w, i32 %h)
+  %wdg7 = load %Widget, ptr %wdg_alloca, align 8
+  %x8 = extractvalue %Widget %wdg7, 2
+  %wdg9 = load %Widget, ptr %wdg_alloca, align 8
+  %y10 = extractvalue %Widget %wdg9, 3
+  %wdg11 = load %Widget, ptr %wdg_alloca, align 8
+  %w12 = extractvalue %Widget %wdg11, 4
+  %wdg13 = load %Widget, ptr %wdg_alloca, align 8
+  %h14 = extractvalue %Widget %wdg13, 5
+  %wdg15 = load %Widget, ptr %wdg_alloca, align 8
+  %fg16 = extractvalue %Widget %wdg15, 7
+  %wdg17 = load %Widget, ptr %wdg_alloca, align 8
+  %bg18 = extractvalue %Widget %wdg17, 8
+  %calltmp19 = call { %struct.NIL, ptr, i8 } @Tui_draw_border(i32 %x8, i32 %y10, i32 %w12, i32 %h14, i32 %fg16, i32 %bg18)
+  %raw.value = extractvalue { %struct.NIL, ptr, i8 } %calltmp19, 0
   br label %ifcont
 
 ifcont:                                           ; preds = %then, %entry
-  %type.ptr7 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
-  %type8 = load i32, ptr %type.ptr7, align 4
-  %eqtmp9 = icmp eq i32 %type8, 2
-  %ifcond10 = icmp ne i1 %eqtmp9, false
-  br i1 %ifcond10, label %then11, label %ifcont24
+  %type.ptr20 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
+  %type21 = load i32, ptr %type.ptr20, align 4
+  %eqtmp22 = icmp eq i32 %type21, 2
+  %ifcond23 = icmp ne i1 %eqtmp22, false
+  br i1 %ifcond23, label %then24, label %ifcont37
 
-then11:                                           ; preds = %ifcont
-  %wdg12 = load %Widget, ptr %wdg_alloca, align 8
-  %fg13 = extractvalue %Widget %wdg12, 7
-  %calltmp14 = call i32 @nitpick_display_set_fg(i32 %fg13)
-  %wdg15 = load %Widget, ptr %wdg_alloca, align 8
-  %bg16 = extractvalue %Widget %wdg15, 8
-  %calltmp17 = call i32 @nitpick_display_set_bg(i32 %bg16)
-  %wdg18 = load %Widget, ptr %wdg_alloca, align 8
-  %x19 = extractvalue %Widget %wdg18, 2
-  %wdg20 = load %Widget, ptr %wdg_alloca, align 8
-  %y21 = extractvalue %Widget %wdg20, 3
-  %calltmp22 = call i32 @nitpick_display_move(i32 %x19, i32 %y21)
-  %wdg23 = load %Widget, ptr %wdg_alloca, align 8
-  %text = extractvalue %Widget %wdg23, 6
+then24:                                           ; preds = %ifcont
+  %wdg25 = load %Widget, ptr %wdg_alloca, align 8
+  %fg26 = extractvalue %Widget %wdg25, 7
+  %calltmp27 = call i32 @nitpick_display_set_fg(i32 %fg26)
+  %wdg28 = load %Widget, ptr %wdg_alloca, align 8
+  %bg29 = extractvalue %Widget %wdg28, 8
+  %calltmp30 = call i32 @nitpick_display_set_bg(i32 %bg29)
+  %wdg31 = load %Widget, ptr %wdg_alloca, align 8
+  %x32 = extractvalue %Widget %wdg31, 2
+  %wdg33 = load %Widget, ptr %wdg_alloca, align 8
+  %y34 = extractvalue %Widget %wdg33, 3
+  %calltmp35 = call i32 @nitpick_display_move(i32 %x32, i32 %y34)
+  %wdg36 = load %Widget, ptr %wdg_alloca, align 8
+  %text = extractvalue %Widget %wdg36, 6
   %str_struct = load %struct.NpkString, ptr %text, align 8
   %str_data = extractvalue %struct.NpkString %str_struct, 0
   %print_call = call i64 @npk_print_cstr(ptr %str_data)
-  br label %ifcont24
+  br label %ifcont37
 
-ifcont24:                                         ; preds = %then11, %ifcont
-  %type.ptr25 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
-  %type26 = load i32, ptr %type.ptr25, align 4
-  %eqtmp27 = icmp eq i32 %type26, 3
-  %ifcond28 = icmp ne i1 %eqtmp27, false
-  br i1 %ifcond28, label %then29, label %ifcont62
+ifcont37:                                         ; preds = %then24, %ifcont
+  %type.ptr38 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
+  %type39 = load i32, ptr %type.ptr38, align 4
+  %eqtmp40 = icmp eq i32 %type39, 3
+  %ifcond41 = icmp ne i1 %eqtmp40, false
+  br i1 %ifcond41, label %then42, label %ifcont75
 
-then29:                                           ; preds = %ifcont24
+then42:                                           ; preds = %ifcont37
   %focused.ptr = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
   %focused = load i32, ptr %focused.ptr, align 4
-  %eqtmp30 = icmp eq i32 %focused, 1
-  %ifcond31 = icmp ne i1 %eqtmp30, false
-  br i1 %ifcond31, label %then32, label %ifcont34
+  %eqtmp43 = icmp eq i32 %focused, 1
+  %ifcond44 = icmp ne i1 %eqtmp43, false
+  br i1 %ifcond44, label %then45, label %ifcont47
 
-then32:                                           ; preds = %then29
-  %calltmp33 = call i32 @nitpick_display_set_reverse(i32 1)
-  br label %ifcont34
+then45:                                           ; preds = %then42
+  %calltmp46 = call i32 @nitpick_display_set_reverse(i32 1)
+  br label %ifcont47
 
-ifcont34:                                         ; preds = %then32, %then29
-  %wdg35 = load %Widget, ptr %wdg_alloca, align 8
-  %fg36 = extractvalue %Widget %wdg35, 7
-  %calltmp37 = call i32 @nitpick_display_set_fg(i32 %fg36)
-  %wdg38 = load %Widget, ptr %wdg_alloca, align 8
-  %bg39 = extractvalue %Widget %wdg38, 8
-  %calltmp40 = call i32 @nitpick_display_set_bg(i32 %bg39)
-  %wdg41 = load %Widget, ptr %wdg_alloca, align 8
-  %x42 = extractvalue %Widget %wdg41, 2
-  %wdg43 = load %Widget, ptr %wdg_alloca, align 8
-  %y44 = extractvalue %Widget %wdg43, 3
-  %calltmp45 = call i32 @nitpick_display_move(i32 %x42, i32 %y44)
-  %str_data46 = load ptr, ptr @.str.344, align 8
-  %print_call47 = call i64 @npk_print_cstr(ptr %str_data46)
+ifcont47:                                         ; preds = %then45, %then42
   %wdg48 = load %Widget, ptr %wdg_alloca, align 8
-  %text49 = extractvalue %Widget %wdg48, 6
-  %str_struct50 = load %struct.NpkString, ptr %text49, align 8
-  %str_data51 = extractvalue %struct.NpkString %str_struct50, 0
-  %print_call52 = call i64 @npk_print_cstr(ptr %str_data51)
-  %str_data53 = load ptr, ptr @.str.346, align 8
-  %print_call54 = call i64 @npk_print_cstr(ptr %str_data53)
-  %focused.ptr55 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused56 = load i32, ptr %focused.ptr55, align 4
-  %eqtmp57 = icmp eq i32 %focused56, 1
-  %ifcond58 = icmp ne i1 %eqtmp57, false
-  br i1 %ifcond58, label %then59, label %ifcont61
+  %fg49 = extractvalue %Widget %wdg48, 7
+  %calltmp50 = call i32 @nitpick_display_set_fg(i32 %fg49)
+  %wdg51 = load %Widget, ptr %wdg_alloca, align 8
+  %bg52 = extractvalue %Widget %wdg51, 8
+  %calltmp53 = call i32 @nitpick_display_set_bg(i32 %bg52)
+  %wdg54 = load %Widget, ptr %wdg_alloca, align 8
+  %x55 = extractvalue %Widget %wdg54, 2
+  %wdg56 = load %Widget, ptr %wdg_alloca, align 8
+  %y57 = extractvalue %Widget %wdg56, 3
+  %calltmp58 = call i32 @nitpick_display_move(i32 %x55, i32 %y57)
+  %str_data59 = load ptr, ptr @.str.366, align 8
+  %print_call60 = call i64 @npk_print_cstr(ptr %str_data59)
+  %wdg61 = load %Widget, ptr %wdg_alloca, align 8
+  %text62 = extractvalue %Widget %wdg61, 6
+  %str_struct63 = load %struct.NpkString, ptr %text62, align 8
+  %str_data64 = extractvalue %struct.NpkString %str_struct63, 0
+  %print_call65 = call i64 @npk_print_cstr(ptr %str_data64)
+  %str_data66 = load ptr, ptr @.str.368, align 8
+  %print_call67 = call i64 @npk_print_cstr(ptr %str_data66)
+  %focused.ptr68 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused69 = load i32, ptr %focused.ptr68, align 4
+  %eqtmp70 = icmp eq i32 %focused69, 1
+  %ifcond71 = icmp ne i1 %eqtmp70, false
+  br i1 %ifcond71, label %then72, label %ifcont74
 
-then59:                                           ; preds = %ifcont34
-  %calltmp60 = call i32 @nitpick_display_set_reverse(i32 0)
-  br label %ifcont61
+then72:                                           ; preds = %ifcont47
+  %calltmp73 = call i32 @nitpick_display_set_reverse(i32 0)
+  br label %ifcont74
 
-ifcont61:                                         ; preds = %then59, %ifcont34
-  br label %ifcont62
+ifcont74:                                         ; preds = %then72, %ifcont47
+  br label %ifcont75
 
-ifcont62:                                         ; preds = %ifcont61, %ifcont24
-  %type.ptr63 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
-  %type64 = load i32, ptr %type.ptr63, align 4
-  %eqtmp65 = icmp eq i32 %type64, 4
-  %ifcond66 = icmp ne i1 %eqtmp65, false
-  br i1 %ifcond66, label %then67, label %ifcont98
+ifcont75:                                         ; preds = %ifcont74, %ifcont37
+  %type.ptr76 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
+  %type77 = load i32, ptr %type.ptr76, align 4
+  %eqtmp78 = icmp eq i32 %type77, 4
+  %ifcond79 = icmp ne i1 %eqtmp78, false
+  br i1 %ifcond79, label %then80, label %ifcont111
 
-then67:                                           ; preds = %ifcont62
-  %wdg68 = load %Widget, ptr %wdg_alloca, align 8
-  %fg69 = extractvalue %Widget %wdg68, 7
-  %calltmp70 = call i32 @nitpick_display_set_fg(i32 %fg69)
-  %wdg71 = load %Widget, ptr %wdg_alloca, align 8
-  %bg72 = extractvalue %Widget %wdg71, 8
-  %calltmp73 = call i32 @nitpick_display_set_bg(i32 %bg72)
-  %focused.ptr74 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused75 = load i32, ptr %focused.ptr74, align 4
-  %eqtmp76 = icmp eq i32 %focused75, 1
-  %ifcond77 = icmp ne i1 %eqtmp76, false
-  br i1 %ifcond77, label %then78, label %ifcont80
-
-then78:                                           ; preds = %then67
-  %calltmp79 = call i32 @nitpick_display_set_reverse(i32 1)
-  br label %ifcont80
-
-ifcont80:                                         ; preds = %then78, %then67
+then80:                                           ; preds = %ifcont75
   %wdg81 = load %Widget, ptr %wdg_alloca, align 8
-  %x82 = extractvalue %Widget %wdg81, 2
-  %wdg83 = load %Widget, ptr %wdg_alloca, align 8
-  %y84 = extractvalue %Widget %wdg83, 3
-  %calltmp85 = call i32 @nitpick_display_move(i32 %x82, i32 %y84)
-  %wdg86 = load %Widget, ptr %wdg_alloca, align 8
-  %text87 = extractvalue %Widget %wdg86, 6
-  %str_struct88 = load %struct.NpkString, ptr %text87, align 8
-  %str_data89 = extractvalue %struct.NpkString %str_struct88, 0
-  %print_call90 = call i64 @npk_print_cstr(ptr %str_data89)
-  %focused.ptr91 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused92 = load i32, ptr %focused.ptr91, align 4
-  %eqtmp93 = icmp eq i32 %focused92, 1
-  %ifcond94 = icmp ne i1 %eqtmp93, false
-  br i1 %ifcond94, label %then95, label %ifcont97
+  %fg82 = extractvalue %Widget %wdg81, 7
+  %calltmp83 = call i32 @nitpick_display_set_fg(i32 %fg82)
+  %wdg84 = load %Widget, ptr %wdg_alloca, align 8
+  %bg85 = extractvalue %Widget %wdg84, 8
+  %calltmp86 = call i32 @nitpick_display_set_bg(i32 %bg85)
+  %focused.ptr87 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused88 = load i32, ptr %focused.ptr87, align 4
+  %eqtmp89 = icmp eq i32 %focused88, 1
+  %ifcond90 = icmp ne i1 %eqtmp89, false
+  br i1 %ifcond90, label %then91, label %ifcont93
 
-then95:                                           ; preds = %ifcont80
-  %calltmp96 = call i32 @nitpick_display_set_reverse(i32 0)
-  br label %ifcont97
+then91:                                           ; preds = %then80
+  %calltmp92 = call i32 @nitpick_display_set_reverse(i32 1)
+  br label %ifcont93
 
-ifcont97:                                         ; preds = %then95, %ifcont80
-  br label %ifcont98
-
-ifcont98:                                         ; preds = %ifcont97, %ifcont62
-  %type.ptr99 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
-  %type100 = load i32, ptr %type.ptr99, align 4
-  %eqtmp101 = icmp eq i32 %type100, 5
-  %ifcond102 = icmp ne i1 %eqtmp101, false
-  br i1 %ifcond102, label %then103, label %ifcont148
-
-then103:                                          ; preds = %ifcont98
+ifcont93:                                         ; preds = %then91, %then80
+  %wdg94 = load %Widget, ptr %wdg_alloca, align 8
+  %x95 = extractvalue %Widget %wdg94, 2
+  %wdg96 = load %Widget, ptr %wdg_alloca, align 8
+  %y97 = extractvalue %Widget %wdg96, 3
+  %calltmp98 = call i32 @nitpick_display_move(i32 %x95, i32 %y97)
+  %wdg99 = load %Widget, ptr %wdg_alloca, align 8
+  %text100 = extractvalue %Widget %wdg99, 6
+  %str_struct101 = load %struct.NpkString, ptr %text100, align 8
+  %str_data102 = extractvalue %struct.NpkString %str_struct101, 0
+  %print_call103 = call i64 @npk_print_cstr(ptr %str_data102)
   %focused.ptr104 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
   %focused105 = load i32, ptr %focused.ptr104, align 4
   %eqtmp106 = icmp eq i32 %focused105, 1
   %ifcond107 = icmp ne i1 %eqtmp106, false
   br i1 %ifcond107, label %then108, label %ifcont110
 
-then108:                                          ; preds = %then103
-  %calltmp109 = call i32 @nitpick_display_set_reverse(i32 1)
+then108:                                          ; preds = %ifcont93
+  %calltmp109 = call i32 @nitpick_display_set_reverse(i32 0)
   br label %ifcont110
 
-ifcont110:                                        ; preds = %then108, %then103
-  %wdg111 = load %Widget, ptr %wdg_alloca, align 8
-  %fg112 = extractvalue %Widget %wdg111, 7
-  %calltmp113 = call i32 @nitpick_display_set_fg(i32 %fg112)
-  %wdg114 = load %Widget, ptr %wdg_alloca, align 8
-  %bg115 = extractvalue %Widget %wdg114, 8
-  %calltmp116 = call i32 @nitpick_display_set_bg(i32 %bg115)
-  %wdg117 = load %Widget, ptr %wdg_alloca, align 8
-  %x118 = extractvalue %Widget %wdg117, 2
-  %wdg119 = load %Widget, ptr %wdg_alloca, align 8
-  %y120 = extractvalue %Widget %wdg119, 3
-  %calltmp121 = call i32 @nitpick_display_move(i32 %x118, i32 %y120)
+ifcont110:                                        ; preds = %then108, %ifcont93
+  br label %ifcont111
+
+ifcont111:                                        ; preds = %ifcont110, %ifcont75
+  %type.ptr112 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
+  %type113 = load i32, ptr %type.ptr112, align 4
+  %eqtmp114 = icmp eq i32 %type113, 5
+  %ifcond115 = icmp ne i1 %eqtmp114, false
+  br i1 %ifcond115, label %then116, label %ifcont161
+
+then116:                                          ; preds = %ifcont111
+  %focused.ptr117 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused118 = load i32, ptr %focused.ptr117, align 4
+  %eqtmp119 = icmp eq i32 %focused118, 1
+  %ifcond120 = icmp ne i1 %eqtmp119, false
+  br i1 %ifcond120, label %then121, label %ifcont123
+
+then121:                                          ; preds = %then116
+  %calltmp122 = call i32 @nitpick_display_set_reverse(i32 1)
+  br label %ifcont123
+
+ifcont123:                                        ; preds = %then121, %then116
+  %wdg124 = load %Widget, ptr %wdg_alloca, align 8
+  %fg125 = extractvalue %Widget %wdg124, 7
+  %calltmp126 = call i32 @nitpick_display_set_fg(i32 %fg125)
+  %wdg127 = load %Widget, ptr %wdg_alloca, align 8
+  %bg128 = extractvalue %Widget %wdg127, 8
+  %calltmp129 = call i32 @nitpick_display_set_bg(i32 %bg128)
+  %wdg130 = load %Widget, ptr %wdg_alloca, align 8
+  %x131 = extractvalue %Widget %wdg130, 2
+  %wdg132 = load %Widget, ptr %wdg_alloca, align 8
+  %y133 = extractvalue %Widget %wdg132, 3
+  %calltmp134 = call i32 @nitpick_display_move(i32 %x131, i32 %y133)
   %value.ptr = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
   %value = load i32, ptr %value.ptr, align 4
-  %eqtmp122 = icmp eq i32 %value, 1
-  %ifcond123 = icmp ne i1 %eqtmp122, false
-  br i1 %ifcond123, label %then124, label %ifcont127
+  %eqtmp135 = icmp eq i32 %value, 1
+  %ifcond136 = icmp ne i1 %eqtmp135, false
+  br i1 %ifcond136, label %then137, label %ifcont140
 
-then124:                                          ; preds = %ifcont110
-  %str_data125 = load ptr, ptr @.str.348, align 8
-  %print_call126 = call i64 @npk_print_cstr(ptr %str_data125)
-  br label %ifcont127
+then137:                                          ; preds = %ifcont123
+  %str_data138 = load ptr, ptr @.str.370, align 8
+  %print_call139 = call i64 @npk_print_cstr(ptr %str_data138)
+  br label %ifcont140
 
-ifcont127:                                        ; preds = %then124, %ifcont110
-  %value.ptr128 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
-  %value129 = load i32, ptr %value.ptr128, align 4
-  %eqtmp130 = icmp eq i32 %value129, 0
-  %ifcond131 = icmp ne i1 %eqtmp130, false
-  br i1 %ifcond131, label %then132, label %ifcont135
-
-then132:                                          ; preds = %ifcont127
-  %str_data133 = load ptr, ptr @.str.350, align 8
-  %print_call134 = call i64 @npk_print_cstr(ptr %str_data133)
-  br label %ifcont135
-
-ifcont135:                                        ; preds = %then132, %ifcont127
-  %wdg136 = load %Widget, ptr %wdg_alloca, align 8
-  %text137 = extractvalue %Widget %wdg136, 6
-  %str_struct138 = load %struct.NpkString, ptr %text137, align 8
-  %str_data139 = extractvalue %struct.NpkString %str_struct138, 0
-  %print_call140 = call i64 @npk_print_cstr(ptr %str_data139)
-  %focused.ptr141 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused142 = load i32, ptr %focused.ptr141, align 4
-  %eqtmp143 = icmp eq i32 %focused142, 1
+ifcont140:                                        ; preds = %then137, %ifcont123
+  %value.ptr141 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
+  %value142 = load i32, ptr %value.ptr141, align 4
+  %eqtmp143 = icmp eq i32 %value142, 0
   %ifcond144 = icmp ne i1 %eqtmp143, false
-  br i1 %ifcond144, label %then145, label %ifcont147
+  br i1 %ifcond144, label %then145, label %ifcont148
 
-then145:                                          ; preds = %ifcont135
-  %calltmp146 = call i32 @nitpick_display_set_reverse(i32 0)
-  br label %ifcont147
-
-ifcont147:                                        ; preds = %then145, %ifcont135
+then145:                                          ; preds = %ifcont140
+  %str_data146 = load ptr, ptr @.str.372, align 8
+  %print_call147 = call i64 @npk_print_cstr(ptr %str_data146)
   br label %ifcont148
 
-ifcont148:                                        ; preds = %ifcont147, %ifcont98
-  %type.ptr149 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
-  %type150 = load i32, ptr %type.ptr149, align 4
-  %eqtmp151 = icmp eq i32 %type150, 6
-  %ifcond152 = icmp ne i1 %eqtmp151, false
-  br i1 %ifcond152, label %then153, label %ifcont194
+ifcont148:                                        ; preds = %then145, %ifcont140
+  %wdg149 = load %Widget, ptr %wdg_alloca, align 8
+  %text150 = extractvalue %Widget %wdg149, 6
+  %str_struct151 = load %struct.NpkString, ptr %text150, align 8
+  %str_data152 = extractvalue %struct.NpkString %str_struct151, 0
+  %print_call153 = call i64 @npk_print_cstr(ptr %str_data152)
+  %focused.ptr154 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused155 = load i32, ptr %focused.ptr154, align 4
+  %eqtmp156 = icmp eq i32 %focused155, 1
+  %ifcond157 = icmp ne i1 %eqtmp156, false
+  br i1 %ifcond157, label %then158, label %ifcont160
 
-then153:                                          ; preds = %ifcont148
-  %wdg154 = load %Widget, ptr %wdg_alloca, align 8
-  %fg155 = extractvalue %Widget %wdg154, 7
-  %calltmp156 = call i32 @nitpick_display_set_fg(i32 %fg155)
-  %wdg157 = load %Widget, ptr %wdg_alloca, align 8
-  %bg158 = extractvalue %Widget %wdg157, 8
-  %calltmp159 = call i32 @nitpick_display_set_bg(i32 %bg158)
-  %wdg160 = load %Widget, ptr %wdg_alloca, align 8
-  %x161 = extractvalue %Widget %wdg160, 2
-  %wdg162 = load %Widget, ptr %wdg_alloca, align 8
-  %y163 = extractvalue %Widget %wdg162, 3
-  %calltmp164 = call i32 @nitpick_display_move(i32 %x161, i32 %y163)
-  %str_data165 = load ptr, ptr @.str.352, align 8
-  %print_call166 = call i64 @npk_print_cstr(ptr %str_data165)
+then158:                                          ; preds = %ifcont148
+  %calltmp159 = call i32 @nitpick_display_set_reverse(i32 0)
+  br label %ifcont160
+
+ifcont160:                                        ; preds = %then158, %ifcont148
+  br label %ifcont161
+
+ifcont161:                                        ; preds = %ifcont160, %ifcont111
+  %type.ptr162 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
+  %type163 = load i32, ptr %type.ptr162, align 4
+  %eqtmp164 = icmp eq i32 %type163, 6
+  %ifcond165 = icmp ne i1 %eqtmp164, false
+  br i1 %ifcond165, label %then166, label %ifcont207
+
+then166:                                          ; preds = %ifcont161
+  %wdg167 = load %Widget, ptr %wdg_alloca, align 8
+  %fg168 = extractvalue %Widget %wdg167, 7
+  %calltmp169 = call i32 @nitpick_display_set_fg(i32 %fg168)
+  %wdg170 = load %Widget, ptr %wdg_alloca, align 8
+  %bg171 = extractvalue %Widget %wdg170, 8
+  %calltmp172 = call i32 @nitpick_display_set_bg(i32 %bg171)
+  %wdg173 = load %Widget, ptr %wdg_alloca, align 8
+  %x174 = extractvalue %Widget %wdg173, 2
+  %wdg175 = load %Widget, ptr %wdg_alloca, align 8
+  %y176 = extractvalue %Widget %wdg175, 3
+  %calltmp177 = call i32 @nitpick_display_move(i32 %x174, i32 %y176)
+  %str_data178 = load ptr, ptr @.str.374, align 8
+  %print_call179 = call i64 @npk_print_cstr(ptr %str_data178)
   %filled = alloca i32, align 4
   %w.ptr = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 4
-  %w167 = load i32, ptr %w.ptr, align 4
-  %subtmp = sub i32 %w167, 2
-  %value.ptr168 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
-  %value169 = load i32, ptr %value.ptr168, align 4
-  %multmp = mul i32 %subtmp, %value169
+  %w180 = load i32, ptr %w.ptr, align 4
+  %subtmp = sub i32 %w180, 2
+  %value.ptr181 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
+  %value182 = load i32, ptr %value.ptr181, align 4
+  %multmp = mul i32 %subtmp, %value182
   %divtmp = sdiv i32 %multmp, 100
   %safe.divtmp = select i1 false, i32 2147483647, i32 %divtmp
   store i32 %safe.divtmp, ptr %filled, align 4
   %empty = alloca i32, align 4
-  %w.ptr170 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 4
-  %w171 = load i32, ptr %w.ptr170, align 4
-  %subtmp172 = sub i32 %w171, 2
-  %filled173 = load i32, ptr %filled, align 4
-  %subtmp174 = sub i32 %subtmp172, %filled173
-  store i32 %subtmp174, ptr %empty, align 4
+  %w.ptr183 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 4
+  %w184 = load i32, ptr %w.ptr183, align 4
+  %subtmp185 = sub i32 %w184, 2
+  %filled186 = load i32, ptr %filled, align 4
+  %subtmp187 = sub i32 %subtmp185, %filled186
+  store i32 %subtmp187, ptr %empty, align 4
   %i = alloca i32, align 4
   store i32 0, ptr %i, align 4
   br label %whilecond
 
-whilecond:                                        ; preds = %whilebody, %then153
-  %i175 = load i32, ptr %i, align 4
-  %filled176 = load i32, ptr %filled, align 4
-  %lttmp = icmp slt i32 %i175, %filled176
-  %whilecond177 = icmp ne i1 %lttmp, false
-  br i1 %whilecond177, label %whilebody, label %afterwhile
+whilecond:                                        ; preds = %whilebody, %then166
+  %i188 = load i32, ptr %i, align 4
+  %filled189 = load i32, ptr %filled, align 4
+  %lttmp = icmp slt i32 %i188, %filled189
+  %whilecond190 = icmp ne i1 %lttmp, false
+  br i1 %whilecond190, label %whilebody, label %afterwhile
 
 whilebody:                                        ; preds = %whilecond
-  %str_data178 = load ptr, ptr @.str.354, align 8
-  %print_call179 = call i64 @npk_print_cstr(ptr %str_data178)
-  %i180 = load i32, ptr %i, align 4
-  %addtmp = add i32 %i180, 1
+  %str_data191 = load ptr, ptr @.str.376, align 8
+  %print_call192 = call i64 @npk_print_cstr(ptr %str_data191)
+  %i193 = load i32, ptr %i, align 4
+  %addtmp = add i32 %i193, 1
   store i32 %addtmp, ptr %i, align 4
   call void @npk_gc_safepoint()
   br label %whilecond
 
 afterwhile:                                       ; preds = %whilecond
   store i32 0, ptr %i, align 4
-  br label %whilecond181
+  br label %whilecond194
 
-whilecond181:                                     ; preds = %whilebody186, %afterwhile
-  %i182 = load i32, ptr %i, align 4
-  %empty183 = load i32, ptr %empty, align 4
-  %lttmp184 = icmp slt i32 %i182, %empty183
-  %whilecond185 = icmp ne i1 %lttmp184, false
-  br i1 %whilecond185, label %whilebody186, label %afterwhile191
+whilecond194:                                     ; preds = %whilebody199, %afterwhile
+  %i195 = load i32, ptr %i, align 4
+  %empty196 = load i32, ptr %empty, align 4
+  %lttmp197 = icmp slt i32 %i195, %empty196
+  %whilecond198 = icmp ne i1 %lttmp197, false
+  br i1 %whilecond198, label %whilebody199, label %afterwhile204
 
-whilebody186:                                     ; preds = %whilecond181
-  %str_data187 = load ptr, ptr @.str.356, align 8
-  %print_call188 = call i64 @npk_print_cstr(ptr %str_data187)
-  %i189 = load i32, ptr %i, align 4
-  %addtmp190 = add i32 %i189, 1
-  store i32 %addtmp190, ptr %i, align 4
+whilebody199:                                     ; preds = %whilecond194
+  %str_data200 = load ptr, ptr @.str.378, align 8
+  %print_call201 = call i64 @npk_print_cstr(ptr %str_data200)
+  %i202 = load i32, ptr %i, align 4
+  %addtmp203 = add i32 %i202, 1
+  store i32 %addtmp203, ptr %i, align 4
   call void @npk_gc_safepoint()
-  br label %whilecond181
+  br label %whilecond194
 
-afterwhile191:                                    ; preds = %whilecond181
-  %str_data192 = load ptr, ptr @.str.358, align 8
-  %print_call193 = call i64 @npk_print_cstr(ptr %str_data192)
-  br label %ifcont194
+afterwhile204:                                    ; preds = %whilecond194
+  %str_data205 = load ptr, ptr @.str.380, align 8
+  %print_call206 = call i64 @npk_print_cstr(ptr %str_data205)
+  br label %ifcont207
 
-ifcont194:                                        ; preds = %afterwhile191, %ifcont148
-  %type.ptr195 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
-  %type196 = load i32, ptr %type.ptr195, align 4
-  %eqtmp197 = icmp eq i32 %type196, 7
-  %ifcond198 = icmp ne i1 %eqtmp197, false
-  br i1 %ifcond198, label %then199, label %ifcont230
+ifcont207:                                        ; preds = %afterwhile204, %ifcont161
+  %type.ptr208 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
+  %type209 = load i32, ptr %type.ptr208, align 4
+  %eqtmp210 = icmp eq i32 %type209, 7
+  %ifcond211 = icmp ne i1 %eqtmp210, false
+  br i1 %ifcond211, label %then212, label %ifcont243
 
-then199:                                          ; preds = %ifcont194
-  %focused.ptr200 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused201 = load i32, ptr %focused.ptr200, align 4
-  %eqtmp202 = icmp eq i32 %focused201, 1
-  %ifcond203 = icmp ne i1 %eqtmp202, false
-  br i1 %ifcond203, label %then204, label %ifcont206
+then212:                                          ; preds = %ifcont207
+  %focused.ptr213 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused214 = load i32, ptr %focused.ptr213, align 4
+  %eqtmp215 = icmp eq i32 %focused214, 1
+  %ifcond216 = icmp ne i1 %eqtmp215, false
+  br i1 %ifcond216, label %then217, label %ifcont219
 
-then204:                                          ; preds = %then199
-  %calltmp205 = call i32 @nitpick_display_set_reverse(i32 1)
-  br label %ifcont206
+then217:                                          ; preds = %then212
+  %calltmp218 = call i32 @nitpick_display_set_reverse(i32 1)
+  br label %ifcont219
 
-ifcont206:                                        ; preds = %then204, %then199
-  %wdg207 = load %Widget, ptr %wdg_alloca, align 8
-  %fg208 = extractvalue %Widget %wdg207, 7
-  %calltmp209 = call i32 @nitpick_display_set_fg(i32 %fg208)
-  %wdg210 = load %Widget, ptr %wdg_alloca, align 8
-  %bg211 = extractvalue %Widget %wdg210, 8
-  %calltmp212 = call i32 @nitpick_display_set_bg(i32 %bg211)
-  %wdg213 = load %Widget, ptr %wdg_alloca, align 8
-  %x214 = extractvalue %Widget %wdg213, 2
-  %wdg215 = load %Widget, ptr %wdg_alloca, align 8
-  %y216 = extractvalue %Widget %wdg215, 3
-  %calltmp217 = call i32 @nitpick_display_move(i32 %x214, i32 %y216)
-  %wdg218 = load %Widget, ptr %wdg_alloca, align 8
-  %text219 = extractvalue %Widget %wdg218, 6
-  %str_struct220 = load %struct.NpkString, ptr %text219, align 8
-  %str_data221 = extractvalue %struct.NpkString %str_struct220, 0
-  %print_call222 = call i64 @npk_print_cstr(ptr %str_data221)
-  %focused.ptr223 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused224 = load i32, ptr %focused.ptr223, align 4
-  %eqtmp225 = icmp eq i32 %focused224, 1
-  %ifcond226 = icmp ne i1 %eqtmp225, false
-  br i1 %ifcond226, label %then227, label %ifcont229
+ifcont219:                                        ; preds = %then217, %then212
+  %wdg220 = load %Widget, ptr %wdg_alloca, align 8
+  %fg221 = extractvalue %Widget %wdg220, 7
+  %calltmp222 = call i32 @nitpick_display_set_fg(i32 %fg221)
+  %wdg223 = load %Widget, ptr %wdg_alloca, align 8
+  %bg224 = extractvalue %Widget %wdg223, 8
+  %calltmp225 = call i32 @nitpick_display_set_bg(i32 %bg224)
+  %wdg226 = load %Widget, ptr %wdg_alloca, align 8
+  %x227 = extractvalue %Widget %wdg226, 2
+  %wdg228 = load %Widget, ptr %wdg_alloca, align 8
+  %y229 = extractvalue %Widget %wdg228, 3
+  %calltmp230 = call i32 @nitpick_display_move(i32 %x227, i32 %y229)
+  %wdg231 = load %Widget, ptr %wdg_alloca, align 8
+  %text232 = extractvalue %Widget %wdg231, 6
+  %str_struct233 = load %struct.NpkString, ptr %text232, align 8
+  %str_data234 = extractvalue %struct.NpkString %str_struct233, 0
+  %print_call235 = call i64 @npk_print_cstr(ptr %str_data234)
+  %focused.ptr236 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused237 = load i32, ptr %focused.ptr236, align 4
+  %eqtmp238 = icmp eq i32 %focused237, 1
+  %ifcond239 = icmp ne i1 %eqtmp238, false
+  br i1 %ifcond239, label %then240, label %ifcont242
 
-then227:                                          ; preds = %ifcont206
-  %calltmp228 = call i32 @nitpick_display_set_reverse(i32 0)
-  br label %ifcont229
+then240:                                          ; preds = %ifcont219
+  %calltmp241 = call i32 @nitpick_display_set_reverse(i32 0)
+  br label %ifcont242
 
-ifcont229:                                        ; preds = %then227, %ifcont206
-  br label %ifcont230
+ifcont242:                                        ; preds = %then240, %ifcont219
+  br label %ifcont243
 
-ifcont230:                                        ; preds = %ifcont229, %ifcont194
-  %type.ptr231 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
-  %type232 = load i32, ptr %type.ptr231, align 4
-  %eqtmp233 = icmp eq i32 %type232, 8
-  %ifcond234 = icmp ne i1 %eqtmp233, false
-  br i1 %ifcond234, label %then235, label %ifcont275
+ifcont243:                                        ; preds = %ifcont242, %ifcont207
+  %type.ptr244 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
+  %type245 = load i32, ptr %type.ptr244, align 4
+  %eqtmp246 = icmp eq i32 %type245, 8
+  %ifcond247 = icmp ne i1 %eqtmp246, false
+  br i1 %ifcond247, label %then248, label %ifcont288
 
-then235:                                          ; preds = %ifcont230
-  %wdg236 = load %Widget, ptr %wdg_alloca, align 8
-  %x237 = extractvalue %Widget %wdg236, 2
-  %wdg238 = load %Widget, ptr %wdg_alloca, align 8
-  %y239 = extractvalue %Widget %wdg238, 3
-  %wdg240 = load %Widget, ptr %wdg_alloca, align 8
-  %fg241 = extractvalue %Widget %wdg240, 7
-  %wdg242 = load %Widget, ptr %wdg_alloca, align 8
-  %bg243 = extractvalue %Widget %wdg242, 8
-  %wdg244 = load %Widget, ptr %wdg_alloca, align 8
-  %w245 = extractvalue %Widget %wdg244, 4
-  %wdg246 = load %Widget, ptr %wdg_alloca, align 8
-  %h247 = extractvalue %Widget %wdg246, 5
-  %calltmp248 = call i32 @nitpick_display_box(i32 %x237, i32 %y239, i32 %fg241, i32 %bg243, i32 %w245, i32 %h247)
+then248:                                          ; preds = %ifcont243
   %wdg249 = load %Widget, ptr %wdg_alloca, align 8
   %x250 = extractvalue %Widget %wdg249, 2
-  %addtmp251 = add i32 %x250, 2
-  %wdg252 = load %Widget, ptr %wdg_alloca, align 8
-  %y253 = extractvalue %Widget %wdg252, 3
-  %addtmp254 = add i32 %y253, 2
-  %calltmp255 = call i32 @nitpick_display_move(i32 %addtmp251, i32 %addtmp254)
-  %focused.ptr256 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused257 = load i32, ptr %focused.ptr256, align 4
-  %eqtmp258 = icmp eq i32 %focused257, 1
-  %ifcond259 = icmp ne i1 %eqtmp258, false
-  br i1 %ifcond259, label %then260, label %ifcont262
+  %wdg251 = load %Widget, ptr %wdg_alloca, align 8
+  %y252 = extractvalue %Widget %wdg251, 3
+  %wdg253 = load %Widget, ptr %wdg_alloca, align 8
+  %fg254 = extractvalue %Widget %wdg253, 7
+  %wdg255 = load %Widget, ptr %wdg_alloca, align 8
+  %bg256 = extractvalue %Widget %wdg255, 8
+  %wdg257 = load %Widget, ptr %wdg_alloca, align 8
+  %w258 = extractvalue %Widget %wdg257, 4
+  %wdg259 = load %Widget, ptr %wdg_alloca, align 8
+  %h260 = extractvalue %Widget %wdg259, 5
+  %calltmp261 = call i32 @nitpick_display_box(i32 %x250, i32 %y252, i32 %fg254, i32 %bg256, i32 %w258, i32 %h260)
+  %wdg262 = load %Widget, ptr %wdg_alloca, align 8
+  %x263 = extractvalue %Widget %wdg262, 2
+  %addtmp264 = add i32 %x263, 2
+  %wdg265 = load %Widget, ptr %wdg_alloca, align 8
+  %y266 = extractvalue %Widget %wdg265, 3
+  %addtmp267 = add i32 %y266, 2
+  %calltmp268 = call i32 @nitpick_display_move(i32 %addtmp264, i32 %addtmp267)
+  %focused.ptr269 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused270 = load i32, ptr %focused.ptr269, align 4
+  %eqtmp271 = icmp eq i32 %focused270, 1
+  %ifcond272 = icmp ne i1 %eqtmp271, false
+  br i1 %ifcond272, label %then273, label %ifcont275
 
-then260:                                          ; preds = %then235
-  %calltmp261 = call i32 @nitpick_display_set_reverse(i32 1)
-  br label %ifcont262
-
-ifcont262:                                        ; preds = %then260, %then235
-  %wdg263 = load %Widget, ptr %wdg_alloca, align 8
-  %text264 = extractvalue %Widget %wdg263, 6
-  %str_struct265 = load %struct.NpkString, ptr %text264, align 8
-  %str_data266 = extractvalue %struct.NpkString %str_struct265, 0
-  %print_call267 = call i64 @npk_print_cstr(ptr %str_data266)
-  %focused.ptr268 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused269 = load i32, ptr %focused.ptr268, align 4
-  %eqtmp270 = icmp eq i32 %focused269, 1
-  %ifcond271 = icmp ne i1 %eqtmp270, false
-  br i1 %ifcond271, label %then272, label %ifcont274
-
-then272:                                          ; preds = %ifcont262
-  %calltmp273 = call i32 @nitpick_display_set_reverse(i32 0)
-  br label %ifcont274
-
-ifcont274:                                        ; preds = %then272, %ifcont262
+then273:                                          ; preds = %then248
+  %calltmp274 = call i32 @nitpick_display_set_reverse(i32 1)
   br label %ifcont275
 
-ifcont275:                                        ; preds = %ifcont274, %ifcont230
-  %type.ptr276 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
-  %type277 = load i32, ptr %type.ptr276, align 4
-  %eqtmp278 = icmp eq i32 %type277, 9
-  %ifcond279 = icmp ne i1 %eqtmp278, false
-  br i1 %ifcond279, label %then280, label %ifcont351
+ifcont275:                                        ; preds = %then273, %then248
+  %wdg276 = load %Widget, ptr %wdg_alloca, align 8
+  %text277 = extractvalue %Widget %wdg276, 6
+  %str_struct278 = load %struct.NpkString, ptr %text277, align 8
+  %str_data279 = extractvalue %struct.NpkString %str_struct278, 0
+  %print_call280 = call i64 @npk_print_cstr(ptr %str_data279)
+  %focused.ptr281 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused282 = load i32, ptr %focused.ptr281, align 4
+  %eqtmp283 = icmp eq i32 %focused282, 1
+  %ifcond284 = icmp ne i1 %eqtmp283, false
+  br i1 %ifcond284, label %then285, label %ifcont287
 
-then280:                                          ; preds = %ifcont275
-  %wdg281 = load %Widget, ptr %wdg_alloca, align 8
-  %fg282 = extractvalue %Widget %wdg281, 7
-  %calltmp283 = call i32 @nitpick_display_set_fg(i32 %fg282)
-  %wdg284 = load %Widget, ptr %wdg_alloca, align 8
-  %bg285 = extractvalue %Widget %wdg284, 8
-  %calltmp286 = call i32 @nitpick_display_set_bg(i32 %bg285)
-  %focused.ptr287 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused288 = load i32, ptr %focused.ptr287, align 4
-  %eqtmp289 = icmp eq i32 %focused288, 1
-  %ifcond290 = icmp ne i1 %eqtmp289, false
-  br i1 %ifcond290, label %then291, label %ifcont293
+then285:                                          ; preds = %ifcont275
+  %calltmp286 = call i32 @nitpick_display_set_reverse(i32 0)
+  br label %ifcont287
 
-then291:                                          ; preds = %then280
-  %calltmp292 = call i32 @nitpick_display_set_reverse(i32 1)
-  br label %ifcont293
+ifcont287:                                        ; preds = %then285, %ifcont275
+  br label %ifcont288
 
-ifcont293:                                        ; preds = %then291, %then280
+ifcont288:                                        ; preds = %ifcont287, %ifcont243
+  %type.ptr289 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
+  %type290 = load i32, ptr %type.ptr289, align 4
+  %eqtmp291 = icmp eq i32 %type290, 9
+  %ifcond292 = icmp ne i1 %eqtmp291, false
+  br i1 %ifcond292, label %then293, label %ifcont364
+
+then293:                                          ; preds = %ifcont288
   %wdg294 = load %Widget, ptr %wdg_alloca, align 8
-  %x295 = extractvalue %Widget %wdg294, 2
-  %wdg296 = load %Widget, ptr %wdg_alloca, align 8
-  %y297 = extractvalue %Widget %wdg296, 3
-  %calltmp298 = call i32 @nitpick_display_move(i32 %x295, i32 %y297)
-  %str_data299 = load ptr, ptr @.str.360, align 8
-  %print_call300 = call i64 @npk_print_cstr(ptr %str_data299)
-  %filled301 = alloca i32, align 4
-  %w.ptr302 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 4
-  %w303 = load i32, ptr %w.ptr302, align 4
-  %subtmp304 = sub i32 %w303, 2
-  %value.ptr305 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
-  %value306 = load i32, ptr %value.ptr305, align 4
-  %multmp307 = mul i32 %subtmp304, %value306
-  %divtmp308 = sdiv i32 %multmp307, 100
-  %safe.divtmp309 = select i1 false, i32 2147483647, i32 %divtmp308
-  store i32 %safe.divtmp309, ptr %filled301, align 4
-  %empty310 = alloca i32, align 4
-  %w.ptr311 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 4
-  %w312 = load i32, ptr %w.ptr311, align 4
-  %subtmp313 = sub i32 %w312, 2
-  %filled314 = load i32, ptr %filled301, align 4
-  %subtmp315 = sub i32 %subtmp313, %filled314
-  %subtmp316 = sub i32 %subtmp315, 1
-  store i32 %subtmp316, ptr %empty310, align 4
-  %i317 = alloca i32, align 4
-  store i32 0, ptr %i317, align 4
-  br label %whilecond318
+  %fg295 = extractvalue %Widget %wdg294, 7
+  %calltmp296 = call i32 @nitpick_display_set_fg(i32 %fg295)
+  %wdg297 = load %Widget, ptr %wdg_alloca, align 8
+  %bg298 = extractvalue %Widget %wdg297, 8
+  %calltmp299 = call i32 @nitpick_display_set_bg(i32 %bg298)
+  %focused.ptr300 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused301 = load i32, ptr %focused.ptr300, align 4
+  %eqtmp302 = icmp eq i32 %focused301, 1
+  %ifcond303 = icmp ne i1 %eqtmp302, false
+  br i1 %ifcond303, label %then304, label %ifcont306
 
-whilecond318:                                     ; preds = %whilebody323, %ifcont293
-  %i319 = load i32, ptr %i317, align 4
-  %filled320 = load i32, ptr %filled301, align 4
-  %lttmp321 = icmp slt i32 %i319, %filled320
-  %whilecond322 = icmp ne i1 %lttmp321, false
-  br i1 %whilecond322, label %whilebody323, label %afterwhile328
+then304:                                          ; preds = %then293
+  %calltmp305 = call i32 @nitpick_display_set_reverse(i32 1)
+  br label %ifcont306
 
-whilebody323:                                     ; preds = %whilecond318
-  %str_data324 = load ptr, ptr @.str.362, align 8
-  %print_call325 = call i64 @npk_print_cstr(ptr %str_data324)
-  %i326 = load i32, ptr %i317, align 4
-  %addtmp327 = add i32 %i326, 1
-  store i32 %addtmp327, ptr %i317, align 4
-  call void @npk_gc_safepoint()
-  br label %whilecond318
-
-afterwhile328:                                    ; preds = %whilecond318
-  %str_data329 = load ptr, ptr @.str.364, align 8
-  %print_call330 = call i64 @npk_print_cstr(ptr %str_data329)
-  store i32 0, ptr %i317, align 4
+ifcont306:                                        ; preds = %then304, %then293
+  %wdg307 = load %Widget, ptr %wdg_alloca, align 8
+  %x308 = extractvalue %Widget %wdg307, 2
+  %wdg309 = load %Widget, ptr %wdg_alloca, align 8
+  %y310 = extractvalue %Widget %wdg309, 3
+  %calltmp311 = call i32 @nitpick_display_move(i32 %x308, i32 %y310)
+  %str_data312 = load ptr, ptr @.str.382, align 8
+  %print_call313 = call i64 @npk_print_cstr(ptr %str_data312)
+  %filled314 = alloca i32, align 4
+  %w.ptr315 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 4
+  %w316 = load i32, ptr %w.ptr315, align 4
+  %subtmp317 = sub i32 %w316, 2
+  %value.ptr318 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
+  %value319 = load i32, ptr %value.ptr318, align 4
+  %multmp320 = mul i32 %subtmp317, %value319
+  %divtmp321 = sdiv i32 %multmp320, 100
+  %safe.divtmp322 = select i1 false, i32 2147483647, i32 %divtmp321
+  store i32 %safe.divtmp322, ptr %filled314, align 4
+  %empty323 = alloca i32, align 4
+  %w.ptr324 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 4
+  %w325 = load i32, ptr %w.ptr324, align 4
+  %subtmp326 = sub i32 %w325, 2
+  %filled327 = load i32, ptr %filled314, align 4
+  %subtmp328 = sub i32 %subtmp326, %filled327
+  %subtmp329 = sub i32 %subtmp328, 1
+  store i32 %subtmp329, ptr %empty323, align 4
+  %i330 = alloca i32, align 4
+  store i32 0, ptr %i330, align 4
   br label %whilecond331
 
-whilecond331:                                     ; preds = %whilebody336, %afterwhile328
-  %i332 = load i32, ptr %i317, align 4
-  %empty333 = load i32, ptr %empty310, align 4
-  %lttmp334 = icmp slt i32 %i332, %empty333
+whilecond331:                                     ; preds = %whilebody336, %ifcont306
+  %i332 = load i32, ptr %i330, align 4
+  %filled333 = load i32, ptr %filled314, align 4
+  %lttmp334 = icmp slt i32 %i332, %filled333
   %whilecond335 = icmp ne i1 %lttmp334, false
   br i1 %whilecond335, label %whilebody336, label %afterwhile341
 
 whilebody336:                                     ; preds = %whilecond331
-  %str_data337 = load ptr, ptr @.str.366, align 8
+  %str_data337 = load ptr, ptr @.str.384, align 8
   %print_call338 = call i64 @npk_print_cstr(ptr %str_data337)
-  %i339 = load i32, ptr %i317, align 4
+  %i339 = load i32, ptr %i330, align 4
   %addtmp340 = add i32 %i339, 1
-  store i32 %addtmp340, ptr %i317, align 4
+  store i32 %addtmp340, ptr %i330, align 4
   call void @npk_gc_safepoint()
   br label %whilecond331
 
 afterwhile341:                                    ; preds = %whilecond331
-  %str_data342 = load ptr, ptr @.str.368, align 8
+  %str_data342 = load ptr, ptr @.str.386, align 8
   %print_call343 = call i64 @npk_print_cstr(ptr %str_data342)
-  %focused.ptr344 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused345 = load i32, ptr %focused.ptr344, align 4
-  %eqtmp346 = icmp eq i32 %focused345, 1
-  %ifcond347 = icmp ne i1 %eqtmp346, false
-  br i1 %ifcond347, label %then348, label %ifcont350
+  store i32 0, ptr %i330, align 4
+  br label %whilecond344
 
-then348:                                          ; preds = %afterwhile341
-  %calltmp349 = call i32 @nitpick_display_set_reverse(i32 0)
-  br label %ifcont350
+whilecond344:                                     ; preds = %whilebody349, %afterwhile341
+  %i345 = load i32, ptr %i330, align 4
+  %empty346 = load i32, ptr %empty323, align 4
+  %lttmp347 = icmp slt i32 %i345, %empty346
+  %whilecond348 = icmp ne i1 %lttmp347, false
+  br i1 %whilecond348, label %whilebody349, label %afterwhile354
 
-ifcont350:                                        ; preds = %then348, %afterwhile341
-  br label %ifcont351
+whilebody349:                                     ; preds = %whilecond344
+  %str_data350 = load ptr, ptr @.str.388, align 8
+  %print_call351 = call i64 @npk_print_cstr(ptr %str_data350)
+  %i352 = load i32, ptr %i330, align 4
+  %addtmp353 = add i32 %i352, 1
+  store i32 %addtmp353, ptr %i330, align 4
+  call void @npk_gc_safepoint()
+  br label %whilecond344
 
-ifcont351:                                        ; preds = %ifcont350, %ifcont275
-  %type.ptr352 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
-  %type353 = load i32, ptr %type.ptr352, align 4
-  %eqtmp354 = icmp eq i32 %type353, 10
-  %ifcond355 = icmp ne i1 %eqtmp354, false
-  br i1 %ifcond355, label %then356, label %ifcont453
+afterwhile354:                                    ; preds = %whilecond344
+  %str_data355 = load ptr, ptr @.str.390, align 8
+  %print_call356 = call i64 @npk_print_cstr(ptr %str_data355)
+  %focused.ptr357 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused358 = load i32, ptr %focused.ptr357, align 4
+  %eqtmp359 = icmp eq i32 %focused358, 1
+  %ifcond360 = icmp ne i1 %eqtmp359, false
+  br i1 %ifcond360, label %then361, label %ifcont363
 
-then356:                                          ; preds = %ifcont351
-  %wdg357 = load %Widget, ptr %wdg_alloca, align 8
-  %x358 = extractvalue %Widget %wdg357, 2
-  %wdg359 = load %Widget, ptr %wdg_alloca, align 8
-  %y360 = extractvalue %Widget %wdg359, 3
-  %wdg361 = load %Widget, ptr %wdg_alloca, align 8
-  %fg362 = extractvalue %Widget %wdg361, 7
-  %wdg363 = load %Widget, ptr %wdg_alloca, align 8
-  %bg364 = extractvalue %Widget %wdg363, 8
-  %wdg365 = load %Widget, ptr %wdg_alloca, align 8
-  %w366 = extractvalue %Widget %wdg365, 4
-  %wdg367 = load %Widget, ptr %wdg_alloca, align 8
-  %h368 = extractvalue %Widget %wdg367, 5
-  %calltmp369 = call i32 @nitpick_display_box(i32 %x358, i32 %y360, i32 %fg362, i32 %bg364, i32 %w366, i32 %h368)
-  %count = alloca i64, align 8
+then361:                                          ; preds = %afterwhile354
+  %calltmp362 = call i32 @nitpick_display_set_reverse(i32 0)
+  br label %ifcont363
+
+ifcont363:                                        ; preds = %then361, %afterwhile354
+  br label %ifcont364
+
+ifcont364:                                        ; preds = %ifcont363, %ifcont288
+  %type.ptr365 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
+  %type366 = load i32, ptr %type.ptr365, align 4
+  %eqtmp367 = icmp eq i32 %type366, 10
+  %ifcond368 = icmp ne i1 %eqtmp367, false
+  br i1 %ifcond368, label %then369, label %ifcont481
+
+then369:                                          ; preds = %ifcont364
   %wdg370 = load %Widget, ptr %wdg_alloca, align 8
-  %text371 = extractvalue %Widget %wdg370, 6
-  %calltmp372 = call { i64, ptr, i8 } @str_token_count(ptr %text371, ptr @.str.370)
-  %raw.value = extractvalue { i64, ptr, i8 } %calltmp372, 0
-  store i64 %raw.value, ptr %count, align 4
+  %x371 = extractvalue %Widget %wdg370, 2
+  %wdg372 = load %Widget, ptr %wdg_alloca, align 8
+  %y373 = extractvalue %Widget %wdg372, 3
+  %wdg374 = load %Widget, ptr %wdg_alloca, align 8
+  %fg375 = extractvalue %Widget %wdg374, 7
+  %wdg376 = load %Widget, ptr %wdg_alloca, align 8
+  %bg377 = extractvalue %Widget %wdg376, 8
+  %wdg378 = load %Widget, ptr %wdg_alloca, align 8
+  %w379 = extractvalue %Widget %wdg378, 4
+  %wdg380 = load %Widget, ptr %wdg_alloca, align 8
+  %h381 = extractvalue %Widget %wdg380, 5
+  %calltmp382 = call i32 @nitpick_display_box(i32 %x371, i32 %y373, i32 %fg375, i32 %bg377, i32 %w379, i32 %h381)
+  %wdg383 = load %Widget, ptr %wdg_alloca, align 8
+  %x384 = extractvalue %Widget %wdg383, 2
+  %wdg385 = load %Widget, ptr %wdg_alloca, align 8
+  %y386 = extractvalue %Widget %wdg385, 3
+  %wdg387 = load %Widget, ptr %wdg_alloca, align 8
+  %w388 = extractvalue %Widget %wdg387, 4
+  %wdg389 = load %Widget, ptr %wdg_alloca, align 8
+  %h390 = extractvalue %Widget %wdg389, 5
+  %wdg391 = load %Widget, ptr %wdg_alloca, align 8
+  %fg392 = extractvalue %Widget %wdg391, 7
+  %wdg393 = load %Widget, ptr %wdg_alloca, align 8
+  %bg394 = extractvalue %Widget %wdg393, 8
+  %calltmp395 = call { %struct.NIL, ptr, i8 } @Tui_draw_border(i32 %x384, i32 %y386, i32 %w388, i32 %h390, i32 %fg392, i32 %bg394)
+  %raw.value396 = extractvalue { %struct.NIL, ptr, i8 } %calltmp395, 0
+  %count = alloca i64, align 8
+  %wdg397 = load %Widget, ptr %wdg_alloca, align 8
+  %text398 = extractvalue %Widget %wdg397, 6
+  %calltmp399 = call { i64, ptr, i8 } @str_token_count(ptr %text398, ptr @.str.392)
+  %raw.value400 = extractvalue { i64, ptr, i8 } %calltmp399, 0
+  store i64 %raw.value400, ptr %count, align 4
   %max_vis = alloca i64, align 8
   %h.ptr = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 5
-  %h373 = load i32, ptr %h.ptr, align 4
-  %subtmp374 = sub i32 %h373, 2
-  %init_sext = sext i32 %subtmp374 to i64
+  %h401 = load i32, ptr %h.ptr, align 4
+  %subtmp402 = sub i32 %h401, 2
+  %init_sext = sext i32 %subtmp402 to i64
   store i64 %init_sext, ptr %max_vis, align 4
   %sel = alloca i64, align 8
-  %value.ptr375 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
-  %value376 = load i32, ptr %value.ptr375, align 4
-  %init_sext377 = sext i32 %value376 to i64
-  store i64 %init_sext377, ptr %sel, align 4
+  %value.ptr403 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
+  %value404 = load i32, ptr %value.ptr403, align 4
+  %init_sext405 = sext i32 %value404 to i64
+  store i64 %init_sext405, ptr %sel, align 4
   %start_idx = alloca i64, align 8
   store i64 0, ptr %start_idx, align 4
-  %sel378 = load i64, ptr %sel, align 4
-  %max_vis379 = load i64, ptr %max_vis, align 4
-  %getmp = icmp sge i64 %sel378, %max_vis379
-  %ifcond380 = icmp ne i1 %getmp, false
-  br i1 %ifcond380, label %then381, label %ifcont386
+  %sel406 = load i64, ptr %sel, align 4
+  %max_vis407 = load i64, ptr %max_vis, align 4
+  %getmp = icmp sge i64 %sel406, %max_vis407
+  %ifcond408 = icmp ne i1 %getmp, false
+  br i1 %ifcond408, label %then409, label %ifcont414
 
-then381:                                          ; preds = %then356
-  %sel382 = load i64, ptr %sel, align 4
-  %max_vis383 = load i64, ptr %max_vis, align 4
-  %subtmp384 = sub i64 %sel382, %max_vis383
-  %addtmp385 = add i64 %subtmp384, 1
-  store i64 %addtmp385, ptr %start_idx, align 4
-  br label %ifcont386
+then409:                                          ; preds = %then369
+  %sel410 = load i64, ptr %sel, align 4
+  %max_vis411 = load i64, ptr %max_vis, align 4
+  %subtmp412 = sub i64 %sel410, %max_vis411
+  %addtmp413 = add i64 %subtmp412, 1
+  store i64 %addtmp413, ptr %start_idx, align 4
+  br label %ifcont414
 
-ifcont386:                                        ; preds = %then381, %then356
-  %i387 = alloca i64, align 8
-  store i64 0, ptr %i387, align 4
-  br label %whilecond388
+ifcont414:                                        ; preds = %then409, %then369
+  %i415 = alloca i64, align 8
+  store i64 0, ptr %i415, align 4
+  br label %whilecond416
 
-whilecond388:                                     ; preds = %ifcont449, %ifcont386
-  %i389 = load i64, ptr %i387, align 4
-  %max_vis390 = load i64, ptr %max_vis, align 4
-  %lttmp391 = icmp slt i64 %i389, %max_vis390
-  %whilecond392 = icmp ne i1 %lttmp391, false
-  br i1 %whilecond392, label %whilebody393, label %afterwhile452
+whilecond416:                                     ; preds = %ifcont477, %ifcont414
+  %i417 = load i64, ptr %i415, align 4
+  %max_vis418 = load i64, ptr %max_vis, align 4
+  %lttmp419 = icmp slt i64 %i417, %max_vis418
+  %whilecond420 = icmp ne i1 %lttmp419, false
+  br i1 %whilecond420, label %whilebody421, label %afterwhile480
 
-whilebody393:                                     ; preds = %whilecond388
+whilebody421:                                     ; preds = %whilecond416
   %idx = alloca i64, align 8
-  %start_idx394 = load i64, ptr %start_idx, align 4
-  %i395 = load i64, ptr %i387, align 4
-  %addtmp396 = add i64 %start_idx394, %i395
-  store i64 %addtmp396, ptr %idx, align 4
-  %idx397 = load i64, ptr %idx, align 4
-  %count398 = load i64, ptr %count, align 4
-  %lttmp399 = icmp slt i64 %idx397, %count398
-  %ifcond400 = icmp ne i1 %lttmp399, false
-  br i1 %ifcond400, label %then401, label %ifcont449
+  %start_idx422 = load i64, ptr %start_idx, align 4
+  %i423 = load i64, ptr %i415, align 4
+  %addtmp424 = add i64 %start_idx422, %i423
+  store i64 %addtmp424, ptr %idx, align 4
+  %idx425 = load i64, ptr %idx, align 4
+  %count426 = load i64, ptr %count, align 4
+  %lttmp427 = icmp slt i64 %idx425, %count426
+  %ifcond428 = icmp ne i1 %lttmp427, false
+  br i1 %ifcond428, label %then429, label %ifcont477
 
-then401:                                          ; preds = %whilebody393
-  %idx402 = load i64, ptr %idx, align 4
-  %sel403 = load i64, ptr %sel, align 4
-  %eqtmp404 = icmp eq i64 %idx402, %sel403
-  %ifcond405 = icmp ne i1 %eqtmp404, false
-  br i1 %ifcond405, label %then406, label %else418
+then429:                                          ; preds = %whilebody421
+  %idx430 = load i64, ptr %idx, align 4
+  %sel431 = load i64, ptr %sel, align 4
+  %eqtmp432 = icmp eq i64 %idx430, %sel431
+  %ifcond433 = icmp ne i1 %eqtmp432, false
+  br i1 %ifcond433, label %then434, label %else446
 
-then406:                                          ; preds = %then401
-  %focused.ptr407 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused408 = load i32, ptr %focused.ptr407, align 4
-  %eqtmp409 = icmp eq i32 %focused408, 1
-  %ifcond410 = icmp ne i1 %eqtmp409, false
-  br i1 %ifcond410, label %then411, label %else
+then434:                                          ; preds = %then429
+  %focused.ptr435 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused436 = load i32, ptr %focused.ptr435, align 4
+  %eqtmp437 = icmp eq i32 %focused436, 1
+  %ifcond438 = icmp ne i1 %eqtmp437, false
+  br i1 %ifcond438, label %then439, label %else
 
-then411:                                          ; preds = %then406
-  %calltmp412 = call i32 @nitpick_display_set_reverse(i32 1)
-  br label %ifcont417
+then439:                                          ; preds = %then434
+  %calltmp440 = call i32 @nitpick_display_set_reverse(i32 1)
+  br label %ifcont445
 
-else:                                             ; preds = %then406
-  %calltmp413 = call i32 @nitpick_display_set_fg(i32 0)
-  %wdg414 = load %Widget, ptr %wdg_alloca, align 8
-  %fg415 = extractvalue %Widget %wdg414, 7
-  %calltmp416 = call i32 @nitpick_display_set_bg(i32 %fg415)
-  br label %ifcont417
+else:                                             ; preds = %then434
+  %calltmp441 = call i32 @nitpick_display_set_fg(i32 0)
+  %wdg442 = load %Widget, ptr %wdg_alloca, align 8
+  %fg443 = extractvalue %Widget %wdg442, 7
+  %calltmp444 = call i32 @nitpick_display_set_bg(i32 %fg443)
+  br label %ifcont445
 
-ifcont417:                                        ; preds = %else, %then411
-  br label %ifcont425
-
-else418:                                          ; preds = %then401
-  %wdg419 = load %Widget, ptr %wdg_alloca, align 8
-  %fg420 = extractvalue %Widget %wdg419, 7
-  %calltmp421 = call i32 @nitpick_display_set_fg(i32 %fg420)
-  %wdg422 = load %Widget, ptr %wdg_alloca, align 8
-  %bg423 = extractvalue %Widget %wdg422, 8
-  %calltmp424 = call i32 @nitpick_display_set_bg(i32 %bg423)
-  br label %ifcont425
-
-ifcont425:                                        ; preds = %else418, %ifcont417
-  %wdg426 = load %Widget, ptr %wdg_alloca, align 8
-  %x427 = extractvalue %Widget %wdg426, 2
-  %addtmp428 = add i32 %x427, 1
-  %wdg429 = load %Widget, ptr %wdg_alloca, align 8
-  %y430 = extractvalue %Widget %wdg429, 3
-  %addtmp431 = add i32 %y430, 1
-  %i432 = load i64, ptr %i387, align 4
-  %cast.checked_trunc = trunc i64 %i432 to i32
-  %cast.rt_sext = sext i32 %cast.checked_trunc to i64
-  %cast.overflow = icmp ne i64 %i432, %cast.rt_sext
-  br i1 %cast.overflow, label %cast.overflow_panic, label %cast.ok
-
-cast.overflow_panic:                              ; preds = %ifcont425
-  call void @npk_panic_overflow(ptr @cast_overflow_msg)
-  unreachable
-
-cast.ok:                                          ; preds = %ifcont425
-  %addtmp433 = add i32 %addtmp431, %cast.checked_trunc
-  %calltmp434 = call i32 @nitpick_display_move(i32 %addtmp428, i32 %addtmp433)
-  %item = alloca ptr, align 8
-  %wdg435 = load %Widget, ptr %wdg_alloca, align 8
-  %text436 = extractvalue %Widget %wdg435, 6
-  %idx437 = load i64, ptr %idx, align 4
-  %calltmp438 = call { ptr, ptr, i8 } @str_token(ptr %text436, ptr @.str.372, i64 %idx437)
-  %raw.value439 = extractvalue { ptr, ptr, i8 } %calltmp438, 0
-  store ptr %raw.value439, ptr %item, align 8
-  %str_data440 = load ptr, ptr @.str.374, align 8
-  %print_call441 = call i64 @npk_print_cstr(ptr %str_data440)
-  %item442 = load ptr, ptr %item, align 8
-  %str_struct443 = load %struct.NpkString, ptr %item442, align 8
-  %str_data444 = extractvalue %struct.NpkString %str_struct443, 0
-  %print_call445 = call i64 @npk_print_cstr(ptr %str_data444)
-  %str_data446 = load ptr, ptr @.str.376, align 8
-  %print_call447 = call i64 @npk_print_cstr(ptr %str_data446)
-  %calltmp448 = call i32 @nitpick_display_set_reverse(i32 0)
-  br label %ifcont449
-
-ifcont449:                                        ; preds = %cast.ok, %whilebody393
-  %i450 = load i64, ptr %i387, align 4
-  %addtmp451 = add i64 %i450, 1
-  store i64 %addtmp451, ptr %i387, align 4
-  call void @npk_gc_safepoint()
-  br label %whilecond388
-
-afterwhile452:                                    ; preds = %whilecond388
+ifcont445:                                        ; preds = %else, %then439
   br label %ifcont453
 
-ifcont453:                                        ; preds = %afterwhile452, %ifcont351
-  %type.ptr454 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
-  %type455 = load i32, ptr %type.ptr454, align 4
-  %eqtmp456 = icmp eq i32 %type455, 11
-  %ifcond457 = icmp ne i1 %eqtmp456, false
-  br i1 %ifcond457, label %then458, label %ifcont577
+else446:                                          ; preds = %then429
+  %wdg447 = load %Widget, ptr %wdg_alloca, align 8
+  %fg448 = extractvalue %Widget %wdg447, 7
+  %calltmp449 = call i32 @nitpick_display_set_fg(i32 %fg448)
+  %wdg450 = load %Widget, ptr %wdg_alloca, align 8
+  %bg451 = extractvalue %Widget %wdg450, 8
+  %calltmp452 = call i32 @nitpick_display_set_bg(i32 %bg451)
+  br label %ifcont453
 
-then458:                                          ; preds = %ifcont453
-  %expanded = alloca i32, align 4
-  %value.ptr459 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
-  %value460 = load i32, ptr %value.ptr459, align 4
-  %divtmp461 = sdiv i32 %value460, 1000
-  %safe.divtmp462 = select i1 false, i32 2147483647, i32 %divtmp461
-  store i32 %safe.divtmp462, ptr %expanded, align 4
-  %sel463 = alloca i32, align 4
-  %value.ptr464 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
-  %value465 = load i32, ptr %value.ptr464, align 4
-  %expanded466 = load i32, ptr %expanded, align 4
-  %multmp467 = mul i32 %expanded466, 1000
-  %subtmp468 = sub i32 %value465, %multmp467
-  store i32 %subtmp468, ptr %sel463, align 4
-  %selected_text = alloca ptr, align 8
-  %wdg469 = load %Widget, ptr %wdg_alloca, align 8
-  %text470 = extractvalue %Widget %wdg469, 6
-  %sel471 = load i32, ptr %sel463, align 4
-  %cast.sext = sext i32 %sel471 to i64
-  %calltmp472 = call { ptr, ptr, i8 } @str_token(ptr %text470, ptr @.str.378, i64 %cast.sext)
-  %raw.value473 = extractvalue { ptr, ptr, i8 } %calltmp472, 0
-  store ptr %raw.value473, ptr %selected_text, align 8
-  %focused.ptr474 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused475 = load i32, ptr %focused.ptr474, align 4
-  %eqtmp476 = icmp eq i32 %focused475, 1
-  %ifcond477 = icmp ne i1 %eqtmp476, false
-  br i1 %ifcond477, label %then478, label %ifcont480
+ifcont453:                                        ; preds = %else446, %ifcont445
+  %wdg454 = load %Widget, ptr %wdg_alloca, align 8
+  %x455 = extractvalue %Widget %wdg454, 2
+  %addtmp456 = add i32 %x455, 1
+  %wdg457 = load %Widget, ptr %wdg_alloca, align 8
+  %y458 = extractvalue %Widget %wdg457, 3
+  %addtmp459 = add i32 %y458, 1
+  %i460 = load i64, ptr %i415, align 4
+  %cast.trunc = trunc i64 %i460 to i32
+  %addtmp461 = add i32 %addtmp459, %cast.trunc
+  %calltmp462 = call i32 @nitpick_display_move(i32 %addtmp456, i32 %addtmp461)
+  %item = alloca ptr, align 8
+  %wdg463 = load %Widget, ptr %wdg_alloca, align 8
+  %text464 = extractvalue %Widget %wdg463, 6
+  %idx465 = load i64, ptr %idx, align 4
+  %calltmp466 = call { ptr, ptr, i8 } @str_token(ptr %text464, ptr @.str.394, i64 %idx465)
+  %raw.value467 = extractvalue { ptr, ptr, i8 } %calltmp466, 0
+  store ptr %raw.value467, ptr %item, align 8
+  %str_data468 = load ptr, ptr @.str.396, align 8
+  %print_call469 = call i64 @npk_print_cstr(ptr %str_data468)
+  %item470 = load ptr, ptr %item, align 8
+  %str_struct471 = load %struct.NpkString, ptr %item470, align 8
+  %str_data472 = extractvalue %struct.NpkString %str_struct471, 0
+  %print_call473 = call i64 @npk_print_cstr(ptr %str_data472)
+  %str_data474 = load ptr, ptr @.str.398, align 8
+  %print_call475 = call i64 @npk_print_cstr(ptr %str_data474)
+  %calltmp476 = call i32 @nitpick_display_set_reverse(i32 0)
+  br label %ifcont477
 
-then478:                                          ; preds = %then458
-  %calltmp479 = call i32 @nitpick_display_set_reverse(i32 1)
-  br label %ifcont480
-
-ifcont480:                                        ; preds = %then478, %then458
-  %wdg481 = load %Widget, ptr %wdg_alloca, align 8
-  %fg482 = extractvalue %Widget %wdg481, 7
-  %calltmp483 = call i32 @nitpick_display_set_fg(i32 %fg482)
-  %wdg484 = load %Widget, ptr %wdg_alloca, align 8
-  %bg485 = extractvalue %Widget %wdg484, 8
-  %calltmp486 = call i32 @nitpick_display_set_bg(i32 %bg485)
-  %wdg487 = load %Widget, ptr %wdg_alloca, align 8
-  %x488 = extractvalue %Widget %wdg487, 2
-  %wdg489 = load %Widget, ptr %wdg_alloca, align 8
-  %y490 = extractvalue %Widget %wdg489, 3
-  %calltmp491 = call i32 @nitpick_display_move(i32 %x488, i32 %y490)
-  %str_data492 = load ptr, ptr @.str.380, align 8
-  %print_call493 = call i64 @npk_print_cstr(ptr %str_data492)
-  %selected_text494 = load ptr, ptr %selected_text, align 8
-  %str_struct495 = load %struct.NpkString, ptr %selected_text494, align 8
-  %str_data496 = extractvalue %struct.NpkString %str_struct495, 0
-  %print_call497 = call i64 @npk_print_cstr(ptr %str_data496)
-  %str_data498 = load ptr, ptr @.str.382, align 8
-  %print_call499 = call i64 @npk_print_cstr(ptr %str_data498)
-  %focused.ptr500 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused501 = load i32, ptr %focused.ptr500, align 4
-  %eqtmp502 = icmp eq i32 %focused501, 1
-  %ifcond503 = icmp ne i1 %eqtmp502, false
-  br i1 %ifcond503, label %then504, label %ifcont506
-
-then504:                                          ; preds = %ifcont480
-  %calltmp505 = call i32 @nitpick_display_set_reverse(i32 0)
-  br label %ifcont506
-
-ifcont506:                                        ; preds = %then504, %ifcont480
-  %expanded507 = load i32, ptr %expanded, align 4
-  %eqtmp508 = icmp eq i32 %expanded507, 1
-  %ifcond509 = icmp ne i1 %eqtmp508, false
-  br i1 %ifcond509, label %then510, label %ifcont576
-
-then510:                                          ; preds = %ifcont506
-  %count511 = alloca i64, align 8
-  %wdg512 = load %Widget, ptr %wdg_alloca, align 8
-  %text513 = extractvalue %Widget %wdg512, 6
-  %calltmp514 = call { i64, ptr, i8 } @str_token_count(ptr %text513, ptr @.str.384)
-  %raw.value515 = extractvalue { i64, ptr, i8 } %calltmp514, 0
-  store i64 %raw.value515, ptr %count511, align 4
-  %wdg516 = load %Widget, ptr %wdg_alloca, align 8
-  %x517 = extractvalue %Widget %wdg516, 2
-  %wdg518 = load %Widget, ptr %wdg_alloca, align 8
-  %y519 = extractvalue %Widget %wdg518, 3
-  %addtmp520 = add i32 %y519, 1
-  %wdg521 = load %Widget, ptr %wdg_alloca, align 8
-  %fg522 = extractvalue %Widget %wdg521, 7
-  %wdg523 = load %Widget, ptr %wdg_alloca, align 8
-  %bg524 = extractvalue %Widget %wdg523, 8
-  %wdg525 = load %Widget, ptr %wdg_alloca, align 8
-  %w526 = extractvalue %Widget %wdg525, 4
-  %count527 = load i64, ptr %count511, align 4
-  %cast.checked_trunc528 = trunc i64 %count527 to i32
-  %cast.rt_sext529 = sext i32 %cast.checked_trunc528 to i64
-  %cast.overflow530 = icmp ne i64 %count527, %cast.rt_sext529
-  br i1 %cast.overflow530, label %cast.overflow_panic531, label %cast.ok532
-
-cast.overflow_panic531:                           ; preds = %then510
-  call void @npk_panic_overflow(ptr @cast_overflow_msg.385)
-  unreachable
-
-cast.ok532:                                       ; preds = %then510
-  %addtmp533 = add i32 %cast.checked_trunc528, 2
-  %calltmp534 = call i32 @nitpick_display_box(i32 %x517, i32 %addtmp520, i32 %fg522, i32 %bg524, i32 %w526, i32 %addtmp533)
-  %i535 = alloca i64, align 8
-  store i64 0, ptr %i535, align 4
-  br label %whilecond536
-
-whilecond536:                                     ; preds = %cast.ok561, %cast.ok532
-  %i537 = load i64, ptr %i535, align 4
-  %count538 = load i64, ptr %count511, align 4
-  %lttmp539 = icmp slt i64 %i537, %count538
-  %whilecond540 = icmp ne i1 %lttmp539, false
-  br i1 %whilecond540, label %whilebody541, label %afterwhile575
-
-whilebody541:                                     ; preds = %whilecond536
-  %i542 = load i64, ptr %i535, align 4
-  %sel543 = load i32, ptr %sel463, align 4
-  %cast.sext544 = sext i32 %sel543 to i64
-  %eqtmp545 = icmp eq i64 %i542, %cast.sext544
-  %ifcond546 = icmp ne i1 %eqtmp545, false
-  br i1 %ifcond546, label %then547, label %ifcont549
-
-then547:                                          ; preds = %whilebody541
-  %calltmp548 = call i32 @nitpick_display_set_reverse(i32 1)
-  br label %ifcont549
-
-ifcont549:                                        ; preds = %then547, %whilebody541
-  %wdg550 = load %Widget, ptr %wdg_alloca, align 8
-  %x551 = extractvalue %Widget %wdg550, 2
-  %addtmp552 = add i32 %x551, 1
-  %wdg553 = load %Widget, ptr %wdg_alloca, align 8
-  %y554 = extractvalue %Widget %wdg553, 3
-  %addtmp555 = add i32 %y554, 2
-  %i556 = load i64, ptr %i535, align 4
-  %cast.checked_trunc557 = trunc i64 %i556 to i32
-  %cast.rt_sext558 = sext i32 %cast.checked_trunc557 to i64
-  %cast.overflow559 = icmp ne i64 %i556, %cast.rt_sext558
-  br i1 %cast.overflow559, label %cast.overflow_panic560, label %cast.ok561
-
-cast.overflow_panic560:                           ; preds = %ifcont549
-  call void @npk_panic_overflow(ptr @cast_overflow_msg.386)
-  unreachable
-
-cast.ok561:                                       ; preds = %ifcont549
-  %addtmp562 = add i32 %addtmp555, %cast.checked_trunc557
-  %calltmp563 = call i32 @nitpick_display_move(i32 %addtmp552, i32 %addtmp562)
-  %wdg564 = load %Widget, ptr %wdg_alloca, align 8
-  %text565 = extractvalue %Widget %wdg564, 6
-  %i566 = load i64, ptr %i535, align 4
-  %calltmp567 = call { ptr, ptr, i8 } @str_token(ptr %text565, ptr @.str.388, i64 %i566)
-  %raw.value568 = extractvalue { ptr, ptr, i8 } %calltmp567, 0
-  %str_struct569 = load %struct.NpkString, ptr %raw.value568, align 8
-  %str_data570 = extractvalue %struct.NpkString %str_struct569, 0
-  %print_call571 = call i64 @npk_print_cstr(ptr %str_data570)
-  %calltmp572 = call i32 @nitpick_display_set_reverse(i32 0)
-  %i573 = load i64, ptr %i535, align 4
-  %addtmp574 = add i64 %i573, 1
-  store i64 %addtmp574, ptr %i535, align 4
+ifcont477:                                        ; preds = %ifcont453, %whilebody421
+  %i478 = load i64, ptr %i415, align 4
+  %addtmp479 = add i64 %i478, 1
+  store i64 %addtmp479, ptr %i415, align 4
   call void @npk_gc_safepoint()
-  br label %whilecond536
+  br label %whilecond416
 
-afterwhile575:                                    ; preds = %whilecond536
-  br label %ifcont576
+afterwhile480:                                    ; preds = %whilecond416
+  br label %ifcont481
 
-ifcont576:                                        ; preds = %afterwhile575, %ifcont506
-  br label %ifcont577
+ifcont481:                                        ; preds = %afterwhile480, %ifcont364
+  %type.ptr482 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
+  %type483 = load i32, ptr %type.ptr482, align 4
+  %eqtmp484 = icmp eq i32 %type483, 11
+  %ifcond485 = icmp ne i1 %eqtmp484, false
+  br i1 %ifcond485, label %then486, label %ifcont597
 
-ifcont577:                                        ; preds = %ifcont576, %ifcont453
-  %type.ptr578 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
-  %type579 = load i32, ptr %type.ptr578, align 4
-  %eqtmp580 = icmp eq i32 %type579, 12
-  %ifcond581 = icmp ne i1 %eqtmp580, false
-  br i1 %ifcond581, label %then582, label %ifcont691
+then486:                                          ; preds = %ifcont481
+  %expanded = alloca i32, align 4
+  %value.ptr487 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
+  %value488 = load i32, ptr %value.ptr487, align 4
+  %divtmp489 = sdiv i32 %value488, 1000
+  %safe.divtmp490 = select i1 false, i32 2147483647, i32 %divtmp489
+  store i32 %safe.divtmp490, ptr %expanded, align 4
+  %sel491 = alloca i32, align 4
+  %value.ptr492 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
+  %value493 = load i32, ptr %value.ptr492, align 4
+  %expanded494 = load i32, ptr %expanded, align 4
+  %multmp495 = mul i32 %expanded494, 1000
+  %subtmp496 = sub i32 %value493, %multmp495
+  store i32 %subtmp496, ptr %sel491, align 4
+  %selected_text = alloca ptr, align 8
+  %wdg497 = load %Widget, ptr %wdg_alloca, align 8
+  %text498 = extractvalue %Widget %wdg497, 6
+  %sel499 = load i32, ptr %sel491, align 4
+  %cast.sext = sext i32 %sel499 to i64
+  %calltmp500 = call { ptr, ptr, i8 } @str_token(ptr %text498, ptr @.str.400, i64 %cast.sext)
+  %raw.value501 = extractvalue { ptr, ptr, i8 } %calltmp500, 0
+  store ptr %raw.value501, ptr %selected_text, align 8
+  %focused.ptr502 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused503 = load i32, ptr %focused.ptr502, align 4
+  %eqtmp504 = icmp eq i32 %focused503, 1
+  %ifcond505 = icmp ne i1 %eqtmp504, false
+  br i1 %ifcond505, label %then506, label %ifcont508
 
-then582:                                          ; preds = %ifcont577
-  %wdg583 = load %Widget, ptr %wdg_alloca, align 8
-  %x584 = extractvalue %Widget %wdg583, 2
-  %wdg585 = load %Widget, ptr %wdg_alloca, align 8
-  %y586 = extractvalue %Widget %wdg585, 3
-  %wdg587 = load %Widget, ptr %wdg_alloca, align 8
-  %fg588 = extractvalue %Widget %wdg587, 7
-  %wdg589 = load %Widget, ptr %wdg_alloca, align 8
-  %bg590 = extractvalue %Widget %wdg589, 8
-  %wdg591 = load %Widget, ptr %wdg_alloca, align 8
-  %w592 = extractvalue %Widget %wdg591, 4
-  %wdg593 = load %Widget, ptr %wdg_alloca, align 8
-  %h594 = extractvalue %Widget %wdg593, 5
-  %calltmp595 = call i32 @nitpick_display_box(i32 %x584, i32 %y586, i32 %fg588, i32 %bg590, i32 %w592, i32 %h594)
-  %wdg596 = load %Widget, ptr %wdg_alloca, align 8
-  %fg597 = extractvalue %Widget %wdg596, 7
-  %calltmp598 = call i32 @nitpick_display_set_fg(i32 %fg597)
-  %wdg599 = load %Widget, ptr %wdg_alloca, align 8
-  %bg600 = extractvalue %Widget %wdg599, 8
-  %calltmp601 = call i32 @nitpick_display_set_bg(i32 %bg600)
-  %title = alloca ptr, align 8
-  %wdg602 = load %Widget, ptr %wdg_alloca, align 8
-  %text603 = extractvalue %Widget %wdg602, 6
-  %calltmp604 = call { ptr, ptr, i8 } @str_token(ptr %text603, ptr @.str.390, i64 0)
-  %raw.value605 = extractvalue { ptr, ptr, i8 } %calltmp604, 0
-  store ptr %raw.value605, ptr %title, align 8
-  %msg = alloca ptr, align 8
+then506:                                          ; preds = %then486
+  %calltmp507 = call i32 @nitpick_display_set_reverse(i32 1)
+  br label %ifcont508
+
+ifcont508:                                        ; preds = %then506, %then486
+  %wdg509 = load %Widget, ptr %wdg_alloca, align 8
+  %fg510 = extractvalue %Widget %wdg509, 7
+  %calltmp511 = call i32 @nitpick_display_set_fg(i32 %fg510)
+  %wdg512 = load %Widget, ptr %wdg_alloca, align 8
+  %bg513 = extractvalue %Widget %wdg512, 8
+  %calltmp514 = call i32 @nitpick_display_set_bg(i32 %bg513)
+  %wdg515 = load %Widget, ptr %wdg_alloca, align 8
+  %x516 = extractvalue %Widget %wdg515, 2
+  %wdg517 = load %Widget, ptr %wdg_alloca, align 8
+  %y518 = extractvalue %Widget %wdg517, 3
+  %calltmp519 = call i32 @nitpick_display_move(i32 %x516, i32 %y518)
+  %str_data520 = load ptr, ptr @.str.402, align 8
+  %print_call521 = call i64 @npk_print_cstr(ptr %str_data520)
+  %selected_text522 = load ptr, ptr %selected_text, align 8
+  %str_struct523 = load %struct.NpkString, ptr %selected_text522, align 8
+  %str_data524 = extractvalue %struct.NpkString %str_struct523, 0
+  %print_call525 = call i64 @npk_print_cstr(ptr %str_data524)
+  %str_data526 = load ptr, ptr @.str.404, align 8
+  %print_call527 = call i64 @npk_print_cstr(ptr %str_data526)
+  %focused.ptr528 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused529 = load i32, ptr %focused.ptr528, align 4
+  %eqtmp530 = icmp eq i32 %focused529, 1
+  %ifcond531 = icmp ne i1 %eqtmp530, false
+  br i1 %ifcond531, label %then532, label %ifcont534
+
+then532:                                          ; preds = %ifcont508
+  %calltmp533 = call i32 @nitpick_display_set_reverse(i32 0)
+  br label %ifcont534
+
+ifcont534:                                        ; preds = %then532, %ifcont508
+  %expanded535 = load i32, ptr %expanded, align 4
+  %eqtmp536 = icmp eq i32 %expanded535, 1
+  %ifcond537 = icmp ne i1 %eqtmp536, false
+  br i1 %ifcond537, label %then538, label %ifcont596
+
+then538:                                          ; preds = %ifcont534
+  %count539 = alloca i64, align 8
+  %wdg540 = load %Widget, ptr %wdg_alloca, align 8
+  %text541 = extractvalue %Widget %wdg540, 6
+  %calltmp542 = call { i64, ptr, i8 } @str_token_count(ptr %text541, ptr @.str.406)
+  %raw.value543 = extractvalue { i64, ptr, i8 } %calltmp542, 0
+  store i64 %raw.value543, ptr %count539, align 4
+  %wdg544 = load %Widget, ptr %wdg_alloca, align 8
+  %x545 = extractvalue %Widget %wdg544, 2
+  %wdg546 = load %Widget, ptr %wdg_alloca, align 8
+  %y547 = extractvalue %Widget %wdg546, 3
+  %addtmp548 = add i32 %y547, 1
+  %wdg549 = load %Widget, ptr %wdg_alloca, align 8
+  %fg550 = extractvalue %Widget %wdg549, 7
+  %wdg551 = load %Widget, ptr %wdg_alloca, align 8
+  %bg552 = extractvalue %Widget %wdg551, 8
+  %wdg553 = load %Widget, ptr %wdg_alloca, align 8
+  %w554 = extractvalue %Widget %wdg553, 4
+  %count555 = load i64, ptr %count539, align 4
+  %cast.trunc556 = trunc i64 %count555 to i32
+  %addtmp557 = add i32 %cast.trunc556, 2
+  %calltmp558 = call i32 @nitpick_display_box(i32 %x545, i32 %addtmp548, i32 %fg550, i32 %bg552, i32 %w554, i32 %addtmp557)
+  %i559 = alloca i64, align 8
+  store i64 0, ptr %i559, align 4
+  br label %whilecond560
+
+whilecond560:                                     ; preds = %ifcont573, %then538
+  %i561 = load i64, ptr %i559, align 4
+  %count562 = load i64, ptr %count539, align 4
+  %lttmp563 = icmp slt i64 %i561, %count562
+  %whilecond564 = icmp ne i1 %lttmp563, false
+  br i1 %whilecond564, label %whilebody565, label %afterwhile595
+
+whilebody565:                                     ; preds = %whilecond560
+  %i566 = load i64, ptr %i559, align 4
+  %sel567 = load i32, ptr %sel491, align 4
+  %cast.sext568 = sext i32 %sel567 to i64
+  %eqtmp569 = icmp eq i64 %i566, %cast.sext568
+  %ifcond570 = icmp ne i1 %eqtmp569, false
+  br i1 %ifcond570, label %then571, label %ifcont573
+
+then571:                                          ; preds = %whilebody565
+  %calltmp572 = call i32 @nitpick_display_set_reverse(i32 1)
+  br label %ifcont573
+
+ifcont573:                                        ; preds = %then571, %whilebody565
+  %wdg574 = load %Widget, ptr %wdg_alloca, align 8
+  %x575 = extractvalue %Widget %wdg574, 2
+  %addtmp576 = add i32 %x575, 1
+  %wdg577 = load %Widget, ptr %wdg_alloca, align 8
+  %y578 = extractvalue %Widget %wdg577, 3
+  %addtmp579 = add i32 %y578, 2
+  %i580 = load i64, ptr %i559, align 4
+  %cast.trunc581 = trunc i64 %i580 to i32
+  %addtmp582 = add i32 %addtmp579, %cast.trunc581
+  %calltmp583 = call i32 @nitpick_display_move(i32 %addtmp576, i32 %addtmp582)
+  %wdg584 = load %Widget, ptr %wdg_alloca, align 8
+  %text585 = extractvalue %Widget %wdg584, 6
+  %i586 = load i64, ptr %i559, align 4
+  %calltmp587 = call { ptr, ptr, i8 } @str_token(ptr %text585, ptr @.str.408, i64 %i586)
+  %raw.value588 = extractvalue { ptr, ptr, i8 } %calltmp587, 0
+  %str_struct589 = load %struct.NpkString, ptr %raw.value588, align 8
+  %str_data590 = extractvalue %struct.NpkString %str_struct589, 0
+  %print_call591 = call i64 @npk_print_cstr(ptr %str_data590)
+  %calltmp592 = call i32 @nitpick_display_set_reverse(i32 0)
+  %i593 = load i64, ptr %i559, align 4
+  %addtmp594 = add i64 %i593, 1
+  store i64 %addtmp594, ptr %i559, align 4
+  call void @npk_gc_safepoint()
+  br label %whilecond560
+
+afterwhile595:                                    ; preds = %whilecond560
+  br label %ifcont596
+
+ifcont596:                                        ; preds = %afterwhile595, %ifcont534
+  br label %ifcont597
+
+ifcont597:                                        ; preds = %ifcont596, %ifcont481
+  %type.ptr598 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
+  %type599 = load i32, ptr %type.ptr598, align 4
+  %eqtmp600 = icmp eq i32 %type599, 12
+  %ifcond601 = icmp ne i1 %eqtmp600, false
+  br i1 %ifcond601, label %then602, label %ifcont736
+
+then602:                                          ; preds = %ifcont597
+  %wdg603 = load %Widget, ptr %wdg_alloca, align 8
+  %x604 = extractvalue %Widget %wdg603, 2
+  %addtmp605 = add i32 %x604, 1
   %wdg606 = load %Widget, ptr %wdg_alloca, align 8
-  %text607 = extractvalue %Widget %wdg606, 6
-  %calltmp608 = call { ptr, ptr, i8 } @str_token(ptr %text607, ptr @.str.392, i64 1)
-  %raw.value609 = extractvalue { ptr, ptr, i8 } %calltmp608, 0
-  store ptr %raw.value609, ptr %msg, align 8
-  %wdg610 = load %Widget, ptr %wdg_alloca, align 8
-  %x611 = extractvalue %Widget %wdg610, 2
-  %addtmp612 = add i32 %x611, 2
-  %wdg613 = load %Widget, ptr %wdg_alloca, align 8
-  %y614 = extractvalue %Widget %wdg613, 3
-  %calltmp615 = call i32 @nitpick_display_move(i32 %addtmp612, i32 %y614)
-  %str_data616 = load ptr, ptr @.str.394, align 8
-  %print_call617 = call i64 @npk_print_cstr(ptr %str_data616)
-  %title618 = load ptr, ptr %title, align 8
-  %str_struct619 = load %struct.NpkString, ptr %title618, align 8
-  %str_data620 = extractvalue %struct.NpkString %str_struct619, 0
-  %print_call621 = call i64 @npk_print_cstr(ptr %str_data620)
-  %str_data622 = load ptr, ptr @.str.396, align 8
-  %print_call623 = call i64 @npk_print_cstr(ptr %str_data622)
+  %y607 = extractvalue %Widget %wdg606, 3
+  %addtmp608 = add i32 %y607, 1
+  %wdg609 = load %Widget, ptr %wdg_alloca, align 8
+  %w610 = extractvalue %Widget %wdg609, 4
+  %wdg611 = load %Widget, ptr %wdg_alloca, align 8
+  %h612 = extractvalue %Widget %wdg611, 5
+  %calltmp613 = call i32 @nitpick_display_box(i32 %addtmp605, i32 %addtmp608, i32 0, i32 0, i32 %w610, i32 %h612)
+  %wdg614 = load %Widget, ptr %wdg_alloca, align 8
+  %x615 = extractvalue %Widget %wdg614, 2
+  %wdg616 = load %Widget, ptr %wdg_alloca, align 8
+  %y617 = extractvalue %Widget %wdg616, 3
+  %wdg618 = load %Widget, ptr %wdg_alloca, align 8
+  %fg619 = extractvalue %Widget %wdg618, 7
+  %wdg620 = load %Widget, ptr %wdg_alloca, align 8
+  %bg621 = extractvalue %Widget %wdg620, 8
+  %wdg622 = load %Widget, ptr %wdg_alloca, align 8
+  %w623 = extractvalue %Widget %wdg622, 4
   %wdg624 = load %Widget, ptr %wdg_alloca, align 8
-  %x625 = extractvalue %Widget %wdg624, 2
-  %addtmp626 = add i32 %x625, 2
+  %h625 = extractvalue %Widget %wdg624, 5
+  %calltmp626 = call i32 @nitpick_display_box(i32 %x615, i32 %y617, i32 %fg619, i32 %bg621, i32 %w623, i32 %h625)
   %wdg627 = load %Widget, ptr %wdg_alloca, align 8
-  %y628 = extractvalue %Widget %wdg627, 3
-  %addtmp629 = add i32 %y628, 2
-  %calltmp630 = call i32 @nitpick_display_move(i32 %addtmp626, i32 %addtmp629)
-  %msg631 = load ptr, ptr %msg, align 8
-  %str_struct632 = load %struct.NpkString, ptr %msg631, align 8
-  %str_data633 = extractvalue %struct.NpkString %str_struct632, 0
-  %print_call634 = call i64 @npk_print_cstr(ptr %str_data633)
+  %x628 = extractvalue %Widget %wdg627, 2
+  %wdg629 = load %Widget, ptr %wdg_alloca, align 8
+  %y630 = extractvalue %Widget %wdg629, 3
+  %wdg631 = load %Widget, ptr %wdg_alloca, align 8
+  %w632 = extractvalue %Widget %wdg631, 4
+  %wdg633 = load %Widget, ptr %wdg_alloca, align 8
+  %h634 = extractvalue %Widget %wdg633, 5
+  %wdg635 = load %Widget, ptr %wdg_alloca, align 8
+  %fg636 = extractvalue %Widget %wdg635, 7
+  %wdg637 = load %Widget, ptr %wdg_alloca, align 8
+  %bg638 = extractvalue %Widget %wdg637, 8
+  %calltmp639 = call { %struct.NIL, ptr, i8 } @Tui_draw_border(i32 %x628, i32 %y630, i32 %w632, i32 %h634, i32 %fg636, i32 %bg638)
+  %raw.value640 = extractvalue { %struct.NIL, ptr, i8 } %calltmp639, 0
+  %title = alloca ptr, align 8
+  %wdg641 = load %Widget, ptr %wdg_alloca, align 8
+  %text642 = extractvalue %Widget %wdg641, 6
+  %calltmp643 = call { ptr, ptr, i8 } @str_token(ptr %text642, ptr @.str.410, i64 0)
+  %raw.value644 = extractvalue { ptr, ptr, i8 } %calltmp643, 0
+  store ptr %raw.value644, ptr %title, align 8
+  %msg = alloca ptr, align 8
+  %wdg645 = load %Widget, ptr %wdg_alloca, align 8
+  %text646 = extractvalue %Widget %wdg645, 6
+  %calltmp647 = call { ptr, ptr, i8 } @str_token(ptr %text646, ptr @.str.412, i64 1)
+  %raw.value648 = extractvalue { ptr, ptr, i8 } %calltmp647, 0
+  store ptr %raw.value648, ptr %msg, align 8
+  %wdg649 = load %Widget, ptr %wdg_alloca, align 8
+  %fg650 = extractvalue %Widget %wdg649, 7
+  %calltmp651 = call i32 @nitpick_display_set_fg(i32 %fg650)
+  %wdg652 = load %Widget, ptr %wdg_alloca, align 8
+  %bg653 = extractvalue %Widget %wdg652, 8
+  %calltmp654 = call i32 @nitpick_display_set_bg(i32 %bg653)
+  %wdg655 = load %Widget, ptr %wdg_alloca, align 8
+  %x656 = extractvalue %Widget %wdg655, 2
+  %addtmp657 = add i32 %x656, 2
+  %wdg658 = load %Widget, ptr %wdg_alloca, align 8
+  %y659 = extractvalue %Widget %wdg658, 3
+  %calltmp660 = call i32 @nitpick_display_move(i32 %addtmp657, i32 %y659)
+  %str_data661 = load ptr, ptr @.str.414, align 8
+  %print_call662 = call i64 @npk_print_cstr(ptr %str_data661)
+  %title663 = load ptr, ptr %title, align 8
+  %str_struct664 = load %struct.NpkString, ptr %title663, align 8
+  %str_data665 = extractvalue %struct.NpkString %str_struct664, 0
+  %print_call666 = call i64 @npk_print_cstr(ptr %str_data665)
+  %str_data667 = load ptr, ptr @.str.416, align 8
+  %print_call668 = call i64 @npk_print_cstr(ptr %str_data667)
+  %wdg669 = load %Widget, ptr %wdg_alloca, align 8
+  %x670 = extractvalue %Widget %wdg669, 2
+  %addtmp671 = add i32 %x670, 2
+  %wdg672 = load %Widget, ptr %wdg_alloca, align 8
+  %y673 = extractvalue %Widget %wdg672, 3
+  %addtmp674 = add i32 %y673, 2
+  %calltmp675 = call i32 @nitpick_display_move(i32 %addtmp671, i32 %addtmp674)
+  %msg676 = load ptr, ptr %msg, align 8
+  %str_struct677 = load %struct.NpkString, ptr %msg676, align 8
+  %str_data678 = extractvalue %struct.NpkString %str_struct677, 0
+  %print_call679 = call i64 @npk_print_cstr(ptr %str_data678)
   %btn_y = alloca i32, align 4
   %y.ptr = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 3
-  %y635 = load i32, ptr %y.ptr, align 4
-  %h.ptr636 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 5
-  %h637 = load i32, ptr %h.ptr636, align 4
-  %addtmp638 = add i32 %y635, %h637
-  %subtmp639 = sub i32 %addtmp638, 2
-  store i32 %subtmp639, ptr %btn_y, align 4
-  %value.ptr640 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
-  %value641 = load i32, ptr %value.ptr640, align 4
-  %eqtmp642 = icmp eq i32 %value641, 0
-  %ifcond643 = icmp ne i1 %eqtmp642, false
-  br i1 %ifcond643, label %then644, label %else664
+  %y680 = load i32, ptr %y.ptr, align 4
+  %h.ptr681 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 5
+  %h682 = load i32, ptr %h.ptr681, align 4
+  %addtmp683 = add i32 %y680, %h682
+  %subtmp684 = sub i32 %addtmp683, 2
+  store i32 %subtmp684, ptr %btn_y, align 4
+  %value.ptr685 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
+  %value686 = load i32, ptr %value.ptr685, align 4
+  %eqtmp687 = icmp eq i32 %value686, 0
+  %ifcond688 = icmp ne i1 %eqtmp687, false
+  br i1 %ifcond688, label %then689, label %else709
 
-then644:                                          ; preds = %then582
-  %wdg645 = load %Widget, ptr %wdg_alloca, align 8
-  %x646 = extractvalue %Widget %wdg645, 2
-  %wdg647 = load %Widget, ptr %wdg_alloca, align 8
-  %w648 = extractvalue %Widget %wdg647, 4
-  %divtmp649 = sdiv i32 %w648, 2
-  %addtmp650 = add i32 %x646, %divtmp649
-  %subtmp651 = sub i32 %addtmp650, 3
-  %btn_y652 = load i32, ptr %btn_y, align 4
-  %calltmp653 = call i32 @nitpick_display_move(i32 %subtmp651, i32 %btn_y652)
-  %focused.ptr654 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused655 = load i32, ptr %focused.ptr654, align 4
-  %eqtmp656 = icmp eq i32 %focused655, 1
-  %ifcond657 = icmp ne i1 %eqtmp656, false
-  br i1 %ifcond657, label %then658, label %ifcont660
+then689:                                          ; preds = %then602
+  %wdg690 = load %Widget, ptr %wdg_alloca, align 8
+  %x691 = extractvalue %Widget %wdg690, 2
+  %wdg692 = load %Widget, ptr %wdg_alloca, align 8
+  %w693 = extractvalue %Widget %wdg692, 4
+  %divtmp694 = sdiv i32 %w693, 2
+  %addtmp695 = add i32 %x691, %divtmp694
+  %subtmp696 = sub i32 %addtmp695, 4
+  %btn_y697 = load i32, ptr %btn_y, align 4
+  %calltmp698 = call i32 @nitpick_display_move(i32 %subtmp696, i32 %btn_y697)
+  %focused.ptr699 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused700 = load i32, ptr %focused.ptr699, align 4
+  %eqtmp701 = icmp eq i32 %focused700, 1
+  %ifcond702 = icmp ne i1 %eqtmp701, false
+  br i1 %ifcond702, label %then703, label %ifcont705
 
-then658:                                          ; preds = %then644
-  %calltmp659 = call i32 @nitpick_display_set_reverse(i32 1)
-  br label %ifcont660
+then703:                                          ; preds = %then689
+  %calltmp704 = call i32 @nitpick_display_set_reverse(i32 1)
+  br label %ifcont705
 
-ifcont660:                                        ; preds = %then658, %then644
-  %str_data661 = load ptr, ptr @.str.398, align 8
-  %print_call662 = call i64 @npk_print_cstr(ptr %str_data661)
-  %calltmp663 = call i32 @nitpick_display_set_reverse(i32 0)
-  br label %ifcont690
+ifcont705:                                        ; preds = %then703, %then689
+  %str_data706 = load ptr, ptr @.str.418, align 8
+  %print_call707 = call i64 @npk_print_cstr(ptr %str_data706)
+  %calltmp708 = call i32 @nitpick_display_set_reverse(i32 0)
+  br label %ifcont735
 
-else664:                                          ; preds = %then582
-  %wdg665 = load %Widget, ptr %wdg_alloca, align 8
-  %x666 = extractvalue %Widget %wdg665, 2
-  %addtmp667 = add i32 %x666, 2
-  %btn_y668 = load i32, ptr %btn_y, align 4
-  %calltmp669 = call i32 @nitpick_display_move(i32 %addtmp667, i32 %btn_y668)
-  %focused.ptr670 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused671 = load i32, ptr %focused.ptr670, align 4
-  %eqtmp672 = icmp eq i32 %focused671, 1
-  %ifcond673 = icmp ne i1 %eqtmp672, false
-  br i1 %ifcond673, label %then674, label %ifcont676
+else709:                                          ; preds = %then602
+  %wdg710 = load %Widget, ptr %wdg_alloca, align 8
+  %x711 = extractvalue %Widget %wdg710, 2
+  %addtmp712 = add i32 %x711, 2
+  %btn_y713 = load i32, ptr %btn_y, align 4
+  %calltmp714 = call i32 @nitpick_display_move(i32 %addtmp712, i32 %btn_y713)
+  %focused.ptr715 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused716 = load i32, ptr %focused.ptr715, align 4
+  %eqtmp717 = icmp eq i32 %focused716, 1
+  %ifcond718 = icmp ne i1 %eqtmp717, false
+  br i1 %ifcond718, label %then719, label %ifcont721
 
-then674:                                          ; preds = %else664
-  %calltmp675 = call i32 @nitpick_display_set_reverse(i32 1)
-  br label %ifcont676
+then719:                                          ; preds = %else709
+  %calltmp720 = call i32 @nitpick_display_set_reverse(i32 1)
+  br label %ifcont721
 
-ifcont676:                                        ; preds = %then674, %else664
-  %str_data677 = load ptr, ptr @.str.400, align 8
-  %print_call678 = call i64 @npk_print_cstr(ptr %str_data677)
-  %calltmp679 = call i32 @nitpick_display_set_reverse(i32 0)
-  %wdg680 = load %Widget, ptr %wdg_alloca, align 8
-  %x681 = extractvalue %Widget %wdg680, 2
-  %wdg682 = load %Widget, ptr %wdg_alloca, align 8
-  %w683 = extractvalue %Widget %wdg682, 4
-  %addtmp684 = add i32 %x681, %w683
-  %subtmp685 = sub i32 %addtmp684, 12
-  %btn_y686 = load i32, ptr %btn_y, align 4
-  %calltmp687 = call i32 @nitpick_display_move(i32 %subtmp685, i32 %btn_y686)
-  %str_data688 = load ptr, ptr @.str.402, align 8
-  %print_call689 = call i64 @npk_print_cstr(ptr %str_data688)
-  br label %ifcont690
+ifcont721:                                        ; preds = %then719, %else709
+  %str_data722 = load ptr, ptr @.str.420, align 8
+  %print_call723 = call i64 @npk_print_cstr(ptr %str_data722)
+  %calltmp724 = call i32 @nitpick_display_set_reverse(i32 0)
+  %wdg725 = load %Widget, ptr %wdg_alloca, align 8
+  %x726 = extractvalue %Widget %wdg725, 2
+  %wdg727 = load %Widget, ptr %wdg_alloca, align 8
+  %w728 = extractvalue %Widget %wdg727, 4
+  %addtmp729 = add i32 %x726, %w728
+  %subtmp730 = sub i32 %addtmp729, 12
+  %btn_y731 = load i32, ptr %btn_y, align 4
+  %calltmp732 = call i32 @nitpick_display_move(i32 %subtmp730, i32 %btn_y731)
+  %str_data733 = load ptr, ptr @.str.422, align 8
+  %print_call734 = call i64 @npk_print_cstr(ptr %str_data733)
+  br label %ifcont735
 
-ifcont690:                                        ; preds = %ifcont676, %ifcont660
-  br label %ifcont691
+ifcont735:                                        ; preds = %ifcont721, %ifcont705
+  br label %ifcont736
 
-ifcont691:                                        ; preds = %ifcont690, %ifcont577
-  %type.ptr692 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
-  %type693 = load i32, ptr %type.ptr692, align 4
-  %eqtmp694 = icmp eq i32 %type693, 13
-  %ifcond695 = icmp ne i1 %eqtmp694, false
-  br i1 %ifcond695, label %then696, label %ifcont794
+ifcont736:                                        ; preds = %ifcont735, %ifcont597
+  %type.ptr737 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
+  %type738 = load i32, ptr %type.ptr737, align 4
+  %eqtmp739 = icmp eq i32 %type738, 13
+  %ifcond740 = icmp ne i1 %eqtmp739, false
+  br i1 %ifcond740, label %then741, label %ifcont879
 
-then696:                                          ; preds = %ifcont691
-  %wdg697 = load %Widget, ptr %wdg_alloca, align 8
-  %x698 = extractvalue %Widget %wdg697, 2
-  %wdg699 = load %Widget, ptr %wdg_alloca, align 8
-  %y700 = extractvalue %Widget %wdg699, 3
-  %wdg701 = load %Widget, ptr %wdg_alloca, align 8
-  %fg702 = extractvalue %Widget %wdg701, 7
-  %wdg703 = load %Widget, ptr %wdg_alloca, align 8
-  %bg704 = extractvalue %Widget %wdg703, 8
-  %wdg705 = load %Widget, ptr %wdg_alloca, align 8
-  %w706 = extractvalue %Widget %wdg705, 4
-  %wdg707 = load %Widget, ptr %wdg_alloca, align 8
-  %h708 = extractvalue %Widget %wdg707, 5
-  %calltmp709 = call i32 @nitpick_display_box(i32 %x698, i32 %y700, i32 %fg702, i32 %bg704, i32 %w706, i32 %h708)
-  %count710 = alloca i64, align 8
-  %wdg711 = load %Widget, ptr %wdg_alloca, align 8
-  %text712 = extractvalue %Widget %wdg711, 6
-  %calltmp713 = call { i64, ptr, i8 } @str_token_count(ptr %text712, ptr @.str.404)
-  %raw.value714 = extractvalue { i64, ptr, i8 } %calltmp713, 0
-  store i64 %raw.value714, ptr %count710, align 4
-  %max_vis715 = alloca i64, align 8
-  %h.ptr716 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 5
-  %h717 = load i32, ptr %h.ptr716, align 4
-  %subtmp718 = sub i32 %h717, 2
-  %init_sext719 = sext i32 %subtmp718 to i64
-  store i64 %init_sext719, ptr %max_vis715, align 4
-  %sel720 = alloca i64, align 8
-  %value.ptr721 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
-  %value722 = load i32, ptr %value.ptr721, align 4
-  %init_sext723 = sext i32 %value722 to i64
-  store i64 %init_sext723, ptr %sel720, align 4
-  %i724 = alloca i64, align 8
-  store i64 0, ptr %i724, align 4
-  br label %whilecond725
-
-whilecond725:                                     ; preds = %ifcont790, %then696
-  %i726 = load i64, ptr %i724, align 4
-  %max_vis727 = load i64, ptr %max_vis715, align 4
-  %lttmp728 = icmp slt i64 %i726, %max_vis727
-  %whilecond729 = icmp ne i1 %lttmp728, false
-  br i1 %whilecond729, label %whilebody730, label %afterwhile793
-
-whilebody730:                                     ; preds = %whilecond725
-  %i731 = load i64, ptr %i724, align 4
-  %count732 = load i64, ptr %count710, align 4
-  %lttmp733 = icmp slt i64 %i731, %count732
-  %ifcond734 = icmp ne i1 %lttmp733, false
-  br i1 %ifcond734, label %then735, label %ifcont790
-
-then735:                                          ; preds = %whilebody730
-  %i736 = load i64, ptr %i724, align 4
-  %sel737 = load i64, ptr %sel720, align 4
-  %eqtmp738 = icmp eq i64 %i736, %sel737
-  %ifcond739 = icmp ne i1 %eqtmp738, false
-  br i1 %ifcond739, label %then740, label %else753
-
-then740:                                          ; preds = %then735
-  %focused.ptr741 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused742 = load i32, ptr %focused.ptr741, align 4
-  %eqtmp743 = icmp eq i32 %focused742, 1
-  %ifcond744 = icmp ne i1 %eqtmp743, false
-  br i1 %ifcond744, label %then745, label %else747
-
-then745:                                          ; preds = %then740
-  %calltmp746 = call i32 @nitpick_display_set_reverse(i32 1)
-  br label %ifcont752
-
-else747:                                          ; preds = %then740
-  %calltmp748 = call i32 @nitpick_display_set_fg(i32 0)
-  %wdg749 = load %Widget, ptr %wdg_alloca, align 8
-  %fg750 = extractvalue %Widget %wdg749, 7
-  %calltmp751 = call i32 @nitpick_display_set_bg(i32 %fg750)
-  br label %ifcont752
-
-ifcont752:                                        ; preds = %else747, %then745
-  br label %ifcont760
-
-else753:                                          ; preds = %then735
-  %wdg754 = load %Widget, ptr %wdg_alloca, align 8
-  %fg755 = extractvalue %Widget %wdg754, 7
-  %calltmp756 = call i32 @nitpick_display_set_fg(i32 %fg755)
+then741:                                          ; preds = %ifcont736
+  %wdg742 = load %Widget, ptr %wdg_alloca, align 8
+  %x743 = extractvalue %Widget %wdg742, 2
+  %wdg744 = load %Widget, ptr %wdg_alloca, align 8
+  %y745 = extractvalue %Widget %wdg744, 3
+  %wdg746 = load %Widget, ptr %wdg_alloca, align 8
+  %fg747 = extractvalue %Widget %wdg746, 7
+  %wdg748 = load %Widget, ptr %wdg_alloca, align 8
+  %bg749 = extractvalue %Widget %wdg748, 8
+  %wdg750 = load %Widget, ptr %wdg_alloca, align 8
+  %w751 = extractvalue %Widget %wdg750, 4
+  %wdg752 = load %Widget, ptr %wdg_alloca, align 8
+  %h753 = extractvalue %Widget %wdg752, 5
+  %calltmp754 = call i32 @nitpick_display_box(i32 %x743, i32 %y745, i32 %fg747, i32 %bg749, i32 %w751, i32 %h753)
+  %wdg755 = load %Widget, ptr %wdg_alloca, align 8
+  %x756 = extractvalue %Widget %wdg755, 2
   %wdg757 = load %Widget, ptr %wdg_alloca, align 8
-  %bg758 = extractvalue %Widget %wdg757, 8
-  %calltmp759 = call i32 @nitpick_display_set_bg(i32 %bg758)
-  br label %ifcont760
-
-ifcont760:                                        ; preds = %else753, %ifcont752
+  %y758 = extractvalue %Widget %wdg757, 3
+  %wdg759 = load %Widget, ptr %wdg_alloca, align 8
+  %w760 = extractvalue %Widget %wdg759, 4
   %wdg761 = load %Widget, ptr %wdg_alloca, align 8
-  %x762 = extractvalue %Widget %wdg761, 2
-  %addtmp763 = add i32 %x762, 1
-  %wdg764 = load %Widget, ptr %wdg_alloca, align 8
-  %y765 = extractvalue %Widget %wdg764, 3
-  %addtmp766 = add i32 %y765, 1
-  %i767 = load i64, ptr %i724, align 4
-  %cast.checked_trunc768 = trunc i64 %i767 to i32
-  %cast.rt_sext769 = sext i32 %cast.checked_trunc768 to i64
-  %cast.overflow770 = icmp ne i64 %i767, %cast.rt_sext769
-  br i1 %cast.overflow770, label %cast.overflow_panic771, label %cast.ok772
+  %h762 = extractvalue %Widget %wdg761, 5
+  %wdg763 = load %Widget, ptr %wdg_alloca, align 8
+  %fg764 = extractvalue %Widget %wdg763, 7
+  %wdg765 = load %Widget, ptr %wdg_alloca, align 8
+  %bg766 = extractvalue %Widget %wdg765, 8
+  %calltmp767 = call { %struct.NIL, ptr, i8 } @Tui_draw_border(i32 %x756, i32 %y758, i32 %w760, i32 %h762, i32 %fg764, i32 %bg766)
+  %raw.value768 = extractvalue { %struct.NIL, ptr, i8 } %calltmp767, 0
+  %count769 = alloca i64, align 8
+  %wdg770 = load %Widget, ptr %wdg_alloca, align 8
+  %text771 = extractvalue %Widget %wdg770, 6
+  %calltmp772 = call { i64, ptr, i8 } @str_token_count(ptr %text771, ptr @.str.424)
+  %raw.value773 = extractvalue { i64, ptr, i8 } %calltmp772, 0
+  store i64 %raw.value773, ptr %count769, align 4
+  %max_vis774 = alloca i64, align 8
+  %h.ptr775 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 5
+  %h776 = load i32, ptr %h.ptr775, align 4
+  %subtmp777 = sub i32 %h776, 2
+  %init_sext778 = sext i32 %subtmp777 to i64
+  store i64 %init_sext778, ptr %max_vis774, align 4
+  %sel779 = alloca i64, align 8
+  %value.ptr780 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
+  %value781 = load i32, ptr %value.ptr780, align 4
+  %init_sext782 = sext i32 %value781 to i64
+  store i64 %init_sext782, ptr %sel779, align 4
+  %start_idx783 = alloca i64, align 8
+  store i64 0, ptr %start_idx783, align 4
+  %sel784 = load i64, ptr %sel779, align 4
+  %max_vis785 = load i64, ptr %max_vis774, align 4
+  %getmp786 = icmp sge i64 %sel784, %max_vis785
+  %ifcond787 = icmp ne i1 %getmp786, false
+  br i1 %ifcond787, label %then788, label %ifcont793
 
-cast.overflow_panic771:                           ; preds = %ifcont760
-  call void @npk_panic_overflow(ptr @cast_overflow_msg.405)
-  unreachable
+then788:                                          ; preds = %then741
+  %sel789 = load i64, ptr %sel779, align 4
+  %max_vis790 = load i64, ptr %max_vis774, align 4
+  %subtmp791 = sub i64 %sel789, %max_vis790
+  %addtmp792 = add i64 %subtmp791, 1
+  store i64 %addtmp792, ptr %start_idx783, align 4
+  br label %ifcont793
 
-cast.ok772:                                       ; preds = %ifcont760
-  %addtmp773 = add i32 %addtmp766, %cast.checked_trunc768
-  %calltmp774 = call i32 @nitpick_display_move(i32 %addtmp763, i32 %addtmp773)
-  %item775 = alloca ptr, align 8
-  %wdg776 = load %Widget, ptr %wdg_alloca, align 8
-  %text777 = extractvalue %Widget %wdg776, 6
-  %i778 = load i64, ptr %i724, align 4
-  %calltmp779 = call { ptr, ptr, i8 } @str_token(ptr %text777, ptr @.str.407, i64 %i778)
-  %raw.value780 = extractvalue { ptr, ptr, i8 } %calltmp779, 0
-  store ptr %raw.value780, ptr %item775, align 8
-  %str_data781 = load ptr, ptr @.str.409, align 8
-  %print_call782 = call i64 @npk_print_cstr(ptr %str_data781)
-  %item783 = load ptr, ptr %item775, align 8
-  %str_struct784 = load %struct.NpkString, ptr %item783, align 8
-  %str_data785 = extractvalue %struct.NpkString %str_struct784, 0
-  %print_call786 = call i64 @npk_print_cstr(ptr %str_data785)
-  %str_data787 = load ptr, ptr @.str.411, align 8
-  %print_call788 = call i64 @npk_print_cstr(ptr %str_data787)
-  %calltmp789 = call i32 @nitpick_display_set_reverse(i32 0)
-  br label %ifcont790
+ifcont793:                                        ; preds = %then788, %then741
+  %i794 = alloca i64, align 8
+  store i64 0, ptr %i794, align 4
+  br label %whilecond795
 
-ifcont790:                                        ; preds = %cast.ok772, %whilebody730
-  %i791 = load i64, ptr %i724, align 4
-  %addtmp792 = add i64 %i791, 1
-  store i64 %addtmp792, ptr %i724, align 4
+whilecond795:                                     ; preds = %ifcont860, %ifcont793
+  %i796 = load i64, ptr %i794, align 4
+  %max_vis797 = load i64, ptr %max_vis774, align 4
+  %lttmp798 = icmp slt i64 %i796, %max_vis797
+  %whilecond799 = icmp ne i1 %lttmp798, false
+  br i1 %whilecond799, label %whilebody800, label %afterwhile863
+
+whilebody800:                                     ; preds = %whilecond795
+  %idx801 = alloca i64, align 8
+  %start_idx802 = load i64, ptr %start_idx783, align 4
+  %i803 = load i64, ptr %i794, align 4
+  %addtmp804 = add i64 %start_idx802, %i803
+  store i64 %addtmp804, ptr %idx801, align 4
+  %idx805 = load i64, ptr %idx801, align 4
+  %count806 = load i64, ptr %count769, align 4
+  %lttmp807 = icmp slt i64 %idx805, %count806
+  %ifcond808 = icmp ne i1 %lttmp807, false
+  br i1 %ifcond808, label %then809, label %ifcont860
+
+then809:                                          ; preds = %whilebody800
+  %idx810 = load i64, ptr %idx801, align 4
+  %sel811 = load i64, ptr %sel779, align 4
+  %eqtmp812 = icmp eq i64 %idx810, %sel811
+  %ifcond813 = icmp ne i1 %eqtmp812, false
+  br i1 %ifcond813, label %then814, label %else827
+
+then814:                                          ; preds = %then809
+  %focused.ptr815 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused816 = load i32, ptr %focused.ptr815, align 4
+  %eqtmp817 = icmp eq i32 %focused816, 1
+  %ifcond818 = icmp ne i1 %eqtmp817, false
+  br i1 %ifcond818, label %then819, label %else821
+
+then819:                                          ; preds = %then814
+  %calltmp820 = call i32 @nitpick_display_set_reverse(i32 1)
+  br label %ifcont826
+
+else821:                                          ; preds = %then814
+  %calltmp822 = call i32 @nitpick_display_set_fg(i32 0)
+  %wdg823 = load %Widget, ptr %wdg_alloca, align 8
+  %fg824 = extractvalue %Widget %wdg823, 7
+  %calltmp825 = call i32 @nitpick_display_set_bg(i32 %fg824)
+  br label %ifcont826
+
+ifcont826:                                        ; preds = %else821, %then819
+  br label %ifcont834
+
+else827:                                          ; preds = %then809
+  %wdg828 = load %Widget, ptr %wdg_alloca, align 8
+  %fg829 = extractvalue %Widget %wdg828, 7
+  %calltmp830 = call i32 @nitpick_display_set_fg(i32 %fg829)
+  %wdg831 = load %Widget, ptr %wdg_alloca, align 8
+  %bg832 = extractvalue %Widget %wdg831, 8
+  %calltmp833 = call i32 @nitpick_display_set_bg(i32 %bg832)
+  br label %ifcont834
+
+ifcont834:                                        ; preds = %else827, %ifcont826
+  %wdg835 = load %Widget, ptr %wdg_alloca, align 8
+  %x836 = extractvalue %Widget %wdg835, 2
+  %addtmp837 = add i32 %x836, 1
+  %wdg838 = load %Widget, ptr %wdg_alloca, align 8
+  %y839 = extractvalue %Widget %wdg838, 3
+  %addtmp840 = add i32 %y839, 1
+  %i841 = load i64, ptr %i794, align 4
+  %cast.trunc842 = trunc i64 %i841 to i32
+  %addtmp843 = add i32 %addtmp840, %cast.trunc842
+  %calltmp844 = call i32 @nitpick_display_move(i32 %addtmp837, i32 %addtmp843)
+  %item845 = alloca ptr, align 8
+  %wdg846 = load %Widget, ptr %wdg_alloca, align 8
+  %text847 = extractvalue %Widget %wdg846, 6
+  %idx848 = load i64, ptr %idx801, align 4
+  %calltmp849 = call { ptr, ptr, i8 } @str_token(ptr %text847, ptr @.str.426, i64 %idx848)
+  %raw.value850 = extractvalue { ptr, ptr, i8 } %calltmp849, 0
+  store ptr %raw.value850, ptr %item845, align 8
+  %str_data851 = load ptr, ptr @.str.428, align 8
+  %print_call852 = call i64 @npk_print_cstr(ptr %str_data851)
+  %item853 = load ptr, ptr %item845, align 8
+  %str_struct854 = load %struct.NpkString, ptr %item853, align 8
+  %str_data855 = extractvalue %struct.NpkString %str_struct854, 0
+  %print_call856 = call i64 @npk_print_cstr(ptr %str_data855)
+  %str_data857 = load ptr, ptr @.str.430, align 8
+  %print_call858 = call i64 @npk_print_cstr(ptr %str_data857)
+  %calltmp859 = call i32 @nitpick_display_set_reverse(i32 0)
+  br label %ifcont860
+
+ifcont860:                                        ; preds = %ifcont834, %whilebody800
+  %i861 = load i64, ptr %i794, align 4
+  %addtmp862 = add i64 %i861, 1
+  store i64 %addtmp862, ptr %i794, align 4
   call void @npk_gc_safepoint()
-  br label %whilecond725
+  br label %whilecond795
 
-afterwhile793:                                    ; preds = %whilecond725
-  br label %ifcont794
+afterwhile863:                                    ; preds = %whilecond795
+  %wdg864 = load %Widget, ptr %wdg_alloca, align 8
+  %x865 = extractvalue %Widget %wdg864, 2
+  %wdg866 = load %Widget, ptr %wdg_alloca, align 8
+  %w867 = extractvalue %Widget %wdg866, 4
+  %addtmp868 = add i32 %x865, %w867
+  %subtmp869 = sub i32 %addtmp868, 1
+  %wdg870 = load %Widget, ptr %wdg_alloca, align 8
+  %y871 = extractvalue %Widget %wdg870, 3
+  %wdg872 = load %Widget, ptr %wdg_alloca, align 8
+  %h873 = extractvalue %Widget %wdg872, 5
+  %count874 = load i64, ptr %count769, align 4
+  %max_vis875 = load i64, ptr %max_vis774, align 4
+  %start_idx876 = load i64, ptr %start_idx783, align 4
+  %calltmp877 = call { %struct.NIL, ptr, i8 } @Tui_draw_scrollbar(i32 %subtmp869, i32 %y871, i32 %h873, i64 %count874, i64 %max_vis875, i64 %start_idx876)
+  %raw.value878 = extractvalue { %struct.NIL, ptr, i8 } %calltmp877, 0
+  br label %ifcont879
 
-ifcont794:                                        ; preds = %afterwhile793, %ifcont691
-  %type.ptr795 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
-  %type796 = load i32, ptr %type.ptr795, align 4
-  %eqtmp797 = icmp eq i32 %type796, 14
-  %ifcond798 = icmp ne i1 %eqtmp797, false
-  br i1 %ifcond798, label %then799, label %ifcont904
+ifcont879:                                        ; preds = %afterwhile863, %ifcont736
+  %type.ptr880 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 0
+  %type881 = load i32, ptr %type.ptr880, align 4
+  %eqtmp882 = icmp eq i32 %type881, 14
+  %ifcond883 = icmp ne i1 %eqtmp882, false
+  br i1 %ifcond883, label %then884, label %ifcont1044
 
-then799:                                          ; preds = %ifcont794
-  %wdg800 = load %Widget, ptr %wdg_alloca, align 8
-  %x801 = extractvalue %Widget %wdg800, 2
-  %wdg802 = load %Widget, ptr %wdg_alloca, align 8
-  %y803 = extractvalue %Widget %wdg802, 3
-  %wdg804 = load %Widget, ptr %wdg_alloca, align 8
-  %fg805 = extractvalue %Widget %wdg804, 7
-  %wdg806 = load %Widget, ptr %wdg_alloca, align 8
-  %bg807 = extractvalue %Widget %wdg806, 8
-  %wdg808 = load %Widget, ptr %wdg_alloca, align 8
-  %w809 = extractvalue %Widget %wdg808, 4
-  %wdg810 = load %Widget, ptr %wdg_alloca, align 8
-  %h811 = extractvalue %Widget %wdg810, 5
-  %calltmp812 = call i32 @nitpick_display_box(i32 %x801, i32 %y803, i32 %fg805, i32 %bg807, i32 %w809, i32 %h811)
+then884:                                          ; preds = %ifcont879
+  %wdg885 = load %Widget, ptr %wdg_alloca, align 8
+  %x886 = extractvalue %Widget %wdg885, 2
+  %wdg887 = load %Widget, ptr %wdg_alloca, align 8
+  %y888 = extractvalue %Widget %wdg887, 3
+  %wdg889 = load %Widget, ptr %wdg_alloca, align 8
+  %fg890 = extractvalue %Widget %wdg889, 7
+  %wdg891 = load %Widget, ptr %wdg_alloca, align 8
+  %bg892 = extractvalue %Widget %wdg891, 8
+  %wdg893 = load %Widget, ptr %wdg_alloca, align 8
+  %w894 = extractvalue %Widget %wdg893, 4
+  %wdg895 = load %Widget, ptr %wdg_alloca, align 8
+  %h896 = extractvalue %Widget %wdg895, 5
+  %calltmp897 = call i32 @nitpick_display_box(i32 %x886, i32 %y888, i32 %fg890, i32 %bg892, i32 %w894, i32 %h896)
+  %wdg898 = load %Widget, ptr %wdg_alloca, align 8
+  %x899 = extractvalue %Widget %wdg898, 2
+  %wdg900 = load %Widget, ptr %wdg_alloca, align 8
+  %y901 = extractvalue %Widget %wdg900, 3
+  %wdg902 = load %Widget, ptr %wdg_alloca, align 8
+  %w903 = extractvalue %Widget %wdg902, 4
+  %wdg904 = load %Widget, ptr %wdg_alloca, align 8
+  %h905 = extractvalue %Widget %wdg904, 5
+  %wdg906 = load %Widget, ptr %wdg_alloca, align 8
+  %fg907 = extractvalue %Widget %wdg906, 7
+  %wdg908 = load %Widget, ptr %wdg_alloca, align 8
+  %bg909 = extractvalue %Widget %wdg908, 8
+  %calltmp910 = call { %struct.NIL, ptr, i8 } @Tui_draw_border(i32 %x899, i32 %y901, i32 %w903, i32 %h905, i32 %fg907, i32 %bg909)
+  %raw.value911 = extractvalue { %struct.NIL, ptr, i8 } %calltmp910, 0
   %row_count = alloca i64, align 8
-  %wdg813 = load %Widget, ptr %wdg_alloca, align 8
-  %text814 = extractvalue %Widget %wdg813, 6
-  %calltmp815 = call { i64, ptr, i8 } @str_token_count(ptr %text814, ptr @.str.413)
-  %raw.value816 = extractvalue { i64, ptr, i8 } %calltmp815, 0
-  store i64 %raw.value816, ptr %row_count, align 4
-  %sel817 = alloca i64, align 8
-  %value.ptr818 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
-  %value819 = load i32, ptr %value.ptr818, align 4
-  %init_sext820 = sext i32 %value819 to i64
-  store i64 %init_sext820, ptr %sel817, align 4
+  %wdg912 = load %Widget, ptr %wdg_alloca, align 8
+  %text913 = extractvalue %Widget %wdg912, 6
+  %calltmp914 = call { i64, ptr, i8 } @str_token_count(ptr %text913, ptr @.str.432)
+  %raw.value915 = extractvalue { i64, ptr, i8 } %calltmp914, 0
+  store i64 %raw.value915, ptr %row_count, align 4
+  %max_vis916 = alloca i64, align 8
+  %h.ptr917 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 5
+  %h918 = load i32, ptr %h.ptr917, align 4
+  %subtmp919 = sub i32 %h918, 2
+  %init_sext920 = sext i32 %subtmp919 to i64
+  store i64 %init_sext920, ptr %max_vis916, align 4
+  %sel921 = alloca i64, align 8
+  %value.ptr922 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 10
+  %value923 = load i32, ptr %value.ptr922, align 4
+  %init_sext924 = sext i32 %value923 to i64
+  store i64 %init_sext924, ptr %sel921, align 4
+  %start_idx925 = alloca i64, align 8
+  store i64 0, ptr %start_idx925, align 4
+  %sel926 = load i64, ptr %sel921, align 4
+  %max_vis927 = load i64, ptr %max_vis916, align 4
+  %getmp928 = icmp sge i64 %sel926, %max_vis927
+  %ifcond929 = icmp ne i1 %getmp928, false
+  br i1 %ifcond929, label %then930, label %ifcont935
+
+then930:                                          ; preds = %then884
+  %sel931 = load i64, ptr %sel921, align 4
+  %max_vis932 = load i64, ptr %max_vis916, align 4
+  %subtmp933 = sub i64 %sel931, %max_vis932
+  %addtmp934 = add i64 %subtmp933, 1
+  store i64 %addtmp934, ptr %start_idx925, align 4
+  br label %ifcont935
+
+ifcont935:                                        ; preds = %then930, %then884
   %r = alloca i64, align 8
   store i64 0, ptr %r, align 4
-  br label %whilecond821
+  br label %whilecond936
 
-whilecond821:                                     ; preds = %afterwhile899, %then799
-  %r822 = load i64, ptr %r, align 4
-  %row_count823 = load i64, ptr %row_count, align 4
-  %lttmp824 = icmp slt i64 %r822, %row_count823
-  %whilecond825 = icmp ne i1 %lttmp824, false
-  br i1 %whilecond825, label %whilebody826, label %afterwhile903
+whilecond936:                                     ; preds = %ifcont1025, %ifcont935
+  %r937 = load i64, ptr %r, align 4
+  %max_vis938 = load i64, ptr %max_vis916, align 4
+  %lttmp939 = icmp slt i64 %r937, %max_vis938
+  %whilecond940 = icmp ne i1 %lttmp939, false
+  br i1 %whilecond940, label %whilebody941, label %afterwhile1028
 
-whilebody826:                                     ; preds = %whilecond821
+whilebody941:                                     ; preds = %whilecond936
+  %idx942 = alloca i64, align 8
+  %start_idx943 = load i64, ptr %start_idx925, align 4
+  %r944 = load i64, ptr %r, align 4
+  %addtmp945 = add i64 %start_idx943, %r944
+  store i64 %addtmp945, ptr %idx942, align 4
+  %idx946 = load i64, ptr %idx942, align 4
+  %row_count947 = load i64, ptr %row_count, align 4
+  %lttmp948 = icmp slt i64 %idx946, %row_count947
+  %ifcond949 = icmp ne i1 %lttmp948, false
+  br i1 %ifcond949, label %then950, label %ifcont1025
+
+then950:                                          ; preds = %whilebody941
   %row_data = alloca ptr, align 8
-  %wdg827 = load %Widget, ptr %wdg_alloca, align 8
-  %text828 = extractvalue %Widget %wdg827, 6
-  %r829 = load i64, ptr %r, align 4
-  %calltmp830 = call { ptr, ptr, i8 } @str_token(ptr %text828, ptr @.str.415, i64 %r829)
-  %raw.value831 = extractvalue { ptr, ptr, i8 } %calltmp830, 0
-  store ptr %raw.value831, ptr %row_data, align 8
-  %r832 = load i64, ptr %r, align 4
-  %sel833 = load i64, ptr %sel817, align 4
-  %eqtmp834 = icmp eq i64 %r832, %sel833
-  %ifcond835 = icmp ne i1 %eqtmp834, false
-  br i1 %ifcond835, label %then836, label %else849
+  %wdg951 = load %Widget, ptr %wdg_alloca, align 8
+  %text952 = extractvalue %Widget %wdg951, 6
+  %idx953 = load i64, ptr %idx942, align 4
+  %calltmp954 = call { ptr, ptr, i8 } @str_token(ptr %text952, ptr @.str.434, i64 %idx953)
+  %raw.value955 = extractvalue { ptr, ptr, i8 } %calltmp954, 0
+  store ptr %raw.value955, ptr %row_data, align 8
+  %idx956 = load i64, ptr %idx942, align 4
+  %sel957 = load i64, ptr %sel921, align 4
+  %eqtmp958 = icmp eq i64 %idx956, %sel957
+  %ifcond959 = icmp ne i1 %eqtmp958, false
+  br i1 %ifcond959, label %then960, label %else973
 
-then836:                                          ; preds = %whilebody826
-  %focused.ptr837 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
-  %focused838 = load i32, ptr %focused.ptr837, align 4
-  %eqtmp839 = icmp eq i32 %focused838, 1
-  %ifcond840 = icmp ne i1 %eqtmp839, false
-  br i1 %ifcond840, label %then841, label %else843
+then960:                                          ; preds = %then950
+  %focused.ptr961 = getelementptr inbounds %Widget, ptr %wdg_alloca, i32 0, i32 9
+  %focused962 = load i32, ptr %focused.ptr961, align 4
+  %eqtmp963 = icmp eq i32 %focused962, 1
+  %ifcond964 = icmp ne i1 %eqtmp963, false
+  br i1 %ifcond964, label %then965, label %else967
 
-then841:                                          ; preds = %then836
-  %calltmp842 = call i32 @nitpick_display_set_reverse(i32 1)
-  br label %ifcont848
+then965:                                          ; preds = %then960
+  %calltmp966 = call i32 @nitpick_display_set_reverse(i32 1)
+  br label %ifcont972
 
-else843:                                          ; preds = %then836
-  %calltmp844 = call i32 @nitpick_display_set_fg(i32 0)
-  %wdg845 = load %Widget, ptr %wdg_alloca, align 8
-  %fg846 = extractvalue %Widget %wdg845, 7
-  %calltmp847 = call i32 @nitpick_display_set_bg(i32 %fg846)
-  br label %ifcont848
+else967:                                          ; preds = %then960
+  %calltmp968 = call i32 @nitpick_display_set_fg(i32 0)
+  %wdg969 = load %Widget, ptr %wdg_alloca, align 8
+  %fg970 = extractvalue %Widget %wdg969, 7
+  %calltmp971 = call i32 @nitpick_display_set_bg(i32 %fg970)
+  br label %ifcont972
 
-ifcont848:                                        ; preds = %else843, %then841
-  br label %ifcont856
+ifcont972:                                        ; preds = %else967, %then965
+  br label %ifcont980
 
-else849:                                          ; preds = %whilebody826
-  %wdg850 = load %Widget, ptr %wdg_alloca, align 8
-  %fg851 = extractvalue %Widget %wdg850, 7
-  %calltmp852 = call i32 @nitpick_display_set_fg(i32 %fg851)
-  %wdg853 = load %Widget, ptr %wdg_alloca, align 8
-  %bg854 = extractvalue %Widget %wdg853, 8
-  %calltmp855 = call i32 @nitpick_display_set_bg(i32 %bg854)
-  br label %ifcont856
+else973:                                          ; preds = %then950
+  %wdg974 = load %Widget, ptr %wdg_alloca, align 8
+  %fg975 = extractvalue %Widget %wdg974, 7
+  %calltmp976 = call i32 @nitpick_display_set_fg(i32 %fg975)
+  %wdg977 = load %Widget, ptr %wdg_alloca, align 8
+  %bg978 = extractvalue %Widget %wdg977, 8
+  %calltmp979 = call i32 @nitpick_display_set_bg(i32 %bg978)
+  br label %ifcont980
 
-ifcont856:                                        ; preds = %else849, %ifcont848
-  %wdg857 = load %Widget, ptr %wdg_alloca, align 8
-  %x858 = extractvalue %Widget %wdg857, 2
-  %addtmp859 = add i32 %x858, 1
-  %wdg860 = load %Widget, ptr %wdg_alloca, align 8
-  %y861 = extractvalue %Widget %wdg860, 3
-  %addtmp862 = add i32 %y861, 1
-  %r863 = load i64, ptr %r, align 4
-  %cast.checked_trunc864 = trunc i64 %r863 to i32
-  %cast.rt_sext865 = sext i32 %cast.checked_trunc864 to i64
-  %cast.overflow866 = icmp ne i64 %r863, %cast.rt_sext865
-  br i1 %cast.overflow866, label %cast.overflow_panic867, label %cast.ok868
-
-cast.overflow_panic867:                           ; preds = %ifcont856
-  call void @npk_panic_overflow(ptr @cast_overflow_msg.416)
-  unreachable
-
-cast.ok868:                                       ; preds = %ifcont856
-  %addtmp869 = add i32 %addtmp862, %cast.checked_trunc864
-  %calltmp870 = call i32 @nitpick_display_move(i32 %addtmp859, i32 %addtmp869)
+ifcont980:                                        ; preds = %else973, %ifcont972
+  %wdg981 = load %Widget, ptr %wdg_alloca, align 8
+  %x982 = extractvalue %Widget %wdg981, 2
+  %addtmp983 = add i32 %x982, 1
+  %wdg984 = load %Widget, ptr %wdg_alloca, align 8
+  %y985 = extractvalue %Widget %wdg984, 3
+  %addtmp986 = add i32 %y985, 1
+  %r987 = load i64, ptr %r, align 4
+  %cast.trunc988 = trunc i64 %r987 to i32
+  %addtmp989 = add i32 %addtmp986, %cast.trunc988
+  %calltmp990 = call i32 @nitpick_display_move(i32 %addtmp983, i32 %addtmp989)
   %col_count = alloca i64, align 8
-  %row_data871 = load ptr, ptr %row_data, align 8
-  %calltmp872 = call { i64, ptr, i8 } @str_token_count(ptr %row_data871, ptr @.str.418)
-  %raw.value873 = extractvalue { i64, ptr, i8 } %calltmp872, 0
-  store i64 %raw.value873, ptr %col_count, align 4
+  %row_data991 = load ptr, ptr %row_data, align 8
+  %calltmp992 = call { i64, ptr, i8 } @str_token_count(ptr %row_data991, ptr @.str.436)
+  %raw.value993 = extractvalue { i64, ptr, i8 } %calltmp992, 0
+  store i64 %raw.value993, ptr %col_count, align 4
   %c = alloca i64, align 8
   store i64 0, ptr %c, align 4
-  br label %whilecond874
+  br label %whilecond994
 
-whilecond874:                                     ; preds = %ifcont896, %cast.ok868
-  %c875 = load i64, ptr %c, align 4
-  %col_count876 = load i64, ptr %col_count, align 4
-  %lttmp877 = icmp slt i64 %c875, %col_count876
-  %whilecond878 = icmp ne i1 %lttmp877, false
-  br i1 %whilecond878, label %whilebody879, label %afterwhile899
+whilecond994:                                     ; preds = %ifcont1020, %ifcont980
+  %c995 = load i64, ptr %c, align 4
+  %col_count996 = load i64, ptr %col_count, align 4
+  %lttmp997 = icmp slt i64 %c995, %col_count996
+  %whilecond998 = icmp ne i1 %lttmp997, false
+  br i1 %whilecond998, label %whilebody999, label %afterwhile1023
 
-whilebody879:                                     ; preds = %whilecond874
+whilebody999:                                     ; preds = %whilecond994
   %cell = alloca ptr, align 8
-  %row_data880 = load ptr, ptr %row_data, align 8
-  %c881 = load i64, ptr %c, align 4
-  %calltmp882 = call { ptr, ptr, i8 } @str_token(ptr %row_data880, ptr @.str.420, i64 %c881)
-  %raw.value883 = extractvalue { ptr, ptr, i8 } %calltmp882, 0
-  store ptr %raw.value883, ptr %cell, align 8
-  %cell884 = load ptr, ptr %cell, align 8
-  %str_struct885 = load %struct.NpkString, ptr %cell884, align 8
-  %str_data886 = extractvalue %struct.NpkString %str_struct885, 0
-  %print_call887 = call i64 @npk_print_cstr(ptr %str_data886)
-  %c888 = load i64, ptr %c, align 4
-  %col_count889 = load i64, ptr %col_count, align 4
-  %subtmp890 = sub i64 %col_count889, 1
-  %lttmp891 = icmp slt i64 %c888, %subtmp890
-  %ifcond892 = icmp ne i1 %lttmp891, false
-  br i1 %ifcond892, label %then893, label %ifcont896
+  %row_data1000 = load ptr, ptr %row_data, align 8
+  %c1001 = load i64, ptr %c, align 4
+  %calltmp1002 = call { ptr, ptr, i8 } @str_token(ptr %row_data1000, ptr @.str.438, i64 %c1001)
+  %raw.value1003 = extractvalue { ptr, ptr, i8 } %calltmp1002, 0
+  store ptr %raw.value1003, ptr %cell, align 8
+  %str_data1004 = load ptr, ptr @.str.440, align 8
+  %print_call1005 = call i64 @npk_print_cstr(ptr %str_data1004)
+  %cell1006 = load ptr, ptr %cell, align 8
+  %str_struct1007 = load %struct.NpkString, ptr %cell1006, align 8
+  %str_data1008 = extractvalue %struct.NpkString %str_struct1007, 0
+  %print_call1009 = call i64 @npk_print_cstr(ptr %str_data1008)
+  %str_data1010 = load ptr, ptr @.str.442, align 8
+  %print_call1011 = call i64 @npk_print_cstr(ptr %str_data1010)
+  %c1012 = load i64, ptr %c, align 4
+  %col_count1013 = load i64, ptr %col_count, align 4
+  %subtmp1014 = sub i64 %col_count1013, 1
+  %lttmp1015 = icmp slt i64 %c1012, %subtmp1014
+  %ifcond1016 = icmp ne i1 %lttmp1015, false
+  br i1 %ifcond1016, label %then1017, label %ifcont1020
 
-then893:                                          ; preds = %whilebody879
-  %str_data894 = load ptr, ptr @.str.422, align 8
-  %print_call895 = call i64 @npk_print_cstr(ptr %str_data894)
-  br label %ifcont896
+then1017:                                         ; preds = %whilebody999
+  %str_data1018 = load ptr, ptr @.str.444, align 8
+  %print_call1019 = call i64 @npk_print_cstr(ptr %str_data1018)
+  br label %ifcont1020
 
-ifcont896:                                        ; preds = %then893, %whilebody879
-  %c897 = load i64, ptr %c, align 4
-  %addtmp898 = add i64 %c897, 1
-  store i64 %addtmp898, ptr %c, align 4
+ifcont1020:                                       ; preds = %then1017, %whilebody999
+  %c1021 = load i64, ptr %c, align 4
+  %addtmp1022 = add i64 %c1021, 1
+  store i64 %addtmp1022, ptr %c, align 4
   call void @npk_gc_safepoint()
-  br label %whilecond874
+  br label %whilecond994
 
-afterwhile899:                                    ; preds = %whilecond874
-  %calltmp900 = call i32 @nitpick_display_set_reverse(i32 0)
-  %r901 = load i64, ptr %r, align 4
-  %addtmp902 = add i64 %r901, 1
-  store i64 %addtmp902, ptr %r, align 4
+afterwhile1023:                                   ; preds = %whilecond994
+  %calltmp1024 = call i32 @nitpick_display_set_reverse(i32 0)
+  br label %ifcont1025
+
+ifcont1025:                                       ; preds = %afterwhile1023, %whilebody941
+  %r1026 = load i64, ptr %r, align 4
+  %addtmp1027 = add i64 %r1026, 1
+  store i64 %addtmp1027, ptr %r, align 4
   call void @npk_gc_safepoint()
-  br label %whilecond821
+  br label %whilecond936
 
-afterwhile903:                                    ; preds = %whilecond821
-  br label %ifcont904
+afterwhile1028:                                   ; preds = %whilecond936
+  %wdg1029 = load %Widget, ptr %wdg_alloca, align 8
+  %x1030 = extractvalue %Widget %wdg1029, 2
+  %wdg1031 = load %Widget, ptr %wdg_alloca, align 8
+  %w1032 = extractvalue %Widget %wdg1031, 4
+  %addtmp1033 = add i32 %x1030, %w1032
+  %subtmp1034 = sub i32 %addtmp1033, 1
+  %wdg1035 = load %Widget, ptr %wdg_alloca, align 8
+  %y1036 = extractvalue %Widget %wdg1035, 3
+  %wdg1037 = load %Widget, ptr %wdg_alloca, align 8
+  %h1038 = extractvalue %Widget %wdg1037, 5
+  %row_count1039 = load i64, ptr %row_count, align 4
+  %max_vis1040 = load i64, ptr %max_vis916, align 4
+  %start_idx1041 = load i64, ptr %start_idx925, align 4
+  %calltmp1042 = call { %struct.NIL, ptr, i8 } @Tui_draw_scrollbar(i32 %subtmp1034, i32 %y1036, i32 %h1038, i64 %row_count1039, i64 %max_vis1040, i64 %start_idx1041)
+  %raw.value1043 = extractvalue { %struct.NIL, ptr, i8 } %calltmp1042, 0
+  br label %ifcont1044
 
-ifcont904:                                        ; preds = %afterwhile903, %ifcont794
+ifcont1044:                                       ; preds = %afterwhile1028, %ifcont879
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -6220,8 +6830,6 @@ declare i32 @nitpick_display_show_cursor()
 declare i32 @nitpick_display_alt_screen(i32)
 
 declare i64 @npk_print_cstr(ptr)
-
-declare void @npk_panic_overflow(ptr)
 
 define i32 @__nitpick_tui_init() {
 entry:
@@ -6723,25 +7331,78 @@ entry:
   ret { i32, ptr, i8 } { i32 3, ptr null, i8 0 }
 }
 
-define { %QueryBuilder, ptr, i8 } @orm_select(ptr %table) {
+define { %QueryBuilder, ptr, i8 } @_orm_init(ptr %table, i32 %op) {
 entry:
+  %op.addr = alloca i32, align 4
+  store i32 %op, ptr %op.addr, align 4
   %q = alloca %QueryBuilder, align 8
   %table.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 0
   store ptr %table, ptr %table.ptr, align 8
-  %select_cols.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 1
-  store ptr @.str.424, ptr %select_cols.ptr, align 8
-  %where_clauses.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 2
-  store ptr @.str.426, ptr %where_clauses.ptr, align 8
-  %mongo_query.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 3
-  store ptr @.str.428, ptr %mongo_query.ptr, align 8
-  %order_by.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 4
-  store ptr @.str.430, ptr %order_by.ptr, align 8
-  %limit_val.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 5
+  %op1 = load i32, ptr %op.addr, align 4
+  %op_type.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 1
+  store i32 %op1, ptr %op_type.ptr, align 4
+  %select_cols.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 2
+  store ptr @.str.446, ptr %select_cols.ptr, align 8
+  %where_clauses.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 3
+  store ptr @.str.448, ptr %where_clauses.ptr, align 8
+  %insert_cols.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 4
+  store ptr @.str.450, ptr %insert_cols.ptr, align 8
+  %insert_vals.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 5
+  store ptr @.str.452, ptr %insert_vals.ptr, align 8
+  %update_set.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 6
+  store ptr @.str.454, ptr %update_set.ptr, align 8
+  %mongo_query.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 7
+  store ptr @.str.456, ptr %mongo_query.ptr, align 8
+  %mongo_set.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 8
+  store ptr @.str.458, ptr %mongo_set.ptr, align 8
+  %order_by.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 9
+  store ptr @.str.460, ptr %order_by.ptr, align 8
+  %limit_val.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 10
   store i32 -1, ptr %limit_val.ptr, align 4
-  %offset_val.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 6
+  %offset_val.ptr = getelementptr inbounds %QueryBuilder, ptr %q, i32 0, i32 11
   store i32 -1, ptr %offset_val.ptr, align 4
-  %q1 = load %QueryBuilder, ptr %q, align 8
-  %result.val = insertvalue { %QueryBuilder, ptr, i8 } undef, %QueryBuilder %q1, 0
+  %q2 = load %QueryBuilder, ptr %q, align 8
+  %result.val = insertvalue { %QueryBuilder, ptr, i8 } undef, %QueryBuilder %q2, 0
+  %result.err = insertvalue { %QueryBuilder, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { %QueryBuilder, ptr, i8 } %result.err, i8 0, 2
+  ret { %QueryBuilder, ptr, i8 } %result.is_error
+}
+
+define { %QueryBuilder, ptr, i8 } @orm_select(ptr %table) {
+entry:
+  %calltmp = call { %QueryBuilder, ptr, i8 } @_orm_init(ptr %table, i32 0)
+  %raw.value = extractvalue { %QueryBuilder, ptr, i8 } %calltmp, 0
+  %result.val = insertvalue { %QueryBuilder, ptr, i8 } undef, %QueryBuilder %raw.value, 0
+  %result.err = insertvalue { %QueryBuilder, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { %QueryBuilder, ptr, i8 } %result.err, i8 0, 2
+  ret { %QueryBuilder, ptr, i8 } %result.is_error
+}
+
+define { %QueryBuilder, ptr, i8 } @orm_insert(ptr %table) {
+entry:
+  %calltmp = call { %QueryBuilder, ptr, i8 } @_orm_init(ptr %table, i32 1)
+  %raw.value = extractvalue { %QueryBuilder, ptr, i8 } %calltmp, 0
+  %result.val = insertvalue { %QueryBuilder, ptr, i8 } undef, %QueryBuilder %raw.value, 0
+  %result.err = insertvalue { %QueryBuilder, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { %QueryBuilder, ptr, i8 } %result.err, i8 0, 2
+  ret { %QueryBuilder, ptr, i8 } %result.is_error
+}
+
+define { %QueryBuilder, ptr, i8 } @orm_update(ptr %table) {
+entry:
+  %calltmp = call { %QueryBuilder, ptr, i8 } @_orm_init(ptr %table, i32 2)
+  %raw.value = extractvalue { %QueryBuilder, ptr, i8 } %calltmp, 0
+  %result.val = insertvalue { %QueryBuilder, ptr, i8 } undef, %QueryBuilder %raw.value, 0
+  %result.err = insertvalue { %QueryBuilder, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { %QueryBuilder, ptr, i8 } %result.err, i8 0, 2
+  ret { %QueryBuilder, ptr, i8 } %result.is_error
+}
+
+define { %QueryBuilder, ptr, i8 } @orm_delete(ptr %table) {
+entry:
+  %calltmp = call { %QueryBuilder, ptr, i8 } @_orm_init(ptr %table, i32 3)
+  %raw.value = extractvalue { %QueryBuilder, ptr, i8 } %calltmp, 0
+  %result.val = insertvalue { %QueryBuilder, ptr, i8 } undef, %QueryBuilder %raw.value, 0
   %result.err = insertvalue { %QueryBuilder, ptr, i8 } %result.val, ptr null, 1
   %result.is_error = insertvalue { %QueryBuilder, ptr, i8 } %result.err, i8 0, 2
   ret { %QueryBuilder, ptr, i8 } %result.is_error
@@ -6751,10 +7412,227 @@ define { %QueryBuilder, ptr, i8 } @orm_cols(%QueryBuilder %q, ptr %cols) {
 entry:
   %q_alloca = alloca %QueryBuilder, align 8
   store %QueryBuilder %q, ptr %q_alloca, align 8
-  %select_cols.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 1
+  %select_cols.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 2
   store ptr %cols, ptr %select_cols.ptr, align 8
   %q1 = load %QueryBuilder, ptr %q_alloca, align 8
   %result.val = insertvalue { %QueryBuilder, ptr, i8 } undef, %QueryBuilder %q1, 0
+  %result.err = insertvalue { %QueryBuilder, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { %QueryBuilder, ptr, i8 } %result.err, i8 0, 2
+  ret { %QueryBuilder, ptr, i8 } %result.is_error
+}
+
+define { %QueryBuilder, ptr, i8 } @orm_set(%QueryBuilder %q, ptr %col, ptr %val) {
+entry:
+  %q_alloca = alloca %QueryBuilder, align 8
+  store %QueryBuilder %q, ptr %q_alloca, align 8
+  %q1 = load %QueryBuilder, ptr %q_alloca, align 8
+  %insert_cols = extractvalue %QueryBuilder %q1, 4
+  %str1 = load %struct.NpkString, ptr %insert_cols, align 8
+  %str2 = load %struct.NpkString, ptr @.str.462, align 8
+  %equals = call i1 @npk_string_equals(%struct.NpkString %str1, %struct.NpkString %str2)
+  %ifcond = icmp ne i1 %equals, false
+  br i1 %ifcond, label %then, label %else
+
+then:                                             ; preds = %entry
+  %insert_cols.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 4
+  store ptr %col, ptr %insert_cols.ptr, align 8
+  %concat_str = call ptr @npk_string_concat_simple(ptr %val, ptr @.str.465)
+  %concat_str2 = call ptr @npk_string_concat_simple(ptr @.str.464, ptr %concat_str)
+  %insert_vals.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 5
+  store ptr %concat_str2, ptr %insert_vals.ptr, align 8
+  br label %ifcont
+
+else:                                             ; preds = %entry
+  %q3 = load %QueryBuilder, ptr %q_alloca, align 8
+  %insert_cols4 = extractvalue %QueryBuilder %q3, 4
+  %concat_str5 = call ptr @npk_string_concat_simple(ptr @.str.467, ptr %col)
+  %concat_str6 = call ptr @npk_string_concat_simple(ptr %insert_cols4, ptr %concat_str5)
+  %insert_cols.ptr7 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 4
+  store ptr %concat_str6, ptr %insert_cols.ptr7, align 8
+  %q8 = load %QueryBuilder, ptr %q_alloca, align 8
+  %insert_vals = extractvalue %QueryBuilder %q8, 5
+  %concat_str9 = call ptr @npk_string_concat_simple(ptr %val, ptr @.str.471)
+  %concat_str10 = call ptr @npk_string_concat_simple(ptr @.str.469, ptr %concat_str9)
+  %concat_str11 = call ptr @npk_string_concat_simple(ptr %insert_vals, ptr %concat_str10)
+  %insert_vals.ptr12 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 5
+  store ptr %concat_str11, ptr %insert_vals.ptr12, align 8
+  br label %ifcont
+
+ifcont:                                           ; preds = %else, %then
+  %upd_clause = alloca ptr, align 8
+  %concat_str13 = call ptr @npk_string_concat_simple(ptr %val, ptr @.str.475)
+  %concat_str14 = call ptr @npk_string_concat_simple(ptr @.str.473, ptr %concat_str13)
+  %concat_str15 = call ptr @npk_string_concat_simple(ptr %col, ptr %concat_str14)
+  store ptr %concat_str15, ptr %upd_clause, align 8
+  %q16 = load %QueryBuilder, ptr %q_alloca, align 8
+  %update_set = extractvalue %QueryBuilder %q16, 6
+  %str117 = load %struct.NpkString, ptr %update_set, align 8
+  %str218 = load %struct.NpkString, ptr @.str.477, align 8
+  %equals19 = call i1 @npk_string_equals(%struct.NpkString %str117, %struct.NpkString %str218)
+  %ifcond20 = icmp ne i1 %equals19, false
+  br i1 %ifcond20, label %then21, label %else23
+
+then21:                                           ; preds = %ifcont
+  %upd_clause22 = load ptr, ptr %upd_clause, align 8
+  %update_set.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 6
+  store ptr %upd_clause22, ptr %update_set.ptr, align 8
+  br label %ifcont30
+
+else23:                                           ; preds = %ifcont
+  %q24 = load %QueryBuilder, ptr %q_alloca, align 8
+  %update_set25 = extractvalue %QueryBuilder %q24, 6
+  %upd_clause26 = load ptr, ptr %upd_clause, align 8
+  %concat_str27 = call ptr @npk_string_concat_simple(ptr @.str.479, ptr %upd_clause26)
+  %concat_str28 = call ptr @npk_string_concat_simple(ptr %update_set25, ptr %concat_str27)
+  %update_set.ptr29 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 6
+  store ptr %concat_str28, ptr %update_set.ptr29, align 8
+  br label %ifcont30
+
+ifcont30:                                         ; preds = %else23, %then21
+  %m_clause = alloca ptr, align 8
+  %concat_str31 = call ptr @npk_string_concat_simple(ptr %val, ptr @.str.484)
+  %concat_str32 = call ptr @npk_string_concat_simple(ptr @.str.483, ptr %concat_str31)
+  %concat_str33 = call ptr @npk_string_concat_simple(ptr %col, ptr %concat_str32)
+  %concat_str34 = call ptr @npk_string_concat_simple(ptr @.str.481, ptr %concat_str33)
+  store ptr %concat_str34, ptr %m_clause, align 8
+  %q35 = load %QueryBuilder, ptr %q_alloca, align 8
+  %mongo_set = extractvalue %QueryBuilder %q35, 8
+  %str136 = load %struct.NpkString, ptr %mongo_set, align 8
+  %str237 = load %struct.NpkString, ptr @.str.486, align 8
+  %equals38 = call i1 @npk_string_equals(%struct.NpkString %str136, %struct.NpkString %str237)
+  %ifcond39 = icmp ne i1 %equals38, false
+  br i1 %ifcond39, label %then40, label %else42
+
+then40:                                           ; preds = %ifcont30
+  %m_clause41 = load ptr, ptr %m_clause, align 8
+  %mongo_set.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 8
+  store ptr %m_clause41, ptr %mongo_set.ptr, align 8
+  br label %ifcont49
+
+else42:                                           ; preds = %ifcont30
+  %q43 = load %QueryBuilder, ptr %q_alloca, align 8
+  %mongo_set44 = extractvalue %QueryBuilder %q43, 8
+  %m_clause45 = load ptr, ptr %m_clause, align 8
+  %concat_str46 = call ptr @npk_string_concat_simple(ptr @.str.488, ptr %m_clause45)
+  %concat_str47 = call ptr @npk_string_concat_simple(ptr %mongo_set44, ptr %concat_str46)
+  %mongo_set.ptr48 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 8
+  store ptr %concat_str47, ptr %mongo_set.ptr48, align 8
+  br label %ifcont49
+
+ifcont49:                                         ; preds = %else42, %then40
+  %q50 = load %QueryBuilder, ptr %q_alloca, align 8
+  %result.val = insertvalue { %QueryBuilder, ptr, i8 } undef, %QueryBuilder %q50, 0
+  %result.err = insertvalue { %QueryBuilder, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { %QueryBuilder, ptr, i8 } %result.err, i8 0, 2
+  ret { %QueryBuilder, ptr, i8 } %result.is_error
+}
+
+define { %QueryBuilder, ptr, i8 } @orm_set_int(%QueryBuilder %q, ptr %col, i64 %val) {
+entry:
+  %q_alloca = alloca %QueryBuilder, align 8
+  store %QueryBuilder %q, ptr %q_alloca, align 8
+  %val.addr = alloca i64, align 8
+  store i64 %val, ptr %val.addr, align 4
+  %val_s = alloca ptr, align 8
+  %val1 = load i64, ptr %val.addr, align 4
+  %from_int_result = call ptr @npk_string_from_int_simple(i64 %val1)
+  store ptr %from_int_result, ptr %val_s, align 8
+  %q2 = load %QueryBuilder, ptr %q_alloca, align 8
+  %insert_cols = extractvalue %QueryBuilder %q2, 4
+  %str1 = load %struct.NpkString, ptr %insert_cols, align 8
+  %str2 = load %struct.NpkString, ptr @.str.490, align 8
+  %equals = call i1 @npk_string_equals(%struct.NpkString %str1, %struct.NpkString %str2)
+  %ifcond = icmp ne i1 %equals, false
+  br i1 %ifcond, label %then, label %else
+
+then:                                             ; preds = %entry
+  %insert_cols.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 4
+  store ptr %col, ptr %insert_cols.ptr, align 8
+  %val_s3 = load ptr, ptr %val_s, align 8
+  %insert_vals.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 5
+  store ptr %val_s3, ptr %insert_vals.ptr, align 8
+  br label %ifcont
+
+else:                                             ; preds = %entry
+  %q4 = load %QueryBuilder, ptr %q_alloca, align 8
+  %insert_cols5 = extractvalue %QueryBuilder %q4, 4
+  %concat_str = call ptr @npk_string_concat_simple(ptr @.str.492, ptr %col)
+  %concat_str6 = call ptr @npk_string_concat_simple(ptr %insert_cols5, ptr %concat_str)
+  %insert_cols.ptr7 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 4
+  store ptr %concat_str6, ptr %insert_cols.ptr7, align 8
+  %q8 = load %QueryBuilder, ptr %q_alloca, align 8
+  %insert_vals = extractvalue %QueryBuilder %q8, 5
+  %val_s9 = load ptr, ptr %val_s, align 8
+  %concat_str10 = call ptr @npk_string_concat_simple(ptr @.str.494, ptr %val_s9)
+  %concat_str11 = call ptr @npk_string_concat_simple(ptr %insert_vals, ptr %concat_str10)
+  %insert_vals.ptr12 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 5
+  store ptr %concat_str11, ptr %insert_vals.ptr12, align 8
+  br label %ifcont
+
+ifcont:                                           ; preds = %else, %then
+  %upd_clause = alloca ptr, align 8
+  %val_s13 = load ptr, ptr %val_s, align 8
+  %concat_str14 = call ptr @npk_string_concat_simple(ptr @.str.496, ptr %val_s13)
+  %concat_str15 = call ptr @npk_string_concat_simple(ptr %col, ptr %concat_str14)
+  store ptr %concat_str15, ptr %upd_clause, align 8
+  %q16 = load %QueryBuilder, ptr %q_alloca, align 8
+  %update_set = extractvalue %QueryBuilder %q16, 6
+  %str117 = load %struct.NpkString, ptr %update_set, align 8
+  %str218 = load %struct.NpkString, ptr @.str.498, align 8
+  %equals19 = call i1 @npk_string_equals(%struct.NpkString %str117, %struct.NpkString %str218)
+  %ifcond20 = icmp ne i1 %equals19, false
+  br i1 %ifcond20, label %then21, label %else23
+
+then21:                                           ; preds = %ifcont
+  %upd_clause22 = load ptr, ptr %upd_clause, align 8
+  %update_set.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 6
+  store ptr %upd_clause22, ptr %update_set.ptr, align 8
+  br label %ifcont30
+
+else23:                                           ; preds = %ifcont
+  %q24 = load %QueryBuilder, ptr %q_alloca, align 8
+  %update_set25 = extractvalue %QueryBuilder %q24, 6
+  %upd_clause26 = load ptr, ptr %upd_clause, align 8
+  %concat_str27 = call ptr @npk_string_concat_simple(ptr @.str.500, ptr %upd_clause26)
+  %concat_str28 = call ptr @npk_string_concat_simple(ptr %update_set25, ptr %concat_str27)
+  %update_set.ptr29 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 6
+  store ptr %concat_str28, ptr %update_set.ptr29, align 8
+  br label %ifcont30
+
+ifcont30:                                         ; preds = %else23, %then21
+  %m_clause = alloca ptr, align 8
+  %val_s31 = load ptr, ptr %val_s, align 8
+  %concat_str32 = call ptr @npk_string_concat_simple(ptr @.str.504, ptr %val_s31)
+  %concat_str33 = call ptr @npk_string_concat_simple(ptr %col, ptr %concat_str32)
+  %concat_str34 = call ptr @npk_string_concat_simple(ptr @.str.502, ptr %concat_str33)
+  store ptr %concat_str34, ptr %m_clause, align 8
+  %q35 = load %QueryBuilder, ptr %q_alloca, align 8
+  %mongo_set = extractvalue %QueryBuilder %q35, 8
+  %str136 = load %struct.NpkString, ptr %mongo_set, align 8
+  %str237 = load %struct.NpkString, ptr @.str.506, align 8
+  %equals38 = call i1 @npk_string_equals(%struct.NpkString %str136, %struct.NpkString %str237)
+  %ifcond39 = icmp ne i1 %equals38, false
+  br i1 %ifcond39, label %then40, label %else42
+
+then40:                                           ; preds = %ifcont30
+  %m_clause41 = load ptr, ptr %m_clause, align 8
+  %mongo_set.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 8
+  store ptr %m_clause41, ptr %mongo_set.ptr, align 8
+  br label %ifcont49
+
+else42:                                           ; preds = %ifcont30
+  %q43 = load %QueryBuilder, ptr %q_alloca, align 8
+  %mongo_set44 = extractvalue %QueryBuilder %q43, 8
+  %m_clause45 = load ptr, ptr %m_clause, align 8
+  %concat_str46 = call ptr @npk_string_concat_simple(ptr @.str.508, ptr %m_clause45)
+  %concat_str47 = call ptr @npk_string_concat_simple(ptr %mongo_set44, ptr %concat_str46)
+  %mongo_set.ptr48 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 8
+  store ptr %concat_str47, ptr %mongo_set.ptr48, align 8
+  br label %ifcont49
+
+ifcont49:                                         ; preds = %else42, %then40
+  %q50 = load %QueryBuilder, ptr %q_alloca, align 8
+  %result.val = insertvalue { %QueryBuilder, ptr, i8 } undef, %QueryBuilder %q50, 0
   %result.err = insertvalue { %QueryBuilder, ptr, i8 } %result.val, ptr null, 1
   %result.is_error = insertvalue { %QueryBuilder, ptr, i8 } %result.err, i8 0, 2
   ret { %QueryBuilder, ptr, i8 } %result.is_error
@@ -6765,24 +7643,24 @@ entry:
   %q_alloca = alloca %QueryBuilder, align 8
   store %QueryBuilder %q, ptr %q_alloca, align 8
   %q1 = load %QueryBuilder, ptr %q_alloca, align 8
-  %where_clauses = extractvalue %QueryBuilder %q1, 2
+  %where_clauses = extractvalue %QueryBuilder %q1, 3
   %str1 = load %struct.NpkString, ptr %where_clauses, align 8
-  %str2 = load %struct.NpkString, ptr @.str.432, align 8
+  %str2 = load %struct.NpkString, ptr @.str.510, align 8
   %equals = call i1 @npk_string_equals(%struct.NpkString %str1, %struct.NpkString %str2)
   %ifcond = icmp ne i1 %equals, false
   br i1 %ifcond, label %then, label %else
 
 then:                                             ; preds = %entry
-  %where_clauses.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 2
+  %where_clauses.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 3
   store ptr %clause, ptr %where_clauses.ptr, align 8
   br label %ifcont
 
 else:                                             ; preds = %entry
   %q2 = load %QueryBuilder, ptr %q_alloca, align 8
-  %where_clauses3 = extractvalue %QueryBuilder %q2, 2
-  %concat_str = call ptr @npk_string_concat_simple(ptr @.str.434, ptr %clause)
+  %where_clauses3 = extractvalue %QueryBuilder %q2, 3
+  %concat_str = call ptr @npk_string_concat_simple(ptr @.str.512, ptr %clause)
   %concat_str4 = call ptr @npk_string_concat_simple(ptr %where_clauses3, ptr %concat_str)
-  %where_clauses.ptr5 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 2
+  %where_clauses.ptr5 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 3
   store ptr %concat_str4, ptr %where_clauses.ptr5, align 8
   br label %ifcont
 
@@ -6799,8 +7677,8 @@ entry:
   %q_alloca = alloca %QueryBuilder, align 8
   store %QueryBuilder %q, ptr %q_alloca, align 8
   %clause = alloca ptr, align 8
-  %concat_str = call ptr @npk_string_concat_simple(ptr %val, ptr @.str.438)
-  %concat_str1 = call ptr @npk_string_concat_simple(ptr @.str.436, ptr %concat_str)
+  %concat_str = call ptr @npk_string_concat_simple(ptr %val, ptr @.str.516)
+  %concat_str1 = call ptr @npk_string_concat_simple(ptr @.str.514, ptr %concat_str)
   %concat_str2 = call ptr @npk_string_concat_simple(ptr %col, ptr %concat_str1)
   store ptr %concat_str2, ptr %clause, align 8
   %q3 = load %QueryBuilder, ptr %q_alloca, align 8
@@ -6809,38 +7687,96 @@ entry:
   %raw.value = extractvalue { %QueryBuilder, ptr, i8 } %calltmp, 0
   store %QueryBuilder %raw.value, ptr %q_alloca, align 8
   %m_clause = alloca ptr, align 8
-  %concat_str5 = call ptr @npk_string_concat_simple(ptr %val, ptr @.str.443)
-  %concat_str6 = call ptr @npk_string_concat_simple(ptr @.str.442, ptr %concat_str5)
+  %concat_str5 = call ptr @npk_string_concat_simple(ptr %val, ptr @.str.521)
+  %concat_str6 = call ptr @npk_string_concat_simple(ptr @.str.520, ptr %concat_str5)
   %concat_str7 = call ptr @npk_string_concat_simple(ptr %col, ptr %concat_str6)
-  %concat_str8 = call ptr @npk_string_concat_simple(ptr @.str.440, ptr %concat_str7)
+  %concat_str8 = call ptr @npk_string_concat_simple(ptr @.str.518, ptr %concat_str7)
   store ptr %concat_str8, ptr %m_clause, align 8
   %q9 = load %QueryBuilder, ptr %q_alloca, align 8
-  %mongo_query = extractvalue %QueryBuilder %q9, 3
+  %mongo_query = extractvalue %QueryBuilder %q9, 7
   %str1 = load %struct.NpkString, ptr %mongo_query, align 8
-  %str2 = load %struct.NpkString, ptr @.str.445, align 8
+  %str2 = load %struct.NpkString, ptr @.str.523, align 8
   %equals = call i1 @npk_string_equals(%struct.NpkString %str1, %struct.NpkString %str2)
   %ifcond = icmp ne i1 %equals, false
   br i1 %ifcond, label %then, label %else
 
 then:                                             ; preds = %entry
   %m_clause10 = load ptr, ptr %m_clause, align 8
-  %mongo_query.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 3
+  %mongo_query.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 7
   store ptr %m_clause10, ptr %mongo_query.ptr, align 8
   br label %ifcont
 
 else:                                             ; preds = %entry
   %q11 = load %QueryBuilder, ptr %q_alloca, align 8
-  %mongo_query12 = extractvalue %QueryBuilder %q11, 3
+  %mongo_query12 = extractvalue %QueryBuilder %q11, 7
   %m_clause13 = load ptr, ptr %m_clause, align 8
-  %concat_str14 = call ptr @npk_string_concat_simple(ptr @.str.447, ptr %m_clause13)
+  %concat_str14 = call ptr @npk_string_concat_simple(ptr @.str.525, ptr %m_clause13)
   %concat_str15 = call ptr @npk_string_concat_simple(ptr %mongo_query12, ptr %concat_str14)
-  %mongo_query.ptr16 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 3
+  %mongo_query.ptr16 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 7
   store ptr %concat_str15, ptr %mongo_query.ptr16, align 8
   br label %ifcont
 
 ifcont:                                           ; preds = %else, %then
   %q17 = load %QueryBuilder, ptr %q_alloca, align 8
   %result.val = insertvalue { %QueryBuilder, ptr, i8 } undef, %QueryBuilder %q17, 0
+  %result.err = insertvalue { %QueryBuilder, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { %QueryBuilder, ptr, i8 } %result.err, i8 0, 2
+  ret { %QueryBuilder, ptr, i8 } %result.is_error
+}
+
+define { %QueryBuilder, ptr, i8 } @orm_where_eq_int(%QueryBuilder %q, ptr %col, i64 %val) {
+entry:
+  %q_alloca = alloca %QueryBuilder, align 8
+  store %QueryBuilder %q, ptr %q_alloca, align 8
+  %val.addr = alloca i64, align 8
+  store i64 %val, ptr %val.addr, align 4
+  %val_s = alloca ptr, align 8
+  %val1 = load i64, ptr %val.addr, align 4
+  %from_int_result = call ptr @npk_string_from_int_simple(i64 %val1)
+  store ptr %from_int_result, ptr %val_s, align 8
+  %clause = alloca ptr, align 8
+  %val_s2 = load ptr, ptr %val_s, align 8
+  %concat_str = call ptr @npk_string_concat_simple(ptr @.str.527, ptr %val_s2)
+  %concat_str3 = call ptr @npk_string_concat_simple(ptr %col, ptr %concat_str)
+  store ptr %concat_str3, ptr %clause, align 8
+  %q4 = load %QueryBuilder, ptr %q_alloca, align 8
+  %clause5 = load ptr, ptr %clause, align 8
+  %calltmp = call { %QueryBuilder, ptr, i8 } @orm_where(%QueryBuilder %q4, ptr %clause5)
+  %raw.value = extractvalue { %QueryBuilder, ptr, i8 } %calltmp, 0
+  store %QueryBuilder %raw.value, ptr %q_alloca, align 8
+  %m_clause = alloca ptr, align 8
+  %val_s6 = load ptr, ptr %val_s, align 8
+  %concat_str7 = call ptr @npk_string_concat_simple(ptr @.str.531, ptr %val_s6)
+  %concat_str8 = call ptr @npk_string_concat_simple(ptr %col, ptr %concat_str7)
+  %concat_str9 = call ptr @npk_string_concat_simple(ptr @.str.529, ptr %concat_str8)
+  store ptr %concat_str9, ptr %m_clause, align 8
+  %q10 = load %QueryBuilder, ptr %q_alloca, align 8
+  %mongo_query = extractvalue %QueryBuilder %q10, 7
+  %str1 = load %struct.NpkString, ptr %mongo_query, align 8
+  %str2 = load %struct.NpkString, ptr @.str.533, align 8
+  %equals = call i1 @npk_string_equals(%struct.NpkString %str1, %struct.NpkString %str2)
+  %ifcond = icmp ne i1 %equals, false
+  br i1 %ifcond, label %then, label %else
+
+then:                                             ; preds = %entry
+  %m_clause11 = load ptr, ptr %m_clause, align 8
+  %mongo_query.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 7
+  store ptr %m_clause11, ptr %mongo_query.ptr, align 8
+  br label %ifcont
+
+else:                                             ; preds = %entry
+  %q12 = load %QueryBuilder, ptr %q_alloca, align 8
+  %mongo_query13 = extractvalue %QueryBuilder %q12, 7
+  %m_clause14 = load ptr, ptr %m_clause, align 8
+  %concat_str15 = call ptr @npk_string_concat_simple(ptr @.str.535, ptr %m_clause14)
+  %concat_str16 = call ptr @npk_string_concat_simple(ptr %mongo_query13, ptr %concat_str15)
+  %mongo_query.ptr17 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 7
+  store ptr %concat_str16, ptr %mongo_query.ptr17, align 8
+  br label %ifcont
+
+ifcont:                                           ; preds = %else, %then
+  %q18 = load %QueryBuilder, ptr %q_alloca, align 8
+  %result.val = insertvalue { %QueryBuilder, ptr, i8 } undef, %QueryBuilder %q18, 0
   %result.err = insertvalue { %QueryBuilder, ptr, i8 } %result.val, ptr null, 1
   %result.is_error = insertvalue { %QueryBuilder, ptr, i8 } %result.err, i8 0, 2
   ret { %QueryBuilder, ptr, i8 } %result.is_error
@@ -6853,7 +7789,7 @@ entry:
   %lim.addr = alloca i32, align 4
   store i32 %lim, ptr %lim.addr, align 4
   %lim1 = load i32, ptr %lim.addr, align 4
-  %limit_val.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 5
+  %limit_val.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 10
   store i32 %lim1, ptr %limit_val.ptr, align 4
   %q2 = load %QueryBuilder, ptr %q_alloca, align 8
   %result.val = insertvalue { %QueryBuilder, ptr, i8 } undef, %QueryBuilder %q2, 0
@@ -6869,7 +7805,7 @@ entry:
   %offset.addr = alloca i32, align 4
   store i32 %offset, ptr %offset.addr, align 4
   %offset1 = load i32, ptr %offset.addr, align 4
-  %offset_val.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 6
+  %offset_val.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 11
   store i32 %offset1, ptr %offset_val.ptr, align 4
   %q2 = load %QueryBuilder, ptr %q_alloca, align 8
   %result.val = insertvalue { %QueryBuilder, ptr, i8 } undef, %QueryBuilder %q2, 0
@@ -6882,7 +7818,7 @@ define { %QueryBuilder, ptr, i8 } @orm_order_by(%QueryBuilder %q, ptr %order) {
 entry:
   %q_alloca = alloca %QueryBuilder, align 8
   store %QueryBuilder %q, ptr %q_alloca, align 8
-  %order_by.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 4
+  %order_by.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 9
   store ptr %order, ptr %order_by.ptr, align 8
   %q1 = load %QueryBuilder, ptr %q_alloca, align 8
   %result.val = insertvalue { %QueryBuilder, ptr, i8 } undef, %QueryBuilder %q1, 0
@@ -6897,132 +7833,362 @@ entry:
   store %QueryBuilder %q, ptr %q_alloca, align 8
   %dialect.addr = alloca i32, align 4
   store i32 %dialect, ptr %dialect.addr, align 4
-  %sql = alloca ptr, align 8
-  %q1 = load %QueryBuilder, ptr %q_alloca, align 8
-  %select_cols = extractvalue %QueryBuilder %q1, 1
-  %concat_str = call ptr @npk_string_concat_simple(ptr @.str.449, ptr %select_cols)
-  store ptr %concat_str, ptr %sql, align 8
-  %sql2 = load ptr, ptr %sql, align 8
-  %q3 = load %QueryBuilder, ptr %q_alloca, align 8
-  %table = extractvalue %QueryBuilder %q3, 0
-  %concat_str4 = call ptr @npk_string_concat_simple(ptr @.str.451, ptr %table)
-  %concat_str5 = call ptr @npk_string_concat_simple(ptr %sql2, ptr %concat_str4)
-  store ptr %concat_str5, ptr %sql, align 8
-  %q6 = load %QueryBuilder, ptr %q_alloca, align 8
-  %where_clauses = extractvalue %QueryBuilder %q6, 2
-  %str1 = load %struct.NpkString, ptr %where_clauses, align 8
-  %str2 = load %struct.NpkString, ptr @.str.453, align 8
-  %equals = call i1 @npk_string_equals(%struct.NpkString %str1, %struct.NpkString %str2)
-  %eqtmp = icmp eq i1 %equals, false
+  %op_type.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 1
+  %op_type = load i32, ptr %op_type.ptr, align 4
+  %eqtmp = icmp eq i32 %op_type, 1
   %ifcond = icmp ne i1 %eqtmp, false
   br i1 %ifcond, label %then, label %ifcont
 
 then:                                             ; preds = %entry
-  %sql7 = load ptr, ptr %sql, align 8
-  %q8 = load %QueryBuilder, ptr %q_alloca, align 8
-  %where_clauses9 = extractvalue %QueryBuilder %q8, 2
-  %concat_str10 = call ptr @npk_string_concat_simple(ptr @.str.455, ptr %where_clauses9)
-  %concat_str11 = call ptr @npk_string_concat_simple(ptr %sql7, ptr %concat_str10)
+  %sql = alloca ptr, align 8
+  %q1 = load %QueryBuilder, ptr %q_alloca, align 8
+  %table = extractvalue %QueryBuilder %q1, 0
+  %concat_str = call ptr @npk_string_concat_simple(ptr @.str.537, ptr %table)
+  store ptr %concat_str, ptr %sql, align 8
+  %sql2 = load ptr, ptr %sql, align 8
+  %q3 = load %QueryBuilder, ptr %q_alloca, align 8
+  %insert_cols = extractvalue %QueryBuilder %q3, 4
+  %concat_str4 = call ptr @npk_string_concat_simple(ptr @.str.539, ptr %insert_cols)
+  %concat_str5 = call ptr @npk_string_concat_simple(ptr %sql2, ptr %concat_str4)
+  store ptr %concat_str5, ptr %sql, align 8
+  %sql6 = load ptr, ptr %sql, align 8
+  %q7 = load %QueryBuilder, ptr %q_alloca, align 8
+  %insert_vals = extractvalue %QueryBuilder %q7, 5
+  %concat_str8 = call ptr @npk_string_concat_simple(ptr @.str.541, ptr %insert_vals)
+  %concat_str9 = call ptr @npk_string_concat_simple(ptr %sql6, ptr %concat_str8)
+  store ptr %concat_str9, ptr %sql, align 8
+  %sql10 = load ptr, ptr %sql, align 8
+  %concat_str11 = call ptr @npk_string_concat_simple(ptr %sql10, ptr @.str.543)
   store ptr %concat_str11, ptr %sql, align 8
-  br label %ifcont
-
-ifcont:                                           ; preds = %then, %entry
-  %q12 = load %QueryBuilder, ptr %q_alloca, align 8
-  %order_by = extractvalue %QueryBuilder %q12, 4
-  %str113 = load %struct.NpkString, ptr %order_by, align 8
-  %str214 = load %struct.NpkString, ptr @.str.457, align 8
-  %equals15 = call i1 @npk_string_equals(%struct.NpkString %str113, %struct.NpkString %str214)
-  %eqtmp16 = icmp eq i1 %equals15, false
-  %ifcond17 = icmp ne i1 %eqtmp16, false
-  br i1 %ifcond17, label %then18, label %ifcont24
-
-then18:                                           ; preds = %ifcont
-  %sql19 = load ptr, ptr %sql, align 8
-  %q20 = load %QueryBuilder, ptr %q_alloca, align 8
-  %order_by21 = extractvalue %QueryBuilder %q20, 4
-  %concat_str22 = call ptr @npk_string_concat_simple(ptr @.str.459, ptr %order_by21)
-  %concat_str23 = call ptr @npk_string_concat_simple(ptr %sql19, ptr %concat_str22)
-  store ptr %concat_str23, ptr %sql, align 8
-  br label %ifcont24
-
-ifcont24:                                         ; preds = %then18, %ifcont
-  %limit_val.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 5
-  %limit_val = load i32, ptr %limit_val.ptr, align 4
-  %getmp = icmp sge i32 %limit_val, 0
-  %ifcond25 = icmp ne i1 %getmp, false
-  br i1 %ifcond25, label %then26, label %ifcont34
-
-then26:                                           ; preds = %ifcont24
-  %limit_str = alloca ptr, align 8
-  %q27 = load %QueryBuilder, ptr %q_alloca, align 8
-  %limit_val28 = extractvalue %QueryBuilder %q27, 5
-  %cast.sext = sext i32 %limit_val28 to i64
-  %from_int_result = call ptr @npk_string_from_int_simple(i64 %cast.sext)
-  store ptr %from_int_result, ptr %limit_str, align 8
-  %sql29 = load ptr, ptr %sql, align 8
-  %concat_str30 = call ptr @npk_string_concat_simple(ptr %sql29, ptr @.str.461)
-  store ptr %concat_str30, ptr %sql, align 8
-  %sql31 = load ptr, ptr %sql, align 8
-  %limit_str32 = load ptr, ptr %limit_str, align 8
-  %concat_str33 = call ptr @npk_string_concat_simple(ptr %sql31, ptr %limit_str32)
-  store ptr %concat_str33, ptr %sql, align 8
-  br label %ifcont34
-
-ifcont34:                                         ; preds = %then26, %ifcont24
-  %offset_val.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 6
-  %offset_val = load i32, ptr %offset_val.ptr, align 4
-  %getmp35 = icmp sge i32 %offset_val, 0
-  %ifcond36 = icmp ne i1 %getmp35, false
-  br i1 %ifcond36, label %then37, label %ifcont47
-
-then37:                                           ; preds = %ifcont34
-  %offset_str = alloca ptr, align 8
-  %q38 = load %QueryBuilder, ptr %q_alloca, align 8
-  %offset_val39 = extractvalue %QueryBuilder %q38, 6
-  %cast.sext40 = sext i32 %offset_val39 to i64
-  %from_int_result41 = call ptr @npk_string_from_int_simple(i64 %cast.sext40)
-  store ptr %from_int_result41, ptr %offset_str, align 8
-  %sql42 = load ptr, ptr %sql, align 8
-  %concat_str43 = call ptr @npk_string_concat_simple(ptr %sql42, ptr @.str.463)
-  store ptr %concat_str43, ptr %sql, align 8
-  %sql44 = load ptr, ptr %sql, align 8
-  %offset_str45 = load ptr, ptr %offset_str, align 8
-  %concat_str46 = call ptr @npk_string_concat_simple(ptr %sql44, ptr %offset_str45)
-  store ptr %concat_str46, ptr %sql, align 8
-  br label %ifcont47
-
-ifcont47:                                         ; preds = %then37, %ifcont34
-  %dialect48 = load i32, ptr %dialect.addr, align 4
-  %calltmp = call { i32, ptr, i8 } @DIALECT_MYSQL()
-  %raw.value = extractvalue { i32, ptr, i8 } %calltmp, 0
-  %eqtmp49 = icmp eq i32 %dialect48, %raw.value
-  %ifcond50 = icmp ne i1 %eqtmp49, false
-  br i1 %ifcond50, label %then51, label %ifcont52
-
-then51:                                           ; preds = %ifcont47
-  br label %ifcont52
-
-ifcont52:                                         ; preds = %then51, %ifcont47
-  %sql53 = load ptr, ptr %sql, align 8
-  %concat_str54 = call ptr @npk_string_concat_simple(ptr %sql53, ptr @.str.465)
-  store ptr %concat_str54, ptr %sql, align 8
-  %sql55 = load ptr, ptr %sql, align 8
-  %result.val = insertvalue { ptr, ptr, i8 } undef, ptr %sql55, 0
+  %sql12 = load ptr, ptr %sql, align 8
+  %result.val = insertvalue { ptr, ptr, i8 } undef, ptr %sql12, 0
   %result.err = insertvalue { ptr, ptr, i8 } %result.val, ptr null, 1
   %result.is_error = insertvalue { ptr, ptr, i8 } %result.err, i8 0, 2
   ret { ptr, ptr, i8 } %result.is_error
+
+ifcont:                                           ; preds = %entry
+  %op_type.ptr13 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 1
+  %op_type14 = load i32, ptr %op_type.ptr13, align 4
+  %eqtmp15 = icmp eq i32 %op_type14, 2
+  %ifcond16 = icmp ne i1 %eqtmp15, false
+  br i1 %ifcond16, label %then17, label %ifcont42
+
+then17:                                           ; preds = %ifcont
+  %sql18 = alloca ptr, align 8
+  %q19 = load %QueryBuilder, ptr %q_alloca, align 8
+  %table20 = extractvalue %QueryBuilder %q19, 0
+  %concat_str21 = call ptr @npk_string_concat_simple(ptr @.str.545, ptr %table20)
+  store ptr %concat_str21, ptr %sql18, align 8
+  %sql22 = load ptr, ptr %sql18, align 8
+  %q23 = load %QueryBuilder, ptr %q_alloca, align 8
+  %update_set = extractvalue %QueryBuilder %q23, 6
+  %concat_str24 = call ptr @npk_string_concat_simple(ptr @.str.547, ptr %update_set)
+  %concat_str25 = call ptr @npk_string_concat_simple(ptr %sql22, ptr %concat_str24)
+  store ptr %concat_str25, ptr %sql18, align 8
+  %q26 = load %QueryBuilder, ptr %q_alloca, align 8
+  %where_clauses = extractvalue %QueryBuilder %q26, 3
+  %str1 = load %struct.NpkString, ptr %where_clauses, align 8
+  %str2 = load %struct.NpkString, ptr @.str.549, align 8
+  %equals = call i1 @npk_string_equals(%struct.NpkString %str1, %struct.NpkString %str2)
+  %eqtmp27 = icmp eq i1 %equals, false
+  %ifcond28 = icmp ne i1 %eqtmp27, false
+  br i1 %ifcond28, label %then29, label %ifcont35
+
+then29:                                           ; preds = %then17
+  %sql30 = load ptr, ptr %sql18, align 8
+  %q31 = load %QueryBuilder, ptr %q_alloca, align 8
+  %where_clauses32 = extractvalue %QueryBuilder %q31, 3
+  %concat_str33 = call ptr @npk_string_concat_simple(ptr @.str.551, ptr %where_clauses32)
+  %concat_str34 = call ptr @npk_string_concat_simple(ptr %sql30, ptr %concat_str33)
+  store ptr %concat_str34, ptr %sql18, align 8
+  br label %ifcont35
+
+ifcont35:                                         ; preds = %then29, %then17
+  %sql36 = load ptr, ptr %sql18, align 8
+  %concat_str37 = call ptr @npk_string_concat_simple(ptr %sql36, ptr @.str.553)
+  store ptr %concat_str37, ptr %sql18, align 8
+  %sql38 = load ptr, ptr %sql18, align 8
+  %result.val39 = insertvalue { ptr, ptr, i8 } undef, ptr %sql38, 0
+  %result.err40 = insertvalue { ptr, ptr, i8 } %result.val39, ptr null, 1
+  %result.is_error41 = insertvalue { ptr, ptr, i8 } %result.err40, i8 0, 2
+  ret { ptr, ptr, i8 } %result.is_error41
+
+ifcont42:                                         ; preds = %ifcont
+  %op_type.ptr43 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 1
+  %op_type44 = load i32, ptr %op_type.ptr43, align 4
+  %eqtmp45 = icmp eq i32 %op_type44, 3
+  %ifcond46 = icmp ne i1 %eqtmp45, false
+  br i1 %ifcond46, label %then47, label %ifcont72
+
+then47:                                           ; preds = %ifcont42
+  %sql48 = alloca ptr, align 8
+  %q49 = load %QueryBuilder, ptr %q_alloca, align 8
+  %table50 = extractvalue %QueryBuilder %q49, 0
+  %concat_str51 = call ptr @npk_string_concat_simple(ptr @.str.555, ptr %table50)
+  store ptr %concat_str51, ptr %sql48, align 8
+  %q52 = load %QueryBuilder, ptr %q_alloca, align 8
+  %where_clauses53 = extractvalue %QueryBuilder %q52, 3
+  %str154 = load %struct.NpkString, ptr %where_clauses53, align 8
+  %str255 = load %struct.NpkString, ptr @.str.557, align 8
+  %equals56 = call i1 @npk_string_equals(%struct.NpkString %str154, %struct.NpkString %str255)
+  %eqtmp57 = icmp eq i1 %equals56, false
+  %ifcond58 = icmp ne i1 %eqtmp57, false
+  br i1 %ifcond58, label %then59, label %ifcont65
+
+then59:                                           ; preds = %then47
+  %sql60 = load ptr, ptr %sql48, align 8
+  %q61 = load %QueryBuilder, ptr %q_alloca, align 8
+  %where_clauses62 = extractvalue %QueryBuilder %q61, 3
+  %concat_str63 = call ptr @npk_string_concat_simple(ptr @.str.559, ptr %where_clauses62)
+  %concat_str64 = call ptr @npk_string_concat_simple(ptr %sql60, ptr %concat_str63)
+  store ptr %concat_str64, ptr %sql48, align 8
+  br label %ifcont65
+
+ifcont65:                                         ; preds = %then59, %then47
+  %sql66 = load ptr, ptr %sql48, align 8
+  %concat_str67 = call ptr @npk_string_concat_simple(ptr %sql66, ptr @.str.561)
+  store ptr %concat_str67, ptr %sql48, align 8
+  %sql68 = load ptr, ptr %sql48, align 8
+  %result.val69 = insertvalue { ptr, ptr, i8 } undef, ptr %sql68, 0
+  %result.err70 = insertvalue { ptr, ptr, i8 } %result.val69, ptr null, 1
+  %result.is_error71 = insertvalue { ptr, ptr, i8 } %result.err70, i8 0, 2
+  ret { ptr, ptr, i8 } %result.is_error71
+
+ifcont72:                                         ; preds = %ifcont42
+  %sql73 = alloca ptr, align 8
+  %q74 = load %QueryBuilder, ptr %q_alloca, align 8
+  %select_cols = extractvalue %QueryBuilder %q74, 2
+  %concat_str75 = call ptr @npk_string_concat_simple(ptr @.str.563, ptr %select_cols)
+  store ptr %concat_str75, ptr %sql73, align 8
+  %sql76 = load ptr, ptr %sql73, align 8
+  %q77 = load %QueryBuilder, ptr %q_alloca, align 8
+  %table78 = extractvalue %QueryBuilder %q77, 0
+  %concat_str79 = call ptr @npk_string_concat_simple(ptr @.str.565, ptr %table78)
+  %concat_str80 = call ptr @npk_string_concat_simple(ptr %sql76, ptr %concat_str79)
+  store ptr %concat_str80, ptr %sql73, align 8
+  %q81 = load %QueryBuilder, ptr %q_alloca, align 8
+  %where_clauses82 = extractvalue %QueryBuilder %q81, 3
+  %str183 = load %struct.NpkString, ptr %where_clauses82, align 8
+  %str284 = load %struct.NpkString, ptr @.str.567, align 8
+  %equals85 = call i1 @npk_string_equals(%struct.NpkString %str183, %struct.NpkString %str284)
+  %eqtmp86 = icmp eq i1 %equals85, false
+  %ifcond87 = icmp ne i1 %eqtmp86, false
+  br i1 %ifcond87, label %then88, label %ifcont94
+
+then88:                                           ; preds = %ifcont72
+  %sql89 = load ptr, ptr %sql73, align 8
+  %q90 = load %QueryBuilder, ptr %q_alloca, align 8
+  %where_clauses91 = extractvalue %QueryBuilder %q90, 3
+  %concat_str92 = call ptr @npk_string_concat_simple(ptr @.str.569, ptr %where_clauses91)
+  %concat_str93 = call ptr @npk_string_concat_simple(ptr %sql89, ptr %concat_str92)
+  store ptr %concat_str93, ptr %sql73, align 8
+  br label %ifcont94
+
+ifcont94:                                         ; preds = %then88, %ifcont72
+  %q95 = load %QueryBuilder, ptr %q_alloca, align 8
+  %order_by = extractvalue %QueryBuilder %q95, 9
+  %str196 = load %struct.NpkString, ptr %order_by, align 8
+  %str297 = load %struct.NpkString, ptr @.str.571, align 8
+  %equals98 = call i1 @npk_string_equals(%struct.NpkString %str196, %struct.NpkString %str297)
+  %eqtmp99 = icmp eq i1 %equals98, false
+  %ifcond100 = icmp ne i1 %eqtmp99, false
+  br i1 %ifcond100, label %then101, label %ifcont107
+
+then101:                                          ; preds = %ifcont94
+  %sql102 = load ptr, ptr %sql73, align 8
+  %q103 = load %QueryBuilder, ptr %q_alloca, align 8
+  %order_by104 = extractvalue %QueryBuilder %q103, 9
+  %concat_str105 = call ptr @npk_string_concat_simple(ptr @.str.573, ptr %order_by104)
+  %concat_str106 = call ptr @npk_string_concat_simple(ptr %sql102, ptr %concat_str105)
+  store ptr %concat_str106, ptr %sql73, align 8
+  br label %ifcont107
+
+ifcont107:                                        ; preds = %then101, %ifcont94
+  %limit_val.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 10
+  %limit_val = load i32, ptr %limit_val.ptr, align 4
+  %getmp = icmp sge i32 %limit_val, 0
+  %ifcond108 = icmp ne i1 %getmp, false
+  br i1 %ifcond108, label %then109, label %ifcont117
+
+then109:                                          ; preds = %ifcont107
+  %limit_str = alloca ptr, align 8
+  %q110 = load %QueryBuilder, ptr %q_alloca, align 8
+  %limit_val111 = extractvalue %QueryBuilder %q110, 10
+  %cast.sext = sext i32 %limit_val111 to i64
+  %from_int_result = call ptr @npk_string_from_int_simple(i64 %cast.sext)
+  store ptr %from_int_result, ptr %limit_str, align 8
+  %sql112 = load ptr, ptr %sql73, align 8
+  %concat_str113 = call ptr @npk_string_concat_simple(ptr %sql112, ptr @.str.575)
+  store ptr %concat_str113, ptr %sql73, align 8
+  %sql114 = load ptr, ptr %sql73, align 8
+  %limit_str115 = load ptr, ptr %limit_str, align 8
+  %concat_str116 = call ptr @npk_string_concat_simple(ptr %sql114, ptr %limit_str115)
+  store ptr %concat_str116, ptr %sql73, align 8
+  br label %ifcont117
+
+ifcont117:                                        ; preds = %then109, %ifcont107
+  %offset_val.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 11
+  %offset_val = load i32, ptr %offset_val.ptr, align 4
+  %getmp118 = icmp sge i32 %offset_val, 0
+  %ifcond119 = icmp ne i1 %getmp118, false
+  br i1 %ifcond119, label %then120, label %ifcont130
+
+then120:                                          ; preds = %ifcont117
+  %offset_str = alloca ptr, align 8
+  %q121 = load %QueryBuilder, ptr %q_alloca, align 8
+  %offset_val122 = extractvalue %QueryBuilder %q121, 11
+  %cast.sext123 = sext i32 %offset_val122 to i64
+  %from_int_result124 = call ptr @npk_string_from_int_simple(i64 %cast.sext123)
+  store ptr %from_int_result124, ptr %offset_str, align 8
+  %sql125 = load ptr, ptr %sql73, align 8
+  %concat_str126 = call ptr @npk_string_concat_simple(ptr %sql125, ptr @.str.577)
+  store ptr %concat_str126, ptr %sql73, align 8
+  %sql127 = load ptr, ptr %sql73, align 8
+  %offset_str128 = load ptr, ptr %offset_str, align 8
+  %concat_str129 = call ptr @npk_string_concat_simple(ptr %sql127, ptr %offset_str128)
+  store ptr %concat_str129, ptr %sql73, align 8
+  br label %ifcont130
+
+ifcont130:                                        ; preds = %then120, %ifcont117
+  %dialect131 = load i32, ptr %dialect.addr, align 4
+  %calltmp = call { i32, ptr, i8 } @DIALECT_MYSQL()
+  %raw.value = extractvalue { i32, ptr, i8 } %calltmp, 0
+  %eqtmp132 = icmp eq i32 %dialect131, %raw.value
+  %ifcond133 = icmp ne i1 %eqtmp132, false
+  br i1 %ifcond133, label %then134, label %ifcont135
+
+then134:                                          ; preds = %ifcont130
+  br label %ifcont135
+
+ifcont135:                                        ; preds = %then134, %ifcont130
+  %sql136 = load ptr, ptr %sql73, align 8
+  %concat_str137 = call ptr @npk_string_concat_simple(ptr %sql136, ptr @.str.579)
+  store ptr %concat_str137, ptr %sql73, align 8
+  %sql138 = load ptr, ptr %sql73, align 8
+  %result.val139 = insertvalue { ptr, ptr, i8 } undef, ptr %sql138, 0
+  %result.err140 = insertvalue { ptr, ptr, i8 } %result.val139, ptr null, 1
+  %result.is_error141 = insertvalue { ptr, ptr, i8 } %result.err140, i8 0, 2
+  ret { ptr, ptr, i8 } %result.is_error141
 }
 
 define { ptr, ptr, i8 } @orm_to_mongo(%QueryBuilder %q) {
 entry:
   %q_alloca = alloca %QueryBuilder, align 8
   store %QueryBuilder %q, ptr %q_alloca, align 8
+  %op_type.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 1
+  %op_type = load i32, ptr %op_type.ptr, align 4
+  %eqtmp = icmp eq i32 %op_type, 1
+  %ifcond = icmp ne i1 %eqtmp, false
+  br i1 %ifcond, label %then, label %ifcont11
+
+then:                                             ; preds = %entry
   %json = alloca ptr, align 8
-  store ptr @.str.467, ptr %json, align 8
+  store ptr @.str.581, ptr %json, align 8
   %q1 = load %QueryBuilder, ptr %q_alloca, align 8
-  %mongo_query = extractvalue %QueryBuilder %q1, 3
+  %mongo_set = extractvalue %QueryBuilder %q1, 8
+  %str1 = load %struct.NpkString, ptr %mongo_set, align 8
+  %str2 = load %struct.NpkString, ptr @.str.583, align 8
+  %equals = call i1 @npk_string_equals(%struct.NpkString %str1, %struct.NpkString %str2)
+  %eqtmp2 = icmp eq i1 %equals, false
+  %ifcond3 = icmp ne i1 %eqtmp2, false
+  br i1 %ifcond3, label %then4, label %ifcont
+
+then4:                                            ; preds = %then
+  %json5 = load ptr, ptr %json, align 8
+  %q6 = load %QueryBuilder, ptr %q_alloca, align 8
+  %mongo_set7 = extractvalue %QueryBuilder %q6, 8
+  %concat_str = call ptr @npk_string_concat_simple(ptr %json5, ptr %mongo_set7)
+  store ptr %concat_str, ptr %json, align 8
+  br label %ifcont
+
+ifcont:                                           ; preds = %then4, %then
+  %json8 = load ptr, ptr %json, align 8
+  %concat_str9 = call ptr @npk_string_concat_simple(ptr %json8, ptr @.str.585)
+  store ptr %concat_str9, ptr %json, align 8
+  %json10 = load ptr, ptr %json, align 8
+  %result.val = insertvalue { ptr, ptr, i8 } undef, ptr %json10, 0
+  %result.err = insertvalue { ptr, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { ptr, ptr, i8 } %result.err, i8 0, 2
+  ret { ptr, ptr, i8 } %result.is_error
+
+ifcont11:                                         ; preds = %entry
+  %op_type.ptr12 = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 1
+  %op_type13 = load i32, ptr %op_type.ptr12, align 4
+  %eqtmp14 = icmp eq i32 %op_type13, 2
+  %ifcond15 = icmp ne i1 %eqtmp14, false
+  br i1 %ifcond15, label %then16, label %ifcont37
+
+then16:                                           ; preds = %ifcont11
+  %json17 = alloca ptr, align 8
+  store ptr @.str.587, ptr %json17, align 8
+  %q18 = load %QueryBuilder, ptr %q_alloca, align 8
+  %mongo_set19 = extractvalue %QueryBuilder %q18, 8
+  %str120 = load %struct.NpkString, ptr %mongo_set19, align 8
+  %str221 = load %struct.NpkString, ptr @.str.589, align 8
+  %equals22 = call i1 @npk_string_equals(%struct.NpkString %str120, %struct.NpkString %str221)
+  %eqtmp23 = icmp eq i1 %equals22, false
+  %ifcond24 = icmp ne i1 %eqtmp23, false
+  br i1 %ifcond24, label %then25, label %ifcont30
+
+then25:                                           ; preds = %then16
+  %json26 = load ptr, ptr %json17, align 8
+  %q27 = load %QueryBuilder, ptr %q_alloca, align 8
+  %mongo_set28 = extractvalue %QueryBuilder %q27, 8
+  %concat_str29 = call ptr @npk_string_concat_simple(ptr %json26, ptr %mongo_set28)
+  store ptr %concat_str29, ptr %json17, align 8
+  br label %ifcont30
+
+ifcont30:                                         ; preds = %then25, %then16
+  %json31 = load ptr, ptr %json17, align 8
+  %concat_str32 = call ptr @npk_string_concat_simple(ptr %json31, ptr @.str.591)
+  store ptr %concat_str32, ptr %json17, align 8
+  %json33 = load ptr, ptr %json17, align 8
+  %result.val34 = insertvalue { ptr, ptr, i8 } undef, ptr %json33, 0
+  %result.err35 = insertvalue { ptr, ptr, i8 } %result.val34, ptr null, 1
+  %result.is_error36 = insertvalue { ptr, ptr, i8 } %result.err35, i8 0, 2
+  ret { ptr, ptr, i8 } %result.is_error36
+
+ifcont37:                                         ; preds = %ifcont11
+  %json38 = alloca ptr, align 8
+  store ptr @.str.593, ptr %json38, align 8
+  %q39 = load %QueryBuilder, ptr %q_alloca, align 8
+  %mongo_query = extractvalue %QueryBuilder %q39, 7
+  %str140 = load %struct.NpkString, ptr %mongo_query, align 8
+  %str241 = load %struct.NpkString, ptr @.str.595, align 8
+  %equals42 = call i1 @npk_string_equals(%struct.NpkString %str140, %struct.NpkString %str241)
+  %eqtmp43 = icmp eq i1 %equals42, false
+  %ifcond44 = icmp ne i1 %eqtmp43, false
+  br i1 %ifcond44, label %then45, label %ifcont50
+
+then45:                                           ; preds = %ifcont37
+  %json46 = load ptr, ptr %json38, align 8
+  %q47 = load %QueryBuilder, ptr %q_alloca, align 8
+  %mongo_query48 = extractvalue %QueryBuilder %q47, 7
+  %concat_str49 = call ptr @npk_string_concat_simple(ptr %json46, ptr %mongo_query48)
+  store ptr %concat_str49, ptr %json38, align 8
+  br label %ifcont50
+
+ifcont50:                                         ; preds = %then45, %ifcont37
+  %json51 = load ptr, ptr %json38, align 8
+  %concat_str52 = call ptr @npk_string_concat_simple(ptr %json51, ptr @.str.597)
+  store ptr %concat_str52, ptr %json38, align 8
+  %json53 = load ptr, ptr %json38, align 8
+  %result.val54 = insertvalue { ptr, ptr, i8 } undef, ptr %json53, 0
+  %result.err55 = insertvalue { ptr, ptr, i8 } %result.val54, ptr null, 1
+  %result.is_error56 = insertvalue { ptr, ptr, i8 } %result.err55, i8 0, 2
+  ret { ptr, ptr, i8 } %result.is_error56
+}
+
+define { ptr, ptr, i8 } @orm_to_mongo_query(%QueryBuilder %q) {
+entry:
+  %q_alloca = alloca %QueryBuilder, align 8
+  store %QueryBuilder %q, ptr %q_alloca, align 8
+  %json = alloca ptr, align 8
+  store ptr @.str.599, ptr %json, align 8
+  %q1 = load %QueryBuilder, ptr %q_alloca, align 8
+  %mongo_query = extractvalue %QueryBuilder %q1, 7
   %str1 = load %struct.NpkString, ptr %mongo_query, align 8
-  %str2 = load %struct.NpkString, ptr @.str.469, align 8
+  %str2 = load %struct.NpkString, ptr @.str.601, align 8
   %equals = call i1 @npk_string_equals(%struct.NpkString %str1, %struct.NpkString %str2)
   %eqtmp = icmp eq i1 %equals, false
   %ifcond = icmp ne i1 %eqtmp, false
@@ -7031,14 +8197,14 @@ entry:
 then:                                             ; preds = %entry
   %json2 = load ptr, ptr %json, align 8
   %q3 = load %QueryBuilder, ptr %q_alloca, align 8
-  %mongo_query4 = extractvalue %QueryBuilder %q3, 3
+  %mongo_query4 = extractvalue %QueryBuilder %q3, 7
   %concat_str = call ptr @npk_string_concat_simple(ptr %json2, ptr %mongo_query4)
   store ptr %concat_str, ptr %json, align 8
   br label %ifcont
 
 ifcont:                                           ; preds = %then, %entry
   %json5 = load ptr, ptr %json, align 8
-  %concat_str6 = call ptr @npk_string_concat_simple(ptr %json5, ptr @.str.471)
+  %concat_str6 = call ptr @npk_string_concat_simple(ptr %json5, ptr @.str.603)
   store ptr %concat_str6, ptr %json, align 8
   %json7 = load ptr, ptr %json, align 8
   %result.val = insertvalue { ptr, ptr, i8 } undef, ptr %json7, 0
@@ -7052,13 +8218,13 @@ entry:
   %q_alloca = alloca %QueryBuilder, align 8
   store %QueryBuilder %q, ptr %q_alloca, align 8
   %json = alloca ptr, align 8
-  store ptr @.str.473, ptr %json, align 8
+  store ptr @.str.605, ptr %json, align 8
   %has_prev = alloca i32, align 4
   store i32 0, ptr %has_prev, align 4
   %q1 = load %QueryBuilder, ptr %q_alloca, align 8
-  %order_by = extractvalue %QueryBuilder %q1, 4
+  %order_by = extractvalue %QueryBuilder %q1, 9
   %str1 = load %struct.NpkString, ptr %order_by, align 8
-  %str2 = load %struct.NpkString, ptr @.str.475, align 8
+  %str2 = load %struct.NpkString, ptr @.str.607, align 8
   %equals = call i1 @npk_string_equals(%struct.NpkString %str1, %struct.NpkString %str2)
   %eqtmp = icmp eq i1 %equals, false
   %ifcond = icmp ne i1 %eqtmp, false
@@ -7066,9 +8232,9 @@ entry:
 
 then:                                             ; preds = %entry
   %q2 = load %QueryBuilder, ptr %q_alloca, align 8
-  %order_by3 = extractvalue %QueryBuilder %q2, 4
+  %order_by3 = extractvalue %QueryBuilder %q2, 9
   %str = load %struct.NpkString, ptr %order_by3, align 8
-  %suffix = load %struct.NpkString, ptr @.str.477, align 8
+  %suffix = load %struct.NpkString, ptr @.str.609, align 8
   %ends_with = call i1 @npk_string_ends_with(%struct.NpkString %str, %struct.NpkString %suffix)
   %ifcond4 = icmp ne i1 %ends_with, false
   br i1 %ifcond4, label %then5, label %else
@@ -7076,14 +8242,14 @@ then:                                             ; preds = %entry
 then5:                                            ; preds = %then
   %field = alloca ptr, align 8
   %q6 = load %QueryBuilder, ptr %q_alloca, align 8
-  %order_by7 = extractvalue %QueryBuilder %q6, 4
-  %calltmp = call { ptr, ptr, i8 } @str_remove_suffix(ptr %order_by7, ptr @.str.479)
+  %order_by7 = extractvalue %QueryBuilder %q6, 9
+  %calltmp = call { ptr, ptr, i8 } @str_remove_suffix(ptr %order_by7, ptr @.str.611)
   %raw.value = extractvalue { ptr, ptr, i8 } %calltmp, 0
   store ptr %raw.value, ptr %field, align 8
   %json8 = load ptr, ptr %json, align 8
   %field9 = load ptr, ptr %field, align 8
-  %concat_str = call ptr @npk_string_concat_simple(ptr %field9, ptr @.str.483)
-  %concat_str10 = call ptr @npk_string_concat_simple(ptr @.str.481, ptr %concat_str)
+  %concat_str = call ptr @npk_string_concat_simple(ptr %field9, ptr @.str.615)
+  %concat_str10 = call ptr @npk_string_concat_simple(ptr @.str.613, ptr %concat_str)
   %concat_str11 = call ptr @npk_string_concat_simple(ptr %json8, ptr %concat_str10)
   store ptr %concat_str11, ptr %json, align 8
   br label %ifcont
@@ -7091,14 +8257,14 @@ then5:                                            ; preds = %then
 else:                                             ; preds = %then
   %field12 = alloca ptr, align 8
   %q13 = load %QueryBuilder, ptr %q_alloca, align 8
-  %order_by14 = extractvalue %QueryBuilder %q13, 4
-  %calltmp15 = call { ptr, ptr, i8 } @str_remove_suffix(ptr %order_by14, ptr @.str.485)
+  %order_by14 = extractvalue %QueryBuilder %q13, 9
+  %calltmp15 = call { ptr, ptr, i8 } @str_remove_suffix(ptr %order_by14, ptr @.str.617)
   %raw.value16 = extractvalue { ptr, ptr, i8 } %calltmp15, 0
   store ptr %raw.value16, ptr %field12, align 8
   %json17 = load ptr, ptr %json, align 8
   %field18 = load ptr, ptr %field12, align 8
-  %concat_str19 = call ptr @npk_string_concat_simple(ptr %field18, ptr @.str.489)
-  %concat_str20 = call ptr @npk_string_concat_simple(ptr @.str.487, ptr %concat_str19)
+  %concat_str19 = call ptr @npk_string_concat_simple(ptr %field18, ptr @.str.621)
+  %concat_str20 = call ptr @npk_string_concat_simple(ptr @.str.619, ptr %concat_str19)
   %concat_str21 = call ptr @npk_string_concat_simple(ptr %json17, ptr %concat_str20)
   store ptr %concat_str21, ptr %json, align 8
   br label %ifcont
@@ -7108,7 +8274,7 @@ ifcont:                                           ; preds = %else, %then5
   br label %ifcont22
 
 ifcont22:                                         ; preds = %ifcont, %entry
-  %limit_val.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 5
+  %limit_val.ptr = getelementptr inbounds %QueryBuilder, ptr %q_alloca, i32 0, i32 10
   %limit_val = load i32, ptr %limit_val.ptr, align 4
   %gttmp = icmp sgt i32 %limit_val, 0
   %ifcond23 = icmp ne i1 %gttmp, false
@@ -7122,24 +8288,24 @@ then24:                                           ; preds = %ifcont22
 
 then28:                                           ; preds = %then24
   %json29 = load ptr, ptr %json, align 8
-  %concat_str30 = call ptr @npk_string_concat_simple(ptr %json29, ptr @.str.491)
+  %concat_str30 = call ptr @npk_string_concat_simple(ptr %json29, ptr @.str.623)
   store ptr %concat_str30, ptr %json, align 8
   br label %ifcont31
 
 ifcont31:                                         ; preds = %then28, %then24
   %json32 = load ptr, ptr %json, align 8
   %q33 = load %QueryBuilder, ptr %q_alloca, align 8
-  %limit_val34 = extractvalue %QueryBuilder %q33, 5
+  %limit_val34 = extractvalue %QueryBuilder %q33, 10
   %cast.sext = sext i32 %limit_val34 to i64
   %from_int_result = call ptr @npk_string_from_int_simple(i64 %cast.sext)
-  %concat_str35 = call ptr @npk_string_concat_simple(ptr @.str.493, ptr %from_int_result)
+  %concat_str35 = call ptr @npk_string_concat_simple(ptr @.str.625, ptr %from_int_result)
   %concat_str36 = call ptr @npk_string_concat_simple(ptr %json32, ptr %concat_str35)
   store ptr %concat_str36, ptr %json, align 8
   br label %ifcont37
 
 ifcont37:                                         ; preds = %ifcont31, %ifcont22
   %json38 = load ptr, ptr %json, align 8
-  %concat_str39 = call ptr @npk_string_concat_simple(ptr %json38, ptr @.str.495)
+  %concat_str39 = call ptr @npk_string_concat_simple(ptr %json38, ptr @.str.627)
   store ptr %concat_str39, ptr %json, align 8
   %json40 = load ptr, ptr %json, align 8
   %result.val = insertvalue { ptr, ptr, i8 } undef, ptr %json40, 0
@@ -7485,10 +8651,10 @@ entry:
   ret i32 0
 }
 
-define { i32, ptr, i8 } @failsafe(i32 %err) {
+define { i32, ptr, i8 } @failsafe(i32 %_err) {
 entry:
-  %err.addr = alloca i32, align 4
-  store i32 %err, ptr %err.addr, align 4
+  %_err.addr = alloca i32, align 4
+  store i32 %_err, ptr %_err.addr, align 4
   %calltmp = call { %struct.NIL, ptr, i8 } @Tui_shutdown()
   %raw.value = extractvalue { %struct.NIL, ptr, i8 } %calltmp, 0
   call void @exit(i32 1) #0
@@ -7513,7 +8679,7 @@ entry:
   %calltmp5 = call { %struct.NIL, ptr, i8 } @mongo_init()
   %raw.value6 = extractvalue { %struct.NIL, ptr, i8 } %calltmp5, 0
   %db_conn = alloca i32, align 4
-  %calltmp7 = call { i32, ptr, i8 } @mongo_connect(ptr @.str.497)
+  %calltmp7 = call { i32, ptr, i8 } @mongo_connect(ptr @.str.629)
   %raw.value8 = extractvalue { i32, ptr, i8 } %calltmp7, 0
   store i32 %raw.value8, ptr %db_conn, align 4
   %db_conn9 = load i32, ptr %db_conn, align 4
@@ -7524,7 +8690,7 @@ entry:
 then:                                             ; preds = %entry
   %cursor = alloca i32, align 4
   %db_conn10 = load i32, ptr %db_conn, align 4
-  %calltmp11 = call { i32, ptr, i8 } @mongo_find(i32 %db_conn10, ptr @.str.499, ptr @.str.501, ptr @.str.503, ptr @.str.505)
+  %calltmp11 = call { i32, ptr, i8 } @mongo_find(i32 %db_conn10, ptr @.str.631, ptr @.str.633, ptr @.str.635, ptr @.str.637)
   %raw.value12 = extractvalue { i32, ptr, i8 } %calltmp11, 0
   store i32 %raw.value12, ptr %cursor, align 4
   %cursor13 = load i32, ptr %cursor, align 4
@@ -7540,7 +8706,7 @@ then16:                                           ; preds = %then
   store ptr %raw.value19, ptr %doc, align 8
   %doc20 = load ptr, ptr %doc, align 8
   %str1 = load %struct.NpkString, ptr %doc20, align 8
-  %str2 = load %struct.NpkString, ptr @.str.507, align 8
+  %str2 = load %struct.NpkString, ptr @.str.639, align 8
   %equals = call i1 @npk_string_equals(%struct.NpkString %str1, %struct.NpkString %str2)
   %eqtmp = icmp eq i1 %equals, false
   %ifcond21 = icmp ne i1 %eqtmp, false
@@ -7558,20 +8724,20 @@ then22:                                           ; preds = %then16
   br i1 %ifcond28, label %then29, label %ifcont
 
 then29:                                           ; preds = %then22
-  %calltmp30 = call { i64, ptr, i8 } @json_get_int(ptr @.str.509)
+  %calltmp30 = call { i64, ptr, i8 } @json_get_int(ptr @.str.641)
   %raw.value31 = extractvalue { i64, ptr, i8 } %calltmp30, 0
   %wood.ptr = getelementptr inbounds %GameState, ptr %s, i32 0, i32 0
   store i64 %raw.value31, ptr %wood.ptr, align 4
-  %calltmp32 = call { i64, ptr, i8 } @json_get_int(ptr @.str.511)
+  %calltmp32 = call { i64, ptr, i8 } @json_get_int(ptr @.str.643)
   %raw.value33 = extractvalue { i64, ptr, i8 } %calltmp32, 0
   %fire_level.ptr = getelementptr inbounds %GameState, ptr %s, i32 0, i32 3
   store i64 %raw.value33, ptr %fire_level.ptr, align 4
-  %calltmp34 = call { i64, ptr, i8 } @json_get_int(ptr @.str.513)
+  %calltmp34 = call { i64, ptr, i8 } @json_get_int(ptr @.str.645)
   %raw.value35 = extractvalue { i64, ptr, i8 } %calltmp34, 0
   %room_temp.ptr = getelementptr inbounds %GameState, ptr %s, i32 0, i32 5
   store i64 %raw.value35, ptr %room_temp.ptr, align 4
   %log36 = load %GameLog, ptr %log, align 8
-  %calltmp37 = call { %GameLog, ptr, i8 } @push_log(%GameLog %log36, ptr @.str.515)
+  %calltmp37 = call { %GameLog, ptr, i8 } @push_log(%GameLog %log36, ptr @.str.647)
   %raw.value38 = extractvalue { %GameLog, ptr, i8 } %calltmp37, 0
   store %GameLog %raw.value38, ptr %log, align 8
   br label %ifcont
@@ -7605,7 +8771,7 @@ ifcont44:                                         ; preds = %ifcont43, %entry
 
 then48:                                           ; preds = %ifcont44
   %log49 = load %GameLog, ptr %log, align 8
-  %calltmp50 = call { %GameLog, ptr, i8 } @push_log(%GameLog %log49, ptr @.str.517)
+  %calltmp50 = call { %GameLog, ptr, i8 } @push_log(%GameLog %log49, ptr @.str.649)
   %raw.value51 = extractvalue { %GameLog, ptr, i8 } %calltmp50, 0
   store %GameLog %raw.value51, ptr %log, align 8
   br label %ifcont52
@@ -7622,13 +8788,13 @@ whilecond:                                        ; preds = %ifcont292, %ifcont5
 
 whilebody:                                        ; preds = %whilecond
   %title = alloca %Widget, align 8
-  %calltmp57 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 1, ptr @.str.519, i32 15, i32 0)
+  %calltmp57 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 1, ptr @.str.651, i32 15, i32 0)
   %raw.value58 = extractvalue { %Widget, ptr, i8 } %calltmp57, 0
   store %Widget %raw.value58, ptr %title, align 8
   %title59 = load %Widget, ptr %title, align 8
   %calltmp60 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %title59)
   %raw.value61 = extractvalue { %struct.NIL, ptr, i8 } %calltmp60, 0
-  %calltmp62 = call { %Widget, ptr, i8 } @Tui_label(i32 40, i32 2, ptr @.str.521, i32 14, i32 0)
+  %calltmp62 = call { %Widget, ptr, i8 } @Tui_label(i32 40, i32 2, ptr @.str.653, i32 14, i32 0)
   %raw.value63 = extractvalue { %Widget, ptr, i8 } %calltmp62, 0
   %calltmp64 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value63)
   %raw.value65 = extractvalue { %struct.NIL, ptr, i8 } %calltmp64, 0
@@ -7637,11 +8803,11 @@ whilebody:                                        ; preds = %whilecond
   %wood = extractvalue %GameState %s66, 0
   %from_int_result = call ptr @npk_string_from_int_simple(i64 %wood)
   store ptr %from_int_result, ptr %wood_str, align 8
-  %calltmp67 = call { %Widget, ptr, i8 } @Tui_label(i32 40, i32 3, ptr @.str.523, i32 7, i32 0)
+  %calltmp67 = call { %Widget, ptr, i8 } @Tui_label(i32 40, i32 3, ptr @.str.655, i32 7, i32 0)
   %raw.value68 = extractvalue { %Widget, ptr, i8 } %calltmp67, 0
   %calltmp69 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value68)
   %raw.value70 = extractvalue { %struct.NIL, ptr, i8 } %calltmp69, 0
-  %calltmp71 = call { %Widget, ptr, i8 } @Tui_label(i32 46, i32 3, ptr @.str.525, i32 15, i32 0)
+  %calltmp71 = call { %Widget, ptr, i8 } @Tui_label(i32 46, i32 3, ptr @.str.657, i32 15, i32 0)
   %raw.value72 = extractvalue { %Widget, ptr, i8 } %calltmp71, 0
   %calltmp73 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value72)
   %raw.value74 = extractvalue { %struct.NIL, ptr, i8 } %calltmp73, 0
@@ -7650,11 +8816,11 @@ whilebody:                                        ; preds = %whilecond
   %raw.value77 = extractvalue { %Widget, ptr, i8 } %calltmp76, 0
   %calltmp78 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value77)
   %raw.value79 = extractvalue { %struct.NIL, ptr, i8 } %calltmp78, 0
-  %calltmp80 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 10, ptr @.str.527, i32 14, i32 0)
+  %calltmp80 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 10, ptr @.str.659, i32 14, i32 0)
   %raw.value81 = extractvalue { %Widget, ptr, i8 } %calltmp80, 0
   %calltmp82 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value81)
   %raw.value83 = extractvalue { %struct.NIL, ptr, i8 } %calltmp82, 0
-  %calltmp84 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 11, ptr @.str.529, i32 15, i32 0)
+  %calltmp84 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 11, ptr @.str.661, i32 15, i32 0)
   %raw.value85 = extractvalue { %Widget, ptr, i8 } %calltmp84, 0
   %calltmp86 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value85)
   %raw.value87 = extractvalue { %struct.NIL, ptr, i8 } %calltmp86, 0
@@ -7664,7 +8830,7 @@ whilebody:                                        ; preds = %whilecond
   %raw.value90 = extractvalue { %Widget, ptr, i8 } %calltmp89, 0
   %calltmp91 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value90)
   %raw.value92 = extractvalue { %struct.NIL, ptr, i8 } %calltmp91, 0
-  %calltmp93 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 12, ptr @.str.531, i32 15, i32 0)
+  %calltmp93 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 12, ptr @.str.663, i32 15, i32 0)
   %raw.value94 = extractvalue { %Widget, ptr, i8 } %calltmp93, 0
   %calltmp95 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value94)
   %raw.value96 = extractvalue { %struct.NIL, ptr, i8 } %calltmp95, 0
@@ -7674,7 +8840,7 @@ whilebody:                                        ; preds = %whilecond
   %raw.value99 = extractvalue { %Widget, ptr, i8 } %calltmp98, 0
   %calltmp100 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value99)
   %raw.value101 = extractvalue { %struct.NIL, ptr, i8 } %calltmp100, 0
-  %calltmp102 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 13, ptr @.str.533, i32 15, i32 0)
+  %calltmp102 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 13, ptr @.str.665, i32 15, i32 0)
   %raw.value103 = extractvalue { %Widget, ptr, i8 } %calltmp102, 0
   %calltmp104 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value103)
   %raw.value105 = extractvalue { %struct.NIL, ptr, i8 } %calltmp104, 0
@@ -7684,7 +8850,7 @@ whilebody:                                        ; preds = %whilecond
   %raw.value108 = extractvalue { %Widget, ptr, i8 } %calltmp107, 0
   %calltmp109 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value108)
   %raw.value110 = extractvalue { %struct.NIL, ptr, i8 } %calltmp109, 0
-  %calltmp111 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 14, ptr @.str.535, i32 15, i32 0)
+  %calltmp111 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 14, ptr @.str.667, i32 15, i32 0)
   %raw.value112 = extractvalue { %Widget, ptr, i8 } %calltmp111, 0
   %calltmp113 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value112)
   %raw.value114 = extractvalue { %struct.NIL, ptr, i8 } %calltmp113, 0
@@ -7694,7 +8860,7 @@ whilebody:                                        ; preds = %whilecond
   %raw.value117 = extractvalue { %Widget, ptr, i8 } %calltmp116, 0
   %calltmp118 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value117)
   %raw.value119 = extractvalue { %struct.NIL, ptr, i8 } %calltmp118, 0
-  %calltmp120 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 15, ptr @.str.537, i32 15, i32 0)
+  %calltmp120 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 15, ptr @.str.669, i32 15, i32 0)
   %raw.value121 = extractvalue { %Widget, ptr, i8 } %calltmp120, 0
   %calltmp122 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value121)
   %raw.value123 = extractvalue { %struct.NIL, ptr, i8 } %calltmp122, 0
@@ -7704,11 +8870,11 @@ whilebody:                                        ; preds = %whilecond
   %raw.value126 = extractvalue { %Widget, ptr, i8 } %calltmp125, 0
   %calltmp127 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value126)
   %raw.value128 = extractvalue { %struct.NIL, ptr, i8 } %calltmp127, 0
-  %calltmp129 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 3, ptr @.str.539, i32 14, i32 0)
+  %calltmp129 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 3, ptr @.str.671, i32 14, i32 0)
   %raw.value130 = extractvalue { %Widget, ptr, i8 } %calltmp129, 0
   %calltmp131 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value130)
   %raw.value132 = extractvalue { %struct.NIL, ptr, i8 } %calltmp131, 0
-  %calltmp133 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 4, ptr @.str.541, i32 11, i32 0)
+  %calltmp133 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 4, ptr @.str.673, i32 11, i32 0)
   %raw.value134 = extractvalue { %Widget, ptr, i8 } %calltmp133, 0
   %calltmp135 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value134)
   %raw.value136 = extractvalue { %struct.NIL, ptr, i8 } %calltmp135, 0
@@ -7719,18 +8885,18 @@ whilebody:                                        ; preds = %whilecond
   br i1 %ifcond139, label %then140, label %ifcont145
 
 then140:                                          ; preds = %whilebody
-  %calltmp141 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 5, ptr @.str.543, i32 10, i32 0)
+  %calltmp141 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 5, ptr @.str.675, i32 10, i32 0)
   %raw.value142 = extractvalue { %Widget, ptr, i8 } %calltmp141, 0
   %calltmp143 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value142)
   %raw.value144 = extractvalue { %struct.NIL, ptr, i8 } %calltmp143, 0
   br label %ifcont145
 
 ifcont145:                                        ; preds = %then140, %whilebody
-  %calltmp146 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 7, ptr @.str.545, i32 10, i32 0)
+  %calltmp146 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 7, ptr @.str.677, i32 10, i32 0)
   %raw.value147 = extractvalue { %Widget, ptr, i8 } %calltmp146, 0
   %calltmp148 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value147)
   %raw.value149 = extractvalue { %struct.NIL, ptr, i8 } %calltmp148, 0
-  %calltmp150 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 8, ptr @.str.547, i32 12, i32 0)
+  %calltmp150 = call { %Widget, ptr, i8 } @Tui_label(i32 2, i32 8, ptr @.str.679, i32 12, i32 0)
   %raw.value151 = extractvalue { %Widget, ptr, i8 } %calltmp150, 0
   %calltmp152 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value151)
   %raw.value153 = extractvalue { %struct.NIL, ptr, i8 } %calltmp152, 0
@@ -7740,11 +8906,11 @@ ifcont145:                                        ; preds = %then140, %whilebody
   %calltmp156 = call { ptr, ptr, i8 } @get_fire_str(i64 %fire_level155)
   %raw.value157 = extractvalue { ptr, ptr, i8 } %calltmp156, 0
   store ptr %raw.value157, ptr %fire_s, align 8
-  %calltmp158 = call { %Widget, ptr, i8 } @Tui_label(i32 20, i32 4, ptr @.str.549, i32 7, i32 0)
+  %calltmp158 = call { %Widget, ptr, i8 } @Tui_label(i32 20, i32 4, ptr @.str.681, i32 7, i32 0)
   %raw.value159 = extractvalue { %Widget, ptr, i8 } %calltmp158, 0
   %calltmp160 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value159)
   %raw.value161 = extractvalue { %struct.NIL, ptr, i8 } %calltmp160, 0
-  %calltmp162 = call { %Widget, ptr, i8 } @Tui_label(i32 26, i32 4, ptr @.str.551, i32 12, i32 0)
+  %calltmp162 = call { %Widget, ptr, i8 } @Tui_label(i32 26, i32 4, ptr @.str.683, i32 12, i32 0)
   %raw.value163 = extractvalue { %Widget, ptr, i8 } %calltmp162, 0
   %calltmp164 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value163)
   %raw.value165 = extractvalue { %struct.NIL, ptr, i8 } %calltmp164, 0
@@ -7759,11 +8925,11 @@ ifcont145:                                        ; preds = %then140, %whilebody
   %calltmp172 = call { ptr, ptr, i8 } @get_temp_str(i64 %room_temp)
   %raw.value173 = extractvalue { ptr, ptr, i8 } %calltmp172, 0
   store ptr %raw.value173, ptr %temp_s, align 8
-  %calltmp174 = call { %Widget, ptr, i8 } @Tui_label(i32 20, i32 5, ptr @.str.553, i32 7, i32 0)
+  %calltmp174 = call { %Widget, ptr, i8 } @Tui_label(i32 20, i32 5, ptr @.str.685, i32 7, i32 0)
   %raw.value175 = extractvalue { %Widget, ptr, i8 } %calltmp174, 0
   %calltmp176 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value175)
   %raw.value177 = extractvalue { %struct.NIL, ptr, i8 } %calltmp176, 0
-  %calltmp178 = call { %Widget, ptr, i8 } @Tui_label(i32 26, i32 5, ptr @.str.555, i32 11, i32 0)
+  %calltmp178 = call { %Widget, ptr, i8 } @Tui_label(i32 26, i32 5, ptr @.str.687, i32 11, i32 0)
   %raw.value179 = extractvalue { %Widget, ptr, i8 } %calltmp178, 0
   %calltmp180 = call { %struct.NIL, ptr, i8 } @Tui_draw_widget(%Widget %raw.value179)
   %raw.value181 = extractvalue { %struct.NIL, ptr, i8 } %calltmp180, 0
@@ -7815,47 +8981,47 @@ then207:                                          ; preds = %ifcont200
 then211:                                          ; preds = %then207
   %_d = alloca i32, align 4
   %db_conn212 = load i32, ptr %db_conn, align 4
-  %calltmp213 = call { i32, ptr, i8 } @mongo_delete(i32 %db_conn212, ptr @.str.557, ptr @.str.559, ptr @.str.561)
+  %calltmp213 = call { i32, ptr, i8 } @mongo_delete(i32 %db_conn212, ptr @.str.689, ptr @.str.691, ptr @.str.693)
   %raw.value214 = extractvalue { i32, ptr, i8 } %calltmp213, 0
   store i32 %raw.value214, ptr %_d, align 4
   %json_doc = alloca ptr, align 8
   %s215 = load %GameState, ptr %s, align 4
   %wood216 = extractvalue %GameState %s215, 0
   %from_int_result217 = call ptr @npk_string_from_int_simple(i64 %wood216)
-  %concat_str = call ptr @npk_string_concat_simple(ptr @.str.563, ptr %from_int_result217)
+  %concat_str = call ptr @npk_string_concat_simple(ptr @.str.695, ptr %from_int_result217)
   store ptr %concat_str, ptr %json_doc, align 8
   %json_doc218 = load ptr, ptr %json_doc, align 8
   %s219 = load %GameState, ptr %s, align 4
   %fire_level220 = extractvalue %GameState %s219, 3
   %from_int_result221 = call ptr @npk_string_from_int_simple(i64 %fire_level220)
-  %concat_str222 = call ptr @npk_string_concat_simple(ptr @.str.565, ptr %from_int_result221)
+  %concat_str222 = call ptr @npk_string_concat_simple(ptr @.str.697, ptr %from_int_result221)
   %concat_str223 = call ptr @npk_string_concat_simple(ptr %json_doc218, ptr %concat_str222)
   store ptr %concat_str223, ptr %json_doc, align 8
   %json_doc224 = load ptr, ptr %json_doc, align 8
   %s225 = load %GameState, ptr %s, align 4
   %room_temp226 = extractvalue %GameState %s225, 5
   %from_int_result227 = call ptr @npk_string_from_int_simple(i64 %room_temp226)
-  %concat_str228 = call ptr @npk_string_concat_simple(ptr @.str.567, ptr %from_int_result227)
+  %concat_str228 = call ptr @npk_string_concat_simple(ptr @.str.699, ptr %from_int_result227)
   %concat_str229 = call ptr @npk_string_concat_simple(ptr %json_doc224, ptr %concat_str228)
   store ptr %concat_str229, ptr %json_doc, align 8
   %json_doc230 = load ptr, ptr %json_doc, align 8
-  %concat_str231 = call ptr @npk_string_concat_simple(ptr %json_doc230, ptr @.str.569)
+  %concat_str231 = call ptr @npk_string_concat_simple(ptr %json_doc230, ptr @.str.701)
   store ptr %concat_str231, ptr %json_doc, align 8
   %ins = alloca i32, align 4
   %db_conn232 = load i32, ptr %db_conn, align 4
   %json_doc233 = load ptr, ptr %json_doc, align 8
-  %calltmp234 = call { i32, ptr, i8 } @mongo_insert(i32 %db_conn232, ptr @.str.571, ptr @.str.573, ptr %json_doc233)
+  %calltmp234 = call { i32, ptr, i8 } @mongo_insert(i32 %db_conn232, ptr @.str.703, ptr @.str.705, ptr %json_doc233)
   %raw.value235 = extractvalue { i32, ptr, i8 } %calltmp234, 0
   store i32 %raw.value235, ptr %ins, align 4
   %log236 = load %GameLog, ptr %log, align 8
-  %calltmp237 = call { %GameLog, ptr, i8 } @push_log(%GameLog %log236, ptr @.str.575)
+  %calltmp237 = call { %GameLog, ptr, i8 } @push_log(%GameLog %log236, ptr @.str.707)
   %raw.value238 = extractvalue { %GameLog, ptr, i8 } %calltmp237, 0
   store %GameLog %raw.value238, ptr %log, align 8
   br label %ifcont242
 
 else:                                             ; preds = %then207
   %log239 = load %GameLog, ptr %log, align 8
-  %calltmp240 = call { %GameLog, ptr, i8 } @push_log(%GameLog %log239, ptr @.str.577)
+  %calltmp240 = call { %GameLog, ptr, i8 } @push_log(%GameLog %log239, ptr @.str.709)
   %raw.value241 = extractvalue { %GameLog, ptr, i8 } %calltmp240, 0
   store %GameLog %raw.value241, ptr %log, align 8
   br label %ifcont242
@@ -7875,7 +9041,7 @@ then247:                                          ; preds = %ifcont243
   %fire_timer.ptr = getelementptr inbounds %GameState, ptr %s, i32 0, i32 4
   store i64 0, ptr %fire_timer.ptr, align 4
   %log249 = load %GameLog, ptr %log, align 8
-  %calltmp250 = call { %GameLog, ptr, i8 } @push_log(%GameLog %log249, ptr @.str.579)
+  %calltmp250 = call { %GameLog, ptr, i8 } @push_log(%GameLog %log249, ptr @.str.711)
   %raw.value251 = extractvalue { %GameLog, ptr, i8 } %calltmp250, 0
   store %GameLog %raw.value251, ptr %log, align 8
   br label %ifcont252
@@ -7900,7 +9066,7 @@ then261:                                          ; preds = %then256
   %wood.ptr264 = getelementptr inbounds %GameState, ptr %s, i32 0, i32 0
   store i64 %addtmp, ptr %wood.ptr264, align 4
   %log265 = load %GameLog, ptr %log, align 8
-  %calltmp266 = call { %GameLog, ptr, i8 } @push_log(%GameLog %log265, ptr @.str.581)
+  %calltmp266 = call { %GameLog, ptr, i8 } @push_log(%GameLog %log265, ptr @.str.713)
   %raw.value267 = extractvalue { %GameLog, ptr, i8 } %calltmp266, 0
   store %GameLog %raw.value267, ptr %log, align 8
   br label %ifcont268
@@ -7938,7 +9104,7 @@ then275:                                          ; preds = %ifcont269
 
 then287:                                          ; preds = %then275
   %log288 = load %GameLog, ptr %log, align 8
-  %calltmp289 = call { %GameLog, ptr, i8 } @push_log(%GameLog %log288, ptr @.str.583)
+  %calltmp289 = call { %GameLog, ptr, i8 } @push_log(%GameLog %log288, ptr @.str.715)
   %raw.value290 = extractvalue { %GameLog, ptr, i8 } %calltmp289, 0
   store %GameLog %raw.value290, ptr %log, align 8
   br label %ifcont291
