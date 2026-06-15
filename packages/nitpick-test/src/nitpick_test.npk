@@ -22,20 +22,40 @@ extern "nitpick_test_shim" {
 
 // ── pub wrappers ────────────────────────────────────────
 
-pub func:test_begin           = NIL(string:suite)                                        { nitpick_test_begin(suite); pass(NIL); };
-pub func:test_set_verbose     = NIL(int32:v)                                             { nitpick_test_set_verbose(v); pass(NIL); };
-pub func:test_end             = int32()                                                  { pass(nitpick_test_end()); };
-pub func:test_passed_count    = int64()                                                  { pass(nitpick_test_passed_count()); };
-pub func:test_failed_count    = int64()                                                  { pass(nitpick_test_failed_count()); };
-pub func:test_skipped_count   = int64()                                                  { pass(nitpick_test_skipped_count()); };
-pub func:test_total_count     = int64()                                                  { pass(nitpick_test_total_count()); };
-pub func:test_skip            = NIL(string:name)                                         { nitpick_test_skip(name); pass(NIL); };
-pub func:test_assert          = NIL(string:name, int32:cond)                             { nitpick_test_assert(name, cond); pass(NIL); };
-pub func:test_assert_eq_i32   = NIL(string:name, int32:a, int32:e)                       { nitpick_test_assert_eq_i32(name, a, e); pass(NIL); };
-pub func:test_assert_eq_i64   = NIL(string:name, int64:a, int64:e)                       { nitpick_test_assert_eq_i64(name, a, e); pass(NIL); };
-pub func:test_assert_eq_str   = NIL(string:name, string:a, string:e)                     { nitpick_test_assert_eq_str(name, a, e); pass(NIL); };
-pub func:test_assert_near_f64 = NIL(string:name, flt64:a, flt64:e, flt64:eps)            { nitpick_test_assert_near_f64(name, a, e, eps); pass(NIL); };
-pub func:test_assert_not_empty = NIL(string:name, string:v)                              { nitpick_test_assert_not_empty(name, v); pass(NIL); };
-pub func:test_assert_gt_i32   = NIL(string:name, int32:a, int32:t)                       { nitpick_test_assert_gt_i32(name, a, t); pass(NIL); };
-pub func:test_assert_gt_i64   = NIL(string:name, int64:a, int64:t)                       { nitpick_test_assert_gt_i64(name, a, t); pass(NIL); };
-pub func:test_assert_ne_i32   = NIL(string:name, int32:a, int32:u)                       { nitpick_test_assert_ne_i32(name, a, u); pass(NIL); };
+func:test_begin           = NIL(string:suite)                                        { nitpick_test_begin(suite); pass(NIL); };
+func:test_set_verbose     = NIL(int32:v)                                             { nitpick_test_set_verbose(v); pass(NIL); };
+func:test_end             = int32()                                                  { pass(nitpick_test_end()); };
+func:test_passed_count    = int64()                                                  { pass(nitpick_test_passed_count()); };
+func:test_failed_count    = int64()                                                  { pass(nitpick_test_failed_count()); };
+func:test_skipped_count   = int64()                                                  { pass(nitpick_test_skipped_count()); };
+func:test_total_count     = int64()                                                  { pass(nitpick_test_total_count()); };
+func:test_skip            = NIL(string:name)                                         { nitpick_test_skip(name); pass(NIL); };
+func:test_assert          = NIL(string:name, int32:cond)                             { nitpick_test_assert(name, cond); pass(NIL); };
+func:test_assert_eq_i32   = NIL(string:name, int32:a, int32:e)                       { nitpick_test_assert_eq_i32(name, a, e); pass(NIL); };
+func:test_assert_eq_i64   = NIL(string:name, int64:a, int64:e)                       { nitpick_test_assert_eq_i64(name, a, e); pass(NIL); };
+func:test_assert_eq_str   = NIL(string:name, string:a, string:e)                     { nitpick_test_assert_eq_str(name, a, e); pass(NIL); };
+func:test_assert_near_f64 = NIL(string:name, flt64:a, flt64:e, flt64:eps)            { nitpick_test_assert_near_f64(name, a, e, eps); pass(NIL); };
+func:test_assert_not_empty = NIL(string:name, string:v)                              { nitpick_test_assert_not_empty(name, v); pass(NIL); };
+func:test_assert_gt_i32   = NIL(string:name, int32:a, int32:t)                       { nitpick_test_assert_gt_i32(name, a, t); pass(NIL); };
+func:test_assert_gt_i64   = NIL(string:name, int64:a, int64:t)                       { nitpick_test_assert_gt_i64(name, a, t); pass(NIL); };
+func:test_assert_ne_i32   = NIL(string:name, int32:a, int32:u)                       { nitpick_test_assert_ne_i32(name, a, u); pass(NIL); };
+
+pub Type:Test = {
+    func:begin = NIL(string:suite) { drop raw test_begin(suite); pass NIL; };
+    func:set_verbose = NIL(int32:v) { drop raw test_set_verbose(v); pass NIL; };
+    func:finish = int32() { pass raw test_end(); };
+    func:passed_count = int64() { pass raw test_passed_count(); };
+    func:failed_count = int64() { pass raw test_failed_count(); };
+    func:skipped_count = int64() { pass raw test_skipped_count(); };
+    func:total_count = int64() { pass raw test_total_count(); };
+    func:skip = NIL(string:name) { drop raw test_skip(name); pass NIL; };
+    func:assert = NIL(string:name, int32:cond) { drop raw test_assert(name, cond); pass NIL; };
+    func:assert_eq_i32 = NIL(string:name, int32:a, int32:e) { drop raw test_assert_eq_i32(name, a, e); pass NIL; };
+    func:assert_eq_i64 = NIL(string:name, int64:a, int64:e) { drop raw test_assert_eq_i64(name, a, e); pass NIL; };
+    func:assert_eq_str = NIL(string:name, string:a, string:e) { drop raw test_assert_eq_str(name, a, e); pass NIL; };
+    func:assert_near_f64 = NIL(string:name, flt64:a, flt64:e, flt64:eps) { drop raw test_assert_near_f64(name, a, e, eps); pass NIL; };
+    func:assert_not_empty = NIL(string:name, string:v) { drop raw test_assert_not_empty(name, v); pass NIL; };
+    func:assert_gt_i32 = NIL(string:name, int32:a, int32:t) { drop raw test_assert_gt_i32(name, a, t); pass NIL; };
+    func:assert_gt_i64 = NIL(string:name, int64:a, int64:t) { drop raw test_assert_gt_i64(name, a, t); pass NIL; };
+    func:assert_ne_i32 = NIL(string:name, int32:a, int32:u) { drop raw test_assert_ne_i32(name, a, u); pass NIL; };
+};

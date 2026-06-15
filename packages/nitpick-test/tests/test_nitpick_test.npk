@@ -1,28 +1,56 @@
-// test_nitpick_test.npk — Self-test for the nitpick-test framework
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
-use "../src/nitpick_test.npk".*;
+use "nitpick_test.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+extern "libc" { func:nitpick_libc_exit = NIL(int32:code); }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+func:failsafe = int32(tbb32:err) { exit(1i32); };
 
 func:main = int32() {
-    drop(println("PASS: all tests passed"));
-    exit 0;
+    NIL:ign1 = raw Test.begin("nitpick-test self-test suite");
+    NIL:ign2 = raw Test.set_verbose(0i32);
+
+    // Basic assertions
+    NIL:ign3 = raw Test.assert("basic assert true", 1i32);
+    
+    // Eq assertions
+    NIL:ign4 = raw Test.assert_eq_i32("eq_i32", 42i32, 42i32);
+    NIL:ign5 = raw Test.assert_eq_i64("eq_i64", 42i64, 42i64);
+    NIL:ign6 = raw Test.assert_eq_str("eq_str", "hello", "hello");
+    
+    // Ne assertions
+    NIL:ign7 = raw Test.assert_ne_i32("ne_i32", 42i32, 0i32);
+    
+    // Gt assertions
+    NIL:ign8 = raw Test.assert_gt_i32("gt_i32", 10i32, 5i32);
+    NIL:ign9 = raw Test.assert_gt_i64("gt_i64", 10i64, 5i64);
+    
+    // Near assertions
+    NIL:ign10 = raw Test.assert_near_f64("near_f64", 3.14159f64, 3.14150f64, 0.001f64);
+    
+    // Not empty assertions
+    NIL:ign11 = raw Test.assert_not_empty("not_empty", "test");
+    
+    // Skip
+    NIL:ign12 = raw Test.skip("skipped test");
+
+    // Check counts
+    int64:passed = raw Test.passed_count();
+    int64:skipped = raw Test.skipped_count();
+    int64:failed = raw Test.failed_count();
+    
+    if (passed != 9i64) {
+        print("FAIL: Expected 9 passed tests.\n");
+        exit(1i32);
+    }
+    if (skipped != 1i64) {
+        print("FAIL: Expected 1 skipped test.\n");
+        exit(1i32);
+    }
+    if (failed != 0i64) {
+        print("FAIL: Expected 0 failed tests.\n");
+        exit(1i32);
+    }
+
+    // End suite
+    int32:res = raw Test.finish();
+    exit(res);
 };
