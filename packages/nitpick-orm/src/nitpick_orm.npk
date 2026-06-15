@@ -259,10 +259,10 @@ pub Type:ORM = {
         // Since we are limited in string parsing, let's just do a hack for "score DESC" for now.
         // In a real ORM we would map order_by correctly.
         if (string_ends_with(q.order_by, " DESC")) {
-            string:field = raw str_remove_suffix(q.order_by, " DESC");
+            string:field = raw Str.remove_suffix(q.order_by, " DESC");
             json = string_concat(json, string_concat("\"sort\": {\"", string_concat(field, "\": -1}")));
         } else {
-            string:field = raw str_remove_suffix(q.order_by, " ASC");
+            string:field = raw Str.remove_suffix(q.order_by, " ASC");
             json = string_concat(json, string_concat("\"sort\": {\"", string_concat(field, "\": 1}")));
         }
         has_prev = 1i32;
