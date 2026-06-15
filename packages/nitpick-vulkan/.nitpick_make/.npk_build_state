@@ -1,0 +1,39 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-vulkan": {
+      "artifact_path": ".nitpick_make/build/libnitpick-vulkan.a",
+      "source_hash": "fnv1a:10434760051791231452",
+      "command_hash": 14695981039346656037,
+      "source_timestamp": 18446744069053434891,
+      "build_timestamp": 1781547296,
+      "build_duration_ms": 79,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-nitpick-vulkan": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-vulkan",
+      "source_hash": "fnv1a:3820156027776688958",
+      "command_hash": 14889490847690900651,
+      "source_timestamp": 18446744069053416142,
+      "build_timestamp": 1781528534,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test_vulkan": {
+      "artifact_path": ".nitpick_make/build/test_vulkan",
+      "source_hash": "fnv1a:17754038429037633652",
+      "command_hash": 17694735095416340061,
+      "source_timestamp": 18446744069053434908,
+      "build_timestamp": 1781547297,
+      "build_duration_ms": 220,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

@@ -1,14 +1,19 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -fPIC -O3 $(shell pkg-config --cflags sdl2)
-LDFLAGS = -shared -lvulkan $(shell pkg-config --libs sdl2)
+CC = clang
+CFLAGS = -O2 -fPIC -Wall -Wextra $(shell pkg-config --cflags sdl2)
 
-TARGET = libnitpick_vulkan_shim.so
-SRC = vulkan_shim.c
+SRCS = vulkan_shim.c
+OBJS = $(SRCS:.c=.o)
+LIB = libnitpick_vulkan_shim.a
 
-all: $(TARGET)
+.PHONY: all clean
 
-$(TARGET): $(SRC)
-	$(CC) $(CFLAGS) $(SRC) -o $(TARGET) $(LDFLAGS)
+all: $(LIB)
+
+$(LIB): $(OBJS)
+	ar rcs $@ $^
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(OBJS) $(LIB)

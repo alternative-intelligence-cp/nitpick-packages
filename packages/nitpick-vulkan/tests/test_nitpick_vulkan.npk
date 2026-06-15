@@ -1,0 +1,81 @@
+extern "libc" { func:printf = int32(string:fmt); }
+use "nitpick_vulkan.npk".*;
+
+int32:fail_cnt = 0i32;
+func:failsafe = int32(tbb32:err) { drop(err); exit 1i32; };
+
+func:main = int32() {
+    int32:init_ok = raw Vulkan.init_window(640i32, 480i32, "Nitpick Vulkan - Round 2");
+    if (init_ok == 0i32) {
+        drop(printf("Failed to initialize Vulkan window.\\n\\0"));
+        string:err = raw Vulkan.get_error();
+        drop(printf(err)); drop(printf("\\n\\0"));
+        exit 1i32;
+    }
+
+    drop(printf("Vulkan initialized successfully!\\n\\0"));
+    
+    // Load Shaders
+    int32:vert_shader = raw Vulkan.load_shader("tests/vert.spv");
+    if (vert_shader < 0i32) {
+        drop(printf("Failed to load vert.spv\\n\\0"));
+        exit 1i32;
+    }
+
+    int32:frag_shader = raw Vulkan.load_shader("tests/frag.spv");
+    if (frag_shader < 0i32) {
+        drop(printf("Failed to load frag.spv\\n\\0"));
+        exit 1i32;
+    }
+
+    // Build Pipeline
+    int32:pipeline = raw Vulkan.build_pipeline(vert_shader, frag_shader);
+    if (pipeline < 0i32) {
+        drop(printf("Failed to build pipeline.\\n\\0"));
+        exit 1i32;
+    }
+
+    // Create and upload vertex buffer (a colorful triangle)
+    // Format: vec3 pos, vec3 color
+    drop(raw Vulkan.buf_clear());
+    // Vertex 1: Top Center, Red
+    drop(raw Vulkan.buf_push6(0.0f32, -0.5f32, 0.0f32,  1.0f32, 0.0f32, 0.0f32));
+    // Vertex 2: Bottom Right, Green
+    drop(raw Vulkan.buf_push6(0.5f32, 0.5f32, 0.0f32,   0.0f32, 1.0f32, 0.0f32));
+    // Vertex 3: Bottom Left, Blue
+    drop(raw Vulkan.buf_push6(-0.5f32, 0.5f32, 0.0f32,  0.0f32, 0.0f32, 1.0f32));
+
+    int32:vbo = raw Vulkan.gen_buffer();
+    drop(raw Vulkan.upload_vertex_buffer(vbo));
+
+    drop(printf("Press 'Q', 'Escape', or close the window to quit.\\n\\0"));
+
+    int32:running = 1i32;
+    int32:frames = 0i32;
+    
+    // For automated testing, we will just render 100 frames and exit
+    while (running == 1i32) {
+        if (raw Vulkan.poll_events() == 0i32) {
+            running = 0i32;
+        }
+
+        // Clear screen with dark gray
+        drop(raw Vulkan.begin_frame(0.1f32, 0.1f32, 0.1f32, 1.0f32));
+        
+        // Bind pipeline and draw triangle
+        drop(raw Vulkan.cmd_bind_pipeline(pipeline));
+        drop(raw Vulkan.cmd_bind_vertex_buffer(vbo));
+        drop(raw Vulkan.draw(3i32));
+
+        drop(raw Vulkan.end_frame());
+
+        frames = frames + 1i32;
+        if (frames > 100i32) {
+            running = 0i32;
+        }
+    }
+
+    drop(raw Vulkan.cleanup());
+    drop(printf("Vulkan test passed!\\n\\0"));
+    if (fail_cnt > 0i32) { drop(printf("FAIL\\n\\0")); } exit fail_cnt;
+};

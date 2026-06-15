@@ -1,0 +1,13 @@
+[project]
+name = "nitpick-vulkan"
+version = "0.1.0"
+
+[target.nitpick-vulkan]
+type = "library"
+sources = ["src/nitpick_vulkan.npk"]
+
+[target.test_vulkan]
+type = "binary"
+sources = ["tests/test_nitpick_vulkan.npk"]
+deps = ["nitpick-vulkan"]
+flags = ["-I", "src", "-Lshim", "-lnitpick_vulkan_shim", "-lSDL2", "-lvulkan", "-L../../../nitpick-libc/shim", "-lnitpick_libc_string", "-lnitpick_libc_mem", "-lnitpick_libc_io", "-lm"]

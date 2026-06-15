@@ -29,92 +29,94 @@ extern "nitpick_vulkan_shim" {
     func:nitpick_vk_draw = void(int32:count);
 }
 
-pub func:vk_init_window = int32(int32:width, int32:height, string:title) {
-    int32:r = nitpick_vk_init_window(width, height, title);
-    pass(r);
-};
+pub Type:Vulkan = {
+    func:init_window = int32(int32:width, int32:height, string:title) {
+        int32:r = nitpick_vk_init_window(width, height, title);
+        pass(r);
+    };
 
-pub func:vk_begin_frame = NIL(flt32:r, flt32:g, flt32:b, flt32:a) {
-    nitpick_vk_begin_frame(r, g, b, a);
-    pass(NIL);
-};
+    func:begin_frame = NIL(flt32:r, flt32:g, flt32:b, flt32:a) {
+        nitpick_vk_begin_frame(r, g, b, a);
+        pass(NIL);
+    };
 
-pub func:vk_end_frame = NIL() {
-    nitpick_vk_end_frame();
-    pass(NIL);
-};
+    func:end_frame = NIL() {
+        nitpick_vk_end_frame();
+        pass(NIL);
+    };
 
-pub func:vk_poll_events = int32() {
-    int32:r = nitpick_vk_poll_events();
-    pass(r);
-};
+    func:poll_events = int32() {
+        int32:r = nitpick_vk_poll_events();
+        pass(r);
+    };
 
-pub func:vk_cleanup = NIL() {
-    nitpick_vk_cleanup();
-    pass(NIL);
-};
+    func:cleanup = NIL() {
+        nitpick_vk_cleanup();
+        pass(NIL);
+    };
 
-pub func:vk_get_error = string() {
-    string:r = nitpick_vk_get_error();
-    pass(r);
-};
+    func:get_error = string() {
+        string:r = nitpick_vk_get_error();
+        pass(r);
+    };
 
-pub func:vk_load_shader = int32(string:filename) {
-    int32:r = nitpick_vk_load_shader(filename);
-    pass(r);
-};
+    func:load_shader = int32(string:filename) {
+        int32:r = nitpick_vk_load_shader(filename);
+        pass(r);
+    };
 
-pub func:vk_build_pipeline = int32(int32:vert_id, int32:frag_id) {
-    int32:r = nitpick_vk_build_pipeline(vert_id, frag_id);
-    pass(r);
-};
+    func:build_pipeline = int32(int32:vert_id, int32:frag_id) {
+        int32:r = nitpick_vk_build_pipeline(vert_id, frag_id);
+        pass(r);
+    };
 
-pub func:vk_buf_clear = NIL() {
-    nitpick_vk_buf_clear();
-    pass(NIL);
-};
+    func:buf_clear = NIL() {
+        nitpick_vk_buf_clear();
+        pass(NIL);
+    };
 
-pub func:vk_buf_push = NIL(flt32:val) {
-    nitpick_vk_buf_push(val);
-    pass(NIL);
-};
+    func:buf_push = NIL(flt32:val) {
+        nitpick_vk_buf_push(val);
+        pass(NIL);
+    };
 
-pub func:vk_buf_push3 = NIL(flt32:a, flt32:b, flt32:c) {
-    nitpick_vk_buf_push3(a, b, c);
-    pass(NIL);
-};
+    func:buf_push3 = NIL(flt32:a, flt32:b, flt32:c) {
+        nitpick_vk_buf_push3(a, b, c);
+        pass(NIL);
+    };
 
-pub func:vk_buf_push6 = NIL(flt32:a, flt32:b, flt32:c, flt32:d, flt32:e, flt32:f) {
-    nitpick_vk_buf_push6(a, b, c, d, e, f);
-    pass(NIL);
-};
+    func:buf_push6 = NIL(flt32:a, flt32:b, flt32:c, flt32:d, flt32:e, flt32:f) {
+        nitpick_vk_buf_push6(a, b, c, d, e, f);
+        pass(NIL);
+    };
 
-pub func:vk_buf_count = int32() {
-    int32:r = nitpick_vk_buf_count();
-    pass(r);
-};
+    func:buf_count = int32() {
+        int32:r = nitpick_vk_buf_count();
+        pass(r);
+    };
 
-pub func:vk_gen_buffer = int32() {
-    int32:r = nitpick_vk_gen_buffer();
-    pass(r);
-};
+    func:gen_buffer = int32() {
+        int32:r = nitpick_vk_gen_buffer();
+        pass(r);
+    };
 
-pub func:vk_upload_vertex_buffer = NIL(int32:id) {
-    nitpick_vk_upload_vertex_buffer(id);
-    pass(NIL);
-};
+    func:upload_vertex_buffer = NIL(int32:id) {
+        nitpick_vk_upload_vertex_buffer(id);
+        pass(NIL);
+    };
 
-pub func:vk_cmd_bind_pipeline = NIL(int32:id) {
-    nitpick_vk_cmd_bind_pipeline(id);
-    pass(NIL);
-};
+    func:cmd_bind_pipeline = NIL(int32:id) {
+        nitpick_vk_cmd_bind_pipeline(id);
+        pass(NIL);
+    };
 
-pub func:vk_cmd_bind_vertex_buffer = NIL(int32:id) {
-    nitpick_vk_cmd_bind_vertex_buffer(id);
-    pass(NIL);
-};
+    func:cmd_bind_vertex_buffer = NIL(int32:id) {
+        nitpick_vk_cmd_bind_vertex_buffer(id);
+        pass(NIL);
+    };
 
-pub func:vk_draw = NIL(int32:count) {
-    nitpick_vk_draw(count);
-    pass(NIL);
+    func:draw = NIL(int32:count) {
+        nitpick_vk_draw(count);
+        pass(NIL);
+    };
 };
