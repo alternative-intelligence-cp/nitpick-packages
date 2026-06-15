@@ -12,7 +12,7 @@ extern "nitpick_unix_socket_shim" {
     func:nitpick_unix_socket_unlink = int64(string:path);
 }
 
-Type:UnixSocket = {
+pub Type:UnixSocket = {
     // Create a Unix socket server. Returns fd, or fails on error.
     func:server = int64(string:path) {
         drop(nitpick_unix_socket_unlink(path)); // Remove existing socket file if any

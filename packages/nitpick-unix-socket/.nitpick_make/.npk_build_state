@@ -1,0 +1,39 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "test_unix_socket": {
+      "artifact_path": ".nitpick_make/build/test_unix_socket",
+      "source_hash": "fnv1a:14471815903602237340",
+      "command_hash": 14408292492630745673,
+      "source_timestamp": 18446744069053434118,
+      "build_timestamp": 1781546508,
+      "build_duration_ms": 187,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-nitpick-unix-socket": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-unix-socket",
+      "source_hash": "fnv1a:4899679537366371561",
+      "command_hash": 14695981039346656037,
+      "source_timestamp": 18446744069053433915,
+      "build_timestamp": 1781546325,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "nitpick-unix-socket": {
+      "artifact_path": ".nitpick_make/build/libnitpick-unix-socket.a",
+      "source_hash": "fnv1a:3577636118643807715",
+      "command_hash": 14695981039346656037,
+      "source_timestamp": 18446744069053433915,
+      "build_timestamp": 1781546508,
+      "build_duration_ms": 76,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

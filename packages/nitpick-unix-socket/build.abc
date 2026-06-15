@@ -1,0 +1,13 @@
+[project]
+name = "nitpick-unix-socket"
+version = "0.1.0"
+
+[target.nitpick-unix-socket]
+type = "library"
+sources = ["src/nitpick_unix_socket.npk"]
+
+[target.test_unix_socket]
+type = "binary"
+sources = ["tests/test_nitpick_unix_socket.npk"]
+deps = ["nitpick-unix-socket"]
+flags = ["-I", "src", "-Lshim", "-lnitpick_unix_socket_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_string", "-lnitpick_libc_mem", "-lnitpick_libc_io"]

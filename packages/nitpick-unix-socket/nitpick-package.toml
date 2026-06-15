@@ -1,8 +1,0 @@
-[package]
-name = "nitpick-unix-socket"
-version = "0.1.0"
-description = "Native AF_UNIX socket support for pure Aria"
-link_libraries = ["nitpick_unix_socket_shim"]
-
-[build]
-type = "shim"

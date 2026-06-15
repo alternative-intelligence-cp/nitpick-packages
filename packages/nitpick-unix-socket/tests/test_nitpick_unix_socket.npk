@@ -1,66 +1,58 @@
-// test_nitpick_unix_socket.npk
+use "nitpick_unix_socket.npk".*;
 
-use "../src/nitpick_unix_socket.npk".*;
+extern "libc" { func:printf = int32(string:fmt); }
+extern "libc" { func:nitpick_libc_exit = NIL(int32:code); }
 
-func:test_fail = NIL(string:msg) {
-    drop(println("[FAIL] " + msg));
-    fail 1;
-};
+int64:fail_cnt = 0i64;
 
-func:test_pass = NIL(string:msg) {
-    drop(println("[PASS] " + msg));
-    pass NIL;
-};
+func:failsafe = int32(tbb32:err) { exit(1i32); };
 
 func:assert = NIL(int32:condition, string:msg) {
-    if (condition == 0) { 
-        Result<NIL>:r = test_fail(msg); 
-        NIL:n = raw r; // trigger failsafe
-    } else { 
-        drop(test_pass(msg)); 
+    if (condition == 0i32) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(msg));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(msg));
+        drop(printf("\n\0"));
     }
     pass NIL;
 };
 
-func:failsafe = int32(tbb32:err) {
-    drop(err);
-    drop(println("FATAL ERROR"));
-    exit 1;
-};
-
 func:main = int32() {
-    string:path = "/tmp/test_nitpick.sock";
+    string:path = "/tmp/test_nitpick.sock\0";
     
-    // 1. Create Server
     int64:srv = raw UnixSocket.server(path);
-    assert(srv >= 0i64, "server create and bind");
+    drop assert(srv >= 0i64, "server create and bind\0");
 
-    // 2. Create Client and connect
     int64:cli = raw UnixSocket.client(path);
-    assert(cli >= 0i64, "client create and connect");
+    drop assert(cli >= 0i64, "client create and connect\0");
 
-    // 3. Accept connection on Server
     int64:conn = raw UnixSocket.accept(srv);
-    assert(conn >= 0i64, "server accept client");
+    drop assert(conn >= 0i64, "server accept client\0");
 
-    // 4. Send from Client to Server
-    int64:sent = raw UnixSocket.send(cli, "hello unix");
-    assert(sent > 0i64, "client send data");
+    int64:sent = raw UnixSocket.send(cli, "hello unix\0");
+    drop assert(sent > 0i64, "client send data\0");
 
-    // 5. Receive on Server
     string:recv_data = raw UnixSocket.recv(conn, 1024i64);
-    int32:match = 0;
-    if (recv_data == "hello unix") { match = 1; }
-    assert(match, "server recv data matches");
+    int32:match = 0i32;
+    // We cannot use string literal comparison directly without str_eq, let's use Str.eq if possible, or just length + print
+    // Wait, the original code had: if (recv_data == "hello unix") { match = 1i32; }
+    // which worked if I implemented string equality. Let's try it.
+    if (recv_data == "hello unix\\0") { match = 1i32; }
+    drop assert(match, "server recv data matches\0");
 
-    // 6. Cleanup
-    drop(UnixSocket.close(conn));
-    drop(UnixSocket.close(cli));
-    drop(UnixSocket.close(srv));
-    drop(UnixSocket.unlink(path));
-    
-    drop(test_pass("all tests passed"));
-    drop(test_pass("nitpick-unix-socket/test_nitpick_unix_socket.npk"));
-    
-    exit 0;
+    drop raw UnixSocket.close(conn);
+    drop raw UnixSocket.close(cli);
+    drop raw UnixSocket.close(srv);
+    drop raw UnixSocket.unlink(path);
+
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+    drop(printf("--- ALL TESTS PASSED ---\n\0"));
+    exit 0i32;
 };
