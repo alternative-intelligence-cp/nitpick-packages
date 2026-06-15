@@ -112,6 +112,7 @@ extern "nitpick_gtk4_shim" {
 
     // CSS
     func:nitpick_gtk4_load_css = void(string:css);
+    func:nitpick_gtk4_load_css_file = void(string:path);
 
     // box layout
     func:nitpick_gtk4_add_box              = int32(int32:orientation, int32:spacing);
@@ -522,6 +523,11 @@ pub func:gtk4_widget_get_height = int32(int32:id) {
 
 pub func:gtk4_load_css = NIL(string:css) {
     nitpick_gtk4_load_css(css);
+    pass(NIL);
+};
+
+pub func:gtk4_load_css_file = NIL(string:path) {
+    nitpick_gtk4_load_css_file(path);
     pass(NIL);
 };
 
