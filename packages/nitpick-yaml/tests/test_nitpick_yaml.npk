@@ -1,58 +1,59 @@
 // test_nitpick_yaml.npk — YAML parser tests (8 tests)
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
-use "../src/nitpick_yaml.npk".*;
+extern "libc" { func:printf = int32(string:fmt); }
+int32:fail_cnt = 0i32;
+use "nitpick_yaml.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:err) { drop(err); exit 1i32; };
 
 
 
 func:main = int32() {
     int32:pass_count = 0i32;
-    int32:n = raw yaml_parse("name: MyApp\nversion: 3\ndebug: true\npi: 3.14\n\nserver:\n  host: localhost\n  port: 8080\n\ndatabase:\n  name: mydb\n  enabled: false\n");
+    int32:n = raw YAML.parse("name: MyApp\nversion: 3\ndebug: true\npi: 3.14\n\nserver:\n  host: localhost\n  port: 8080\n\ndatabase:\n  name: mydb\n  enabled: false\n");
 
     // T01: parse
-    if (n > 0i32) { drop(println("[PASS] T01 parse")); }
-    if (n <= 0i32) { drop(println("[FAIL] T01 parse")); }
+    if (n > 0i32) { drop(printf("[PASS] T01 parse\n\0")); }
+    if (n <= 0i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T01 parse\n\0")); }
 
     // T02: top-level string
-    int32:h1 = raw yaml_has_key("name");
-    if (h1 == 1i32) { drop(println("[PASS] T02 has_key name")); }
-    if (h1 != 1i32) { drop(println("[FAIL] T02 has_key name")); }
+    int32:h1 = raw YAML.has_key("name");
+    if (h1 == 1i32) { drop(printf("[PASS] T02 has_key name\n\0")); }
+    if (h1 != 1i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T02 has_key name\n\0")); }
 
     // T03: top-level int
-    int64:ver = raw yaml_get_int("version");
-    if (ver == 3i64) { drop(println("[PASS] T03 get_int version")); }
-    if (ver != 3i64) { drop(println("[FAIL] T03 get_int version")); }
+    int64:ver = raw YAML.get_int("version");
+    if (ver == 3i64) { drop(printf("[PASS] T03 get_int version\n\0")); }
+    if (ver != 3i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T03 get_int version\n\0")); }
 
     // T04: bool true
-    int32:dbg = raw yaml_get_bool("debug");
-    if (dbg == 1i32) { drop(println("[PASS] T04 get_bool debug")); }
-    if (dbg != 1i32) { drop(println("[FAIL] T04 get_bool debug")); }
+    int32:dbg = raw YAML.get_bool("debug");
+    if (dbg == 1i32) { drop(printf("[PASS] T04 get_bool debug\n\0")); }
+    if (dbg != 1i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T04 get_bool debug\n\0")); }
 
     // T05: nested int
-    int64:port = raw yaml_get_int("server.port");
-    if (port == 8080i64) { drop(println("[PASS] T05 get_int server.port")); }
-    if (port != 8080i64) { drop(println("[FAIL] T05 get_int server.port")); }
+    int64:port = raw YAML.get_int("server.port");
+    if (port == 8080i64) { drop(printf("[PASS] T05 get_int server.port\n\0")); }
+    if (port != 8080i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T05 get_int server.port\n\0")); }
 
     // T06: nested bool false
-    int32:en = raw yaml_get_bool("database.enabled");
-    if (en == 0i32) { drop(println("[PASS] T06 get_bool database.enabled")); }
-    if (en != 0i32) { drop(println("[FAIL] T06 get_bool database.enabled")); }
+    int32:en = raw YAML.get_bool("database.enabled");
+    if (en == 0i32) { drop(printf("[PASS] T06 get_bool database.enabled\n\0")); }
+    if (en != 0i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T06 get_bool database.enabled\n\0")); }
 
     // T07: missing key
-    int32:miss = raw yaml_has_key("nonexistent");
-    if (miss == 0i32) { drop(println("[PASS] T07 missing key")); }
-    if (miss != 0i32) { drop(println("[FAIL] T07 missing key")); }
+    int32:miss = raw YAML.has_key("nonexistent");
+    if (miss == 0i32) { drop(printf("[PASS] T07 missing key\n\0")); }
+    if (miss != 0i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T07 missing key\n\0")); }
 
     // T08: clear
-    raw yaml_clear();
-    int32:c2 = raw yaml_count();
-    if (c2 == 0i32) { drop(println("[PASS] T08 clear")); }
-    if (c2 != 0i32) { drop(println("[FAIL] T08 clear")); }
+    raw YAML.clear();
+    int32:c2 = raw YAML.count();
+    if (c2 == 0i32) { drop(printf("[PASS] T08 clear\n\0")); }
+    if (c2 != 0i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T08 clear\n\0")); }
 
     
-    drop(println("---"));
+    drop(printf("---\n\0"));
     
-        drop(println("PASS: all tests passed"));
-    exit 0;
+        drop(printf("PASS: all tests passed\n\0"));
+    if (fail_cnt > 0i32) { drop(printf("FAIL\n\0")); } exit fail_cnt;
 };

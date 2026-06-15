@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-yaml"
+version = "0.1.0"
+
+[target.nitpick-yaml]
+type = "library"
+sources = ["src/nitpick_yaml.npk"]
+deps = []
+flags = ["-Lshim/.nitpick_make/lib", "-lnitpick_yaml_shim"]
+
+[target.test-nitpick-yaml]
+type = "binary"
+sources = ["tests/test_nitpick_yaml.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_yaml_shim"]
