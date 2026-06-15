@@ -1,0 +1,39 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-sdl2": {
+      "artifact_path": ".nitpick_make/build/libnitpick-sdl2.a",
+      "source_hash": "fnv1a:13079153592071564639",
+      "command_hash": 17850826536003756987,
+      "source_timestamp": 18446744069053431680,
+      "build_timestamp": 1781544063,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-nitpick-sdl2": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-sdl2",
+      "source_hash": "fnv1a:17724043853915897567",
+      "command_hash": 8720772383256665007,
+      "source_timestamp": 18446744069053431668,
+      "build_timestamp": 1781544063,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-sdl2-extensions": {
+      "artifact_path": ".nitpick_make/build/test-sdl2-extensions",
+      "source_hash": "fnv1a:8751223311836850592",
+      "command_hash": 8720772383256665007,
+      "source_timestamp": 18446744069053408309,
+      "build_timestamp": 1781520702,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

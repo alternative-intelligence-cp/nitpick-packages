@@ -128,43 +128,43 @@ extern "nitpick_sdl2_shim" {
 
 // ── SDL2 init flag constants ────────────────────────────────────────
 
-pub func:SDL_INIT_VIDEO = int32() { pass(32i32); };
-pub func:SDL_INIT_AUDIO = int32() { pass(16i32); };
-pub func:SDL_INIT_TIMER = int32() { pass(1i32); };
-pub func:SDL_INIT_EVENTS = int32() { pass(16384i32); };
-pub func:SDL_INIT_EVERYTHING = int32() { pass(62001i32); };
+func:SDL_INIT_VIDEO = int32() { pass(32i32); };
+func:SDL_INIT_AUDIO = int32() { pass(16i32); };
+func:SDL_INIT_TIMER = int32() { pass(1i32); };
+func:SDL_INIT_EVENTS = int32() { pass(16384i32); };
+func:SDL_INIT_EVERYTHING = int32() { pass(62001i32); };
 
 // ── SDL2 window flag constants ──────────────────────────────────────
 
-pub func:SDL_WINDOW_SHOWN       = int32() { pass(4i32); };
-pub func:SDL_WINDOW_RESIZABLE   = int32() { pass(32i32); };
-pub func:SDL_WINDOW_FULLSCREEN  = int32() { pass(1i32); };
-pub func:SDL_WINDOW_BORDERLESS  = int32() { pass(16i32); };
-pub func:SDL_WINDOW_MAXIMIZED   = int32() { pass(128i32); };
-pub func:SDL_WINDOW_MINIMIZED   = int32() { pass(64i32); };
+func:SDL_WINDOW_SHOWN       = int32() { pass(4i32); };
+func:SDL_WINDOW_RESIZABLE   = int32() { pass(32i32); };
+func:SDL_WINDOW_FULLSCREEN  = int32() { pass(1i32); };
+func:SDL_WINDOW_BORDERLESS  = int32() { pass(16i32); };
+func:SDL_WINDOW_MAXIMIZED   = int32() { pass(128i32); };
+func:SDL_WINDOW_MINIMIZED   = int32() { pass(64i32); };
 
 // ── SDL2 window position constants ──────────────────────────────────
 
-pub func:SDL_WINDOWPOS_CENTERED  = int32() { pass(805240832i32); };
-pub func:SDL_WINDOWPOS_UNDEFINED = int32() { pass(536805376i32); };
+func:SDL_WINDOWPOS_CENTERED  = int32() { pass(805240832i32); };
+func:SDL_WINDOWPOS_UNDEFINED = int32() { pass(536805376i32); };
 
 // ── SDL2 renderer flag constants ────────────────────────────────────
 
-pub func:SDL_RENDERER_ACCELERATED  = int32() { pass(2i32); };
-pub func:SDL_RENDERER_PRESENTVSYNC = int32() { pass(4i32); };
-pub func:SDL_RENDERER_SOFTWARE     = int32() { pass(1i32); };
+func:SDL_RENDERER_ACCELERATED  = int32() { pass(2i32); };
+func:SDL_RENDERER_PRESENTVSYNC = int32() { pass(4i32); };
+func:SDL_RENDERER_SOFTWARE     = int32() { pass(1i32); };
 
 // ── SDL2 event type constants ───────────────────────────────────────
 
-pub func:SDL_QUIT_EVENT       = int32() { pass(256i32); };
-pub func:SDL_KEYDOWN_EVENT    = int32() { pass(768i32); };
-pub func:SDL_KEYUP_EVENT      = int32() { pass(769i32); };
-pub func:SDL_MOUSEMOTION_EVENT  = int32() { pass(1024i32); };
-pub func:SDL_MOUSEBUTTONDOWN_EVENT = int32() { pass(1025i32); };
-pub func:SDL_MOUSEBUTTONUP_EVENT   = int32() { pass(1026i32); };
-pub func:SDL_MOUSEWHEEL_EVENT = int32() { pass(1027i32); };
-pub func:SDL_WINDOWEVENT      = int32() { pass(512i32); };
-pub func:SDL_TEXTINPUT_EVENT  = int32() { pass(771i32); };
+func:SDL_QUIT_EVENT       = int32() { pass(256i32); };
+func:SDL_KEYDOWN_EVENT    = int32() { pass(768i32); };
+func:SDL_KEYUP_EVENT      = int32() { pass(769i32); };
+func:SDL_MOUSEMOTION_EVENT  = int32() { pass(1024i32); };
+func:SDL_MOUSEBUTTONDOWN_EVENT = int32() { pass(1025i32); };
+func:SDL_MOUSEBUTTONUP_EVENT   = int32() { pass(1026i32); };
+func:SDL_MOUSEWHEEL_EVENT = int32() { pass(1027i32); };
+func:SDL_WINDOWEVENT      = int32() { pass(512i32); };
+func:SDL_TEXTINPUT_EVENT  = int32() { pass(771i32); };
 
 // ── SDL2 keycode constants (common keys) ────────────────────────────
 
@@ -182,400 +182,404 @@ pub func:SDLK_RIGHT  = int32() { pass(1073741903i32); };
 
 // ── public API: init / quit ─────────────────────────────────────────
 
-pub func:sdl_init = int32(int32:flags) {
+
+Type:Sdl2 = {
+func:init = int32(int32:flags) {
     int32:r = nitpick_sdl2_init(flags);
     pass(r);
 };
 
-pub func:sdl_quit = NIL() {
+func:quit = NIL() {
     nitpick_sdl2_quit();
     pass(NIL);
 };
 
 // ── public API: window ──────────────────────────────────────────────
 
-pub func:sdl_create_window = int32(string:title, int32:x, int32:y,
+func:create_window = int32(string:title, int32:x, int32:y,
                                     int32:w, int32:h, int32:flags) {
     int32:r = nitpick_sdl2_create_window(title, x, y, w, h, flags);
     pass(r);
 };
 
-pub func:sdl_set_window_title = NIL(string:title) {
+func:set_window_title = NIL(string:title) {
     nitpick_sdl2_set_window_title(title);
     pass(NIL);
 };
 
-pub func:sdl_set_window_size = NIL(int32:w, int32:h) {
+func:set_window_size = NIL(int32:w, int32:h) {
     nitpick_sdl2_set_window_size(w, h);
     pass(NIL);
 };
 
-pub func:sdl_get_window_width = int32() {
+func:get_window_width = int32() {
     int32:r = nitpick_sdl2_get_window_width();
     pass(r);
 };
 
-pub func:sdl_get_window_height = int32() {
+func:get_window_height = int32() {
     int32:r = nitpick_sdl2_get_window_height();
     pass(r);
 };
 
-pub func:sdl_show_window = NIL() {
+func:show_window = NIL() {
     nitpick_sdl2_show_window();
     pass(NIL);
 };
 
-pub func:sdl_hide_window = NIL() {
+func:hide_window = NIL() {
     nitpick_sdl2_hide_window();
     pass(NIL);
 };
 
 // ── public API: renderer ────────────────────────────────────────────
 
-pub func:sdl_create_renderer = int32(int32:flags) {
+func:create_renderer = int32(int32:flags) {
     int32:r = nitpick_sdl2_create_renderer(flags);
     pass(r);
 };
 
-pub func:sdl_set_draw_color = NIL(int32:r, int32:g, int32:b, int32:a) {
+func:set_draw_color = NIL(int32:r, int32:g, int32:b, int32:a) {
     nitpick_sdl2_set_render_draw_color(r, g, b, a);
     pass(NIL);
 };
 
-pub func:sdl_clear = NIL() {
+func:clear = NIL() {
     nitpick_sdl2_render_clear();
     pass(NIL);
 };
 
-pub func:sdl_present = NIL() {
+func:present = NIL() {
     nitpick_sdl2_render_present();
     pass(NIL);
 };
 
 // ── public API: drawing ─────────────────────────────────────────────
 
-pub func:sdl_draw_point = NIL(int32:x, int32:y) {
+func:draw_point = NIL(int32:x, int32:y) {
     nitpick_sdl2_render_draw_point(x, y);
     pass(NIL);
 };
 
-pub func:sdl_draw_line = NIL(int32:x1, int32:y1, int32:x2, int32:y2) {
+func:draw_line = NIL(int32:x1, int32:y1, int32:x2, int32:y2) {
     nitpick_sdl2_render_draw_line(x1, y1, x2, y2);
     pass(NIL);
 };
 
-pub func:sdl_draw_rect = NIL(int32:x, int32:y, int32:w, int32:h) {
+func:draw_rect = NIL(int32:x, int32:y, int32:w, int32:h) {
     nitpick_sdl2_render_draw_rect(x, y, w, h);
     pass(NIL);
 };
 
-pub func:sdl_fill_rect = NIL(int32:x, int32:y, int32:w, int32:h) {
+func:fill_rect = NIL(int32:x, int32:y, int32:w, int32:h) {
     nitpick_sdl2_render_fill_rect(x, y, w, h);
     pass(NIL);
 };
 
 // ── public API: events ──────────────────────────────────────────────
 
-pub func:sdl_poll_event = int32() {
+func:poll_event = int32() {
     int32:r = nitpick_sdl2_poll_event();
     pass(r);
 };
 
-pub func:sdl_event_type = int32() {
+func:event_type = int32() {
     int32:r = nitpick_sdl2_event_type();
     pass(r);
 };
 
 // ── public API: keyboard event fields ───────────────────────────────
 
-pub func:sdl_event_key_scancode = int32() {
+func:event_key_scancode = int32() {
     int32:r = nitpick_sdl2_event_key_scancode();
     pass(r);
 };
 
-pub func:sdl_event_key_keycode = int32() {
+func:event_key_keycode = int32() {
     int32:r = nitpick_sdl2_event_key_keycode();
     pass(r);
 };
 
-pub func:sdl_event_key_mod = int32() {
+func:event_key_mod = int32() {
     int32:r = nitpick_sdl2_event_key_mod();
     pass(r);
 };
 
-pub func:sdl_event_key_repeat = int32() {
+func:event_key_repeat = int32() {
     int32:r = nitpick_sdl2_event_key_repeat();
     pass(r);
 };
 
 // ── public API: mouse event fields ──────────────────────────────────
 
-pub func:sdl_event_mouse_x = int32() {
+func:event_mouse_x = int32() {
     int32:r = nitpick_sdl2_event_mouse_x();
     pass(r);
 };
 
-pub func:sdl_event_mouse_y = int32() {
+func:event_mouse_y = int32() {
     int32:r = nitpick_sdl2_event_mouse_y();
     pass(r);
 };
 
-pub func:sdl_event_mouse_button = int32() {
+func:event_mouse_button = int32() {
     int32:r = nitpick_sdl2_event_mouse_button();
     pass(r);
 };
 
-pub func:sdl_event_wheel_x = int32() {
+func:event_wheel_x = int32() {
     int32:r = nitpick_sdl2_event_wheel_x();
     pass(r);
 };
 
-pub func:sdl_event_wheel_y = int32() {
+func:event_wheel_y = int32() {
     int32:r = nitpick_sdl2_event_wheel_y();
     pass(r);
 };
 
 // ── public API: keyboard state ──────────────────────────────────────
 
-pub func:sdl_key_is_down = int32(int32:scancode) {
+func:key_is_down = int32(int32:scancode) {
     int32:r = nitpick_sdl2_get_keyboard_state(scancode);
     pass(r);
 };
 
 // ── public API: mouse state ─────────────────────────────────────────
 
-pub func:sdl_get_mouse_x = int32() {
+func:get_mouse_x = int32() {
     int32:r = nitpick_sdl2_get_mouse_state_x();
     pass(r);
 };
 
-pub func:sdl_get_mouse_y = int32() {
+func:get_mouse_y = int32() {
     int32:r = nitpick_sdl2_get_mouse_state_y();
     pass(r);
 };
 
-pub func:sdl_get_mouse_buttons = int32() {
+func:get_mouse_buttons = int32() {
     int32:r = nitpick_sdl2_get_mouse_state_buttons();
     pass(r);
 };
 
 // ── public API: timing ──────────────────────────────────────────────
 
-pub func:sdl_get_ticks = int32() {
+func:get_ticks = int32() {
     int32:r = nitpick_sdl2_get_ticks();
     pass(r);
 };
 
-pub func:sdl_delay = NIL(int32:ms) {
+func:delay = NIL(int32:ms) {
     nitpick_sdl2_delay(ms);
     pass(NIL);
 };
 
 // ── public API: misc ────────────────────────────────────────────────
 
-pub func:sdl_get_error = string() {
+func:get_error = string() {
     string:r = nitpick_sdl2_get_error();
-    pass(r);
+    pass r;
 };
 
 // ── public API: textures ────────────────────────────────────────────
 
-pub func:sdl_load_bmp_texture = int32(string:path) {
+func:load_bmp_texture = int32(string:path) {
     int32:r = nitpick_sdl2_load_bmp_texture(path);
     pass(r);
 };
 
-pub func:sdl_destroy_texture = NIL(int32:handle) {
+func:destroy_texture = NIL(int32:handle) {
     nitpick_sdl2_destroy_texture(handle);
     pass(NIL);
 };
 
-pub func:sdl_render_copy = NIL(int32:handle, int32:sx, int32:sy, int32:sw, int32:sh, int32:dx, int32:dy, int32:dw, int32:dh) {
+func:render_copy = NIL(int32:handle, int32:sx, int32:sy, int32:sw, int32:sh, int32:dx, int32:dy, int32:dw, int32:dh) {
     nitpick_sdl2_render_copy(handle, sx, sy, sw, sh, dx, dy, dw, dh);
     pass(NIL);
 };
 
-pub func:sdl_render_copy_full = NIL(int32:handle, int32:dx, int32:dy, int32:dw, int32:dh) {
+func:render_copy_full = NIL(int32:handle, int32:dx, int32:dy, int32:dw, int32:dh) {
     nitpick_sdl2_render_copy_full(handle, dx, dy, dw, dh);
     pass(NIL);
 };
 
-pub func:sdl_query_texture_w = int32(int32:handle) {
+func:query_texture_w = int32(int32:handle) {
     int32:r = nitpick_sdl2_query_texture_w(handle);
     pass(r);
 };
 
-pub func:sdl_query_texture_h = int32(int32:handle) {
+func:query_texture_h = int32(int32:handle) {
     int32:r = nitpick_sdl2_query_texture_h(handle);
     pass(r);
 };
 
 // ── public API: render scaling & clipping ───────────────────────────
 
-pub func:sdl_render_set_logical_size = NIL(int32:w, int32:h) {
+func:render_set_logical_size = NIL(int32:w, int32:h) {
     nitpick_sdl2_render_set_logical_size(w, h);
     pass(NIL);
 };
 
-pub func:sdl_render_set_scale = NIL(flt32:scale_x, flt32:scale_y) {
+func:render_set_scale = NIL(flt32:scale_x, flt32:scale_y) {
     nitpick_sdl2_render_set_scale(scale_x, scale_y);
     pass(NIL);
 };
 
-pub func:sdl_render_set_clip_rect = NIL(int32:x, int32:y, int32:w, int32:h) {
+func:render_set_clip_rect = NIL(int32:x, int32:y, int32:w, int32:h) {
     nitpick_sdl2_render_set_clip_rect(x, y, w, h);
     pass(NIL);
 };
 
-pub func:sdl_render_disable_clip = NIL() {
+func:render_disable_clip = NIL() {
     nitpick_sdl2_render_disable_clip();
     pass(NIL);
 };
 
 // ── public API: text input events ───────────────────────────────────
 
-pub func:sdl_start_text_input = NIL() {
+func:start_text_input = NIL() {
     nitpick_sdl2_start_text_input();
     pass(NIL);
 };
 
-pub func:sdl_stop_text_input = NIL() {
+func:stop_text_input = NIL() {
     nitpick_sdl2_stop_text_input();
     pass(NIL);
 };
 
-pub func:sdl_event_text_input = string() {
+func:event_text_input = string() {
     string:r = nitpick_sdl2_event_text_input();
-    pass(r);
+    pass r;
 };
 
 // ── public API: SDL_image ───────────────────────────────────────────
 
-pub func:sdl_load_image_texture = int32(string:path) {
+func:load_image_texture = int32(string:path) {
     int32:r = nitpick_sdl2_load_image_texture(path);
     pass(r);
 };
 
 // ── public API: SDL_ttf ─────────────────────────────────────────────
 
-pub func:sdl_ttf_init = int32() {
+func:ttf_init = int32() {
     int32:r = nitpick_sdl2_ttf_init();
     pass(r);
 };
 
-pub func:sdl_ttf_quit = NIL() {
+func:ttf_quit = NIL() {
     nitpick_sdl2_ttf_quit();
     pass(NIL);
 };
 
-pub func:sdl_load_font = int32(string:path, int32:ptsize) {
+func:load_font = int32(string:path, int32:ptsize) {
     int32:r = nitpick_sdl2_load_font(path, ptsize);
     pass(r);
 };
 
-pub func:sdl_destroy_font = NIL(int32:handle) {
+func:destroy_font = NIL(int32:handle) {
     nitpick_sdl2_destroy_font(handle);
     pass(NIL);
 };
 
-pub func:sdl_render_text_blended = int32(int32:font_handle, string:text, int32:r, int32:g, int32:b, int32:a) {
+func:render_text_blended = int32(int32:font_handle, string:text, int32:r, int32:g, int32:b, int32:a) {
     int32:res = nitpick_sdl2_render_text_blended(font_handle, text, r, g, b, a);
     pass(res);
 };
 
 // ── public API: SDL_mixer ───────────────────────────────────────────
 
-pub func:sdl_mixer_init = int32(int32:frequency, int32:channels, int32:chunksize) {
+func:mixer_init = int32(int32:frequency, int32:channels, int32:chunksize) {
     int32:r = nitpick_sdl2_mixer_init(frequency, channels, chunksize);
     pass(r);
 };
 
-pub func:sdl_mixer_quit = NIL() {
+func:mixer_quit = NIL() {
     nitpick_sdl2_mixer_quit();
     pass(NIL);
 };
 
-pub func:sdl_load_wav = int32(string:path) {
+func:load_wav = int32(string:path) {
     int32:r = nitpick_sdl2_load_wav(path);
     pass(r);
 };
 
-pub func:sdl_destroy_wav = NIL(int32:handle) {
+func:destroy_wav = NIL(int32:handle) {
     nitpick_sdl2_destroy_wav(handle);
     pass(NIL);
 };
 
-pub func:sdl_play_channel = NIL(int32:channel, int32:handle, int32:loops) {
+func:play_channel = NIL(int32:channel, int32:handle, int32:loops) {
     nitpick_sdl2_play_channel(channel, handle, loops);
     pass(NIL);
 };
 
-pub func:sdl_load_music = int32(string:path) {
+func:load_music = int32(string:path) {
     int32:r = nitpick_sdl2_load_music(path);
     pass(r);
 };
 
-pub func:sdl_play_music = NIL(int32:loops) {
+func:play_music = NIL(int32:loops) {
     nitpick_sdl2_play_music(loops);
     pass(NIL);
 };
 
-pub func:sdl_pause_music = NIL() {
+func:pause_music = NIL() {
     nitpick_sdl2_pause_music();
     pass(NIL);
 };
 
-pub func:sdl_resume_music = NIL() {
+func:resume_music = NIL() {
     nitpick_sdl2_resume_music();
     pass(NIL);
 };
 
-pub func:sdl_halt_music = NIL() {
+func:halt_music = NIL() {
     nitpick_sdl2_halt_music();
     pass(NIL);
 };
 
 // ── public API: SDL_GameController ──────────────────────────────────
 
-pub func:SDL_CONTROLLER_BUTTON_A = int32() { pass(0i32); };
-pub func:SDL_CONTROLLER_BUTTON_B = int32() { pass(1i32); };
-pub func:SDL_CONTROLLER_BUTTON_X = int32() { pass(2i32); };
-pub func:SDL_CONTROLLER_BUTTON_Y = int32() { pass(3i32); };
-pub func:SDL_CONTROLLER_BUTTON_BACK = int32() { pass(4i32); };
-pub func:SDL_CONTROLLER_BUTTON_GUIDE = int32() { pass(5i32); };
-pub func:SDL_CONTROLLER_BUTTON_START = int32() { pass(6i32); };
-pub func:SDL_CONTROLLER_BUTTON_LEFTSTICK = int32() { pass(7i32); };
-pub func:SDL_CONTROLLER_BUTTON_RIGHTSTICK = int32() { pass(8i32); };
-pub func:SDL_CONTROLLER_BUTTON_LEFTSHOULDER = int32() { pass(9i32); };
-pub func:SDL_CONTROLLER_BUTTON_RIGHTSHOULDER = int32() { pass(10i32); };
-pub func:SDL_CONTROLLER_BUTTON_DPAD_UP = int32() { pass(11i32); };
-pub func:SDL_CONTROLLER_BUTTON_DPAD_DOWN = int32() { pass(12i32); };
-pub func:SDL_CONTROLLER_BUTTON_DPAD_LEFT = int32() { pass(13i32); };
-pub func:SDL_CONTROLLER_BUTTON_DPAD_RIGHT = int32() { pass(14i32); };
+func:SDL_CONTROLLER_BUTTON_A = int32() { pass(0i32); };
+func:SDL_CONTROLLER_BUTTON_B = int32() { pass(1i32); };
+func:SDL_CONTROLLER_BUTTON_X = int32() { pass(2i32); };
+func:SDL_CONTROLLER_BUTTON_Y = int32() { pass(3i32); };
+func:SDL_CONTROLLER_BUTTON_BACK = int32() { pass(4i32); };
+func:SDL_CONTROLLER_BUTTON_GUIDE = int32() { pass(5i32); };
+func:SDL_CONTROLLER_BUTTON_START = int32() { pass(6i32); };
+func:SDL_CONTROLLER_BUTTON_LEFTSTICK = int32() { pass(7i32); };
+func:SDL_CONTROLLER_BUTTON_RIGHTSTICK = int32() { pass(8i32); };
+func:SDL_CONTROLLER_BUTTON_LEFTSHOULDER = int32() { pass(9i32); };
+func:SDL_CONTROLLER_BUTTON_RIGHTSHOULDER = int32() { pass(10i32); };
+func:SDL_CONTROLLER_BUTTON_DPAD_UP = int32() { pass(11i32); };
+func:SDL_CONTROLLER_BUTTON_DPAD_DOWN = int32() { pass(12i32); };
+func:SDL_CONTROLLER_BUTTON_DPAD_LEFT = int32() { pass(13i32); };
+func:SDL_CONTROLLER_BUTTON_DPAD_RIGHT = int32() { pass(14i32); };
 
-pub func:SDL_CONTROLLER_AXIS_LEFTX = int32() { pass(0i32); };
-pub func:SDL_CONTROLLER_AXIS_LEFTY = int32() { pass(1i32); };
-pub func:SDL_CONTROLLER_AXIS_RIGHTX = int32() { pass(2i32); };
-pub func:SDL_CONTROLLER_AXIS_RIGHTY = int32() { pass(3i32); };
-pub func:SDL_CONTROLLER_AXIS_TRIGGERLEFT = int32() { pass(4i32); };
-pub func:SDL_CONTROLLER_AXIS_TRIGGERRIGHT = int32() { pass(5i32); };
+func:SDL_CONTROLLER_AXIS_LEFTX = int32() { pass(0i32); };
+func:SDL_CONTROLLER_AXIS_LEFTY = int32() { pass(1i32); };
+func:SDL_CONTROLLER_AXIS_RIGHTX = int32() { pass(2i32); };
+func:SDL_CONTROLLER_AXIS_RIGHTY = int32() { pass(3i32); };
+func:SDL_CONTROLLER_AXIS_TRIGGERLEFT = int32() { pass(4i32); };
+func:SDL_CONTROLLER_AXIS_TRIGGERRIGHT = int32() { pass(5i32); };
 
-pub func:sdl_controller_open = int32(int32:device_index) {
+func:controller_open = int32(int32:device_index) {
     int32:r = nitpick_sdl2_controller_open(device_index);
     pass(r);
 };
 
-pub func:sdl_controller_close = NIL(int32:handle) {
+func:controller_close = NIL(int32:handle) {
     nitpick_sdl2_controller_close(handle);
     pass(NIL);
 };
 
-pub func:sdl_controller_get_button = int32(int32:handle, int32:button) {
+func:controller_get_button = int32(int32:handle, int32:button) {
     int32:r = nitpick_sdl2_controller_get_button(handle, button);
     pass(r);
 };
 
-pub func:sdl_controller_get_axis = int32(int32:handle, int32:axis) {
+func:controller_get_axis = int32(int32:handle, int32:axis) {
     int32:r = nitpick_sdl2_controller_get_axis(handle, axis);
     pass(r);
+};
+
 };

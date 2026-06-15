@@ -1,0 +1,21 @@
+[project]
+name = "nitpick-sdl2"
+version = "0.1.0"
+
+[target.nitpick-sdl2]
+type = "library"
+sources = ["src/nitpick_sdl2.npk"]
+deps = []
+flags = ["-Lshim/.nitpick_make/lib", "-lnitpick_sdl2", "-lSDL2", "-lSDL2_image", "-lSDL2_ttf", "-lSDL2_mixer"]
+
+[target.test-nitpick-sdl2]
+type = "binary"
+sources = ["tests/test_nitpick_sdl2.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_sdl2", "-lSDL2", "-lSDL2_image", "-lSDL2_ttf", "-lSDL2_mixer", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io"]
+
+[target.test-sdl2-extensions]
+type = "binary"
+sources = ["tests/test_sdl2_extensions.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_sdl2", "-lSDL2", "-lSDL2_image", "-lSDL2_ttf", "-lSDL2_mixer", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io"]
