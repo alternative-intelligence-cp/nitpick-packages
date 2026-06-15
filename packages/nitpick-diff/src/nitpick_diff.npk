@@ -93,7 +93,7 @@ func:diff_build_lcs_table = int64(int64:a, int64:m, int64:b, int64:n) {
             } else {
                 int64:up   = aria_libc_mem_read_i64(tbl, ((i - 1i64) * cols + j) * 8i64);
                 int64:left = aria_libc_mem_read_i64(tbl, (i * cols + (j - 1i64)) * 8i64);
-                cell = diff_max(up, left);
+                cell = raw diff_max(up, left);
             }
             aria_libc_mem_write_i64(tbl, (i * cols + j) * 8i64, cell);
             j += 1i64;

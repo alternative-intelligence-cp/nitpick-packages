@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-diff"
+version = "0.11.1"
+
+[target.nitpick-diff]
+type = "library"
+sources = ["src/nitpick_diff.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem"]
+
+[target.test-nitpick-diff]
+type = "binary"
+sources = ["tests/test_nitpick_diff.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
