@@ -1,0 +1,23 @@
+[project]
+name = "nitpick-tui"
+version = "0.1.0"
+
+[target.test_tui_v4]
+type = "binary"
+sources = ["tests/test_tui_v4.npk"]
+deps = [
+    "nitpick-display",
+    "nitpick-input",
+    "nitpick-vec",
+    "nitpick-str"
+]
+flags = [
+    "-I", "src",
+    "-I", "../nitpick-display/src",
+    "-I", "../nitpick-input/src",
+    "-I", "../nitpick-vec/src",
+    "-I", "../nitpick-str/src",
+    "-L../nitpick-display/shim", "-lnitpick_display_shim",
+    "-L../nitpick-input/shim", "-lnitpick_input_shim",
+    "-L../../../nitpick-libc/shim", "-lnitpick_libc_string", "-lnitpick_libc_mem", "-lnitpick_libc_io"
+]

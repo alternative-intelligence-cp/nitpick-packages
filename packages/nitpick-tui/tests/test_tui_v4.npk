@@ -3,12 +3,12 @@
 use "nitpick_tui.npk".*;
 
 func:failsafe = int32(tbb32:err) {
-    raw Tui_shutdown();
+    raw Tui.shutdown();
     exit 1i32;
 };
 
 func:main = int32() {
-    raw Tui_init();
+    raw Tui.init();
 
     int32:running = 1i32;
     int32:vk = 0i32;
@@ -24,43 +24,43 @@ func:main = int32() {
     int32:dialog_btn = 0i32;
 
     while (running == 1i32) {
-        nitpick_display_clear();
+        Display.clear();
 
         // Title
-        Widget:title = raw Tui_label(2i32, 1i32, "Advanced TUI Widgets Demo\0", 6i32, 0i32);
-        raw Tui_draw_widget(title);
+        Widget:title = raw Tui.label(2i32, 1i32, "Advanced TUI Widgets Demo\0", 6i32, 0i32);
+        raw Tui.draw_widget(title);
 
-        LayoutCursor:content = raw Layout_create(2i32, 3i32, 2i32); // padding = 2
+        LayoutCursor:content = raw Layout.create(2i32, 3i32, 2i32); // padding = 2
 
         // 1. ListBox (Long list to test scrollbar)
-        Widget:listbox = raw Tui_listbox(0i32, 0i32, 20i32, 6i32, "Apple|Banana|Cherry|Date|Elderberry|Fig|Grape|Honeydew|Kiwi|Lemon|Mango|Nectarine|Orange\0", list_sel);
-        listbox = raw Layout_hbox_add(content, listbox);
+        Widget:listbox = raw Tui.listbox(0i32, 0i32, 20i32, 6i32, "Apple|Banana|Cherry|Date|Elderberry|Fig|Grape|Honeydew|Kiwi|Lemon|Mango|Nectarine|Orange\0", list_sel);
+        listbox = raw Layout.hbox_add(content, listbox);
         
         // 2. Dropdown
         int32:drop_val = drop_exp * 1000i32 + drop_sel;
-        Widget:dropdown = raw Tui_dropdown(0i32, 0i32, 20i32, "Option A|Option B|Option C\0", drop_val);
-        dropdown = raw Layout_hbox_add(content, dropdown);
+        Widget:dropdown = raw Tui.dropdown(0i32, 0i32, 20i32, "Option A|Option B|Option C\0", drop_val);
+        dropdown = raw Layout.hbox_add(content, dropdown);
         
-        raw Layout_newline(content);
+        raw Layout.newline(content);
         
         // 3. TreeView
-        Widget:tree = raw Tui_treeview(0i32, 0i32, 30i32, 8i32, "Root|-Folder1|--FileA.txt|--FileB.txt|-Folder2|--FileC.txt\0", tree_sel);
-        tree = raw Layout_hbox_add(content, tree);
+        Widget:tree = raw Tui.treeview(0i32, 0i32, 30i32, 8i32, "Root|-Folder1|--FileA.txt|--FileB.txt|-Folder2|--FileC.txt\0", tree_sel);
+        tree = raw Layout.hbox_add(content, tree);
         
         // 4. DataGrid (Long grid to test scrollbar)
-        Widget:grid = raw Tui_datagrid(0i32, 0i32, 35i32, 6i32, "ID,Name,Status|1,Alice,Active|2,Bob,Inactive|3,Charlie,Active|4,David,Active|5,Eve,Inactive|6,Frank,Active|7,Grace,Active|8,Heidi,Inactive\0", grid_sel);
-        grid = raw Layout_hbox_add(content, grid);
+        Widget:grid = raw Tui.datagrid(0i32, 0i32, 35i32, 6i32, "ID,Name,Status|1,Alice,Active|2,Bob,Inactive|3,Charlie,Active|4,David,Active|5,Eve,Inactive|6,Frank,Active|7,Grace,Active|8,Heidi,Inactive\0", grid_sel);
+        grid = raw Layout.hbox_add(content, grid);
         
-        raw Layout_newline(content);
-        raw Layout_set_padding(content, 4i32); // Change padding
+        raw Layout.newline(content);
+        raw Layout.set_padding(content, 4i32); // Change padding
 
         // Right-aligned button
-        Widget:btn_quit = raw Tui_button(0i32, 0i32, 15i32, "Show Dialog\0");
-        btn_quit = raw Layout_vbox_right(content, btn_quit, 70i32); // container width = 70
+        Widget:btn_quit = raw Tui.button(0i32, 0i32, 15i32, "Show Dialog\0");
+        btn_quit = raw Layout.vbox_right(content, btn_quit, 70i32); // container width = 70
 
         // Centered button
-        Widget:btn_other = raw Tui_button(0i32, 0i32, 15i32, "Centered Btn\0");
-        btn_other = raw Layout_vbox_center(content, btn_other, 70i32);
+        Widget:btn_other = raw Tui.button(0i32, 0i32, 15i32, "Centered Btn\0");
+        btn_other = raw Layout.vbox_center(content, btn_other, 70i32);
 
         // Update focus
         listbox.focused = 0i32; dropdown.focused = 0i32; tree.focused = 0i32; grid.focused = 0i32; btn_quit.focused = 0i32; btn_other.focused = 0i32;
@@ -71,26 +71,26 @@ func:main = int32() {
         if (focus == 4i32) { btn_quit.focused = 1i32; }
         if (focus == 5i32) { btn_other.focused = 1i32; }
 
-        raw Tui_draw_widget(listbox);
-        raw Tui_draw_widget(dropdown); // rendering order matters if it overlaps, so it should be drawn last if expanded, but for simplicity here we draw sequentially.
-        raw Tui_draw_widget(tree);
-        raw Tui_draw_widget(grid);
-        raw Tui_draw_widget(btn_quit);
-        raw Tui_draw_widget(btn_other);
+        raw Tui.draw_widget(listbox);
+        raw Tui.draw_widget(dropdown); // rendering order matters if it overlaps, so it should be drawn last if expanded, but for simplicity here we draw sequentially.
+        raw Tui.draw_widget(tree);
+        raw Tui.draw_widget(grid);
+        raw Tui.draw_widget(btn_quit);
+        raw Tui.draw_widget(btn_other);
 
         // 5. Dialog (Rendered last to sit on top)
         if (show_dialog == 1i32) {
-            Widget:dlg = raw Tui_dialog(15i32, 5i32, 40i32, 8i32, "Confirmation|Are you sure you want to quit?\0", 1i32);
+            Widget:dlg = raw Tui.dialog(15i32, 5i32, 40i32, 8i32, "Confirmation|Are you sure you want to quit?\0", 1i32);
             dlg.focused = 1i32;
             dlg.value = dialog_btn; // Actually dialog style, we'll hack focus to mean btn selection here just to show it
             if (dialog_btn == 0i32) { dlg.focused = 1i32; } else { dlg.focused = 0i32; } // Simplification for demo
-            raw Tui_draw_widget(dlg);
+            raw Tui.draw_widget(dlg);
         }
 
-        nitpick_display_flush();
+        Display.flush();
 
         // --- INPUT ---
-        vk = nitpick_input_read_key();
+        vk = Input.read_key();
         
         if (vk == 27i32) { running = 0i32; } // ESC
         
@@ -134,6 +134,6 @@ func:main = int32() {
         }
     }
 
-    raw Tui_shutdown();
+    raw Tui.shutdown();
     exit 0i32;
 };
