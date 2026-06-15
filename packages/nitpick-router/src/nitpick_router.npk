@@ -8,106 +8,110 @@
 //
 // v0.12.0: Rebuilt on aria-libc.
 
-extern "aria_libc_router" {
-    func:aria_libc_router_add         = int64(string:method, string:pattern, int64:handler_id);
-    func:aria_libc_router_match       = int64(string:method, string:path);
-    func:aria_libc_router_param       = string(string:name);
-    func:aria_libc_router_param_count = int64();
-    func:aria_libc_router_param_name  = string(int64:idx);
-    func:aria_libc_router_param_value = string(int64:idx);
-    func:aria_libc_router_use_mw     = int64(int64:middleware_id);
-    func:aria_libc_router_mw_count   = int64();
-    func:aria_libc_router_mw_id      = int64(int64:idx);
-    func:aria_libc_router_route_count = int64();
-    func:aria_libc_router_matched     = int64();
-    func:aria_libc_router_reset_all   = int64();
-    func:aria_libc_router_error       = string();
+extern "nitpick_libc_router" {
+    func:nitpick_libc_router_add         = int64(string:method, string:pattern, int64:handler_id);
+    func:nitpick_libc_router_match       = int64(string:method, string:path);
+    func:nitpick_libc_router_param       = string(string:name);
+    func:nitpick_libc_router_param_count = int64();
+    func:nitpick_libc_router_param_name  = string(int64:idx);
+    func:nitpick_libc_router_param_value = string(int64:idx);
+    func:nitpick_libc_router_use_mw     = int64(int64:middleware_id);
+    func:nitpick_libc_router_mw_count   = int64();
+    func:nitpick_libc_router_mw_id      = int64(int64:idx);
+    func:nitpick_libc_router_route_count = int64();
+    func:nitpick_libc_router_matched     = int64();
+    func:nitpick_libc_router_reset_all   = int64();
+    func:nitpick_libc_router_error       = string();
 }
 
 // ── Route registration ──────────────────────────────────────────────────────
 
 pub func:route_add = int64(string:method, string:pattern, int64:handler_id) {
-    pass aria_libc_router_add(method, pattern, handler_id);
+    pass nitpick_libc_router_add(method, pattern, handler_id);
 };
 
 pub func:route_get = int64(string:pattern, int64:handler_id) {
-    pass aria_libc_router_add("GET", pattern, handler_id);
+    pass nitpick_libc_router_add("GET", pattern, handler_id);
 };
 
 pub func:route_post = int64(string:pattern, int64:handler_id) {
-    pass aria_libc_router_add("POST", pattern, handler_id);
+    pass nitpick_libc_router_add("POST", pattern, handler_id);
 };
 
 pub func:route_put = int64(string:pattern, int64:handler_id) {
-    pass aria_libc_router_add("PUT", pattern, handler_id);
+    pass nitpick_libc_router_add("PUT", pattern, handler_id);
 };
 
 pub func:route_del = int64(string:pattern, int64:handler_id) {
-    pass aria_libc_router_add("DELETE", pattern, handler_id);
+    pass nitpick_libc_router_add("DELETE", pattern, handler_id);
 };
 
 pub func:route_patch = int64(string:pattern, int64:handler_id) {
-    pass aria_libc_router_add("PATCH", pattern, handler_id);
+    pass nitpick_libc_router_add("PATCH", pattern, handler_id);
 };
 
 pub func:route_any = int64(string:pattern, int64:handler_id) {
-    pass aria_libc_router_add("", pattern, handler_id);
+    pass nitpick_libc_router_add("", pattern, handler_id);
 };
 
 // ── Route matching ──────────────────────────────────────────────────────────
 
 pub func:route_match = int64(string:method, string:path) {
-    pass aria_libc_router_match(method, path);
+    pass nitpick_libc_router_match(method, path);
 };
 
 pub func:route_matched = int64() {
-    pass aria_libc_router_matched();
+    pass nitpick_libc_router_matched();
 };
 
 // ── Parameter access ────────────────────────────────────────────────────────
 
 pub func:route_param = string(string:name) {
-    pass aria_libc_router_param(name);
+    string:r = nitpick_libc_router_param(name);
+    pass r;
 };
 
 pub func:route_param_count = int64() {
-    pass aria_libc_router_param_count();
+    pass nitpick_libc_router_param_count();
 };
 
 pub func:route_param_name = string(int64:idx) {
-    pass aria_libc_router_param_name(idx);
+    string:r = nitpick_libc_router_param_name(idx);
+    pass r;
 };
 
 pub func:route_param_val = string(int64:idx) {
-    pass aria_libc_router_param_value(idx);
+    string:r = nitpick_libc_router_param_value(idx);
+    pass r;
 };
 
 // ── Middleware ───────────────────────────────────────────────────────────────
 
 pub func:route_use_mw = int64(int64:middleware_id) {
-    pass aria_libc_router_use_mw(middleware_id);
+    pass nitpick_libc_router_use_mw(middleware_id);
 };
 
 pub func:route_mw_count = int64() {
-    pass aria_libc_router_mw_count();
+    pass nitpick_libc_router_mw_count();
 };
 
 pub func:route_mw_id = int64(int64:idx) {
-    pass aria_libc_router_mw_id(idx);
+    pass nitpick_libc_router_mw_id(idx);
 };
 
 // ── State ───────────────────────────────────────────────────────────────────
 
 pub func:route_count = int64() {
-    pass aria_libc_router_route_count();
+    pass nitpick_libc_router_route_count();
 };
 
 pub func:route_reset = int64() {
-    pass aria_libc_router_reset_all();
+    pass nitpick_libc_router_reset_all();
 };
 
 pub func:route_error = string() {
-    pass aria_libc_router_error();
+    string:r = nitpick_libc_router_error();
+    pass r;
 };
 
 // ── Type wrapper ───────────────────────────────────────────────────────────
@@ -127,10 +131,10 @@ Type:Router = {
     func:last_matched = int64() { pass raw route_matched(); };
 
     // params
-    func:param       = string(string:name) { pass raw route_param(name); };
+    func:param       = string(string:name) { string:v = raw route_param(name); pass v; };
     func:param_count = int64() { pass raw route_param_count(); };
-    func:param_name  = string(int64:i) { pass raw route_param_name(i); };
-    func:param_val   = string(int64:i) { pass raw route_param_val(i); };
+    func:param_name  = string(int64:i) { string:v = raw route_param_name(i); pass v; };
+    func:param_val   = string(int64:i) { string:v = raw route_param_val(i); pass v; };
 
     // middleware
     func:use_mw   = int64(int64:mid) { pass raw route_use_mw(mid); };
@@ -140,5 +144,5 @@ Type:Router = {
     // state
     func:count     = int64() { pass raw route_count(); };
     func:reset_all = int64() { pass raw route_reset(); };
-    func:last_err  = string() { pass raw route_error(); };
+    func:last_err  = string() { string:v = raw route_error(); pass v; };
 };

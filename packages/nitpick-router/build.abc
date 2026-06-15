@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-router"
+version = "0.1.0"
+
+[target.nitpick-router]
+type = "library"
+sources = ["src/nitpick_router.npk"]
+deps = []
+flags = ["-Lshim/.nitpick_make/lib", "-lnitpick_router"]
+
+[target.test-nitpick-router]
+type = "binary"
+sources = ["tests/test_nitpick_router.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_router", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io"]

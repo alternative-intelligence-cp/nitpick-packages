@@ -1,10 +1,100 @@
 // test_nitpick_router.npk — 12-test suite for nitpick-router (v0.12.0)
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+extern "libc" { func:printf = int32(string:fmt); }
 use "../src/nitpick_router.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+int64:fail_cnt = 0i64;
+
+func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+func:assert_eq_i64 = int64(int64:actual, int64:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass 0i64;
+};
+
+func:assert_eq_string = int32(string:actual, string:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i32);
+};
 
 func:main = int32() {
-    drop(println("PASS: all tests passed"));
-    exit 0;
+    // T01: Route registration
+    drop raw Router.on_get("/hello", 1i64);
+    drop raw Router.on_post("/submit", 2i64);
+    int64:c = raw Router.count();
+    drop assert_eq_i64(c, 2i64, "T01 count() == 2\0");
+
+    // T02: Simple exact match
+    int64:r1 = raw Router.dispatch("GET", "/hello");
+    drop assert_eq_i64(r1, 1i64, "T02 GET /hello\0");
+
+    // T03: Simple exact match POST
+    int64:r2 = raw Router.dispatch("POST", "/submit");
+    drop assert_eq_i64(r2, 2i64, "T03 POST /submit\0");
+
+    // T04: Missing path
+    int64:r3 = raw Router.dispatch("GET", "/missing");
+    drop assert_eq_i64(r3, 0i64 - 1i64, "T04 GET /missing\0");
+
+    // T05: Method mismatch
+    int64:r4 = raw Router.dispatch("POST", "/hello");
+    drop assert_eq_i64(r4, 0i64 - 1i64, "T05 POST /hello (mismatch)\0");
+
+    // T06: Path parameters
+    int64:r5 = raw Router.dispatch("GET", "/users/42");
+    drop assert_eq_i64(r5, 10i64, "T06 GET /users/42\0");
+
+    // T07: Extract parameter
+    string:p1 = raw Router.param("id");
+    drop assert_eq_string(p1, "42", "T07 param id == 42\0");
+
+    // T08: Multiple parameters match
+    int64:r6 = raw Router.dispatch("GET", "/post/7/comments/99");
+    drop assert_eq_i64(r6, 20i64, "T08 GET /post/7/comments/99\0");
+
+    // T09: Extract multiple parameters
+    string:p2 = raw Router.param("pid");
+    drop assert_eq_string(p2, "7", "T09 param pid == 7\0");
+
+    // T10: Middleware use
+    drop raw Router.use_mw(100i64);
+    int64:mwc = raw Router.mw_count();
+    drop assert_eq_i64(mwc, 2i64, "T10 use_mw\0");
+
+    // T11: Last matched
+    int64:lm = raw Router.last_matched();
+    drop assert_eq_i64(lm, 1i64, "T11 last_matched\0");
+
+    // T12: Reset
+    drop raw Router.reset_all();
+    int64:mwc2 = raw Router.mw_count();
+    drop assert_eq_i64(mwc2, 0i64, "T12 reset_all\0");
+
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+
+    drop(printf("SUCCESS: All tests passed.\n\0"));
+    exit 0i32;
 };
