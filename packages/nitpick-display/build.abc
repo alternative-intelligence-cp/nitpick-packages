@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-display"
+version = "0.12.2"
+
+[target.nitpick-display]
+type = "library"
+sources = ["src/nitpick_display.npk"]
+deps = []
+flags = ["-L.", "-lnitpick_display_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-nitpick-display]
+type = "binary"
+sources = ["tests/test_nitpick_display.npk"]
+deps = []
+flags = ["-I", "src", "-I", "../nitpick-str/src", "-L.", "-lnitpick_display_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
