@@ -1,4 +1,4 @@
-// test_aria_decision_t.aria — LIB-25 test suite (aria-decision-t)
+// test_nitpick_decision_t.npk — LIB-25 test suite (nitpick-decision-t)
 //
 // 20 deterministic tests covering:
 //   DG math (opt_a, opt_b, decision_code), lean/tilt mutations,
@@ -10,52 +10,93 @@
 use "../src/nitpick_decision_t.npk".*;
 
 extern "libc" {
-    func:aria_libc_mem_read_f64 = float64(int64:ptr, int64:offset);
-    func:aria_libc_mem_read_i64 = int64(int64:ptr, int64:offset);
-    func:aria_libc_mem_free = void(int64:ptr);
-    func:aria_libc_mem_malloc = int64(int64:size);
-        func:aria_libc_exit = NIL(int32:code);
+    func:nitpick_libc_mem_read_f64 = float64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_read_i64 = int64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_free = void(int64:ptr);
+    func:nitpick_libc_mem_malloc = int64(int64:size);
+        func:nitpick_libc_exit = NIL(int32:code);
 }
 
 
-func:failsafe = int32(tbb32:_err) { exit 1; };
+
+int64:fail_cnt = 0i64;
+
+func:failsafe = int32(tbb32:_err) {
+    drop _err;
+    exit 1i32;
+};
+
+func:assert_eq_i64 = int64(int64:actual, int64:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        fail_cnt += 1i64;
+        print("[FAIL] ");
+        print(test_name);
+        print("\n");
+    } else {
+        print("[PASS] ");
+        print(test_name);
+        print("\n");
+    }
+    pass(0i64);
+};
+
+func:assert_eq_f64 = int64(float64:actual, float64:expected, string:test_name) {
+    float64:diff = actual - expected;
+    if (diff < 0.0) { diff = 0.0 - diff; }
+    if (diff > 0.01) {
+        fail_cnt += 1i64;
+        fail_cnt += 1i64;
+        print("[FAIL] ");
+        print(test_name);
+        print("\n");
+    } else {
+        print("[PASS] ");
+        print(test_name);
+        print("\n");
+    }
+    pass(0i64);
+};
+
 
 func:main = int32() {
 
     // Allocate shared buffers (reused across tests)
-    int64:dg = aria_libc_mem_malloc(5i64 * 8i64);
-    int64:meta    = aria_libc_mem_malloc(5i64 * 8i64);
-    int64:snaps = aria_libc_mem_malloc(64i64 * 8i64 * 8i64);  // 64 snapshots
-    int64:snap  = aria_libc_mem_malloc(8i64 * 8i64);           // single-snap read buffer
-    int64:pr    = aria_libc_mem_malloc(2i64 * 8i64);           // peak-result buffer
-    int64:idx_out = aria_libc_mem_malloc(32i64 * 8i64);              // index output
-    int64:counts  = aria_libc_mem_malloc(5i64 * 8i64);               // stability counts
+    int64:dg = nitpick_libc_mem_malloc(5i64 * 8i64);
+    int64:meta    = nitpick_libc_mem_malloc(5i64 * 8i64);
+    int64:snaps = nitpick_libc_mem_malloc(64i64 * 8i64 * 8i64);  // 64 snapshots
+    int64:snap  = nitpick_libc_mem_malloc(8i64 * 8i64);           // single-snap read buffer
+    int64:pr    = nitpick_libc_mem_malloc(2i64 * 8i64);           // peak-result buffer
+    int64:idx_out = nitpick_libc_mem_malloc(32i64 * 8i64);              // index output
+    int64:counts  = nitpick_libc_mem_malloc(5i64 * 8i64);               // stability counts
 
     int64:passed = 0i64;
     int64:total  = 0i64;
 
-    print("aria-decision-t LIB-25 test suite\n");
+    print("nitpick-decision-t LIB-25 test suite\n");
     print("====================================\n");
 
     // ── 01: dg_opt_a at center — pbc=50 pbm=0 factor=0.5 hw=0.125 → a=0.25 ──
     total = total + 1i64;
-    float64:a01 = raw dg_opt_a(50.0, 0.0, 100.0);
+    float64:a01 = raw DecisionT.opt_a(50.0, 0.0, 100.0);
     float64:diff01 = a01 - 0.25; if (diff01 < 0.0) { diff01 = 0.0 - diff01; }
     if (diff01 < 0.01) {
         print("[PASS] 01: dg_opt_a center pbm=0 -> ~0.25\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 01: dg_opt_a center pbm=0 -> ~0.25\n");
     }
 
     // ── 02: dg_opt_b at center — pbc=50 pbm=0 → b=0.25 ─────────────────────
     total = total + 1i64;
-    float64:b02 = raw dg_opt_b(50.0, 0.0, 100.0);
+    float64:b02 = raw DecisionT.opt_b(50.0, 0.0, 100.0);
     float64:diff02 = b02 - 0.25; if (diff02 < 0.0) { diff02 = 0.0 - diff02; }
     if (diff02 < 0.01) {
         print("[PASS] 02: dg_opt_b center pbm=0 -> ~0.25\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 02: dg_opt_b center pbm=0 -> ~0.25\n");
     }
 
@@ -63,35 +104,38 @@ func:main = int32() {
     // pbc=25.0, pbm=0.0 → factor=0.5, hw=0.5*0.5/2=0.125 → lo=0.125 hi=0.375
     // overlap of [0.125,0.375] with [0,0.5] = 0.25 → a = 0.25/0.5 = 0.5
     total = total + 1i64;
-    float64:a03 = raw dg_opt_a(25.0, 0.0, 100.0);
+    float64:a03 = raw DecisionT.opt_a(25.0, 0.0, 100.0);
     float64:diff03 = a03 - 0.5;
     if (diff03 < 0.0) { diff03 = 0.0 - diff03; }
     if (diff03 < 0.01) {
         print("[PASS] 03: dg_opt_a pbc=25 pbm=0 -> 0.5\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 03: dg_opt_a pbc=25 pbm=0 -> expected 0.5\n");
     }
 
     // ── 04: dg_decision_code — leaned to A ───────────────────────────────────
     // pbc=25 pbm=0: a=0.5 (>0.25) b=0 (<0.25) → DECISION=A=2
     total = total + 1i64;
-    int64:dec04 = raw dg_decision_code(25.0, 0.0, 100.0);
+    int64:dec04 = raw DecisionT.decision_code(25.0, 0.0, 100.0);
     if (dec04 == 2i64) {
         print("[PASS] 04: dg_decision_code pbc=25 -> A=2\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 04: dg_decision_code pbc=25 -> expected A=2\n");
     }
 
     // ── 05: dg_decision_code — leaned to B ───────────────────────────────────
     // pbc=75 pbm=0: a=0 b=0.5 → B=3
     total = total + 1i64;
-    int64:dec05 = raw dg_decision_code(75.0, 0.0, 100.0);
+    int64:dec05 = raw DecisionT.decision_code(75.0, 0.0, 100.0);
     if (dec05 == 3i64) {
         print("[PASS] 05: dg_decision_code pbc=75 -> B=3\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 05: dg_decision_code pbc=75 -> expected B=3\n");
     }
 
@@ -101,211 +145,226 @@ func:main = int32() {
     // overlap_b = raw min(1.0,0.625)-max(0.5,-0.125) = 0.625−0.5=0.125 → b=0.25
     // a>0.25 b>0.25 → BOTH=4
     total = total + 1i64;
-    int64:dec06 = raw dg_decision_code(50.0, 1.0, 100.0);
+    int64:dec06 = raw DecisionT.decision_code(50.0, 1.0, 100.0);
     if (dec06 == 4i64) {
         print("[PASS] 06: dg_decision_code pbc=50 pbm=1 -> BOTH=4\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 06: dg_decision_code pbc=50 pbm=1 -> expected BOTH=4\n");
     }
 
     // ── 07: dg_create initialises cell correctly ──────────────────────────────
     total = total + 1i64;
-    drop(dg_create(dg, 100.0));
-    float64:pbc07 = aria_libc_mem_read_f64(dg, 0i64 * 8i64);
-    float64:pbm07 = aria_libc_mem_read_f64(dg, 1i64 * 8i64);
-    float64:w07   = aria_libc_mem_read_f64(dg, 2i64 * 8i64);
+    drop(raw DecisionT.create(dg, 100.0));
+    float64:pbc07 = nitpick_libc_mem_read_f64(dg, 0i64 * 8i64);
+    float64:pbm07 = nitpick_libc_mem_read_f64(dg, 1i64 * 8i64);
+    float64:w07   = nitpick_libc_mem_read_f64(dg, 2i64 * 8i64);
     float64:diff_pbc = pbc07 - 50.0;
     if (diff_pbc < 0.0) { diff_pbc = 0.0 - diff_pbc; }
     if (diff_pbc < 0.01 && pbm07 < 0.001 && w07 > 99.9) {
         print("[PASS] 07: dg_create sets pbc=50 pbm=0 width=100\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 07: dg_create initial state wrong\n");
     }
 
     // ── 08: dg_lean_a moves pbc left ─────────────────────────────────────────
     total = total + 1i64;
-    drop(dg_create(dg, 100.0));
-    drop(dg_lean_a(dg, 10.0));
-    float64:pbc08 = aria_libc_mem_read_f64(dg, 0i64 * 8i64);
+    drop(raw DecisionT.create(dg, 100.0));
+    drop(raw DecisionT.lean_a(dg, 10.0));
+    float64:pbc08 = nitpick_libc_mem_read_f64(dg, 0i64 * 8i64);
     float64:diff08 = pbc08 - 40.0;
     if (diff08 < 0.0) { diff08 = 0.0 - diff08; }
     if (diff08 < 0.01) {
         print("[PASS] 08: dg_lean_a 10.0 -> pbc=40\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 08: dg_lean_a 10.0 -> expected pbc=40\n");
     }
 
     // ── 09: dg_lean_b moves pbc right ────────────────────────────────────────
     total = total + 1i64;
-    drop(dg_create(dg, 100.0));
-    drop(dg_lean_b(dg, 10.0));
-    float64:pbc09 = aria_libc_mem_read_f64(dg, 0i64 * 8i64);
+    drop(raw DecisionT.create(dg, 100.0));
+    drop(raw DecisionT.lean_b(dg, 10.0));
+    float64:pbc09 = nitpick_libc_mem_read_f64(dg, 0i64 * 8i64);
     float64:diff09 = pbc09 - 60.0;
     if (diff09 < 0.0) { diff09 = 0.0 - diff09; }
     if (diff09 < 0.01) {
         print("[PASS] 09: dg_lean_b 10.0 -> pbc=60\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 09: dg_lean_b 10.0 -> expected pbc=60\n");
     }
 
     // ── 10: lean clamping at lo_lim=25 ───────────────────────────────────────
     total = total + 1i64;
-    drop(dg_create(dg, 100.0));
-    drop(dg_lean_a(dg, 100.0));   // big lean — should clamp to 25.0
-    float64:pbc10 = aria_libc_mem_read_f64(dg, 0i64 * 8i64);
+    drop(raw DecisionT.create(dg, 100.0));
+    drop(raw DecisionT.lean_a(dg, 100.0));   // big lean — should clamp to 25.0
+    float64:pbc10 = nitpick_libc_mem_read_f64(dg, 0i64 * 8i64);
     float64:diff10 = pbc10 - 25.0;
     if (diff10 < 0.0) { diff10 = 0.0 - diff10; }
     if (diff10 < 0.01) {
         print("[PASS] 10: dg_lean_a clamps at lo_lim=25\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 10: dg_lean_a clamp failed, got unexpected pbc\n");
     }
 
     // ── 11: dg_tilt_both increases pbm ───────────────────────────────────────
     total = total + 1i64;
-    drop(dg_create(dg, 100.0));
-    drop(dg_tilt_both(dg, 25.0));   // step = 25/50 = 0.5 → pbm=0.5
-    float64:pbm11 = aria_libc_mem_read_f64(dg, 1i64 * 8i64);
+    drop(raw DecisionT.create(dg, 100.0));
+    drop(raw DecisionT.tilt_both(dg, 25.0));   // step = 25/50 = 0.5 → pbm=0.5
+    float64:pbm11 = nitpick_libc_mem_read_f64(dg, 1i64 * 8i64);
     float64:diff11 = pbm11 - 0.5;
     if (diff11 < 0.0) { diff11 = 0.0 - diff11; }
     if (diff11 < 0.01) {
         print("[PASS] 11: dg_tilt_both 25.0 -> pbm=0.5\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 11: dg_tilt_both 25.0 -> expected pbm=0.5\n");
     }
 
     // ── 12: dgt_create stores init snapshot ──────────────────────────────────
     total = total + 1i64;
-    drop(dgt_create(dg, meta, snaps, 100.0, 64i64));
-    int64:snap_count12 = raw dgt_snap_count(meta);
-    int64:step_count12 = raw dgt_step_count(meta);
+    drop(raw DecisionT.t_create(dg, meta, snaps, 100.0, 64i64));
+    int64:snap_count12 = raw DecisionT.t_snap_count(meta);
+    int64:step_count12 = raw DecisionT.t_step_count(meta);
     if (snap_count12 == 1i64 && step_count12 == 1i64) {
         print("[PASS] 12: dgt_create stores 1 init snapshot\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 12: dgt_create snapshot count wrong\n");
     }
 
     // ── 13: dgt_lean_a adds snapshot ─────────────────────────────────────────
     total = total + 1i64;
-    drop(dgt_lean_a(dg, meta, snaps, 10.0));
-    int64:snap_count13 = raw dgt_snap_count(meta);
+    drop(raw DecisionT.t_lean_a(dg, meta, snaps, 10.0));
+    int64:snap_count13 = raw DecisionT.t_snap_count(meta);
     if (snap_count13 == 2i64) {
         print("[PASS] 13: dgt_lean_a adds snapshot -> count=2\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 13: dgt_lean_a snapshot count wrong\n");
     }
 
     // ── 14: dgt_get_snap reads slot 0 (init snapshot) ────────────────────────
     total = total + 1i64;
-    drop(dgt_create(dg, meta, snaps, 100.0, 64i64));
-    int64:ok14 = raw dgt_get_snap(snaps, meta, 0i64, snap);
-    float64:dec14 = aria_libc_mem_read_f64(snap, 6i64 * 8i64);
+    drop(raw DecisionT.t_create(dg, meta, snaps, 100.0, 64i64));
+    int64:ok14 = raw DecisionT.t_get_snap(snaps, meta, 0i64, snap);
+    float64:dec14 = nitpick_libc_mem_read_f64(snap, 6i64 * 8i64);
     int64:dec14i = dec14 => int64;
     // init: pbc=50, pbm=0 → UNKNOWN=1 (a=b=0.25, a is not >0.25 but >=0.125)
     if (ok14 == 1i64 && dec14i == 1i64) {
         print("[PASS] 14: dgt_get_snap slot 0 = UNKNOWN decision\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 14: dgt_get_snap slot 0 wrong\n");
     }
 
     // ── 15: dgt_lean_a two steps → decision change NONE→A ────────────────────
     total = total + 1i64;
-    drop(dgt_create(dg, meta, snaps, 100.0, 64i64));
+    drop(raw DecisionT.t_create(dg, meta, snaps, 100.0, 64i64));
     // push lean: from pbc=50 to pbc=26 (under 25 threshold for decision A)
-    drop(dgt_lean_a(dg, meta, snaps, 24.0));   // pbc=26
-    int64:chg15 = aria_libc_mem_malloc(8i64 * 8i64);
-    int64:changes15 = raw dgt_find_decision_changes(snaps, meta, chg15, 8i64);
+    drop(raw DecisionT.t_lean_a(dg, meta, snaps, 24.0));   // pbc=26
+    int64:chg15 = nitpick_libc_mem_malloc(8i64 * 8i64);
+    int64:changes15 = raw DecisionT.t_find_decision_changes(snaps, meta, chg15, 8i64);
     if (changes15 == 1i64) {
         print("[PASS] 15: lean_a causes 1 decision change NONE->A\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 15: expected 1 decision change\n");
     }
 
     // ── 16: dgt_tilt_both followed by tilt_none → trigger detected ───────────
     total = total + 1i64;
-    drop(dgt_create(dg, meta, snaps, 100.0, 64i64));
-    drop(dgt_tilt_both(dg, meta, snaps, 25.0));   // pbm goes to 0.5
-    drop(dgt_tilt_none(dg, meta, snaps, 25.0));   // pbm back to 0.0
+    drop(raw DecisionT.t_create(dg, meta, snaps, 100.0, 64i64));
+    drop(raw DecisionT.t_tilt_both(dg, meta, snaps, 25.0));   // pbm goes to 0.5
+    drop(raw DecisionT.t_tilt_none(dg, meta, snaps, 25.0));   // pbm back to 0.0
     // Axis A metric changes as pbm changes
-    int64:trig16 = aria_libc_mem_malloc(8i64 * 8i64);
-    int64:trigs16 = raw dgt_find_triggers(snaps, meta, 0i64, 0.05, trig16, 8i64);
+    int64:trig16 = nitpick_libc_mem_malloc(8i64 * 8i64);
+    int64:trigs16 = raw DecisionT.t_find_triggers(snaps, meta, 0i64, 0.05, trig16, 8i64);
     if (trigs16 > 0i64) {
         print("[PASS] 16: tilt cycle produces triggers on axis A\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 16: no triggers found on axis A after tilt cycle\n");
     }
 
     // ── 17: dgt_peak_confidence on axis A ────────────────────────────────────
     total = total + 1i64;
-    drop(dgt_create(dg, meta, snaps, 100.0, 64i64));
-    drop(dgt_lean_a(dg, meta, snaps, 24.0));    // pbc=26 → a grows
-    drop(dgt_lean_a(dg, meta, snaps, 1.0));     // pbc=25 → a at max for pbm=0
-    drop(dgt_peak_confidence(snaps, meta, 0i64, pr));
-    float64:peak_val17 = aria_libc_mem_read_f64(pr, 1i64 * 8i64);
+    drop(raw DecisionT.t_create(dg, meta, snaps, 100.0, 64i64));
+    drop(raw DecisionT.t_lean_a(dg, meta, snaps, 24.0));    // pbc=26 → a grows
+    drop(raw DecisionT.t_lean_a(dg, meta, snaps, 1.0));     // pbc=25 → a at max for pbm=0
+    drop(raw DecisionT.t_peak_confidence(snaps, meta, 0i64, pr));
+    float64:peak_val17 = nitpick_libc_mem_read_f64(pr, 1i64 * 8i64);
     if (peak_val17 > 0.4) {
         print("[PASS] 17: peak confidence axis A > 0.4\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 17: peak confidence axis A too low\n");
     }
 
     // ── 18: dgt_stability_report counts decision zones ───────────────────────
     total = total + 1i64;
-    drop(dgt_create(dg, meta, snaps, 100.0, 64i64));
-    drop(dgt_lean_a(dg, meta, snaps, 24.0));   // -> A
-    drop(dgt_lean_b(dg, meta, snaps, 48.0));   // -> back to center and B side
-    drop(dgt_stability_report(snaps, meta, counts));
-    int64:total18 = aria_libc_mem_read_i64(counts, 0i64 * 8i64) + aria_libc_mem_read_i64(counts, 1i64 * 8i64) + aria_libc_mem_read_i64(counts, 2i64 * 8i64) + aria_libc_mem_read_i64(counts, 3i64 * 8i64) + aria_libc_mem_read_i64(counts, 4i64 * 8i64);
-    int64:snap_count18 = raw dgt_snap_count(meta);
+    drop(raw DecisionT.t_create(dg, meta, snaps, 100.0, 64i64));
+    drop(raw DecisionT.t_lean_a(dg, meta, snaps, 24.0));   // -> A
+    drop(raw DecisionT.t_lean_b(dg, meta, snaps, 48.0));   // -> back to center and B side
+    drop(raw DecisionT.t_stability_report(snaps, meta, counts));
+    int64:total18 = nitpick_libc_mem_read_i64(counts, 0i64 * 8i64) + nitpick_libc_mem_read_i64(counts, 1i64 * 8i64) + nitpick_libc_mem_read_i64(counts, 2i64 * 8i64) + nitpick_libc_mem_read_i64(counts, 3i64 * 8i64) + nitpick_libc_mem_read_i64(counts, 4i64 * 8i64);
+    int64:snap_count18 = raw DecisionT.t_snap_count(meta);
     if (total18 == snap_count18) {
         print("[PASS] 18: stability_report sums to total snapshot count\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 18: stability_report sum != snapshot count\n");
     }
 
     // ── 19: dgt_observe compound lean+tilt adds one snapshot ─────────────────
     total = total + 1i64;
-    drop(dgt_create(dg, meta, snaps, 100.0, 64i64));
-    int64:before19 = raw dgt_snap_count(meta);
-    drop(dgt_observe(dg, meta, snaps, 10.0, 10.0, 8i64, 0i64));
-    int64:after19 = raw dgt_snap_count(meta);
+    drop(raw DecisionT.t_create(dg, meta, snaps, 100.0, 64i64));
+    int64:before19 = raw DecisionT.t_snap_count(meta);
+    drop(raw DecisionT.t_observe(dg, meta, snaps, 10.0, 10.0, 8i64, 0i64));
+    int64:after19 = raw DecisionT.t_snap_count(meta);
     if (after19 == before19 + 1i64) {
         print("[PASS] 19: dgt_observe adds exactly one snapshot\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 19: dgt_observe snapshot count wrong\n");
     }
 
     // ── 20: ring buffer wraps correctly at capacity ───────────────────────────
     total = total + 1i64;
-    int64:small_snaps = aria_libc_mem_malloc(4i64 * 8i64 * 8i64);  // capacity=4
-    int64:small_meta    = aria_libc_mem_malloc(5i64 * 8i64);
-    drop(dgt_create(dg, small_meta, small_snaps, 100.0, 4i64));
+    int64:small_snaps = nitpick_libc_mem_malloc(4i64 * 8i64 * 8i64);  // capacity=4
+    int64:small_meta    = nitpick_libc_mem_malloc(5i64 * 8i64);
+    drop(raw DecisionT.t_create(dg, small_meta, small_snaps, 100.0, 4i64));
     // add 6 more snapshots — total attempted = 7, but capacity=4 → count=4
-    drop(dgt_lean_a(dg, small_meta, small_snaps, 5.0));
-    drop(dgt_lean_a(dg, small_meta, small_snaps, 5.0));
-    drop(dgt_lean_a(dg, small_meta, small_snaps, 2.0));
-    drop(dgt_lean_b(dg, small_meta, small_snaps, 1.0));
-    drop(dgt_lean_b(dg, small_meta, small_snaps, 1.0));
-    drop(dgt_lean_b(dg, small_meta, small_snaps, 1.0));
-    int64:count20 = raw dgt_snap_count(small_meta);
-    int64:step20  = raw dgt_step_count(small_meta);
+    drop(raw DecisionT.t_lean_a(dg, small_meta, small_snaps, 5.0));
+    drop(raw DecisionT.t_lean_a(dg, small_meta, small_snaps, 5.0));
+    drop(raw DecisionT.t_lean_a(dg, small_meta, small_snaps, 2.0));
+    drop(raw DecisionT.t_lean_b(dg, small_meta, small_snaps, 1.0));
+    drop(raw DecisionT.t_lean_b(dg, small_meta, small_snaps, 1.0));
+    drop(raw DecisionT.t_lean_b(dg, small_meta, small_snaps, 1.0));
+    int64:count20 = raw DecisionT.t_snap_count(small_meta);
+    int64:step20  = raw DecisionT.t_step_count(small_meta);
     if (count20 == 4i64 && step20 == 7i64) {
         print("[PASS] 20: ring buffer wraps: count=4, step=7\n");
         passed = passed + 1i64;
     } else {
+        fail_cnt += 1i64;
         print("[FAIL] 20: ring buffer wrap failed\n");
     }
 
@@ -317,13 +376,16 @@ func:main = int32() {
     print(string_from_int(total));
     print(" tests passed\n");
 
+    if (fail_cnt > 0i64) {
+        exit 1i32;
+    }
     
-    aria_libc_mem_free(dg);
-    aria_libc_mem_free(meta);
-    aria_libc_mem_free(snaps);
-    aria_libc_mem_free(counts);
-    aria_libc_mem_free(small_meta);
-    aria_libc_mem_free(small_snaps);
+    nitpick_libc_mem_free(dg);
+    nitpick_libc_mem_free(meta);
+    nitpick_libc_mem_free(snaps);
+    nitpick_libc_mem_free(counts);
+    nitpick_libc_mem_free(small_meta);
+    nitpick_libc_mem_free(small_snaps);
     exit 0;
 };
 

@@ -1,0 +1,5 @@
+[package]
+name = "nitpick-decision-t"
+version = "0.1.0"
+description = "Two-axis gradient decision construct with time-axis history"
+author = "Nitpick Authors"
