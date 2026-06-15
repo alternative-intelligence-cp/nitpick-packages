@@ -18,10 +18,10 @@ use "../src/nitpick_audio.npk".*;
 
 
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:_err) { exit 1i32; };
 
 func:main = int32() {
-    int32:pass_count = 0i32;
+    int64:_pass_count = 0i64;
     // ── T01: sample_rate returns 44100 ─────────────────────────────────────
     int32:sr = raw audio_sample_rate();
     if (sr == 44100i32) {
