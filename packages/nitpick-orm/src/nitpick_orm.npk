@@ -5,14 +5,6 @@
 use "nitpick_str.npk".*;
 use "nitpick_conv.npk".*;
 
-pub func:DIALECT_POSTGRES = int32() { pass(0i32); };
-pub func:DIALECT_MYSQL    = int32() { pass(1i32); };
-pub func:DIALECT_SQLITE   = int32() { pass(2i32); };
-pub func:DIALECT_MONGO    = int32() { pass(3i32); };
-
-// In Nitpick we don't have arrays easily resizable outside of nitpick-vec,
-// but for a simple query builder we can use delimited strings to accumulate fields.
-// e.g. "id|name|age"
 pub struct:QueryBuilder = {
     string:table;
     int32:op_type; // 0=SELECT, 1=INSERT, 2=UPDATE, 3=DELETE
@@ -26,9 +18,20 @@ pub struct:QueryBuilder = {
     string:order_by;
     int32:limit_val;
     int32:offset_val;
-};
+    };
 
-func:_orm_init = QueryBuilder(string:table, int32:op) {
+pub Type:ORM = {
+
+    func:POSTGRES = int32() { pass(0i32); };
+    func:MYSQL    = int32() { pass(1i32); };
+    func:SQLITE   = int32() { pass(2i32); };
+    func:MONGO    = int32() { pass(3i32); };
+
+// In Nitpick we don't have arrays easily resizable outside of nitpick-vec,
+// but for a simple query builder we can use delimited strings to accumulate fields.
+// e.g. "id|name|age"
+
+    func:_init = QueryBuilder(string:table, int32:op) {
     QueryBuilder:q;
     q.table = table;
     q.op_type = op;
@@ -43,19 +46,19 @@ func:_orm_init = QueryBuilder(string:table, int32:op) {
     q.limit_val = -1i32;
     q.offset_val = -1i32;
     pass(q);
-};
+    };
 
-pub func:orm_select = QueryBuilder(string:table) { pass(raw _orm_init(table, 0i32)); };
-pub func:orm_insert = QueryBuilder(string:table) { pass(raw _orm_init(table, 1i32)); };
-pub func:orm_update = QueryBuilder(string:table) { pass(raw _orm_init(table, 2i32)); };
-pub func:orm_delete = QueryBuilder(string:table) { pass(raw _orm_init(table, 3i32)); };
+    func:select = QueryBuilder(string:table) { pass(raw ORM._init(table, 0i32)); };
+    func:insert = QueryBuilder(string:table) { pass(raw ORM._init(table, 1i32)); };
+    func:update = QueryBuilder(string:table) { pass(raw ORM._init(table, 2i32)); };
+    func:delete = QueryBuilder(string:table) { pass(raw ORM._init(table, 3i32)); };
 
-pub func:orm_cols = QueryBuilder(QueryBuilder:q, string:cols) {
+    func:cols = QueryBuilder(QueryBuilder:q, string:cols) {
     q.select_cols = cols;
     pass(q);
-};
+    };
 
-pub func:orm_set = QueryBuilder(QueryBuilder:q, string:col, string:val) {
+    func:set = QueryBuilder(QueryBuilder:q, string:col, string:val) {
     if (string_equals(q.insert_cols, "")) {
         q.insert_cols = col;
         q.insert_vals = string_concat("'", string_concat(val, "'"));
@@ -76,9 +79,9 @@ pub func:orm_set = QueryBuilder(QueryBuilder:q, string:col, string:val) {
         q.mongo_set = string_concat(q.mongo_set, string_concat(", ", m_clause));
     }
     pass(q);
-};
+    };
 
-pub func:orm_set_int = QueryBuilder(QueryBuilder:q, string:col, int64:val) {
+    func:set_int = QueryBuilder(QueryBuilder:q, string:col, int64:val) {
     string:val_s = string_from_int(val);
     if (string_equals(q.insert_cols, "")) {
         q.insert_cols = col;
@@ -100,58 +103,58 @@ pub func:orm_set_int = QueryBuilder(QueryBuilder:q, string:col, int64:val) {
         q.mongo_set = string_concat(q.mongo_set, string_concat(", ", m_clause));
     }
     pass(q);
-};
+    };
 
-pub func:orm_where = QueryBuilder(QueryBuilder:q, string:clause) {
-    if (string_equals(q.where_clauses, "")) {
-        q.where_clauses = clause;
-    } else {
-        q.where_clauses = string_concat(q.where_clauses, string_concat(" AND ", clause));
-    }
-    pass(q);
-};
+    func:where_clause = QueryBuilder(QueryBuilder:q, string:clause) {
+        if (string_equals(q.where_clauses, "")) {
+            q.where_clauses = clause;
+        } else {
+            q.where_clauses = string_concat(q.where_clauses, string_concat(" AND ", clause));
+        }
+        pass(q);
+    };
 
-pub func:orm_where_eq = QueryBuilder(QueryBuilder:q, string:col, string:val) {
-    string:clause = string_concat(col, string_concat(" = '", string_concat(val, "'")));
-    q = raw orm_where(q, clause);
-    string:m_clause = string_concat("\"", string_concat(col, string_concat("\": \"", string_concat(val, "\""))));
-    if (string_equals(q.mongo_query, "")) {
-        q.mongo_query = m_clause;
-    } else {
-        q.mongo_query = string_concat(q.mongo_query, string_concat(", ", m_clause));
-    }
-    pass(q);
-};
+    func:where_eq = QueryBuilder(QueryBuilder:q, string:col, string:val) {
+        string:clause = string_concat(col, string_concat(" = '", string_concat(val, "'")));
+        q = raw ORM.where_clause(q, clause);
+        string:m_clause = string_concat("\"", string_concat(col, string_concat("\": \"", string_concat(val, "\""))));
+        if (string_equals(q.mongo_query, "")) {
+            q.mongo_query = m_clause;
+        } else {
+            q.mongo_query = string_concat(q.mongo_query, string_concat(", ", m_clause));
+        }
+        pass(q);
+    };
 
-pub func:orm_where_eq_int = QueryBuilder(QueryBuilder:q, string:col, int64:val) {
-    string:val_s = string_from_int(val);
-    string:clause = string_concat(col, string_concat(" = ", val_s));
-    q = raw orm_where(q, clause);
-    string:m_clause = string_concat("\"", string_concat(col, string_concat("\": ", val_s)));
-    if (string_equals(q.mongo_query, "")) {
-        q.mongo_query = m_clause;
-    } else {
-        q.mongo_query = string_concat(q.mongo_query, string_concat(", ", m_clause));
-    }
-    pass(q);
-};
+    func:where_eq_int = QueryBuilder(QueryBuilder:q, string:col, int64:val) {
+        string:val_s = string_from_int(val);
+        string:clause = string_concat(col, string_concat(" = ", val_s));
+        q = raw ORM.where_clause(q, clause);
+        string:m_clause = string_concat("\"", string_concat(col, string_concat("\": ", val_s)));
+        if (string_equals(q.mongo_query, "")) {
+            q.mongo_query = m_clause;
+        } else {
+            q.mongo_query = string_concat(q.mongo_query, string_concat(", ", m_clause));
+        }
+        pass(q);
+    };
 
-pub func:orm_limit = QueryBuilder(QueryBuilder:q, int32:lim) {
+    func:set_limit = QueryBuilder(QueryBuilder:q, int32:lim) {
     q.limit_val = lim;
     pass(q);
-};
+    };
 
-pub func:orm_offset = QueryBuilder(QueryBuilder:q, int32:offset) {
+    func:set_offset = QueryBuilder(QueryBuilder:q, int32:offset) {
     q.offset_val = offset;
     pass(q);
-};
+    };
 
-pub func:orm_order_by = QueryBuilder(QueryBuilder:q, string:order) {
+    func:order_by = QueryBuilder(QueryBuilder:q, string:order) {
     q.order_by = order;
     pass(q);
-};
+    };
 
-pub func:orm_to_sql = string(QueryBuilder:q, int32:dialect) {
+    func:to_sql = string(QueryBuilder:q, int32:dialect) {
     if (q.op_type == 1i32) {
         string:sql = string_concat("INSERT INTO ", q.table);
         sql = string_concat(sql, string_concat(" (", q.insert_cols));
@@ -191,27 +194,27 @@ pub func:orm_to_sql = string(QueryBuilder:q, int32:dialect) {
     // SQLite and Postgres use LIMIT x OFFSET y
     // MySQL uses LIMIT x OFFSET y as well (or LIMIT y, x)
     if (q.limit_val >= 0i32) {
-        string:limit_str = string_from_int(@cast<int64>(q.limit_val));
+        string:limit_str = string_from_int(@cast_unchecked<int64>(q.limit_val));
         sql = string_concat(sql, " LIMIT ");
         sql = string_concat(sql, limit_str);
     }
     
     if (q.offset_val >= 0i32) {
-        string:offset_str = string_from_int(@cast<int64>(q.offset_val));
+        string:offset_str = string_from_int(@cast_unchecked<int64>(q.offset_val));
         sql = string_concat(sql, " OFFSET ");
         sql = string_concat(sql, offset_str);
     }
     
     // Dialect specific tweaks could be added here (e.g. quote characters ` vs ")
-    if (dialect == raw DIALECT_MYSQL()) {
+    if (dialect == raw ORM.MYSQL()) {
         // MySQL specific adjustments...
     }
     
     sql = string_concat(sql, ";");
     pass(sql);
-};
+    };
 
-pub func:orm_to_mongo = string(QueryBuilder:q) {
+    func:to_mongo = string(QueryBuilder:q) {
     if (q.op_type == 1i32) {
         string:json = "{";
         if (string_equals(q.mongo_set, "") == false) {
@@ -235,18 +238,18 @@ pub func:orm_to_mongo = string(QueryBuilder:q) {
     }
     json = string_concat(json, "}");
     pass(json);
-};
+    };
 
-pub func:orm_to_mongo_query = string(QueryBuilder:q) {
+    func:to_mongo_query = string(QueryBuilder:q) {
     string:json = "{";
     if (string_equals(q.mongo_query, "") == false) {
         json = string_concat(json, q.mongo_query);
     }
     json = string_concat(json, "}");
     pass(json);
-};
+    };
 
-pub func:orm_to_mongo_opts = string(QueryBuilder:q) {
+    func:to_mongo_opts = string(QueryBuilder:q) {
     string:json = "{";
     int32:has_prev = 0i32;
     
@@ -270,9 +273,11 @@ pub func:orm_to_mongo_opts = string(QueryBuilder:q) {
         if (has_prev == 1i32) {
             json = string_concat(json, ", ");
         }
-        json = string_concat(json, string_concat("\"limit\": ", string_from_int(@cast<int64>(q.limit_val))));
+        json = string_concat(json, string_concat("\"limit\": ", string_from_int(@cast_unchecked<int64>(q.limit_val))));
     }
     
     json = string_concat(json, "}");
     pass(json);
+    };
+
 };

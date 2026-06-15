@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-orm"
+version = "0.1.0"
+
+[target.nitpick-orm]
+type = "library"
+sources = ["src/nitpick_orm.npk"]
+deps = []
+flags = ["-I", "../nitpick-str/src", "-I", "../nitpick-conv/src"]
+
+[target.test-orm]
+type = "binary"
+sources = ["tests/test_orm.npk"]
+deps = []
+flags = ["-I", "src", "-I", "../nitpick-str/src", "-I", "../nitpick-conv/src", "-L.nitpick_make/build", "-L../nitpick-str/.nitpick_make/build", "-L../nitpick-conv/.nitpick_make/build", "-L../../../nitpick-libc/shim", "-lnitpick-orm", "-lnitpick-str", "-lnitpick-conv", "-lnitpick_libc_string"]

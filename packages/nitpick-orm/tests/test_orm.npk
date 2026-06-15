@@ -1,54 +1,82 @@
 // test_orm.npk
 use "nitpick_orm.npk".*;
+use "nitpick_str.npk".*;
 
 extern "libc" {
     func:printf = int32(string:fmt);
 }
 
+int64:fail_cnt = 0i64;
+
 func:failsafe = int32(tbb32:err) {
-    int32:_ = printf("FAILSAFE TRIGGERED!\n\0");
+    drop err;
     exit 1i32;
 };
 
+func:assert_eq = int32(string:actual, string:expected, string:test_name) {
+    if (string_equals(actual, expected) == false) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n  Expected: \0"));
+        drop(printf(expected));
+        drop(printf("\n  Actual:   \0"));
+        drop(printf(actual));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i32);
+};
+
 func:main = int32() {
-    int32:_1 = printf("Initializing ORM Test...\n\0");
+    drop(printf("Initializing ORM Test...\n\0"));
     
     // --- SELECT ---
-    QueryBuilder:q = raw orm_select("users");
-    q = raw orm_cols(q, "id, name, email");
-    q = raw orm_where_eq(q, "status", "active");
-    q = raw orm_where_eq(q, "role", "admin");
-    q = raw orm_order_by(q, "created_at DESC");
-    q = raw orm_limit(q, 10i32);
-    q = raw orm_offset(q, 20i32);
+    QueryBuilder:q = raw ORM.select("users");
+    q = raw ORM.cols(q, "id, name, email");
+    q = raw ORM.where_eq(q, "status", "active");
+    q = raw ORM.where_eq(q, "role", "admin");
+    q = raw ORM.order_by(q, "created_at DESC");
+    q = raw ORM.set_limit(q, 10i32);
+    q = raw ORM.set_offset(q, 20i32);
     
-    int32:_2 = printf("SELECT SQL Postgres: \0");
-    print(raw orm_to_sql(q, raw DIALECT_POSTGRES())); print("\n");
+    string:select_sql = raw ORM.to_sql(q, raw ORM.POSTGRES());
+    string:select_mongo = raw ORM.to_mongo(q);
     
-    int32:_4 = printf("SELECT Mongo JSON: \0");
-    print(raw orm_to_mongo(q)); print("\n");
+    drop assert_eq(select_sql, "SELECT id, name, email FROM users WHERE status = 'active' AND role = 'admin' ORDER BY created_at DESC LIMIT 10 OFFSET 20;", "SELECT SQL Postgres");
+    drop assert_eq(select_mongo, "{\"status\": \"active\", \"role\": \"admin\"}", "SELECT Mongo JSON");
     
     // --- INSERT ---
-    QueryBuilder:q2 = raw orm_insert("users");
-    q2 = raw orm_set(q2, "name", "John Doe");
-    q2 = raw orm_set(q2, "email", "john@example.com");
-    q2 = raw orm_set_int(q2, "age", 30i64);
+    QueryBuilder:q2 = raw ORM.insert("users");
+    q2 = raw ORM.set(q2, "name", "John Doe");
+    q2 = raw ORM.set(q2, "email", "john@example.com");
+    q2 = raw ORM.set_int(q2, "age", 30i64);
     
-    int32:_5 = printf("INSERT SQL: \0");
-    print(raw orm_to_sql(q2, raw DIALECT_POSTGRES())); print("\n");
-    int32:_6 = printf("INSERT Mongo: \0");
-    print(raw orm_to_mongo(q2)); print("\n");
+    string:insert_sql = raw ORM.to_sql(q2, raw ORM.POSTGRES());
+    string:insert_mongo = raw ORM.to_mongo(q2);
+    
+    drop assert_eq(insert_sql, "INSERT INTO users (name, email, age) VALUES ('John Doe', 'john@example.com', 30);", "INSERT SQL");
+    drop assert_eq(insert_mongo, "{\"name\": \"John Doe\", \"email\": \"john@example.com\", \"age\": 30}", "INSERT Mongo");
     
     // --- UPDATE ---
-    QueryBuilder:q3 = raw orm_update("users");
-    q3 = raw orm_set(q3, "status", "inactive");
-    q3 = raw orm_where_eq(q3, "id", "123");
+    QueryBuilder:q3 = raw ORM.update("users");
+    q3 = raw ORM.set(q3, "status", "inactive");
+    q3 = raw ORM.where_eq(q3, "id", "123");
     
-    int32:_7 = printf("UPDATE SQL: \0");
-    print(raw orm_to_sql(q3, raw DIALECT_POSTGRES())); print("\n");
-    int32:_8 = printf("UPDATE Mongo: \0");
-    print(raw orm_to_mongo(q3)); print("\n");
+    string:update_sql = raw ORM.to_sql(q3, raw ORM.POSTGRES());
+    string:update_mongo = raw ORM.to_mongo(q3);
     
-    int32:_9 = printf("Done!\n\0");
+    drop assert_eq(update_sql, "UPDATE users SET status = 'inactive' WHERE id = '123';", "UPDATE SQL");
+    drop assert_eq(update_mongo, "{\"$set\": {\"status\": \"inactive\"}}", "UPDATE Mongo");
+    
+    drop(printf("Done!\n\0"));
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+    
     exit 0i32;
 };
