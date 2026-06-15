@@ -3,7 +3,7 @@ name            = "nitpick-mysql"
 version         = "0.2.3"
 description     = "MySQL database client for Nitpick — connect, query, parameterized queries, transactions via libmysqlclient"
 license         = "MIT"
-repository      = "https://github.com/alternative-intelligence-cp/aria-packages"
+repository      = "https://github.com/alternative-intelligence-cp/nitpick-packages"
 
 [dependencies]
 

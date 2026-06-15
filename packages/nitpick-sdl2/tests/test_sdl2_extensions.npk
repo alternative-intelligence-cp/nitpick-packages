@@ -1,0 +1,65 @@
+use "../src/nitpick_sdl2.npk";
+
+extern "std" {
+    func:print = int32(string:s);
+}
+
+pub func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    // Basic init
+    _ = raw sdl_init(raw SDL_INIT_VIDEO() | raw SDL_INIT_AUDIO() | raw SDL_INIT_EVENTS());
+    
+    // Extensions init
+    _ = raw sdl_ttf_init();
+    _ = raw sdl_mixer_init(44100i32, 2i32, 2048i32);
+
+    // Create window & renderer
+    _ = raw sdl_create_window("SDL2 Extensions Test", raw SDL_WINDOWPOS_CENTERED(), raw SDL_WINDOWPOS_CENTERED(), 800i32, 600i32, raw SDL_WINDOW_SHOWN());
+    _ = raw sdl_create_renderer(raw SDL_RENDERER_ACCELERATED());
+
+    // Test TTF
+    int32:font = raw sdl_load_font("missing_font.ttf", 24i32);
+    if (font < 0i32) {
+        _ = print("Expected: Failed to load font gracefully.\n");
+    } else {
+        _ = print("Loaded font.\n");
+        _ = raw sdl_destroy_font(font);
+    }
+
+    // Test Image
+    int32:img = raw sdl_load_image_texture("missing_image.png");
+    if (img < 0i32) {
+        _ = print("Expected: Failed to load image gracefully.\n");
+    } else {
+        _ = print("Loaded image.\n");
+    }
+
+    // Test Mixer
+    int32:wav = raw sdl_load_wav("missing_sound.wav");
+    if (wav < 0i32) {
+        _ = print("Expected: Failed to load wav gracefully.\n");
+    } else {
+        _ = print("Loaded wav.\n");
+        _ = raw sdl_destroy_wav(wav);
+    }
+
+    // Test Controller
+    int32:ctrl = raw sdl_controller_open(0i32);
+    if (ctrl < 0i32) {
+        _ = print("Expected: No controller found or gracefully failed.\n");
+    } else {
+        _ = print("Opened controller.\n");
+        _ = raw sdl_controller_close(ctrl);
+    }
+
+    // Quit
+    _ = raw sdl_mixer_quit();
+    _ = raw sdl_ttf_quit();
+    _ = raw sdl_quit();
+
+    _ = print("Success!\n");
+    return 0i32;
+};

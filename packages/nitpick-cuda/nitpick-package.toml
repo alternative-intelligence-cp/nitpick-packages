@@ -1,0 +1,15 @@
+[package]
+name = "nitpick-cuda"
+version = "0.1.0"
+authors = ["Nitpick Language Project"]
+license = "Apache-2.0 WITH Runtime-Library-Exception"
+description = "CUDA GPU compute bindings for Nitpick (Skeleton)"
+keywords = ["cuda", "gpu", "compute", "nvidia", "hardware"]
+categories = ["math", "hardware"]
+
+[dependencies]
+
+[build]
+type = "library"
+entry = "src/nitpick_cuda.npk"
+link_libraries = ["nitpick_cuda_shim", "cudart"]

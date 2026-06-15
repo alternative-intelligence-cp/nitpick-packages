@@ -15,6 +15,8 @@
 #include <string.h>
 #include <math.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 #include "glad/include/glad/glad.h"
 #include <SDL2/SDL.h>
 
@@ -232,7 +234,7 @@ void aria_gl_delete_buffer(int32_t buffer) {
    pre-built geometry helpers and a raw upload that takes a C-side buffer. */
 
 /* Internal scratch buffer for building geometry from Nitpick scalar calls */
-#define ARIA_GL_MAX_FLOATS 8192
+#define ARIA_GL_MAX_FLOATS 1048576
 static float g_float_buf[ARIA_GL_MAX_FLOATS];
 static int32_t g_float_count = 0;
 
@@ -292,16 +294,26 @@ void aria_gl_disable_vertex_attrib(int32_t index) {
     glDisableVertexAttribArray((GLuint)index);
 }
 
+void aria_gl_vertex_attrib_divisor(int32_t index, int32_t divisor) {
+    glVertexAttribDivisor((GLuint)index, (GLuint)divisor);
+}
+
 /* ── drawing ─────────────────────────────────────────────────────────── */
 
 void aria_gl_draw_arrays(int32_t mode, int32_t first, int32_t count) {
-    glDrawArrays((GLenum)mode, first, count);
+    glDrawArrays((GLenum)mode, (GLint)first, (GLsizei)count);
 }
 
-void aria_gl_draw_elements(int32_t mode, int32_t count, int32_t type,
-                           int32_t offset) {
-    glDrawElements((GLenum)mode, count, (GLenum)type,
-                   (const void *)(intptr_t)offset);
+void aria_gl_draw_arrays_instanced(int32_t mode, int32_t first, int32_t count, int32_t instancecount) {
+    glDrawArraysInstanced((GLenum)mode, (GLint)first, (GLsizei)count, (GLsizei)instancecount);
+}
+
+void aria_gl_draw_elements(int32_t mode, int32_t count, int32_t type, int32_t indices) {
+    glDrawElements((GLenum)mode, (GLsizei)count, (GLenum)type, (const void *)(uintptr_t)indices);
+}
+
+void aria_gl_draw_elements_instanced(int32_t mode, int32_t count, int32_t type, int32_t indices, int32_t instancecount) {
+    glDrawElementsInstanced((GLenum)mode, (GLsizei)count, (GLenum)type, (const void *)(uintptr_t)indices, (GLsizei)instancecount);
 }
 
 /* ── uniforms ────────────────────────────────────────────────────────── */
@@ -363,6 +375,63 @@ void aria_gl_delete_texture(int32_t texture) {
     glDeleteTextures(1, &t);
 }
 
+int32_t aria_gl_load_texture_from_file(const char *filename) {
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(1);
+    unsigned char *data = stbi_load(filename, &width, &height, &nrChannels, 0);
+    if (!data) return -1;
+    
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    GLenum format = GL_RGB;
+    if (nrChannels == 4) format = GL_RGBA;
+    else if (nrChannels == 1) format = GL_RED;
+    
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    
+    stbi_image_free(data);
+    return (int32_t)texture;
+}
+
+/* ── framebuffers ────────────────────────────────────────────────────── */
+
+int32_t aria_gl_gen_framebuffer(void) {
+    GLuint fbo;
+    glGenFramebuffers(1, &fbo);
+    return (int32_t)fbo;
+}
+
+void aria_gl_bind_framebuffer(int32_t target, int32_t framebuffer) {
+    glBindFramebuffer((GLenum)target, (GLuint)framebuffer);
+}
+
+void aria_gl_framebuffer_texture_2d(int32_t target, int32_t attachment, int32_t textarget, int32_t texture, int32_t level) {
+    glFramebufferTexture2D((GLenum)target, (GLenum)attachment, (GLenum)textarget, (GLuint)texture, (GLint)level);
+}
+
+int32_t aria_gl_check_framebuffer_status(int32_t target) {
+    return (int32_t)glCheckFramebufferStatus((GLenum)target);
+}
+
+void aria_gl_delete_framebuffer(int32_t framebuffer) {
+    GLuint fbo = (GLuint)framebuffer;
+    glDeleteFramebuffers(1, &fbo);
+}
+
+/* ── blending ────────────────────────────────────────────────────────── */
+
+void aria_gl_blend_func(int32_t sfactor, int32_t dfactor) {
+    glBlendFunc((GLenum)sfactor, (GLenum)dfactor);
+}
+
 /* ── matrix helpers (C-side 4×4 math for the cube demo) ──────────────── */
 
 /* These build a 4x4 matrix in g_float_buf (column-major) so Nitpick can
@@ -417,6 +486,86 @@ void aria_gl_mat4_rotate_x(float angle_deg) {
     g_float_buf[6]  =  s;
     g_float_buf[9]  = -s;
     g_float_buf[10] =  c;
+}
+
+void aria_gl_mat4_rotate_z(float angle_deg) {
+    g_float_count = 16;
+    mat4_identity(g_float_buf);
+    float c = cosf(angle_deg * 3.14159265f / 180.0f);
+    float s = sinf(angle_deg * 3.14159265f / 180.0f);
+    g_float_buf[0] =  c;
+    g_float_buf[1] =  s;
+    g_float_buf[4] = -s;
+    g_float_buf[5] =  c;
+}
+
+void aria_gl_mat4_scale(float sx, float sy, float sz) {
+    g_float_count = 16;
+    mat4_identity(g_float_buf);
+    g_float_buf[0]  = sx;
+    g_float_buf[5]  = sy;
+    g_float_buf[10] = sz;
+}
+
+void aria_gl_mat4_ortho(float left, float right, float bottom, float top, float zNear, float zFar) {
+    g_float_count = 16;
+    memset(g_float_buf, 0, 16 * sizeof(float));
+    g_float_buf[0] = 2.0f / (right - left);
+    g_float_buf[5] = 2.0f / (top - bottom);
+    g_float_buf[10] = -2.0f / (zFar - zNear);
+    g_float_buf[12] = -(right + left) / (right - left);
+    g_float_buf[13] = -(top + bottom) / (top - bottom);
+    g_float_buf[14] = -(zFar + zNear) / (zFar - zNear);
+    g_float_buf[15] = 1.0f;
+}
+
+/* Very simple look_at: eye, center, up */
+void aria_gl_mat4_look_at(float ex, float ey, float ez, float cx, float cy, float cz, float ux, float uy, float uz) {
+    float f[3] = {cx - ex, cy - ey, cz - ez};
+    float fn = sqrtf(f[0]*f[0] + f[1]*f[1] + f[2]*f[2]);
+    f[0]/=fn; f[1]/=fn; f[2]/=fn;
+    
+    float up[3] = {ux, uy, uz};
+    float un = sqrtf(up[0]*up[0] + up[1]*up[1] + up[2]*up[2]);
+    up[0]/=un; up[1]/=un; up[2]/=un;
+    
+    float s[3] = {f[1]*up[2] - f[2]*up[1], f[2]*up[0] - f[0]*up[2], f[0]*up[1] - f[1]*up[0]};
+    float sn = sqrtf(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
+    s[0]/=sn; s[1]/=sn; s[2]/=sn;
+    
+    float u[3] = {s[1]*f[2] - s[2]*f[1], s[2]*f[0] - s[0]*f[2], s[0]*f[1] - s[1]*f[0]};
+    
+    g_float_count = 16;
+    memset(g_float_buf, 0, 16 * sizeof(float));
+    g_float_buf[0] = s[0];
+    g_float_buf[4] = s[1];
+    g_float_buf[8] = s[2];
+    
+    g_float_buf[1] = u[0];
+    g_float_buf[5] = u[1];
+    g_float_buf[9] = u[2];
+    
+    g_float_buf[2] = -f[0];
+    g_float_buf[6] = -f[1];
+    g_float_buf[10]= -f[2];
+    
+    g_float_buf[15] = 1.0f;
+    
+    float tm[16];
+    mat4_identity(tm);
+    tm[12] = -ex; tm[13] = -ey; tm[14] = -ez;
+    
+    // multiply
+    float r[16];
+    for (int col = 0; col < 4; col++) {
+        for (int row = 0; row < 4; row++) {
+            r[col*4+row] = g_float_buf[0*4+row]*tm[col*4+0]
+                         + g_float_buf[1*4+row]*tm[col*4+1]
+                         + g_float_buf[2*4+row]*tm[col*4+2]
+                         + g_float_buf[3*4+row]*tm[col*4+3];
+        }
+    }
+    memcpy(g_float_buf, r, 16 * sizeof(float));
 }
 
 /* Multiply two 4x4 matrices: result = A * B (column-major).
@@ -501,11 +650,34 @@ void aria_gl_delay(int32_t ms) {
     SDL_Delay((Uint32)ms);
 }
 
+int32_t aria_gl_get_mouse_x(void) {
+    int x, y;
+    SDL_GetMouseState(&x, &y);
+    return (int32_t)x;
+}
+
+int32_t aria_gl_get_mouse_y(void) {
+    int x, y;
+    SDL_GetMouseState(&x, &y);
+    return (int32_t)y;
+}
+
+int32_t aria_gl_get_mouse_buttons(void) {
+    int x, y;
+    return (int32_t)SDL_GetMouseState(&x, &y);
+}
+
 /* ── OpenGL constants ────────────────────────────────────────────────── */
 
 int32_t aria_gl_COLOR_BUFFER_BIT(void)   { return GL_COLOR_BUFFER_BIT; }
 int32_t aria_gl_DEPTH_BUFFER_BIT(void)   { return GL_DEPTH_BUFFER_BIT; }
 int32_t aria_gl_DEPTH_TEST(void)         { return GL_DEPTH_TEST; }
+int32_t aria_gl_BLEND(void)              { return GL_BLEND; }
+int32_t aria_gl_SRC_ALPHA(void)           { return GL_SRC_ALPHA; }
+int32_t aria_gl_ONE_MINUS_SRC_ALPHA(void) { return GL_ONE_MINUS_SRC_ALPHA; }
+int32_t aria_gl_FRAMEBUFFER(void)          { return GL_FRAMEBUFFER; }
+int32_t aria_gl_COLOR_ATTACHMENT0(void)    { return GL_COLOR_ATTACHMENT0; }
+int32_t aria_gl_FRAMEBUFFER_COMPLETE(void) { return GL_FRAMEBUFFER_COMPLETE; }
 int32_t aria_gl_VERTEX_SHADER(void)      { return GL_VERTEX_SHADER; }
 int32_t aria_gl_FRAGMENT_SHADER(void)    { return GL_FRAGMENT_SHADER; }
 int32_t aria_gl_ARRAY_BUFFER(void)       { return GL_ARRAY_BUFFER; }
@@ -523,7 +695,7 @@ int32_t aria_gl_TEXTURE_MAG_FILTER(void) { return GL_TEXTURE_MAG_FILTER; }
 int32_t aria_gl_LINEAR(void)             { return GL_LINEAR; }
 int32_t aria_gl_NEAREST(void)            { return GL_NEAREST; }
 int32_t aria_gl_CULL_FACE(void)          { return GL_CULL_FACE; }
-int32_t aria_gl_BLEND(void)              { return GL_BLEND; }
+
 
 /* ── pre-built cube geometry ─────────────────────────────────────────── */
 
@@ -553,6 +725,20 @@ void aria_gl_load_cube_geometry(void) {
     };
     g_float_count = 36 * 6;
     memcpy(g_float_buf, cube, sizeof(cube));
+}
+
+void aria_gl_load_quad_geometry(void) {
+    /* 2 triangles = 6 verts × 5 floats (pos xyz + tex uv) */
+    static const float quad[] = {
+         0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
+         0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f, // top left
+         0.5f,  0.5f, 0.0f,   1.0f, 1.0f  // top right
+    };
+    g_float_count = 6 * 5;
+    memcpy(g_float_buf, quad, sizeof(quad));
 }
 
 /* ── diagnostics ─────────────────────────────────────────────────────── */

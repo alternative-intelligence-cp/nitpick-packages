@@ -1,0 +1,188 @@
+// test_cuda.npk — Test CUDA Streams, Async Kernel Execution, and Profiling
+use "../src/nitpick_cuda.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:main = int32() {
+    int32:err = raw cuda_init();
+    if (err != 0i32) {
+        drop(println("Failed to initialize CUDA Driver API."));
+        exit 1;
+    }
+
+    int32:count = raw cuda_get_device_count();
+    if (count <= 0i32) {
+        drop(println("No CUDA devices found."));
+        exit 1;
+    }
+
+    drop(println("CUDA initialized!"));
+
+    int32:num_elements = 5i32;
+    int32:byte_size = 20i32; // 5 * 4 bytes
+    
+    // Create Stream and Events
+    int64:cu_stream = raw cuda_stream_create();
+    int64:event_start = raw cuda_event_create();
+    int64:event_stop = raw cuda_event_create();
+
+    if (cu_stream == 0i64) {
+        drop(println("Failed to create stream."));
+        exit 1;
+    }
+    if (event_start == 0i64) {
+        drop(println("Failed to create start event."));
+        exit 1;
+    }
+
+    // Allocate 3 arrays
+    int64:d_A = raw cuda_malloc(byte_size);
+    int64:d_B = raw cuda_malloc(byte_size);
+    int64:d_C = raw cuda_malloc(byte_size);
+
+    // Record Start Event
+    drop(cuda_event_record(event_start, cu_stream));
+
+    // Upload A (1.0, 2.0, 3.0, 4.0, 5.0)
+    drop(cuda_buf_clear());
+    drop(cuda_buf_push_f32(1.0f32));
+    drop(cuda_buf_push_f32(2.0f32));
+    drop(cuda_buf_push_f32(3.0f32));
+    drop(cuda_buf_push_f32(4.0f32));
+    drop(cuda_buf_push_f32(5.0f32));
+    drop(cuda_memcpy_to_device_async(d_A, byte_size, cu_stream));
+    drop(cuda_stream_synchronize(cu_stream)); // Important! Sync before reusing staging buffer
+
+    // Upload B (10.0, 20.0, 30.0, 40.0, 50.0)
+    drop(cuda_buf_clear());
+    drop(cuda_buf_push_f32(10.0f32));
+    drop(cuda_buf_push_f32(20.0f32));
+    drop(cuda_buf_push_f32(30.0f32));
+    drop(cuda_buf_push_f32(40.0f32));
+    drop(cuda_buf_push_f32(50.0f32));
+    drop(cuda_memcpy_to_device_async(d_B, byte_size, cu_stream));
+    drop(cuda_stream_synchronize(cu_stream));
+
+    // Load module and function
+    int64:module = raw cuda_module_load("kernel.ptx");
+    if (module == 0i64) {
+        drop(println("Failed to load kernel.ptx"));
+        exit 1;
+    }
+
+    int64:func = raw cuda_module_get_function(module, "vectorAdd");
+    if (func == 0i64) {
+        drop(println("Failed to find vectorAdd in module"));
+        exit 1;
+    }
+
+    // Stage kernel arguments
+    drop(cuda_args_clear());
+    drop(cuda_args_push_i64(d_A));
+    drop(cuda_args_push_i64(d_B));
+    drop(cuda_args_push_i64(d_C));
+    drop(cuda_args_push_i32(num_elements));
+
+    // Launch kernel on custom stream
+    err = raw cuda_launch_kernel(func, 1i32, 1i32, 1i32, 256i32, 1i32, 1i32, 0i32, cu_stream);
+    if (err != 0i32) {
+        drop(println("Failed to launch kernel."));
+        exit 1;
+    }
+
+    // Download C async
+    drop(cuda_buf_clear());
+    err = raw cuda_memcpy_to_host_async(d_C, byte_size, cu_stream);
+    
+    // Record Stop Event and sync on it
+    drop(cuda_event_record(event_stop, cu_stream));
+    drop(cuda_event_synchronize(event_stop));
+
+    // Calculate Elapsed Time
+    flt32:ms = raw cuda_event_elapsed_time(event_start, event_stop);
+    
+    // Verify
+    int32:passed = 1i32;
+    flt32:f0 = raw cuda_buf_get_f32(0i32);
+    flt32:f4 = raw cuda_buf_get_f32(4i32);
+    
+    if (f0 != 11.0f32) { passed = 0i32; }
+    if (f4 != 55.0f32) { passed = 0i32; }
+
+    if (passed == 1i32) {
+        drop(println("Async Vector addition verified: Passed!"));
+    } else {
+        drop(println("Async Vector addition verified: Failed!"));
+    }
+
+    // Need to use print format strings, but nitpick println takes strings.
+    // For now, we will just print that profiling succeeded.
+    if (ms > 0.0f32) {
+        drop(println("Profiling successful! Time elapsed: >0 ms"));
+    }
+
+    // ──────────────────────────────────────────────────────────────────
+    // Unified Memory Test Pass
+    // ──────────────────────────────────────────────────────────────────
+    drop(println("Testing Unified Memory..."));
+
+    int64:d_D = raw cuda_malloc_managed(byte_size);
+    if (d_D == 0i64) {
+        drop(println("Failed to allocate managed memory."));
+        exit 1;
+    }
+
+    // Initialize managed memory directly from CPU (clear to 0)
+    drop(cuda_managed_set_f32(d_D, 0i32, 0.0f32));
+    drop(cuda_managed_set_f32(d_D, 4i32, 0.0f32));
+
+    // Prefetch D to GPU 0 (Optional, but good for performance)
+    drop(cuda_prefetch_async(d_D, byte_size, 0i32, cu_stream));
+
+    // Stage kernel arguments: A + B = D
+    drop(cuda_args_clear());
+    drop(cuda_args_push_i64(d_A));
+    drop(cuda_args_push_i64(d_B));
+    drop(cuda_args_push_i64(d_D));
+    drop(cuda_args_push_i32(num_elements));
+
+    // Launch kernel
+    err = raw cuda_launch_kernel(func, 1i32, 1i32, 1i32, 256i32, 1i32, 1i32, 0i32, cu_stream);
+    if (err != 0i32) {
+        drop(println("Failed to launch kernel for Unified Memory."));
+        exit 1;
+    }
+
+    // Wait for kernel to finish
+    drop(cuda_stream_synchronize(cu_stream));
+
+    // Prefetch D back to CPU
+    int32:cpu_device = raw cuda_cpu_device_id();
+    drop(cuda_prefetch_async(d_D, byte_size, cpu_device, cu_stream));
+    drop(cuda_stream_synchronize(cu_stream));
+
+    // Read directly from managed memory
+    flt32:d0 = raw cuda_managed_get_f32(d_D, 0i32);
+    flt32:d4 = raw cuda_managed_get_f32(d_D, 4i32);
+
+    int32:passed_managed = 1i32;
+    if (d0 != 11.0f32) { passed_managed = 0i32; }
+    if (d4 != 55.0f32) { passed_managed = 0i32; }
+
+    if (passed_managed == 1i32) {
+        drop(println("Unified Memory Vector addition verified: Passed!"));
+    } else {
+        drop(println("Unified Memory Vector addition verified: Failed!"));
+    }
+
+    // Cleanup
+    drop(cuda_free(d_A));
+    drop(cuda_free(d_B));
+    drop(cuda_free(d_C));
+    drop(cuda_free(d_D));
+    drop(cuda_event_destroy(event_start));
+    drop(cuda_event_destroy(event_stop));
+    drop(cuda_stream_destroy(cu_stream));
+
+    exit 0;
+};

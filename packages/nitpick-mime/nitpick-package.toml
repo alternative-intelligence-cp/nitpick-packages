@@ -1,15 +1,15 @@
 [package]
 name = "nitpick-mime"
 version = "0.11.2"
-description = "MIME type detection from file extensions — Nitpick + aria-libc_string"
+description = "MIME type detection from file extensions — Nitpick + nitpick-libc_string"
 license = "MIT"
-repository = "https://github.com/alternative-intelligence-cp/aria-packages"
+repository = "https://github.com/alternative-intelligence-cp/nitpick-packages"
 categories = ["text", "web"]
 
 [dependencies]
-aria-libc = "0.10.0"
+nitpick-libc = "0.10.0"
 
 [build]
 type = "library"
 entry = "src/nitpick_mime.npk"
-link_libraries = ["aria_libc_string"]
+link_libraries = ["nitpick_libc_string"]

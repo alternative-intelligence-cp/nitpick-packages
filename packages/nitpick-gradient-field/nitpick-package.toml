@@ -6,4 +6,4 @@ author = "Randy Hoggard"
 license = "MIT"
 
 [dependencies]
-aria-decision-t = { path = "../aria-decision-t" }
+nitpick-decision-t = { path = "../nitpick-decision-t" }

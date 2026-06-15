@@ -61,13 +61,13 @@ extern "nitpick_opengl_shim" {
     // vertex attributes
     func:aria_gl_vertex_attrib_pointer  = void(int32:index, int32:size,
                                                int32:stride_floats, int32:offset_floats);
-    func:aria_gl_enable_vertex_attrib   = void(int32:index);
-    func:aria_gl_disable_vertex_attrib  = void(int32:index);
-
-    // drawing
-    func:aria_gl_draw_arrays   = void(int32:mode, int32:first, int32:count);
-    func:aria_gl_draw_elements = void(int32:mode, int32:count, int32:elem_type,
-                                      int32:offset);
+    func:aria_gl_enable_vertex_attrib  = void(int32:index);
+    func:aria_gl_disable_vertex_attrib = void(int32:index);
+    func:aria_gl_vertex_attrib_divisor = void(int32:index, int32:divisor);
+    func:aria_gl_draw_arrays      = void(int32:mode, int32:first, int32:count);
+    func:aria_gl_draw_arrays_instanced = void(int32:mode, int32:first, int32:count, int32:instancecount);
+    func:aria_gl_draw_elements    = void(int32:mode, int32:count, int32:type, int32:indices);
+    func:aria_gl_draw_elements_instanced = void(int32:mode, int32:count, int32:type, int32:indices, int32:instancecount);
 
     // uniforms
     func:aria_gl_get_uniform_location = int32(int32:program, string:name);
@@ -87,6 +87,17 @@ extern "nitpick_opengl_shim" {
     func:aria_gl_bind_texture     = void(int32:target, int32:texture);
     func:aria_gl_tex_parameter_i  = void(int32:target, int32:pname, int32:param);
     func:aria_gl_delete_texture   = void(int32:texture);
+    func:aria_gl_load_texture_from_file = int32(string:filename);
+
+    // framebuffers
+    func:aria_gl_gen_framebuffer  = int32();
+    func:aria_gl_bind_framebuffer = void(int32:target, int32:framebuffer);
+    func:aria_gl_framebuffer_texture_2d = void(int32:target, int32:attachment, int32:textarget, int32:texture, int32:level);
+    func:aria_gl_check_framebuffer_status = int32(int32:target);
+    func:aria_gl_delete_framebuffer = void(int32:framebuffer);
+
+    // blending
+    func:aria_gl_blend_func       = void(int32:sfactor, int32:dfactor);
 
     // matrix helpers (output in internal float buffer)
     func:aria_gl_mat4_identity    = void();
@@ -95,6 +106,10 @@ extern "nitpick_opengl_shim" {
     func:aria_gl_mat4_translate   = void(flt32:x, flt32:y, flt32:z);
     func:aria_gl_mat4_rotate_y    = void(flt32:angle_deg);
     func:aria_gl_mat4_rotate_x    = void(flt32:angle_deg);
+    func:aria_gl_mat4_rotate_z    = void(flt32:angle_deg);
+    func:aria_gl_mat4_scale       = void(flt32:sx, flt32:sy, flt32:sz);
+    func:aria_gl_mat4_ortho       = void(flt32:left, flt32:right, flt32:bottom, flt32:top, flt32:near, flt32:far);
+    func:aria_gl_mat4_look_at     = void(flt32:ex, flt32:ey, flt32:ez, flt32:cx, flt32:cy, flt32:cz, flt32:ux, flt32:uy, flt32:uz);
     func:aria_gl_mat4_multiply    = void();
     func:aria_gl_mat4_store       = void(int32:slot);
     func:aria_gl_mat4_load        = void(int32:slot);
@@ -105,6 +120,9 @@ extern "nitpick_opengl_shim" {
     func:aria_gl_event_type         = int32();
     func:aria_gl_event_key_scancode = int32();
     func:aria_gl_event_key_keycode  = int32();
+    func:aria_gl_get_mouse_x        = int32();
+    func:aria_gl_get_mouse_y        = int32();
+    func:aria_gl_get_mouse_buttons  = int32();
     func:aria_gl_get_ticks          = int32();
     func:aria_gl_delay              = void(int32:ms);
 
@@ -112,6 +130,12 @@ extern "nitpick_opengl_shim" {
     func:aria_gl_COLOR_BUFFER_BIT    = int32();
     func:aria_gl_DEPTH_BUFFER_BIT    = int32();
     func:aria_gl_DEPTH_TEST          = int32();
+    func:aria_gl_BLEND               = int32();
+    func:aria_gl_SRC_ALPHA           = int32();
+    func:aria_gl_ONE_MINUS_SRC_ALPHA = int32();
+    func:aria_gl_FRAMEBUFFER         = int32();
+    func:aria_gl_COLOR_ATTACHMENT0   = int32();
+    func:aria_gl_FRAMEBUFFER_COMPLETE= int32();
     func:aria_gl_VERTEX_SHADER       = int32();
     func:aria_gl_FRAGMENT_SHADER     = int32();
     func:aria_gl_ARRAY_BUFFER        = int32();
@@ -129,10 +153,11 @@ extern "nitpick_opengl_shim" {
     func:aria_gl_LINEAR              = int32();
     func:aria_gl_NEAREST             = int32();
     func:aria_gl_CULL_FACE           = int32();
-    func:aria_gl_BLEND               = int32();
+
 
     // pre-built geometry
     func:aria_gl_load_cube_geometry = void();
+    func:aria_gl_load_quad_geometry = void();
 }
 
 // ── public API: window + context ────────────────────────────────────
@@ -341,16 +366,28 @@ pub func:gl_disable_vertex_attrib = NIL(int32:index) {
     pass(NIL);
 };
 
-// ── public API: drawing ─────────────────────────────────────────────
+pub func:gl_vertex_attrib_divisor = NIL(int32:index, int32:divisor) {
+    aria_gl_vertex_attrib_divisor(index, divisor);
+    pass(NIL);
+};
 
 pub func:gl_draw_arrays = NIL(int32:mode, int32:first, int32:count) {
     aria_gl_draw_arrays(mode, first, count);
     pass(NIL);
 };
 
-pub func:gl_draw_elements = NIL(int32:mode, int32:count, int32:elem_type,
-                                 int32:offset) {
-    aria_gl_draw_elements(mode, count, elem_type, offset);
+pub func:gl_draw_arrays_instanced = NIL(int32:mode, int32:first, int32:count, int32:instancecount) {
+    aria_gl_draw_arrays_instanced(mode, first, count, instancecount);
+    pass(NIL);
+};
+
+pub func:gl_draw_elements = NIL(int32:mode, int32:count, int32:type, int32:indices) {
+    aria_gl_draw_elements(mode, count, type, indices);
+    pass(NIL);
+};
+
+pub func:gl_draw_elements_instanced = NIL(int32:mode, int32:count, int32:type, int32:indices, int32:instancecount) {
+    aria_gl_draw_elements_instanced(mode, count, type, indices, instancecount);
     pass(NIL);
 };
 
@@ -418,6 +455,45 @@ pub func:gl_delete_texture = NIL(int32:texture) {
     pass(NIL);
 };
 
+pub func:gl_load_texture_from_file = int32(string:filename) {
+    int32:r = aria_gl_load_texture_from_file(filename);
+    pass(r);
+};
+
+// ── public API: framebuffers ────────────────────────────────────────
+
+pub func:gl_gen_framebuffer = int32() {
+    int32:r = aria_gl_gen_framebuffer();
+    pass(r);
+};
+
+pub func:gl_bind_framebuffer = NIL(int32:target, int32:framebuffer) {
+    aria_gl_bind_framebuffer(target, framebuffer);
+    pass(NIL);
+};
+
+pub func:gl_framebuffer_texture_2d = NIL(int32:target, int32:attachment, int32:textarget, int32:texture, int32:level) {
+    aria_gl_framebuffer_texture_2d(target, attachment, textarget, texture, level);
+    pass(NIL);
+};
+
+pub func:gl_check_framebuffer_status = int32(int32:target) {
+    int32:r = aria_gl_check_framebuffer_status(target);
+    pass(r);
+};
+
+pub func:gl_delete_framebuffer = NIL(int32:framebuffer) {
+    aria_gl_delete_framebuffer(framebuffer);
+    pass(NIL);
+};
+
+// ── public API: blending ────────────────────────────────────────────
+
+pub func:gl_blend_func = NIL(int32:sfactor, int32:dfactor) {
+    aria_gl_blend_func(sfactor, dfactor);
+    pass(NIL);
+};
+
 // ── public API: matrix helpers ──────────────────────────────────────
 
 pub func:gl_mat4_identity = NIL() {
@@ -443,6 +519,26 @@ pub func:gl_mat4_rotate_y = NIL(flt32:angle_deg) {
 
 pub func:gl_mat4_rotate_x = NIL(flt32:angle_deg) {
     aria_gl_mat4_rotate_x(angle_deg);
+    pass(NIL);
+};
+
+pub func:gl_mat4_rotate_z = NIL(flt32:angle_deg) {
+    aria_gl_mat4_rotate_z(angle_deg);
+    pass(NIL);
+};
+
+pub func:gl_mat4_scale = NIL(flt32:sx, flt32:sy, flt32:sz) {
+    aria_gl_mat4_scale(sx, sy, sz);
+    pass(NIL);
+};
+
+pub func:gl_mat4_ortho = NIL(flt32:left, flt32:right, flt32:bottom, flt32:top, flt32:near, flt32:far) {
+    aria_gl_mat4_ortho(left, right, bottom, top, near, far);
+    pass(NIL);
+};
+
+pub func:gl_mat4_look_at = NIL(flt32:ex, flt32:ey, flt32:ez, flt32:cx, flt32:cy, flt32:cz, flt32:ux, flt32:uy, flt32:uz) {
+    aria_gl_mat4_look_at(ex, ey, ez, cx, cy, cz, ux, uy, uz);
     pass(NIL);
 };
 
@@ -488,6 +584,21 @@ pub func:gl_event_key_keycode = int32() {
     pass(r);
 };
 
+pub func:gl_get_mouse_x = int32() {
+    int32:r = aria_gl_get_mouse_x();
+    pass(r);
+};
+
+pub func:gl_get_mouse_y = int32() {
+    int32:r = aria_gl_get_mouse_y();
+    pass(r);
+};
+
+pub func:gl_get_mouse_buttons = int32() {
+    int32:r = aria_gl_get_mouse_buttons();
+    pass(r);
+};
+
 pub func:gl_get_ticks = int32() {
     int32:r = aria_gl_get_ticks();
     pass(r);
@@ -505,6 +616,11 @@ pub func:gl_load_cube_geometry = NIL() {
     pass(NIL);
 };
 
+pub func:gl_load_quad_geometry = NIL() {
+    aria_gl_load_quad_geometry();
+    pass(NIL);
+};
+
 // ── GL constants (from shim) ────────────────────────────────────────
 
 pub func:GL_COLOR_BUFFER_BIT = int32() {
@@ -519,6 +635,36 @@ pub func:GL_DEPTH_BUFFER_BIT = int32() {
 
 pub func:GL_DEPTH_TEST = int32() {
     int32:r = aria_gl_DEPTH_TEST();
+    pass(r);
+};
+
+pub func:GL_BLEND = int32() {
+    int32:r = aria_gl_BLEND();
+    pass(r);
+};
+
+pub func:GL_SRC_ALPHA = int32() {
+    int32:r = aria_gl_SRC_ALPHA();
+    pass(r);
+};
+
+pub func:GL_ONE_MINUS_SRC_ALPHA = int32() {
+    int32:r = aria_gl_ONE_MINUS_SRC_ALPHA();
+    pass(r);
+};
+
+pub func:GL_FRAMEBUFFER = int32() {
+    int32:r = aria_gl_FRAMEBUFFER();
+    pass(r);
+};
+
+pub func:GL_COLOR_ATTACHMENT0 = int32() {
+    int32:r = aria_gl_COLOR_ATTACHMENT0();
+    pass(r);
+};
+
+pub func:GL_FRAMEBUFFER_COMPLETE = int32() {
+    int32:r = aria_gl_FRAMEBUFFER_COMPLETE();
     pass(r);
 };
 
@@ -577,10 +723,7 @@ pub func:GL_CULL_FACE = int32() {
     pass(r);
 };
 
-pub func:GL_BLEND = int32() {
-    int32:r = aria_gl_BLEND();
-    pass(r);
-};
+
 
 pub func:GL_DYNAMIC_DRAW = int32() {
     int32:r = aria_gl_DYNAMIC_DRAW();

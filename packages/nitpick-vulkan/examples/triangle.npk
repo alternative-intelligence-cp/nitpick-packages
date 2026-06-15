@@ -1,0 +1,74 @@
+// triangle.npk — Vulkan Interactive Triangle Example
+use "../src/nitpick_vulkan.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:main = int32() {
+    int32:init_ok = raw vk_init_window(800i32, 600i32, "Nitpick Vulkan - Triangle Demo");
+    if (init_ok == 0i32) {
+        drop(println("Failed to initialize Vulkan window."));
+        string:err = raw vk_get_error();
+        drop(println(err));
+        exit 1;
+    }
+
+    drop(println("Vulkan initialized successfully!"));
+    
+    int32:vert_shader = raw vk_load_shader("vert.spv");
+    if (vert_shader < 0i32) {
+        drop(println("Failed to load vert.spv"));
+        exit 1;
+    }
+
+    int32:frag_shader = raw vk_load_shader("frag.spv");
+    if (frag_shader < 0i32) {
+        drop(println("Failed to load frag.spv"));
+        exit 1;
+    }
+
+    int32:pipeline = raw vk_build_pipeline(vert_shader, frag_shader);
+    if (pipeline < 0i32) {
+        drop(println("Failed to build pipeline."));
+        exit 1;
+    }
+
+    // Vertex buffer
+    drop(vk_buf_clear());
+    // Vertex 1: Top Center, Red
+    drop(vk_buf_push6(0.0f32, -0.5f32, 0.0f32,  1.0f32, 0.0f32, 0.0f32));
+    // Vertex 2: Bottom Right, Green
+    drop(vk_buf_push6(0.5f32, 0.5f32, 0.0f32,   0.0f32, 1.0f32, 0.0f32));
+    // Vertex 3: Bottom Left, Blue
+    drop(vk_buf_push6(-0.5f32, 0.5f32, 0.0f32,  0.0f32, 0.0f32, 1.0f32));
+
+    int32:vbo = raw vk_gen_buffer();
+    drop(vk_upload_vertex_buffer(vbo));
+
+    drop(println("Entering main loop. Close the window to exit."));
+
+    int32:running = 1i32;
+    int32:frames = 0i32;
+    
+    // We will render for 300 frames to ensure it can be automatically tested
+    // without hanging CI systems forever.
+    while (running == 1i32) {
+        if (raw vk_poll_events() == 0i32) {
+            running = 0i32;
+        }
+
+        drop(vk_begin_frame(0.2f32, 0.2f32, 0.25f32, 1.0f32));
+        drop(vk_cmd_bind_pipeline(pipeline));
+        drop(vk_cmd_bind_vertex_buffer(vbo));
+        drop(vk_draw(3i32));
+        drop(vk_end_frame());
+
+        frames = frames + 1i32;
+        if (frames > 300i32) {
+            running = 0i32;
+        }
+    }
+
+    drop(vk_cleanup());
+    drop(println("Vulkan demo completed!"));
+    exit 0;
+};

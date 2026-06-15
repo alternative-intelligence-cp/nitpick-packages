@@ -1,44 +1,80 @@
-use "nitpick_vulkan.npk";
-use "nitpick_str.npk";
+// test_vulkan.npk — Test Vulkan wrapper Round 2
+use "../src/nitpick_vulkan.npk".*;
 
-pub func:main = int32() {
-    println("Testing Vulkan...");
+func:failsafe = int32(tbb32:err) { exit 1; };
 
-    int32:r1 = raw vk_init_instance("Test App");
-    if (r1 == 0i32) {
-        println("Error: Failed to init instance");
+func:main = int32() {
+    int32:init_ok = raw vk_init_window(640i32, 480i32, "Nitpick Vulkan - Round 2");
+    if (init_ok == 0i32) {
+        drop(println("Failed to initialize Vulkan window."));
         string:err = raw vk_get_error();
-        println(err);
-        return 1i32;
+        drop(println(err));
+        exit 1;
     }
-    println("Instance initialized!");
 
-    int32:r2 = raw vk_pick_physical_device();
-    if (r2 == 0i32) {
-        println("Error: Failed to pick physical device");
-        string:err = raw vk_get_error();
-        println(err);
-        return 1i32;
+    drop(println("Vulkan initialized successfully!"));
+    
+    // Load Shaders
+    int32:vert_shader = raw vk_load_shader("vert.spv");
+    if (vert_shader < 0i32) {
+        drop(println("Failed to load vert.spv"));
+        exit 1;
     }
-    string:name = raw vk_get_device_name();
-    print("Picked GPU: ");
-    println(name);
 
-    int32:r3 = raw vk_create_logical_device();
-    if (r3 == 0i32) {
-        println("Error: Failed to create logical device");
-        string:err = raw vk_get_error();
-        println(err);
-        return 1i32;
+    int32:frag_shader = raw vk_load_shader("frag.spv");
+    if (frag_shader < 0i32) {
+        drop(println("Failed to load frag.spv"));
+        exit 1;
     }
-    println("Logical device created!");
 
-    raw vk_cleanup();
-    println("Cleanup done. Vulkan wrapper works!");
+    // Build Pipeline
+    int32:pipeline = raw vk_build_pipeline(vert_shader, frag_shader);
+    if (pipeline < 0i32) {
+        drop(println("Failed to build pipeline."));
+        exit 1;
+    }
 
-    return 0i32;
-};
+    // Create and upload vertex buffer (a colorful triangle)
+    // Format: vec3 pos, vec3 color
+    drop(vk_buf_clear());
+    // Vertex 1: Top Center, Red
+    drop(vk_buf_push6(0.0f32, -0.5f32, 0.0f32,  1.0f32, 0.0f32, 0.0f32));
+    // Vertex 2: Bottom Right, Green
+    drop(vk_buf_push6(0.5f32, 0.5f32, 0.0f32,   0.0f32, 1.0f32, 0.0f32));
+    // Vertex 3: Bottom Left, Blue
+    drop(vk_buf_push6(-0.5f32, 0.5f32, 0.0f32,  0.0f32, 0.0f32, 1.0f32));
 
-pub func:failsafe = int32(tbb32:err) {
-    exit 1i32;
+    int32:vbo = raw vk_gen_buffer();
+    drop(vk_upload_vertex_buffer(vbo));
+
+    drop(println("Press 'Q', 'Escape', or close the window to quit."));
+
+    int32:running = 1i32;
+    int32:frames = 0i32;
+    
+    // For automated testing, we will just render 100 frames and exit
+    while (running == 1i32) {
+        if (raw vk_poll_events() == 0i32) {
+            running = 0i32;
+        }
+
+        // Clear screen with dark gray
+        drop(vk_begin_frame(0.1f32, 0.1f32, 0.1f32, 1.0f32));
+        
+        // Bind pipeline and draw triangle
+        drop(vk_cmd_bind_pipeline(pipeline));
+        drop(vk_cmd_bind_vertex_buffer(vbo));
+        drop(vk_draw(3i32));
+
+        drop(vk_end_frame());
+
+        frames = frames + 1i32;
+        if (frames > 100i32) {
+            running = 0i32;
+        }
+    }
+
+    drop(vk_cleanup());
+    drop(println("Vulkan test passed!"));
+    exit 0;
 };

@@ -176,3 +176,5 @@ pub func:args_make1 = string(string:a0) { pass(string_concat("|", string_concat(
 pub func:args_make2 = string(string:a0, string:a1) { string:b = raw args_make1(a0); pass(string_concat(b, string_concat(a1, "|"))); };
 pub func:args_make3 = string(string:a0, string:a1, string:a2) { string:b = raw args_make2(a0, a1); pass(string_concat(b, string_concat(a2, "|"))); };
 pub func:args_make4 = string(string:a0, string:a1, string:a2, string:a3) { string:b = raw args_make3(a0, a1, a2); pass(string_concat(b, string_concat(a3, "|"))); };
+pub func:args_make5 = string(string:a0, string:a1, string:a2, string:a3, string:a4) { string:b = raw args_make4(a0, a1, a2, a3); pass(string_concat(b, string_concat(a4, "|"))); };
+pub func:args_make6 = string(string:a0, string:a1, string:a2, string:a3, string:a4, string:a5) { string:b = raw args_make5(a0, a1, a2, a3, a4); pass(string_concat(b, string_concat(a5, "|"))); };

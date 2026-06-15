@@ -56,7 +56,7 @@ for pkg_dir in "$PACKAGES_DIR"/nitpick-*/; do
         test_name=$(basename "$test_file")
         
         # Parse link libraries from nitpick-package.toml
-        extra_flags=""
+        extra_flags="-L/usr/local/cuda/lib64"
         if [ -f "$pkg_dir/nitpick-package.toml" ]; then
             libs=$(grep "^link_libraries" "$pkg_dir/nitpick-package.toml" | sed -E 's/.*=\s*\[(.*)\]/\1/' | tr -d '" ' | tr ',' ' ')
             for lib in $libs; do
@@ -68,6 +68,13 @@ for pkg_dir in "$PACKAGES_DIR"/nitpick-*/; do
         if [ -n "$shim_flags" ]; then
             extra_flags="$extra_flags $shim_flags"
         fi
+
+        # Add all package src directories to include path
+        for p in "$PACKAGES_DIR"/nitpick-*/src; do
+            if [ -d "$p" ]; then
+                extra_flags="$extra_flags -I $p"
+            fi
+        done
 
         # Always link all nitpick-libc standard libraries to fix broken TOML dependencies
         ARIA_LIBC_SHIM="/home/randy/Workspace/REPOS/nitpick-libc/shim"
@@ -84,11 +91,28 @@ for pkg_dir in "$PACKAGES_DIR"/nitpick-*/; do
         fi
         
 
-        
         # Auto-link the package's own shim if it exists
         pkg_shim_name=$(echo "$pkg_name" | sed 's/-/_/g')_shim
         if [ -f "$pkg_dir/shim/lib${pkg_shim_name}.so" ] || [ -f "$pkg_dir/shim/lib${pkg_shim_name}.a" ]; then
             extra_flags="$extra_flags -L$pkg_dir/shim -l${pkg_shim_name}"
+        fi
+
+        # Parse dependencies from nitpick-package.toml and link their shims and required link_libraries
+        if [ -f "$pkg_dir/nitpick-package.toml" ]; then
+            # Extract keys under [dependencies]
+            deps=$(awk '/^\[dependencies\]/{flag=1; next} /^\[.*\]/{flag=0} flag && /^[a-z0-9-]+[ \t]*=/{print $1}' "$pkg_dir/nitpick-package.toml" || true)
+            for dep in $deps; do
+                dep_shim_name=$(echo "$dep" | sed 's/-/_/g')_shim
+                if [ -f "$PACKAGES_DIR/$dep/shim/lib${dep_shim_name}.so" ] || [ -f "$PACKAGES_DIR/$dep/shim/lib${dep_shim_name}.a" ]; then
+                    extra_flags="$extra_flags -L$PACKAGES_DIR/$dep/shim -l${dep_shim_name}"
+                fi
+                if [ -f "$PACKAGES_DIR/$dep/nitpick-package.toml" ]; then
+                    dep_libs=$(grep "^link_libraries" "$PACKAGES_DIR/$dep/nitpick-package.toml" | sed -E 's/.*=\s*\[(.*)\]/\1/' | tr -d '" ' | tr ',' ' ' || true)
+                    for l in $dep_libs; do
+                        extra_flags="$extra_flags -l$l"
+                    done
+                fi
+            done
         fi
 
         # Provide nitpick-libc
@@ -102,8 +126,8 @@ for pkg_dir in "$PACKAGES_DIR"/nitpick-*/; do
         extra_flags="$extra_flags -L$PACKAGES_DIR/../nitpick-libc/shim $libc_libs"
 
         bin_name="/tmp/test-${pkg_name}"
-        if $NPKC_BIN "$test_file" -I "$pkg_dir/src" $extra_flags -o "$bin_name" > /tmp/compile_${pkg_name}.log 2>&1; then
-            if "$bin_name" 2>/dev/null; then
+        if $NPKC_BIN "$test_file" $extra_flags -o "$bin_name" > /tmp/compile_${pkg_name}.log 2>&1; then
+            if (cd "$test_dir" && "$bin_name" 2>/dev/null); then
                 echo "PASS  $pkg_name/$test_name"
                 PASS=$((PASS + 1))
             else

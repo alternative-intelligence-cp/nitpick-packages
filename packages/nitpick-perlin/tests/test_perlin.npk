@@ -1,30 +1,28 @@
 // test_perlin.npk
 
-import "core.npk";
-import "io.npk";
-import "fmt.npk";
-import "../src/nitpick_perlin.npk";
+extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+use "../src/nitpick_perlin.npk".*;
 
-pub func:main = int32() {
-    print("Testing nitpick-perlin...\n");
+func:failsafe = int32(tbb32:err) { exit 1; };
 
-    noise_set_seed(42);
+func:main = int32() {
+    drop(println("Testing nitpick-perlin...\n"));
 
-    let val1 = perlin_2d(0.5, 0.5);
-    let val2 = perlin_3d(0.5, 0.5, 0.5);
-    let val3 = simplex_2d(0.5, 0.5);
+    drop(noise_set_seed(42i32));
 
-    print(fmt_sprintf("Perlin 2D (0.5, 0.5): %f\n", val1));
-    print(fmt_sprintf("Perlin 3D (0.5, 0.5, 0.5): %f\n", val2));
-    print(fmt_sprintf("Simplex 2D (0.5, 0.5): %f\n", val3));
+    flt64:val1 = raw perlin_2d(0.5f64, 0.5f64);
+    flt64:val2 = raw perlin_3d(0.5f64, 0.5f64, 0.5f64);
+    flt64:val3 = raw simplex_2d(0.5f64, 0.5f64);
+
+    drop(println("Perlin / Simplex generated!\n"));
 
     // Ensure they return different values at different coordinates
-    let val4 = perlin_2d(1.5, 0.5);
-    if val4 == val1 {
-        print("ERROR: Perlin 2D returned identical values for different coords!\n");
-        pass(1);
+    flt64:val4 = raw perlin_2d(1.5f64, 0.5f64);
+    if (val4 == val1) {
+        drop(println("ERROR: Perlin 2D returned identical values for different coords!\n"));
+        exit 1;
     }
 
-    print("SUCCESS: All tests passed.\n");
-    pass(0);
+    drop(println("SUCCESS: All tests passed.\n"));
+    exit 0;
 };

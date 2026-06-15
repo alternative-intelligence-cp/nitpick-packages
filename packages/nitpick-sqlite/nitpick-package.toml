@@ -3,7 +3,7 @@ name            = "nitpick-sqlite"
 version         = "0.2.3"
 description     = "SQLite3 database client for Nitpick — open, query, execute, transactions via libsqlite3"
 license         = "MIT"
-repository      = "https://github.com/alternative-intelligence-cp/aria-packages"
+repository      = "https://github.com/alternative-intelligence-cp/nitpick-packages"
 
 [dependencies]
 

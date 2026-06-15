@@ -462,14 +462,83 @@ func:main = int32() {
         drop(println("[FAIL] 25 cube geometry count mismatch"));
     }
 
+    // ── test 26: advanced matrix math ───────────────────────────────
+    drop(gl_mat4_rotate_z(90.0f32));
+    drop(gl_mat4_scale(2.0f32, 2.0f32, 2.0f32));
+    drop(gl_mat4_ortho(0.0f32, 800.0f32, 600.0f32, 0.0f32, -1.0f32, 1.0f32));
+    drop(gl_mat4_look_at(0.0f32, 0.0f32, 5.0f32, 0.0f32, 0.0f32, 0.0f32, 0.0f32, 1.0f32, 0.0f32));
+    passed = passed + 1i64;
+    drop(println("[PASS] 26 advanced mat4 math (scale, ortho, look_at) no crash"));
+
+    // ── test 27: mouse inputs ───────────────────────────────────────
+    int32:mx = raw gl_get_mouse_x();
+    int32:my = raw gl_get_mouse_y();
+    int32:mb = raw gl_get_mouse_buttons();
+    passed = passed + 1i64;
+    drop(println("[PASS] 27 mouse state getters no crash"));
+
+    // ── test 28: load_quad_geometry ─────────────────────────────────
+    drop(gl_buf_clear());
+    drop(gl_load_quad_geometry());
+    int32:quad_count = raw gl_buf_count();
+    // 6 vertices × 5 floats each = 30
+    if (quad_count == 30i32) {
+        passed = passed + 1i64;
+        drop(println("[PASS] 28 quad geometry: 30 floats (6 verts × 5)"));
+    }
+    if (quad_count != 30i32) {
+        failed = failed + 1i64;
+        drop(println("[FAIL] 28 quad geometry count mismatch"));
+    }
+
+    // ── test 29: load_texture_from_file (non-existent) ──────────────
+    int32:bad_tex = raw gl_load_texture_from_file("does_not_exist.png");
+    if (bad_tex == 0i32 - 1i32) {
+        passed = passed + 1i64;
+        drop(println("[PASS] 29 missing texture load returns -1"));
+    }
+    if (bad_tex != 0i32 - 1i32) {
+        failed = failed + 1i64;
+        drop(println("[FAIL] 29 missing texture load did not return -1"));
+    }
+
+    // ── test 30: blending ───────────────────────────────────────────
+    drop(gl_blend_func(raw GL_SRC_ALPHA(), raw GL_ONE_MINUS_SRC_ALPHA()));
+    passed = passed + 1i64;
+    drop(println("[PASS] 30 gl_blend_func no crash"));
+
+    // ── test 31: framebuffers ───────────────────────────────────────
+    int32:fbo = raw gl_gen_framebuffer();
+    if (fbo > 0i32) {
+        passed = passed + 1i64;
+        drop(println("[PASS] 31 gl_gen_framebuffer returned positive ID"));
+    }
+    if (fbo <= 0i32) {
+        failed = failed + 1i64;
+        drop(println("[FAIL] 31 gl_gen_framebuffer returned invalid ID"));
+    }
+
+    drop(gl_bind_framebuffer(raw GL_FRAMEBUFFER(), fbo));
+    int32:fbo_status = raw gl_check_framebuffer_status(raw GL_FRAMEBUFFER());
+    // Note: status will be INCOMPLETE_MISSING_ATTACHMENT because we didn't attach a texture, 
+    // but the call shouldn't crash.
+    passed = passed + 1i64;
+    drop(println("[PASS] 32 gl_check_framebuffer_status no crash"));
+    drop(gl_delete_framebuffer(fbo));
+
+    // ── test 33: instanced drawing ──────────────────────────────────
+    drop(gl_draw_arrays_instanced(raw GL_TRIANGLES(), 0i32, 6i32, 100i32));
+    passed = passed + 1i64;
+    drop(println("[PASS] 33 gl_draw_arrays_instanced no crash"));
+
     // ── cleanup ─────────────────────────────────────────────────────
-    aria_gl_disable_vertex_attrib(0i32);
-    aria_gl_disable_vertex_attrib(1i32);
-    aria_gl_delete_program(prog);
-    aria_gl_delete_program(prog2);
-    aria_gl_delete_buffer(vbo);
-    aria_gl_delete_vao(vao);
-    aria_gl_quit();
+    drop(gl_disable_vertex_attrib(0i32));
+    drop(gl_disable_vertex_attrib(1i32));
+    drop(gl_delete_program(prog));
+    drop(gl_delete_program(prog2));
+    drop(gl_delete_buffer(vbo));
+    drop(gl_delete_vao(vao));
+    drop(gl_quit());
 
     // ── summary ─────────────────────────────────────────────────────
     drop(println(""));

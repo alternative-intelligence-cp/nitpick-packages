@@ -4,3 +4,8 @@ version = "0.1.0"
 description = "MongoDB driver for Nitpick using libmongoc"
 
 [dependencies]
+
+[build]
+type = "library"
+entry = "src/nitpick_mongo.npk"
+link_libraries = ["mongoc-1.0", "bson-1.0"]

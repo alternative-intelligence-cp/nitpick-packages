@@ -61,6 +61,20 @@ extern "nitpick_raylib_shim" {
                                             int32:r, int32:g, int32:b, int32:a);
 
     // 3D
+    func:aria_rl_create_camera_3d = int32(flt32:pos_x, flt32:pos_y, flt32:pos_z,
+                                          flt32:tar_x, flt32:tar_y, flt32:tar_z,
+                                          flt32:up_x, flt32:up_y, flt32:up_z,
+                                          flt32:fovy, int32:projection);
+    func:aria_rl_destroy_camera_3d = void(int32:handle);
+    func:aria_rl_update_camera_3d = void(int32:handle, int32:mode);
+    func:aria_rl_begin_mode_3d_camera = void(int32:handle);
+    func:aria_rl_get_camera_3d_pos_x = flt32(int32:handle);
+    func:aria_rl_get_camera_3d_pos_y = flt32(int32:handle);
+    func:aria_rl_get_camera_3d_pos_z = flt32(int32:handle);
+    func:aria_rl_get_camera_3d_target_x = flt32(int32:handle);
+    func:aria_rl_get_camera_3d_target_y = flt32(int32:handle);
+    func:aria_rl_get_camera_3d_target_z = flt32(int32:handle);
+
     func:aria_rl_begin_mode_3d = void(flt32:pos_x, flt32:pos_y, flt32:pos_z,
                                       flt32:tar_x, flt32:tar_y, flt32:tar_z,
                                       flt32:up_x, flt32:up_y, flt32:up_z,
@@ -84,6 +98,7 @@ extern "nitpick_raylib_shim" {
     func:aria_rl_unload_model = void(int32:handle);
     func:aria_rl_draw_model = void(int32:handle, flt32:x, flt32:y, flt32:z,
                                    flt32:scale, int32:r, int32:g, int32:b, int32:a);
+    func:aria_rl_set_model_material_texture = void(int32:model_handle, int32:material_idx, int32:map_type, int32:tex_handle);
 
     // text
     func:aria_rl_draw_text    = void(string:text, int32:x, int32:y,
@@ -166,6 +181,48 @@ extern "nitpick_raylib_shim" {
 
     // procedural beep (wave_type: 0=square 1=triangle 2=sawtooth 3=sine)
     func:aria_rl_gen_beep = int32(int32:freq, int32:dur_ms, int32:wave, flt32:vol);
+
+    // advanced shapes
+    func:aria_rl_draw_line_ex = void(flt32:x1, flt32:y1, flt32:x2, flt32:y2, flt32:thick,
+                                     int32:r, int32:g, int32:b, int32:a);
+    func:aria_rl_draw_rectangle_rounded = void(flt32:x, flt32:y, flt32:w, flt32:h,
+                                               flt32:roundness, int32:segments,
+                                               int32:r, int32:g, int32:b, int32:a);
+    func:aria_rl_draw_rectangle_rounded_lines = void(flt32:x, flt32:y, flt32:w, flt32:h,
+                                                     flt32:roundness, int32:segments,
+                                                     int32:r, int32:g, int32:b, int32:a);
+
+    // 2D Camera
+    func:aria_rl_begin_mode_2d = void(flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom);
+    func:aria_rl_end_mode_2d = void();
+    func:aria_rl_get_screen_to_world_2d_x = flt32(flt32:pos_x, flt32:pos_y, flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom);
+    func:aria_rl_get_screen_to_world_2d_y = flt32(flt32:pos_x, flt32:pos_y, flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom);
+    func:aria_rl_get_world_to_screen_2d_x = flt32(flt32:pos_x, flt32:pos_y, flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom);
+    func:aria_rl_get_world_to_screen_2d_y = flt32(flt32:pos_x, flt32:pos_y, flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom);
+
+    // custom fonts
+    func:aria_rl_load_font = int32(string:path);
+    func:aria_rl_unload_font = void(int32:handle);
+    func:aria_rl_draw_text_ex = void(int32:font_handle, string:text, flt32:x, flt32:y, flt32:font_size, flt32:spacing, int32:r, int32:g, int32:b, int32:a);
+    func:aria_rl_measure_text_ex_x = flt32(int32:font_handle, string:text, flt32:font_size, flt32:spacing);
+    func:aria_rl_measure_text_ex_y = flt32(int32:font_handle, string:text, flt32:font_size, flt32:spacing);
+
+    // collision detection
+    func:aria_rl_check_collision_recs = int32(flt32:x1, flt32:y1, flt32:w1, flt32:h1, flt32:x2, flt32:y2, flt32:w2, flt32:h2);
+    func:aria_rl_check_collision_circles = int32(flt32:x1, flt32:y1, flt32:r1, flt32:x2, flt32:y2, flt32:r2);
+    func:aria_rl_check_collision_point_rec = int32(flt32:px, flt32:py, flt32:rx, flt32:ry, flt32:rw, flt32:rh);
+
+    // shaders
+    func:aria_rl_load_shader = int32(string:vs_path, string:fs_path);
+    func:aria_rl_unload_shader = void(int32:handle);
+    func:aria_rl_begin_shader_mode = void(int32:handle);
+    func:aria_rl_end_shader_mode = void();
+    func:aria_rl_get_shader_location = int32(int32:handle, string:uniform_name);
+    func:aria_rl_set_shader_value_float = void(int32:handle, int32:locIndex, flt32:val);
+    func:aria_rl_set_shader_value_int = void(int32:handle, int32:locIndex, int32:val);
+    func:aria_rl_set_shader_value_vec2 = void(int32:handle, int32:locIndex, flt32:x, flt32:y);
+    func:aria_rl_set_shader_value_vec3 = void(int32:handle, int32:locIndex, flt32:x, flt32:y, flt32:z);
+    func:aria_rl_set_shader_value_vec4 = void(int32:handle, int32:locIndex, flt32:x, flt32:y, flt32:z, flt32:w);
 }
 
 // ── public API: window ──────────────────────────────────────────────
@@ -302,6 +359,45 @@ pub func:rl_draw_triangle = NIL(flt32:x1, flt32:y1,
 
 // ── public API: 3D ────────────────────────────────────────────────────
 
+pub func:rl_create_camera_3d = int32(flt32:pos_x, flt32:pos_y, flt32:pos_z,
+                                     flt32:tar_x, flt32:tar_y, flt32:tar_z,
+                                     flt32:up_x, flt32:up_y, flt32:up_z,
+                                     flt32:fovy, int32:projection) {
+    int32:r = aria_rl_create_camera_3d(pos_x, pos_y, pos_z, tar_x, tar_y, tar_z, up_x, up_y, up_z, fovy, projection);
+    pass(r);
+};
+
+pub func:rl_destroy_camera_3d = NIL(int32:handle) {
+    aria_rl_destroy_camera_3d(handle);
+    pass(NIL);
+};
+
+pub func:rl_update_camera_3d = NIL(int32:handle, int32:mode) {
+    aria_rl_update_camera_3d(handle, mode);
+    pass(NIL);
+};
+
+pub func:rl_begin_mode_3d_camera = NIL(int32:handle) {
+    aria_rl_begin_mode_3d_camera(handle);
+    pass(NIL);
+};
+
+pub func:rl_get_camera_3d_pos_x = flt32(int32:handle) { flt32:r = aria_rl_get_camera_3d_pos_x(handle); pass(r); };
+pub func:rl_get_camera_3d_pos_y = flt32(int32:handle) { flt32:r = aria_rl_get_camera_3d_pos_y(handle); pass(r); };
+pub func:rl_get_camera_3d_pos_z = flt32(int32:handle) { flt32:r = aria_rl_get_camera_3d_pos_z(handle); pass(r); };
+pub func:rl_get_camera_3d_target_x = flt32(int32:handle) { flt32:r = aria_rl_get_camera_3d_target_x(handle); pass(r); };
+pub func:rl_get_camera_3d_target_y = flt32(int32:handle) { flt32:r = aria_rl_get_camera_3d_target_y(handle); pass(r); };
+pub func:rl_get_camera_3d_target_z = flt32(int32:handle) { flt32:r = aria_rl_get_camera_3d_target_z(handle); pass(r); };
+
+pub func:CAMERA_CUSTOM       = int32() { pass(0i32); };
+pub func:CAMERA_FREE         = int32() { pass(1i32); };
+pub func:CAMERA_ORBITAL      = int32() { pass(2i32); };
+pub func:CAMERA_FIRST_PERSON = int32() { pass(3i32); };
+pub func:CAMERA_THIRD_PERSON = int32() { pass(4i32); };
+
+pub func:CAMERA_PERSPECTIVE  = int32() { pass(0i32); };
+pub func:CAMERA_ORTHOGRAPHIC = int32() { pass(1i32); };
+
 pub func:rl_begin_mode_3d = NIL(flt32:pos_x, flt32:pos_y, flt32:pos_z,
                                 flt32:tar_x, flt32:tar_y, flt32:tar_z,
                                 flt32:up_x, flt32:up_y, flt32:up_z,
@@ -364,6 +460,16 @@ pub func:rl_draw_model = NIL(int32:handle, flt32:x, flt32:y, flt32:z,
     aria_rl_draw_model(handle, x, y, z, scale, r, g, b, a);
     pass(NIL);
 };
+
+pub func:rl_set_model_material_texture = NIL(int32:model_handle, int32:material_idx, int32:map_type, int32:tex_handle) {
+    aria_rl_set_model_material_texture(model_handle, material_idx, map_type, tex_handle);
+    pass(NIL);
+};
+
+pub func:MATERIAL_MAP_ALBEDO = int32() { pass(0i32); };
+pub func:MATERIAL_MAP_METALNESS = int32() { pass(1i32); };
+pub func:MATERIAL_MAP_NORMAL = int32() { pass(2i32); };
+pub func:MATERIAL_MAP_ROUGHNESS = int32() { pass(3i32); };
 
 // ── public API: text ────────────────────────────────────────────────
 
@@ -704,3 +810,156 @@ pub func:GP_AXIS_LEFT_X  = int32() { pass(0i32); };
 pub func:GP_AXIS_LEFT_Y  = int32() { pass(1i32); };
 pub func:GP_AXIS_RIGHT_X = int32() { pass(2i32); };
 pub func:GP_AXIS_RIGHT_Y = int32() { pass(3i32); };
+
+// ── public API: advanced shapes ───────────────────────────────────────
+
+pub func:rl_draw_line_ex = NIL(flt32:x1, flt32:y1, flt32:x2, flt32:y2, flt32:thick,
+                               int32:r, int32:g, int32:b, int32:a) {
+    aria_rl_draw_line_ex(x1, y1, x2, y2, thick, r, g, b, a);
+    pass(NIL);
+};
+
+pub func:rl_draw_rectangle_rounded = NIL(flt32:x, flt32:y, flt32:w, flt32:h,
+                                         flt32:roundness, int32:segments,
+                                         int32:r, int32:g, int32:b, int32:a) {
+    aria_rl_draw_rectangle_rounded(x, y, w, h, roundness, segments, r, g, b, a);
+    pass(NIL);
+};
+
+pub func:rl_draw_rectangle_rounded_lines = NIL(flt32:x, flt32:y, flt32:w, flt32:h,
+                                               flt32:roundness, int32:segments,
+                                               int32:r, int32:g, int32:b, int32:a) {
+    aria_rl_draw_rectangle_rounded_lines(x, y, w, h, roundness, segments, r, g, b, a);
+    pass(NIL);
+};
+
+// ── public API: 2D Camera ─────────────────────────────────────────────
+
+pub func:rl_begin_mode_2d = NIL(flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom) {
+    aria_rl_begin_mode_2d(offset_x, offset_y, target_x, target_y, rotation, zoom);
+    pass(NIL);
+};
+
+pub func:rl_end_mode_2d = NIL() {
+    aria_rl_end_mode_2d();
+    pass(NIL);
+};
+
+pub func:rl_get_screen_to_world_2d_x = flt32(flt32:pos_x, flt32:pos_y, flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom) {
+    flt32:r = aria_rl_get_screen_to_world_2d_x(pos_x, pos_y, offset_x, offset_y, target_x, target_y, rotation, zoom);
+    pass(r);
+};
+
+pub func:rl_get_screen_to_world_2d_y = flt32(flt32:pos_x, flt32:pos_y, flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom) {
+    flt32:r = aria_rl_get_screen_to_world_2d_y(pos_x, pos_y, offset_x, offset_y, target_x, target_y, rotation, zoom);
+    pass(r);
+};
+
+pub func:rl_get_world_to_screen_2d_x = flt32(flt32:pos_x, flt32:pos_y, flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom) {
+    flt32:r = aria_rl_get_world_to_screen_2d_x(pos_x, pos_y, offset_x, offset_y, target_x, target_y, rotation, zoom);
+    pass(r);
+};
+
+pub func:rl_get_world_to_screen_2d_y = flt32(flt32:pos_x, flt32:pos_y, flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom) {
+    flt32:r = aria_rl_get_world_to_screen_2d_y(pos_x, pos_y, offset_x, offset_y, target_x, target_y, rotation, zoom);
+    pass(r);
+};
+
+// ── public API: custom fonts ──────────────────────────────────────────
+
+pub func:rl_load_font = int32(string:path) {
+    int32:r = aria_rl_load_font(path);
+    pass(r);
+};
+
+pub func:rl_unload_font = NIL(int32:handle) {
+    aria_rl_unload_font(handle);
+    pass(NIL);
+};
+
+pub func:rl_draw_text_ex = NIL(int32:font_handle, string:text, flt32:x, flt32:y, flt32:font_size, flt32:spacing, int32:r, int32:g, int32:b, int32:a) {
+    aria_rl_draw_text_ex(font_handle, text, x, y, font_size, spacing, r, g, b, a);
+    pass(NIL);
+};
+
+pub func:rl_measure_text_ex_x = flt32(int32:font_handle, string:text, flt32:font_size, flt32:spacing) {
+    flt32:r = aria_rl_measure_text_ex_x(font_handle, text, font_size, spacing);
+    pass(r);
+};
+
+pub func:rl_measure_text_ex_y = flt32(int32:font_handle, string:text, flt32:font_size, flt32:spacing) {
+    flt32:r = aria_rl_measure_text_ex_y(font_handle, text, font_size, spacing);
+    pass(r);
+};
+
+// ── public API: collision detection ───────────────────────────────────
+
+pub func:rl_check_collision_recs = int32(flt32:x1, flt32:y1, flt32:w1, flt32:h1,
+                                         flt32:x2, flt32:y2, flt32:w2, flt32:h2) {
+    int32:r = aria_rl_check_collision_recs(x1, y1, w1, h1, x2, y2, w2, h2);
+    pass(r);
+};
+
+pub func:rl_check_collision_circles = int32(flt32:x1, flt32:y1, flt32:r1,
+                                            flt32:x2, flt32:y2, flt32:r2) {
+    int32:r = aria_rl_check_collision_circles(x1, y1, r1, x2, y2, r2);
+    pass(r);
+};
+
+pub func:rl_check_collision_point_rec = int32(flt32:px, flt32:py,
+                                              flt32:rx, flt32:ry, flt32:rw, flt32:rh) {
+    int32:r = aria_rl_check_collision_point_rec(px, py, rx, ry, rw, rh);
+    pass(r);
+};
+
+// ── public API: shaders ───────────────────────────────────────────────
+
+pub func:rl_load_shader = int32(string:vs_path, string:fs_path) {
+    int32:r = aria_rl_load_shader(vs_path, fs_path);
+    pass(r);
+};
+
+pub func:rl_unload_shader = NIL(int32:handle) {
+    aria_rl_unload_shader(handle);
+    pass(NIL);
+};
+
+pub func:rl_begin_shader_mode = NIL(int32:handle) {
+    aria_rl_begin_shader_mode(handle);
+    pass(NIL);
+};
+
+pub func:rl_end_shader_mode = NIL() {
+    aria_rl_end_shader_mode();
+    pass(NIL);
+};
+
+pub func:rl_get_shader_location = int32(int32:handle, string:uniform_name) {
+    int32:r = aria_rl_get_shader_location(handle, uniform_name);
+    pass(r);
+};
+
+pub func:rl_set_shader_value_float = NIL(int32:handle, int32:locIndex, flt32:val) {
+    aria_rl_set_shader_value_float(handle, locIndex, val);
+    pass(NIL);
+};
+
+pub func:rl_set_shader_value_int = NIL(int32:handle, int32:locIndex, int32:val) {
+    aria_rl_set_shader_value_int(handle, locIndex, val);
+    pass(NIL);
+};
+
+pub func:rl_set_shader_value_vec2 = NIL(int32:handle, int32:locIndex, flt32:x, flt32:y) {
+    aria_rl_set_shader_value_vec2(handle, locIndex, x, y);
+    pass(NIL);
+};
+
+pub func:rl_set_shader_value_vec3 = NIL(int32:handle, int32:locIndex, flt32:x, flt32:y, flt32:z) {
+    aria_rl_set_shader_value_vec3(handle, locIndex, x, y, z);
+    pass(NIL);
+};
+
+pub func:rl_set_shader_value_vec4 = NIL(int32:handle, int32:locIndex, flt32:x, flt32:y, flt32:z, flt32:w) {
+    aria_rl_set_shader_value_vec4(handle, locIndex, x, y, z, w);
+    pass(NIL);
+};

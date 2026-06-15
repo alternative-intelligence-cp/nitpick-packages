@@ -8,8 +8,9 @@ func:failsafe = int32(tbb32:err_code) {
 func:main = int32() {
     Plot:p = raw Plot_create(800i32, 600i32, "Nitpick Plot Demo\0");
     
-    // Test showing the window
-    raw Plot_show(p);
+    // Do not call Plot_show in tests to avoid hanging CI
+    int32:x = raw Plot_map_x(p, 0.5f64);
+    int32:y = raw Plot_map_y(p, 0.5f64);
     
     exit 0i32;
 };

@@ -17,7 +17,7 @@ for shim_dir in packages/*/shim; do
             libs=""
             if [ "$pkg_name" = "nitpick-sdl2" ] || [ "$pkg_name" = "nitpick-audio" ]; then
                 flags="$flags $(sdl2-config --cflags)"
-                libs="$(sdl2-config --libs)"
+                libs="$(sdl2-config --libs) -lSDL2_image -lSDL2_ttf -lSDL2_mixer"
                 if [ "$pkg_name" = "nitpick-audio" ]; then
                     libs="$libs -lasound"
                 fi
@@ -46,6 +46,8 @@ for shim_dir in packages/*/shim; do
                 libs="$libs -lasound"
             elif [ "$pkg_name" = "nitpick-compress" ]; then
                 libs="-lz"
+            elif [ "$pkg_name" = "nitpick-cuda" ]; then
+                libs="-lcudart"
             fi
             
             shim_name="lib$(echo $pkg_name | sed 's/-/_/g')_shim.so"

@@ -114,6 +114,11 @@ void aria_rl_draw_line(int32_t x1, int32_t y1, int32_t x2, int32_t y2,
     DrawLine(x1, y1, x2, y2, mk_color(r, g, b, a));
 }
 
+void aria_rl_draw_line_ex(float x1, float y1, float x2, float y2, float thick,
+                          int32_t r, int32_t g, int32_t b, int32_t a) {
+    DrawLineEx((Vector2){x1, y1}, (Vector2){x2, y2}, thick, mk_color(r, g, b, a));
+}
+
 /* ── shapes: circle ──────────────────────────────────────────────────── */
 
 void aria_rl_draw_circle(int32_t cx, int32_t cy, float radius,
@@ -154,6 +159,18 @@ void aria_rl_draw_rectangle_gradient_v(int32_t x, int32_t y, int32_t w, int32_t 
                            mk_color(br, bg, bb, ba));
 }
 
+void aria_rl_draw_rectangle_rounded(float x, float y, float w, float h,
+                                    float roundness, int32_t segments,
+                                    int32_t r, int32_t g, int32_t b, int32_t a) {
+    DrawRectangleRounded((Rectangle){x, y, w, h}, roundness, segments, mk_color(r, g, b, a));
+}
+
+void aria_rl_draw_rectangle_rounded_lines(float x, float y, float w, float h,
+                                          float roundness, int32_t segments,
+                                          int32_t r, int32_t g, int32_t b, int32_t a) {
+    DrawRectangleRoundedLines((Rectangle){x, y, w, h}, roundness, segments, mk_color(r, g, b, a));
+}
+
 /* ── shapes: triangle ────────────────────────────────────────────────── */
 
 void aria_rl_draw_triangle(float x1, float y1, float x2, float y2,
@@ -168,6 +185,45 @@ void aria_rl_draw_triangle_lines(float x1, float y1, float x2, float y2,
                                  int32_t r, int32_t g, int32_t b, int32_t a) {
     DrawTriangleLines((Vector2){x1,y1}, (Vector2){x2,y2}, (Vector2){x3,y3},
                       mk_color(r, g, b, a));
+}
+
+/* ── 2D Camera ───────────────────────────────────────────────────────── */
+
+void aria_rl_begin_mode_2d(float offset_x, float offset_y, float target_x, float target_y, float rotation, float zoom) {
+    Camera2D camera = { 0 };
+    camera.offset = (Vector2){ offset_x, offset_y };
+    camera.target = (Vector2){ target_x, target_y };
+    camera.rotation = rotation;
+    camera.zoom = zoom;
+    BeginMode2D(camera);
+}
+
+void aria_rl_end_mode_2d(void) {
+    EndMode2D();
+}
+
+float aria_rl_get_screen_to_world_2d_x(float pos_x, float pos_y, float offset_x, float offset_y, float target_x, float target_y, float rotation, float zoom) {
+    Camera2D camera = { (Vector2){ offset_x, offset_y }, (Vector2){ target_x, target_y }, rotation, zoom };
+    Vector2 w = GetScreenToWorld2D((Vector2){ pos_x, pos_y }, camera);
+    return w.x;
+}
+
+float aria_rl_get_screen_to_world_2d_y(float pos_x, float pos_y, float offset_x, float offset_y, float target_x, float target_y, float rotation, float zoom) {
+    Camera2D camera = { (Vector2){ offset_x, offset_y }, (Vector2){ target_x, target_y }, rotation, zoom };
+    Vector2 w = GetScreenToWorld2D((Vector2){ pos_x, pos_y }, camera);
+    return w.y;
+}
+
+float aria_rl_get_world_to_screen_2d_x(float pos_x, float pos_y, float offset_x, float offset_y, float target_x, float target_y, float rotation, float zoom) {
+    Camera2D camera = { (Vector2){ offset_x, offset_y }, (Vector2){ target_x, target_y }, rotation, zoom };
+    Vector2 s = GetWorldToScreen2D((Vector2){ pos_x, pos_y }, camera);
+    return s.x;
+}
+
+float aria_rl_get_world_to_screen_2d_y(float pos_x, float pos_y, float offset_x, float offset_y, float target_x, float target_y, float rotation, float zoom) {
+    Camera2D camera = { (Vector2){ offset_x, offset_y }, (Vector2){ target_x, target_y }, rotation, zoom };
+    Vector2 s = GetWorldToScreen2D((Vector2){ pos_x, pos_y }, camera);
+    return s.y;
 }
 
 /* ── 3D ──────────────────────────────────────────────────────────────── */
@@ -187,6 +243,71 @@ void aria_rl_begin_mode_3d(float pos_x, float pos_y, float pos_z,
 
 void aria_rl_end_mode_3d(void) {
     EndMode3D();
+}
+
+#define ARIA_MAX_CAMERAS 16
+static Camera3D g_cameras[ARIA_MAX_CAMERAS];
+static int32_t g_camera_used[ARIA_MAX_CAMERAS];
+
+int32_t aria_rl_create_camera_3d(float pos_x, float pos_y, float pos_z,
+                                 float tar_x, float tar_y, float tar_z,
+                                 float up_x, float up_y, float up_z,
+                                 float fovy, int32_t projection) {
+    for (int i=0; i<ARIA_MAX_CAMERAS; i++) {
+        if (!g_camera_used[i]) {
+            g_cameras[i].position = (Vector3){ pos_x, pos_y, pos_z };
+            g_cameras[i].target   = (Vector3){ tar_x, tar_y, tar_z };
+            g_cameras[i].up       = (Vector3){ up_x, up_y, up_z };
+            g_cameras[i].fovy     = fovy;
+            g_cameras[i].projection = projection;
+            g_camera_used[i] = 1;
+            return i;
+        }
+    }
+    return -1;
+}
+
+void aria_rl_destroy_camera_3d(int32_t handle) {
+    if (handle >= 0 && handle < ARIA_MAX_CAMERAS && g_camera_used[handle]) {
+        g_camera_used[handle] = 0;
+    }
+}
+
+void aria_rl_update_camera_3d(int32_t handle, int32_t mode) {
+    if (handle >= 0 && handle < ARIA_MAX_CAMERAS && g_camera_used[handle]) {
+        UpdateCamera(&g_cameras[handle], mode);
+    }
+}
+
+void aria_rl_begin_mode_3d_camera(int32_t handle) {
+    if (handle >= 0 && handle < ARIA_MAX_CAMERAS && g_camera_used[handle]) {
+        BeginMode3D(g_cameras[handle]);
+    }
+}
+
+float aria_rl_get_camera_3d_pos_x(int32_t handle) {
+    if (handle >= 0 && handle < ARIA_MAX_CAMERAS && g_camera_used[handle]) return g_cameras[handle].position.x;
+    return 0.0f;
+}
+float aria_rl_get_camera_3d_pos_y(int32_t handle) {
+    if (handle >= 0 && handle < ARIA_MAX_CAMERAS && g_camera_used[handle]) return g_cameras[handle].position.y;
+    return 0.0f;
+}
+float aria_rl_get_camera_3d_pos_z(int32_t handle) {
+    if (handle >= 0 && handle < ARIA_MAX_CAMERAS && g_camera_used[handle]) return g_cameras[handle].position.z;
+    return 0.0f;
+}
+float aria_rl_get_camera_3d_target_x(int32_t handle) {
+    if (handle >= 0 && handle < ARIA_MAX_CAMERAS && g_camera_used[handle]) return g_cameras[handle].target.x;
+    return 0.0f;
+}
+float aria_rl_get_camera_3d_target_y(int32_t handle) {
+    if (handle >= 0 && handle < ARIA_MAX_CAMERAS && g_camera_used[handle]) return g_cameras[handle].target.y;
+    return 0.0f;
+}
+float aria_rl_get_camera_3d_target_z(int32_t handle) {
+    if (handle >= 0 && handle < ARIA_MAX_CAMERAS && g_camera_used[handle]) return g_cameras[handle].target.z;
+    return 0.0f;
 }
 
 void aria_rl_draw_cube(float x, float y, float z,
@@ -246,6 +367,49 @@ void aria_rl_draw_model(int32_t handle, float x, float y, float z,
 }
 
 /* ── text ────────────────────────────────────────────────────────────── */
+
+#define ARIA_MAX_FONTS 128
+static Font g_fonts[ARIA_MAX_FONTS];
+static int32_t g_font_used[ARIA_MAX_FONTS];
+
+int32_t aria_rl_load_font(const char *path) {
+    for (int32_t i = 0; i < ARIA_MAX_FONTS; i++) {
+        if (!g_font_used[i]) {
+            g_fonts[i] = LoadFont(path);
+            if (g_fonts[i].baseSize == 0) return -1;
+            g_font_used[i] = 1;
+            return i;
+        }
+    }
+    return -1;
+}
+
+void aria_rl_unload_font(int32_t handle) {
+    if (handle >= 0 && handle < ARIA_MAX_FONTS && g_font_used[handle]) {
+        UnloadFont(g_fonts[handle]);
+        g_font_used[handle] = 0;
+    }
+}
+
+void aria_rl_draw_text_ex(int32_t font_handle, const char *text, float x, float y, float font_size, float spacing, int32_t r, int32_t g, int32_t b, int32_t a) {
+    if (font_handle >= 0 && font_handle < ARIA_MAX_FONTS && g_font_used[font_handle]) {
+        DrawTextEx(g_fonts[font_handle], text, (Vector2){x, y}, font_size, spacing, mk_color(r, g, b, a));
+    }
+}
+
+float aria_rl_measure_text_ex_x(int32_t font_handle, const char *text, float font_size, float spacing) {
+    if (font_handle >= 0 && font_handle < ARIA_MAX_FONTS && g_font_used[font_handle]) {
+        return MeasureTextEx(g_fonts[font_handle], text, font_size, spacing).x;
+    }
+    return 0.0f;
+}
+
+float aria_rl_measure_text_ex_y(int32_t font_handle, const char *text, float font_size, float spacing) {
+    if (font_handle >= 0 && font_handle < ARIA_MAX_FONTS && g_font_used[font_handle]) {
+        return MeasureTextEx(g_fonts[font_handle], text, font_size, spacing).y;
+    }
+    return 0.0f;
+}
 
 void aria_rl_draw_text(const char *text, int32_t x, int32_t y,
                        int32_t font_size,
@@ -315,6 +479,23 @@ void aria_rl_set_mouse_position(int32_t x, int32_t y) {
 
 void aria_rl_set_mouse_cursor(int32_t cursor) {
     SetMouseCursor(cursor);
+}
+
+/* ── collision detection ─────────────────────────────────────────────── */
+
+int32_t aria_rl_check_collision_recs(float x1, float y1, float w1, float h1,
+                                     float x2, float y2, float w2, float h2) {
+    return CheckCollisionRecs((Rectangle){x1, y1, w1, h1}, (Rectangle){x2, y2, w2, h2}) ? 1 : 0;
+}
+
+int32_t aria_rl_check_collision_circles(float x1, float y1, float r1,
+                                        float x2, float y2, float r2) {
+    return CheckCollisionCircles((Vector2){x1, y1}, r1, (Vector2){x2, y2}, r2) ? 1 : 0;
+}
+
+int32_t aria_rl_check_collision_point_rec(float px, float py,
+                                          float rx, float ry, float rw, float rh) {
+    return CheckCollisionPointRec((Vector2){px, py}, (Rectangle){rx, ry, rw, rh}) ? 1 : 0;
 }
 
 /* ── textures ────────────────────────────────────────────────────────── */
@@ -612,4 +793,90 @@ int32_t aria_rl_gen_beep(int32_t freq_hz, int32_t duration_ms,
     g_sound_used[slot] = 1;
     free(data);
     return slot;
+}
+
+/* ── shaders ─────────────────────────────────────────────────────────── */
+
+#define ARIA_MAX_SHADERS 64
+static Shader g_shaders[ARIA_MAX_SHADERS];
+static int32_t g_shader_used[ARIA_MAX_SHADERS];
+
+int32_t aria_rl_load_shader(const char *vs_path, const char *fs_path) {
+    for (int i=0; i<ARIA_MAX_SHADERS; i++) {
+        if (!g_shader_used[i]) {
+            const char* vs = (vs_path && vs_path[0]) ? vs_path : 0;
+            const char* fs = (fs_path && fs_path[0]) ? fs_path : 0;
+            g_shaders[i] = LoadShader(vs, fs);
+            g_shader_used[i] = 1;
+            return i;
+        }
+    }
+    return -1;
+}
+
+void aria_rl_unload_shader(int32_t handle) {
+    if (handle >= 0 && handle < ARIA_MAX_SHADERS && g_shader_used[handle]) {
+        UnloadShader(g_shaders[handle]);
+        g_shader_used[handle] = 0;
+    }
+}
+
+void aria_rl_begin_shader_mode(int32_t handle) {
+    if (handle >= 0 && handle < ARIA_MAX_SHADERS && g_shader_used[handle]) {
+        BeginShaderMode(g_shaders[handle]);
+    }
+}
+
+void aria_rl_end_shader_mode(void) {
+    EndShaderMode();
+}
+
+int32_t aria_rl_get_shader_location(int32_t handle, const char *uniform_name) {
+    if (handle >= 0 && handle < ARIA_MAX_SHADERS && g_shader_used[handle]) {
+        return GetShaderLocation(g_shaders[handle], uniform_name);
+    }
+    return -1;
+}
+
+void aria_rl_set_shader_value_float(int32_t handle, int32_t locIndex, float val) {
+    if (handle >= 0 && handle < ARIA_MAX_SHADERS && g_shader_used[handle]) {
+        SetShaderValue(g_shaders[handle], locIndex, &val, SHADER_UNIFORM_FLOAT);
+    }
+}
+
+void aria_rl_set_shader_value_int(int32_t handle, int32_t locIndex, int32_t val) {
+    if (handle >= 0 && handle < ARIA_MAX_SHADERS && g_shader_used[handle]) {
+        SetShaderValue(g_shaders[handle], locIndex, &val, SHADER_UNIFORM_INT);
+    }
+}
+
+void aria_rl_set_shader_value_vec2(int32_t handle, int32_t locIndex, float x, float y) {
+    if (handle >= 0 && handle < ARIA_MAX_SHADERS && g_shader_used[handle]) {
+        float vec[2] = {x, y};
+        SetShaderValue(g_shaders[handle], locIndex, vec, SHADER_UNIFORM_VEC2);
+    }
+}
+
+void aria_rl_set_shader_value_vec3(int32_t handle, int32_t locIndex, float x, float y, float z) {
+    if (handle >= 0 && handle < ARIA_MAX_SHADERS && g_shader_used[handle]) {
+        float vec[3] = {x, y, z};
+        SetShaderValue(g_shaders[handle], locIndex, vec, SHADER_UNIFORM_VEC3);
+    }
+}
+
+void aria_rl_set_shader_value_vec4(int32_t handle, int32_t locIndex, float x, float y, float z, float w) {
+    if (handle >= 0 && handle < ARIA_MAX_SHADERS && g_shader_used[handle]) {
+        float vec[4] = {x, y, z, w};
+        SetShaderValue(g_shaders[handle], locIndex, vec, SHADER_UNIFORM_VEC4);
+    }
+}
+
+/* ── extensions ──────────────────────────────────────────────────────── */
+
+void aria_rl_set_model_material_texture(int32_t model_handle, int32_t material_idx, int32_t map_type, int32_t tex_handle) {
+    if (model_handle >= 0 && model_handle < ARIA_MAX_MODELS && g_model_used[model_handle]) {
+        if (tex_handle >= 0 && tex_handle < ARIA_MAX_TEXTURES && g_texture_used[tex_handle]) {
+            SetMaterialTexture(&g_models[model_handle].materials[material_idx], map_type, g_textures[tex_handle]);
+        }
+    }
 }

@@ -1,0 +1,282 @@
+// nitpick_cuda.npk — Idiomatic Nitpick bindings for CUDA Runtime API
+//
+// Requires: libnitpick_cuda_shim.so + libcudart + libcuda
+
+extern "nitpick_cuda_shim" {
+    func:nitpick_cuda_init = int32();
+    func:nitpick_cuda_get_device_count = int32();
+    func:nitpick_cuda_set_device = int32(int32:device);
+    func:nitpick_cuda_device_synchronize = int32();
+    func:nitpick_cuda_device_get_attribute = int32(int32:device, int32:attr);
+    func:nitpick_cuda_get_error_name = string(int32:error_code);
+    func:nitpick_cuda_get_error_string = string(int32:error_code);
+
+    func:nitpick_cuda_malloc = int64(int32:byte_size);
+    func:nitpick_cuda_free = int32(int64:ptr);
+
+    func:nitpick_cuda_malloc_managed = int64(int32:byte_size);
+    func:nitpick_cuda_managed_set_f32 = void(int64:ptr, int32:index, flt32:val);
+    func:nitpick_cuda_managed_get_f32 = flt32(int64:ptr, int32:index);
+    func:nitpick_cuda_managed_set_i32 = void(int64:ptr, int32:index, int32:val);
+    func:nitpick_cuda_managed_get_i32 = int32(int64:ptr, int32:index);
+    func:nitpick_cuda_prefetch_async = int32(int64:ptr, int32:byte_size, int32:dst_device, int64:cu_stream);
+    func:nitpick_cuda_cpu_device_id = int32();
+
+    func:nitpick_cuda_buf_clear = void();
+    func:nitpick_cuda_buf_push_f32 = void(flt32:val);
+    func:nitpick_cuda_buf_push_i32 = void(int32:val);
+    func:nitpick_cuda_buf_get_f32 = flt32(int32:index);
+    func:nitpick_cuda_buf_get_i32 = int32(int32:index);
+    func:nitpick_cuda_buf_count = int32();
+
+    func:nitpick_cuda_memcpy_to_device = int32(int64:dst_ptr, int32:byte_size);
+    func:nitpick_cuda_memcpy_to_host = int32(int64:src_ptr, int32:byte_size);
+
+    func:nitpick_cuda_memcpy_to_device_async = int32(int64:dst_ptr, int32:byte_size, int64:cu_stream);
+    func:nitpick_cuda_memcpy_to_host_async = int32(int64:src_ptr, int32:byte_size, int64:cu_stream);
+
+    func:nitpick_cuda_stream_create = int64();
+    func:nitpick_cuda_stream_destroy = int32(int64:cu_stream);
+    func:nitpick_cuda_stream_synchronize = int32(int64:cu_stream);
+
+    func:nitpick_cuda_event_create = int64();
+    func:nitpick_cuda_event_destroy = int32(int64:event);
+    func:nitpick_cuda_event_record = int32(int64:event, int64:cu_stream);
+    func:nitpick_cuda_event_synchronize = int32(int64:event);
+    func:nitpick_cuda_event_elapsed_time = flt32(int64:start_event, int64:end_event);
+
+    func:nitpick_cuda_module_load = int64(string:filename);
+    func:nitpick_cuda_module_get_function = int64(int64:module, string:name);
+
+    func:nitpick_cuda_args_clear = void();
+    func:nitpick_cuda_args_push_f32 = void(flt32:val);
+    func:nitpick_cuda_args_push_i32 = void(int32:val);
+    func:nitpick_cuda_args_push_i64 = void(int64:val);
+
+    func:nitpick_cuda_launch_kernel = int32(int64:func, int32:gx, int32:gy, int32:gz, int32:bx, int32:by, int32:bz, int32:shared_mem, int64:cu_stream);
+}
+
+// ── public API: initialization ──────────────────────────────────────
+
+pub func:cuda_init = int32() {
+    int32:r = nitpick_cuda_init();
+    pass(r);
+};
+
+pub func:cuda_get_device_count = int32() {
+    int32:r = nitpick_cuda_get_device_count();
+    pass(r);
+};
+
+pub func:cuda_set_device = int32(int32:device) {
+    int32:r = nitpick_cuda_set_device(device);
+    pass(r);
+};
+
+pub func:cuda_device_synchronize = int32() {
+    int32:r = nitpick_cuda_device_synchronize();
+    pass(r);
+};
+
+// ── public API: properties ──────────────────────────────────────────
+
+pub func:cuda_device_get_attribute = int32(int32:device, int32:attr) {
+    int32:r = nitpick_cuda_device_get_attribute(device, attr);
+    pass(r);
+};
+
+// ── public API: error handling ──────────────────────────────────────
+
+pub func:cuda_get_error_name = string(int32:error_code) {
+    string:r = nitpick_cuda_get_error_name(error_code);
+    pass(r);
+};
+
+pub func:cuda_get_error_string = string(int32:error_code) {
+    string:r = nitpick_cuda_get_error_string(error_code);
+    pass(r);
+};
+
+// ── public API: memory management ───────────────────────────────────
+
+pub func:cuda_malloc = int64(int32:size) {
+    int64:r = nitpick_cuda_malloc(size);
+    pass(r);
+};
+
+pub func:cuda_free = int32(int64:ptr) {
+    int32:r = nitpick_cuda_free(ptr);
+    pass(r);
+};
+
+// ── public API: unified memory ──────────────────────────────────────
+
+pub func:cuda_malloc_managed = int64(int32:byte_size) {
+    int64:r = nitpick_cuda_malloc_managed(byte_size);
+    pass(r);
+};
+
+pub func:cuda_managed_set_f32 = NIL(int64:ptr, int32:index, flt32:val) {
+    nitpick_cuda_managed_set_f32(ptr, index, val);
+    pass(NIL);
+};
+
+pub func:cuda_managed_get_f32 = flt32(int64:ptr, int32:index) {
+    flt32:r = nitpick_cuda_managed_get_f32(ptr, index);
+    pass(r);
+};
+
+pub func:cuda_managed_set_i32 = NIL(int64:ptr, int32:index, int32:val) {
+    nitpick_cuda_managed_set_i32(ptr, index, val);
+    pass(NIL);
+};
+
+pub func:cuda_managed_get_i32 = int32(int64:ptr, int32:index) {
+    int32:r = nitpick_cuda_managed_get_i32(ptr, index);
+    pass(r);
+};
+
+pub func:cuda_prefetch_async = int32(int64:ptr, int32:byte_size, int32:dst_device, int64:cu_stream) {
+    int32:r = nitpick_cuda_prefetch_async(ptr, byte_size, dst_device, cu_stream);
+    pass(r);
+};
+
+pub func:cuda_cpu_device_id = int32() {
+    int32:r = nitpick_cuda_cpu_device_id();
+    pass(r);
+};
+
+// ── public API: staging buffer ──────────────────────────────────────
+
+pub func:cuda_buf_clear = NIL() {
+    nitpick_cuda_buf_clear();
+    pass(NIL);
+};
+
+pub func:cuda_buf_push_f32 = NIL(flt32:val) {
+    nitpick_cuda_buf_push_f32(val);
+    pass(NIL);
+};
+
+pub func:cuda_buf_push_i32 = NIL(int32:val) {
+    nitpick_cuda_buf_push_i32(val);
+    pass(NIL);
+};
+
+pub func:cuda_buf_get_f32 = flt32(int32:index) {
+    flt32:r = nitpick_cuda_buf_get_f32(index);
+    pass(r);
+};
+
+pub func:cuda_buf_get_i32 = int32(int32:index) {
+    int32:r = nitpick_cuda_buf_get_i32(index);
+    pass(r);
+};
+
+pub func:cuda_buf_count = int32() {
+    int32:r = nitpick_cuda_buf_count();
+    pass(r);
+};
+
+// ── public API: memcpy ──────────────────────────────────────────────
+
+pub func:cuda_memcpy_to_device = int32(int64:dst_ptr, int32:byte_size) {
+    int32:r = nitpick_cuda_memcpy_to_device(dst_ptr, byte_size);
+    pass(r);
+};
+
+pub func:cuda_memcpy_to_host = int32(int64:src_ptr, int32:byte_size) {
+    int32:r = nitpick_cuda_memcpy_to_host(src_ptr, byte_size);
+    pass(r);
+};
+
+pub func:cuda_memcpy_to_device_async = int32(int64:dst_ptr, int32:byte_size, int64:cu_stream) {
+    int32:r = nitpick_cuda_memcpy_to_device_async(dst_ptr, byte_size, cu_stream);
+    pass(r);
+};
+
+pub func:cuda_memcpy_to_host_async = int32(int64:src_ptr, int32:byte_size, int64:cu_stream) {
+    int32:r = nitpick_cuda_memcpy_to_host_async(src_ptr, byte_size, cu_stream);
+    pass(r);
+};
+
+// ── public API: streams ─────────────────────────────────────────────
+
+pub func:cuda_stream_create = int64() {
+    int64:r = nitpick_cuda_stream_create();
+    pass(r);
+};
+
+pub func:cuda_stream_destroy = int32(int64:cu_stream) {
+    int32:r = nitpick_cuda_stream_destroy(cu_stream);
+    pass(r);
+};
+
+pub func:cuda_stream_synchronize = int32(int64:cu_stream) {
+    int32:r = nitpick_cuda_stream_synchronize(cu_stream);
+    pass(r);
+};
+
+// ── public API: events ──────────────────────────────────────────────
+
+pub func:cuda_event_create = int64() {
+    int64:r = nitpick_cuda_event_create();
+    pass(r);
+};
+
+pub func:cuda_event_destroy = int32(int64:event) {
+    int32:r = nitpick_cuda_event_destroy(event);
+    pass(r);
+};
+
+pub func:cuda_event_record = int32(int64:event, int64:cu_stream) {
+    int32:r = nitpick_cuda_event_record(event, cu_stream);
+    pass(r);
+};
+
+pub func:cuda_event_synchronize = int32(int64:event) {
+    int32:r = nitpick_cuda_event_synchronize(event);
+    pass(r);
+};
+
+pub func:cuda_event_elapsed_time = flt32(int64:start_event, int64:end_event) {
+    flt32:r = nitpick_cuda_event_elapsed_time(start_event, end_event);
+    pass(r);
+};
+
+// ── public API: kernel execution ────────────────────────────────────
+
+pub func:cuda_module_load = int64(string:filename) {
+    int64:r = nitpick_cuda_module_load(filename);
+    pass(r);
+};
+
+pub func:cuda_module_get_function = int64(int64:module, string:name) {
+    int64:r = nitpick_cuda_module_get_function(module, name);
+    pass(r);
+};
+
+pub func:cuda_args_clear = NIL() {
+    nitpick_cuda_args_clear();
+    pass(NIL);
+};
+
+pub func:cuda_args_push_f32 = NIL(flt32:val) {
+    nitpick_cuda_args_push_f32(val);
+    pass(NIL);
+};
+
+pub func:cuda_args_push_i32 = NIL(int32:val) {
+    nitpick_cuda_args_push_i32(val);
+    pass(NIL);
+};
+
+pub func:cuda_args_push_i64 = NIL(int64:val) {
+    nitpick_cuda_args_push_i64(val);
+    pass(NIL);
+};
+
+pub func:cuda_launch_kernel = int32(int64:func, int32:gx, int32:gy, int32:gz, int32:bx, int32:by, int32:bz, int32:shared_mem, int64:cu_stream) {
+    int32:r = nitpick_cuda_launch_kernel(func, gx, gy, gz, bx, by, bz, shared_mem, cu_stream);
+    pass(r);
+};

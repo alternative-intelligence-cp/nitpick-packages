@@ -27,8 +27,14 @@ static int             g_running = 0;
 #define EVT_ACTIVATE   1
 #define EVT_DESTROY    2
 #define EVT_CLICKED    3
+#define EVT_DIALOG_RESPONSE 4
+#define EVT_FILE_CHOSEN     5
 
 static int32_t g_last_event = EVT_NONE;
+
+static char g_dialog_response[256] = {0};
+static char g_chosen_file[1024] = {0};
+static GtkWidget *g_header_bar = NULL;
 
 /* Storage for dynamically created widgets (simple indexed array) */
 #define MAX_WIDGETS 256
@@ -72,7 +78,7 @@ static void on_window_destroy(GtkWidget *widget, gpointer user_data) {
 /* ── init / quit ─────────────────────────────────────────────────────── */
 
 int32_t nitpick_gtk4_init(const char *app_id) {
-    g_app = gtk_application_new(app_id, G_APPLICATION_DEFAULT_FLAGS);
+    g_app = gtk_application_new(app_id, G_APPLICATION_NON_UNIQUE);
     if (!g_app) return 0;
     g_signal_connect(g_app, "activate", G_CALLBACK(on_activate), NULL);
     g_widget_count = 0;
@@ -105,6 +111,7 @@ void nitpick_gtk4_quit(void) {
     }
     g_window = NULL;
     g_box = NULL;
+    g_header_bar = NULL;
     g_running = 0;
 }
 
@@ -166,6 +173,37 @@ void nitpick_gtk4_window_maximize(void) {
 
 void nitpick_gtk4_window_minimize(void) {
     if (g_window) gtk_window_minimize(GTK_WINDOW(g_window));
+}
+
+void nitpick_gtk4_window_set_header_bar(void) {
+    if (g_window && !g_header_bar) {
+        g_header_bar = gtk_header_bar_new();
+        gtk_window_set_titlebar(GTK_WINDOW(g_window), g_header_bar);
+    }
+}
+
+void nitpick_gtk4_header_bar_pack_start(int32_t child_id) {
+    if (g_header_bar && child_id >= 0 && child_id < g_widget_count && g_widgets[child_id]) {
+        GtkWidget *parent = gtk_widget_get_parent(g_widgets[child_id]);
+        if (parent == g_box) {
+            g_object_ref(g_widgets[child_id]);
+            gtk_box_remove(GTK_BOX(g_box), g_widgets[child_id]);
+            gtk_header_bar_pack_start(GTK_HEADER_BAR(g_header_bar), g_widgets[child_id]);
+            g_object_unref(g_widgets[child_id]);
+        }
+    }
+}
+
+void nitpick_gtk4_header_bar_pack_end(int32_t child_id) {
+    if (g_header_bar && child_id >= 0 && child_id < g_widget_count && g_widgets[child_id]) {
+        GtkWidget *parent = gtk_widget_get_parent(g_widgets[child_id]);
+        if (parent == g_box) {
+            g_object_ref(g_widgets[child_id]);
+            gtk_box_remove(GTK_BOX(g_box), g_widgets[child_id]);
+            gtk_header_bar_pack_end(GTK_HEADER_BAR(g_header_bar), g_widgets[child_id]);
+            g_object_unref(g_widgets[child_id]);
+        }
+    }
 }
 
 /* ── widget creation ─────────────────────────────────────────────────── */
@@ -336,6 +374,123 @@ void nitpick_gtk4_scrolled_window_set_child(int32_t sw_id, int32_t child_id) {
     }
 }
 
+/* TextView */
+int32_t nitpick_gtk4_add_text_view(void) {
+    if (!g_box) return -1;
+    GtkWidget *tv = gtk_text_view_new();
+    gtk_box_append(GTK_BOX(g_box), tv);
+    return register_widget(tv);
+}
+
+void nitpick_gtk4_text_view_set_text(int32_t id, const char *text) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        GtkTextBuffer *buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(g_widgets[id]));
+        gtk_text_buffer_set_text(buf, text, -1);
+    }
+}
+
+const char *nitpick_gtk4_text_view_get_text(int32_t id) {
+    if (id < 0 || id >= g_widget_count || !g_widgets[id]) return "";
+    GtkTextBuffer *buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(g_widgets[id]));
+    GtkTextIter start, end;
+    gtk_text_buffer_get_bounds(buf, &start, &end);
+    /* Note: returning dynamically allocated memory without freeing it is a leak,
+       but GTK has no easy static buffer for this. We will use a static buffer for simplicity. */
+    static char text_buf[8192];
+    char *text = gtk_text_buffer_get_text(buf, &start, &end, FALSE);
+    if (text) {
+        strncpy(text_buf, text, sizeof(text_buf) - 1);
+        text_buf[sizeof(text_buf) - 1] = '\0';
+        g_free(text);
+        return text_buf;
+    }
+    return "";
+}
+
+/* ListBox */
+int32_t nitpick_gtk4_add_list_box(void) {
+    if (!g_box) return -1;
+    GtkWidget *lb = gtk_list_box_new();
+    gtk_box_append(GTK_BOX(g_box), lb);
+    return register_widget(lb);
+}
+
+void nitpick_gtk4_list_box_append(int32_t lb_id, int32_t child_id) {
+    if (lb_id >= 0 && lb_id < g_widget_count && g_widgets[lb_id] &&
+        child_id >= 0 && child_id < g_widget_count && g_widgets[child_id]) {
+        GtkWidget *parent = gtk_widget_get_parent(g_widgets[child_id]);
+        if (parent == g_box) {
+            g_object_ref(g_widgets[child_id]);
+            gtk_box_remove(GTK_BOX(g_box), g_widgets[child_id]);
+            gtk_list_box_append(GTK_LIST_BOX(g_widgets[lb_id]), g_widgets[child_id]);
+            g_object_unref(g_widgets[child_id]);
+        }
+    }
+}
+
+/* Scale */
+int32_t nitpick_gtk4_add_scale(int32_t orientation, float min, float max, float step) {
+    if (!g_box) return -1;
+    GtkWidget *scale = gtk_scale_new_with_range((GtkOrientation)orientation, (double)min, (double)max, (double)step);
+    gtk_box_append(GTK_BOX(g_box), scale);
+    return register_widget(scale);
+}
+
+float nitpick_gtk4_scale_get_value(int32_t id) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        return (float)gtk_range_get_value(GTK_RANGE(g_widgets[id]));
+    }
+    return 0.0f;
+}
+
+void nitpick_gtk4_scale_set_value(int32_t id, float val) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        gtk_range_set_value(GTK_RANGE(g_widgets[id]), (double)val);
+    }
+}
+
+/* Switch */
+int32_t nitpick_gtk4_add_switch(void) {
+    if (!g_box) return -1;
+    GtkWidget *sw = gtk_switch_new();
+    gtk_box_append(GTK_BOX(g_box), sw);
+    return register_widget(sw);
+}
+
+int32_t nitpick_gtk4_switch_get_active(int32_t id) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        return gtk_switch_get_active(GTK_SWITCH(g_widgets[id])) ? 1 : 0;
+    }
+    return 0;
+}
+
+void nitpick_gtk4_switch_set_active(int32_t id, int32_t active) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        gtk_switch_set_active(GTK_SWITCH(g_widgets[id]), active ? TRUE : FALSE);
+    }
+}
+
+/* SpinButton */
+int32_t nitpick_gtk4_add_spin_button(float min, float max, float step) {
+    if (!g_box) return -1;
+    GtkWidget *spin = gtk_spin_button_new_with_range((double)min, (double)max, (double)step);
+    gtk_box_append(GTK_BOX(g_box), spin);
+    return register_widget(spin);
+}
+
+float nitpick_gtk4_spin_button_get_value(int32_t id) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        return (float)gtk_spin_button_get_value(GTK_SPIN_BUTTON(g_widgets[id]));
+    }
+    return 0.0f;
+}
+
+void nitpick_gtk4_spin_button_set_value(int32_t id, float val) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        gtk_spin_button_set_value(GTK_SPIN_BUTTON(g_widgets[id]), (double)val);
+    }
+}
+
 /* ── widget properties ───────────────────────────────────────────────── */
 
 void nitpick_gtk4_widget_set_visible(int32_t id, int32_t visible) {
@@ -375,10 +530,93 @@ void nitpick_gtk4_load_css(const char *css_string) {
 
 /* ── box layout ──────────────────────────────────────────────────────── */
 
+int32_t nitpick_gtk4_add_box(int32_t orientation, int32_t spacing) {
+    if (!g_box) return -1;
+    GtkWidget *box = gtk_box_new((GtkOrientation)orientation, spacing);
+    gtk_box_append(GTK_BOX(g_box), box);
+    return register_widget(box);
+}
+
+void nitpick_gtk4_box_append(int32_t box_id, int32_t child_id) {
+    if (box_id >= 0 && box_id < g_widget_count && g_widgets[box_id] &&
+        child_id >= 0 && child_id < g_widget_count && g_widgets[child_id]) {
+        GtkWidget *parent = gtk_widget_get_parent(g_widgets[child_id]);
+        if (parent == g_box) {
+            g_object_ref(g_widgets[child_id]);
+            gtk_box_remove(GTK_BOX(g_box), g_widgets[child_id]);
+            gtk_box_append(GTK_BOX(g_widgets[box_id]), g_widgets[child_id]);
+            g_object_unref(g_widgets[child_id]);
+        }
+    }
+}
+
 void nitpick_gtk4_box_set_spacing(int32_t spacing) {
     if (g_box) gtk_box_set_spacing(GTK_BOX(g_box), spacing);
 }
 
 void nitpick_gtk4_box_set_homogeneous(int32_t homogeneous) {
     if (g_box) gtk_box_set_homogeneous(GTK_BOX(g_box), homogeneous ? TRUE : FALSE);
+}
+
+/* ── dialogs ─────────────────────────────────────────────────────────── */
+
+static void on_message_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data) {
+    (void)user_data;
+    if (response_id == GTK_RESPONSE_ACCEPT || response_id == GTK_RESPONSE_OK || response_id == GTK_RESPONSE_YES) {
+        strncpy(g_dialog_response, "OK", sizeof(g_dialog_response)-1);
+    } else {
+        strncpy(g_dialog_response, "CANCEL", sizeof(g_dialog_response)-1);
+    }
+    gtk_window_destroy(GTK_WINDOW(dialog));
+    g_last_event = EVT_DIALOG_RESPONSE;
+}
+
+void nitpick_gtk4_show_message_dialog(const char *message) {
+    if (!g_window) return;
+    GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(g_window),
+                                               GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                               GTK_MESSAGE_INFO,
+                                               GTK_BUTTONS_OK,
+                                               "%s", message);
+    g_signal_connect(dialog, "response", G_CALLBACK(on_message_dialog_response), NULL);
+    gtk_window_present(GTK_WINDOW(dialog));
+}
+
+const char* nitpick_gtk4_get_dialog_response(void) {
+    return g_dialog_response;
+}
+
+static void on_file_chooser_response(GtkNativeDialog *native, gint response_id, gpointer user_data) {
+    (void)user_data;
+    if (response_id == GTK_RESPONSE_ACCEPT) {
+        GtkFileChooser *chooser = GTK_FILE_CHOOSER(native);
+        GFile *file = gtk_file_chooser_get_file(chooser);
+        if (file) {
+            char *path = g_file_get_path(file);
+            if (path) {
+                strncpy(g_chosen_file, path, sizeof(g_chosen_file)-1);
+                g_free(path);
+            }
+            g_object_unref(file);
+        }
+    } else {
+        g_chosen_file[0] = '\0';
+    }
+    g_object_unref(native);
+    g_last_event = EVT_FILE_CHOSEN;
+}
+
+void nitpick_gtk4_show_file_chooser(const char *title) {
+    if (!g_window) return;
+    GtkFileChooserNative *native = gtk_file_chooser_native_new(title,
+                                                               GTK_WINDOW(g_window),
+                                                               GTK_FILE_CHOOSER_ACTION_OPEN,
+                                                               "_Open",
+                                                               "_Cancel");
+    g_signal_connect(native, "response", G_CALLBACK(on_file_chooser_response), NULL);
+    gtk_native_dialog_show(GTK_NATIVE_DIALOG(native));
+}
+
+const char* nitpick_gtk4_get_chosen_file(void) {
+    return g_chosen_file;
 }

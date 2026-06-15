@@ -1,0 +1,103 @@
+// matrix_multiply.npk — CUDA Matrix Multiplication using Unified Memory
+use "../src/nitpick_cuda.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit 1; };
+
+func:main = int32() {
+    int32:err = raw cuda_init();
+    if (err != 0i32) {
+        drop(println("Failed to initialize CUDA Driver API."));
+        exit 1;
+    }
+
+    int32:N = 16i32; // 16x16 matrix
+    int32:num_elements = N * N;
+    int32:byte_size = num_elements * 4i32;
+
+    int64:cu_stream = raw cuda_stream_create();
+    int64:event_start = raw cuda_event_create();
+    int64:event_stop = raw cuda_event_create();
+
+    // Unified Memory allocations
+    int64:d_A = raw cuda_malloc_managed(byte_size);
+    int64:d_B = raw cuda_malloc_managed(byte_size);
+    int64:d_C = raw cuda_malloc_managed(byte_size);
+
+    if (d_A == 0i64) {
+        drop(println("Failed to allocate managed memory."));
+        exit 1;
+    }
+
+    // Initialize matrices
+    // A: row-major identity matrix (simplified for verification)
+    // B: matrix with elements 1.0, 2.0, ... 
+    int32:i = 0i32;
+    while (i < num_elements) {
+        // Init A to 2.0
+        drop(cuda_managed_set_f32(d_A, i, 2.0f32));
+        // Init B to 3.0
+        drop(cuda_managed_set_f32(d_B, i, 3.0f32));
+        i = i + 1i32;
+    }
+
+    // Prefetch to GPU (optional)
+    drop(cuda_prefetch_async(d_A, byte_size, 0i32, cu_stream));
+    drop(cuda_prefetch_async(d_B, byte_size, 0i32, cu_stream));
+    drop(cuda_prefetch_async(d_C, byte_size, 0i32, cu_stream));
+
+    // Load module
+    int64:module = raw cuda_module_load("matmul.ptx");
+    int64:func = raw cuda_module_get_function(module, "matmul");
+
+    // Arguments: A, B, C, N
+    drop(cuda_args_clear());
+    drop(cuda_args_push_i64(d_A));
+    drop(cuda_args_push_i64(d_B));
+    drop(cuda_args_push_i64(d_C));
+    drop(cuda_args_push_i32(N));
+
+    drop(println("Launching matrix multiplication..."));
+
+    drop(cuda_event_record(event_start, cu_stream));
+
+    // Launch: 16x16 threads = 256 per block. 1 block.
+    err = raw cuda_launch_kernel(func, 1i32, 1i32, 1i32, 16i32, 16i32, 1i32, 0i32, cu_stream);
+
+    drop(cuda_event_record(event_stop, cu_stream));
+    drop(cuda_stream_synchronize(cu_stream));
+
+    flt32:ms = raw cuda_event_elapsed_time(event_start, event_stop);
+
+    // Prefetch back to CPU
+    int32:cpu_device = raw cuda_cpu_device_id();
+    drop(cuda_prefetch_async(d_C, byte_size, cpu_device, cu_stream));
+    drop(cuda_stream_synchronize(cu_stream));
+
+    // Verification: each element of C should be N * (2.0 * 3.0) = 16 * 6.0 = 96.0
+    flt32:c0 = raw cuda_managed_get_f32(d_C, 0i32);
+    flt32:c255 = raw cuda_managed_get_f32(d_C, 255i32);
+
+    int32:passed = 1i32;
+    if (c0 != 96.0f32) { passed = 0i32; }
+    if (c255 != 96.0f32) { passed = 0i32; }
+
+    if (passed == 1i32) {
+        drop(println("Matrix Multiply Verification: Passed!"));
+    } else {
+        drop(println("Matrix Multiply Verification: Failed!"));
+    }
+
+    if (ms > 0.0f32) {
+        drop(println("Profiling successful! Time elapsed > 0 ms"));
+    }
+
+    // Cleanup
+    drop(cuda_free(d_A));
+    drop(cuda_free(d_B));
+    drop(cuda_free(d_C));
+    drop(cuda_event_destroy(event_start));
+    drop(cuda_event_destroy(event_stop));
+    drop(cuda_stream_destroy(cu_stream));
+
+    exit 0;
+};

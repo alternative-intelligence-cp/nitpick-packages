@@ -3,5 +3,5 @@ name = "nitpick-stats"
 version = "0.11.1"
 description = "Descriptive statistics — mean, median, mode, stddev, percentile, correlation"
 entry = "src/nitpick_stats.npk"
-type = "aria-libc"
-deps = ["aria-libc_mem", "aria-libc_math"]
+type = "nitpick-libc"
+deps = ["nitpick-libc_mem", "nitpick-libc_math"]

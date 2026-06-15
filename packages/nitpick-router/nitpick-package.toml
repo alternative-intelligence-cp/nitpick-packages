@@ -6,5 +6,5 @@ license = "MIT"
 categories = ["networking", "routing"]
 
 [dependencies]
-aria-libc = "*"
-aria-server = "*"
+nitpick-libc = "*"
+nitpick-server = "*"

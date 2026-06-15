@@ -30,10 +30,10 @@ func:main = int32() {
         Widget:title = raw Tui_label(2i32, 1i32, "Advanced TUI Widgets Demo\0", 6i32, 0i32);
         raw Tui_draw_widget(title);
 
-        LayoutCursor:content = raw Layout_create(2i32, 3i32, 1i32);
+        LayoutCursor:content = raw Layout_create(2i32, 3i32, 2i32); // padding = 2
 
-        // 1. ListBox
-        Widget:listbox = raw Tui_listbox(0i32, 0i32, 20i32, 6i32, "Apple|Banana|Cherry|Date|Elderberry|Fig|Grape\0", list_sel);
+        // 1. ListBox (Long list to test scrollbar)
+        Widget:listbox = raw Tui_listbox(0i32, 0i32, 20i32, 6i32, "Apple|Banana|Cherry|Date|Elderberry|Fig|Grape|Honeydew|Kiwi|Lemon|Mango|Nectarine|Orange\0", list_sel);
         listbox = raw Layout_hbox_add(content, listbox);
         
         // 2. Dropdown
@@ -47,29 +47,36 @@ func:main = int32() {
         Widget:tree = raw Tui_treeview(0i32, 0i32, 30i32, 8i32, "Root|-Folder1|--FileA.txt|--FileB.txt|-Folder2|--FileC.txt\0", tree_sel);
         tree = raw Layout_hbox_add(content, tree);
         
-        // 4. DataGrid
-        Widget:grid = raw Tui_datagrid(0i32, 0i32, 35i32, 8i32, "ID,Name,Status|1,Alice,Active|2,Bob,Inactive|3,Charlie,Active\0", grid_sel);
+        // 4. DataGrid (Long grid to test scrollbar)
+        Widget:grid = raw Tui_datagrid(0i32, 0i32, 35i32, 6i32, "ID,Name,Status|1,Alice,Active|2,Bob,Inactive|3,Charlie,Active|4,David,Active|5,Eve,Inactive|6,Frank,Active|7,Grace,Active|8,Heidi,Inactive\0", grid_sel);
         grid = raw Layout_hbox_add(content, grid);
         
         raw Layout_newline(content);
+        raw Layout_set_padding(content, 4i32); // Change padding
 
-        // Quit Button
+        // Right-aligned button
         Widget:btn_quit = raw Tui_button(0i32, 0i32, 15i32, "Show Dialog\0");
-        btn_quit = raw Layout_vbox_add(content, btn_quit);
+        btn_quit = raw Layout_vbox_right(content, btn_quit, 70i32); // container width = 70
+
+        // Centered button
+        Widget:btn_other = raw Tui_button(0i32, 0i32, 15i32, "Centered Btn\0");
+        btn_other = raw Layout_vbox_center(content, btn_other, 70i32);
 
         // Update focus
-        listbox.focused = 0i32; dropdown.focused = 0i32; tree.focused = 0i32; grid.focused = 0i32; btn_quit.focused = 0i32;
+        listbox.focused = 0i32; dropdown.focused = 0i32; tree.focused = 0i32; grid.focused = 0i32; btn_quit.focused = 0i32; btn_other.focused = 0i32;
         if (focus == 0i32) { listbox.focused = 1i32; }
         if (focus == 1i32) { dropdown.focused = 1i32; }
         if (focus == 2i32) { tree.focused = 1i32; }
         if (focus == 3i32) { grid.focused = 1i32; }
         if (focus == 4i32) { btn_quit.focused = 1i32; }
+        if (focus == 5i32) { btn_other.focused = 1i32; }
 
         raw Tui_draw_widget(listbox);
         raw Tui_draw_widget(dropdown); // rendering order matters if it overlaps, so it should be drawn last if expanded, but for simplicity here we draw sequentially.
         raw Tui_draw_widget(tree);
         raw Tui_draw_widget(grid);
         raw Tui_draw_widget(btn_quit);
+        raw Tui_draw_widget(btn_other);
 
         // 5. Dialog (Rendered last to sit on top)
         if (show_dialog == 1i32) {
@@ -97,12 +104,12 @@ func:main = int32() {
         } else {
             if (vk == 9i32) { // TAB
                 focus = focus + 1i32;
-                if (focus > 4i32) { focus = 0i32; }
+                if (focus > 5i32) { focus = 0i32; }
             }
 
             if (focus == 0i32) { // ListBox
                 if (vk == 200i32) { list_sel = list_sel - 1i32; if (list_sel < 0i32) { list_sel = 0i32; } } // UP
-                if (vk == 201i32) { list_sel = list_sel + 1i32; if (list_sel > 6i32) { list_sel = 6i32; } } // DOWN
+                if (vk == 201i32) { list_sel = list_sel + 1i32; if (list_sel > 12i32) { list_sel = 12i32; } } // DOWN
             }
             if (focus == 1i32) { // Dropdown
                 if (vk == 10i32) { 
@@ -119,7 +126,7 @@ func:main = int32() {
             }
             if (focus == 3i32) { // DataGrid
                 if (vk == 200i32) { grid_sel = grid_sel - 1i32; if (grid_sel < 0i32) { grid_sel = 0i32; } } // UP
-                if (vk == 201i32) { grid_sel = grid_sel + 1i32; if (grid_sel > 3i32) { grid_sel = 3i32; } } // DOWN
+                if (vk == 201i32) { grid_sel = grid_sel + 1i32; if (grid_sel > 8i32) { grid_sel = 8i32; } } // DOWN
             }
             if (focus == 4i32) { // Button
                 if (vk == 10i32) { show_dialog = 1i32; dialog_btn = 0i32; } // Enter

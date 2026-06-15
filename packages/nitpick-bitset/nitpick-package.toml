@@ -3,13 +3,13 @@ name = "nitpick-bitset"
 version = "0.11.3"
 description = "Fixed-size bit sets with set operations (union, intersect, complement, difference)"
 license = "MIT"
-repository = "https://github.com/alternative-intelligence-cp/aria-packages"
+repository = "https://github.com/alternative-intelligence-cp/nitpick-packages"
 categories = ["data-structures"]
 
 [dependencies]
-aria-libc = "0.10.0"
+nitpick-libc = "0.10.0"
 
 [build]
 type = "library"
 entry = "src/nitpick_bitset.npk"
-link_libraries = ["aria_libc_mem"]
+link_libraries = ["nitpick_libc_mem"]

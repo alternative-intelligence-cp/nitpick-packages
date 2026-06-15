@@ -86,6 +86,31 @@ pub func:Layout_newline = NIL(LayoutCursor:cur) {
     pass NIL;
 };
 
+pub func:Layout_vbox_center = Widget(LayoutCursor:cur, Widget:wdg, int32:container_w) {
+    Widget:pos = wdg;
+    pos.x = cur.start_x + (container_w / 2i32) - (pos.w / 2i32);
+    pos.y = cur.y;
+    cur.y = cur.y + pos.h + cur.padding;
+    cur.x = cur.start_x;
+    cur.max_h_in_row = 0i32;
+    pass pos;
+};
+
+pub func:Layout_vbox_right = Widget(LayoutCursor:cur, Widget:wdg, int32:container_w) {
+    Widget:pos = wdg;
+    pos.x = cur.start_x + container_w - pos.w;
+    pos.y = cur.y;
+    cur.y = cur.y + pos.h + cur.padding;
+    cur.x = cur.start_x;
+    cur.max_h_in_row = 0i32;
+    pass pos;
+};
+
+pub func:Layout_set_padding = NIL(LayoutCursor:cur, int32:pad) {
+    cur.padding = pad;
+    pass NIL;
+};
+
 // --- Constructors ---
 
 pub func:Tui_panel = Widget(int32:x, int32:y, int32:w, int32:h, int32:fg, int32:bg) {
@@ -188,10 +213,66 @@ pub func:Tui_datagrid = Widget(int32:x, int32:y, int32:w, int32:h, string:csv_da
 
 // --- Rendering ---
 
+pub func:Tui_draw_border = NIL(int32:x, int32:y, int32:w, int32:h, int32:fg, int32:bg) {
+    nitpick_display_set_fg(fg);
+    nitpick_display_set_bg(bg);
+    
+    // Top border
+    nitpick_display_move(x, y);
+    print("┌");
+    int32:i = 1i32;
+    while (i < w - 1i32) { print("─"); i = i + 1i32; }
+    print("┐");
+    
+    // Sides
+    i = 1i32;
+    while (i < h - 1i32) {
+        nitpick_display_move(x, y + i); print("│");
+        nitpick_display_move(x + w - 1i32, y + i); print("│");
+        i = i + 1i32;
+    }
+    
+    // Bottom border
+    nitpick_display_move(x, y + h - 1i32);
+    print("└");
+    i = 1i32;
+    while (i < w - 1i32) { print("─"); i = i + 1i32; }
+    print("┘");
+    pass NIL;
+};
+
+pub func:Tui_draw_scrollbar = NIL(int32:x, int32:y, int32:h, int64:count, int64:max_vis, int64:start_idx) {
+    if (count <= max_vis) { pass NIL; }
+    
+    // Calculate scrollbar knob position
+    int64:track_h = @cast<int64>(h) - 2i64;
+    int64:knob_h = track_h * max_vis / count;
+    if (knob_h < 1i64) { knob_h = 1i64; }
+    
+    int64:knob_y = track_h * start_idx / count;
+    
+    int32:i = 0i32;
+    while (i < @cast<int32>(track_h)) {
+        nitpick_display_move(x, y + 1i32 + i);
+        if (@cast<int64>(i) >= knob_y) {
+            if (@cast<int64>(i) < knob_y + knob_h) {
+                print("█");
+            } else {
+                print("░");
+            }
+        } else {
+            print("░");
+        }
+        i = i + 1i32;
+    }
+    pass NIL;
+};
+
 pub func:Tui_draw_widget = NIL(Widget:wdg) {
     
     if (wdg.type == 1i32) {
         nitpick_display_box(wdg.x, wdg.y, wdg.fg, wdg.bg, wdg.w, wdg.h);
+        raw Tui_draw_border(wdg.x, wdg.y, wdg.w, wdg.h, wdg.fg, wdg.bg);
     }
     
     if (wdg.type == 2i32) {
@@ -275,6 +356,7 @@ pub func:Tui_draw_widget = NIL(Widget:wdg) {
     if (wdg.type == 10i32) {
         // ListBox
         nitpick_display_box(wdg.x, wdg.y, wdg.fg, wdg.bg, wdg.w, wdg.h);
+        raw Tui_draw_border(wdg.x, wdg.y, wdg.w, wdg.h, wdg.fg, wdg.bg);
         int64:count = raw str_token_count(wdg.text, "|\0");
         int64:max_vis = wdg.h - 2i32;
         int64:sel = wdg.value;
@@ -327,29 +409,34 @@ pub func:Tui_draw_widget = NIL(Widget:wdg) {
     }
 
     if (wdg.type == 12i32) {
-        // Dialog
+        // Dialog with shadow
+        // Shadow (offset by +1,+1)
+        nitpick_display_box(wdg.x + 1i32, wdg.y + 1i32, 0i32, 0i32, wdg.w, wdg.h);
+        
+        // Dialog body
         nitpick_display_box(wdg.x, wdg.y, wdg.fg, wdg.bg, wdg.w, wdg.h);
-        nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
+        raw Tui_draw_border(wdg.x, wdg.y, wdg.w, wdg.h, wdg.fg, wdg.bg);
         
         string:title = raw str_token(wdg.text, "|\0", 0i64);
         string:msg = raw str_token(wdg.text, "|\0", 1i64);
         
-        nitpick_display_move(wdg.x + 2i32, wdg.y); print("[ "); print(title); print(" ]");
+        nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
+        nitpick_display_move(wdg.x + 2i32, wdg.y); print("┤ "); print(title); print(" ├");
         nitpick_display_move(wdg.x + 2i32, wdg.y + 2i32); print(msg);
         
         // Render buttons at bottom depending on style
         int32:btn_y = wdg.y + wdg.h - 2i32;
         if (wdg.value == 0i32) {
             // OK
-            nitpick_display_move(wdg.x + wdg.w / 2i32 - 3i32, btn_y);
+            nitpick_display_move(wdg.x + wdg.w / 2i32 - 4i32, btn_y);
             if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
-            print("[ OK ]");
+            print("[  OK  ]");
             nitpick_display_set_reverse(0i32);
         } else {
             // OK / Cancel
             nitpick_display_move(wdg.x + 2i32, btn_y);
             if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
-            print("[ OK ]");
+            print("[  OK  ]");
             nitpick_display_set_reverse(0i32);
             nitpick_display_move(wdg.x + wdg.w - 12i32, btn_y);
             print("[ Cancel ]");
@@ -359,21 +446,25 @@ pub func:Tui_draw_widget = NIL(Widget:wdg) {
     if (wdg.type == 13i32) {
         // TreeView
         nitpick_display_box(wdg.x, wdg.y, wdg.fg, wdg.bg, wdg.w, wdg.h);
+        raw Tui_draw_border(wdg.x, wdg.y, wdg.w, wdg.h, wdg.fg, wdg.bg);
         int64:count = raw str_token_count(wdg.text, "|\0");
         int64:max_vis = wdg.h - 2i32;
         int64:sel = wdg.value;
+        int64:start_idx = 0i64;
+        if (sel >= max_vis) { start_idx = sel - max_vis + 1i64; }
         
         int64:i = 0i64;
         while (i < max_vis) {
-            if (i < count) {
-                if (i == sel) {
+            int64:idx = start_idx + i;
+            if (idx < count) {
+                if (idx == sel) {
                     if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
                     else { nitpick_display_set_fg(0i32); nitpick_display_set_bg(wdg.fg); }
                 } else {
                     nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
                 }
                 nitpick_display_move(wdg.x + 1i32, wdg.y + 1i32 + @cast<int32>(i));
-                string:item = raw str_token(wdg.text, "|\0", i);
+                string:item = raw str_token(wdg.text, "|\0", idx);
                 
                 // Depth is denoted by leading '-' (e.g. "--file.txt")
                 // We'll just print it directly for now, which already creates tree visual
@@ -382,40 +473,49 @@ pub func:Tui_draw_widget = NIL(Widget:wdg) {
             }
             i = i + 1i64;
         }
+        raw Tui_draw_scrollbar(wdg.x + wdg.w - 1i32, wdg.y, wdg.h, count, max_vis, start_idx);
     }
 
     if (wdg.type == 14i32) {
         // DataGrid
         nitpick_display_box(wdg.x, wdg.y, wdg.fg, wdg.bg, wdg.w, wdg.h);
+        raw Tui_draw_border(wdg.x, wdg.y, wdg.w, wdg.h, wdg.fg, wdg.bg);
         int64:row_count = raw str_token_count(wdg.text, "|\0");
+        int64:max_vis = wdg.h - 2i32;
         int64:sel = wdg.value;
+        int64:start_idx = 0i64;
+        if (sel >= max_vis) { start_idx = sel - max_vis + 1i64; }
         
         int64:r = 0i64;
-        while (r < row_count) {
-            string:row_data = raw str_token(wdg.text, "|\0", r);
-            if (r == sel) {
-                if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
-                else { nitpick_display_set_fg(0i32); nitpick_display_set_bg(wdg.fg); }
-            } else {
-                nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
-            }
-            
-            nitpick_display_move(wdg.x + 1i32, wdg.y + 1i32 + @cast<int32>(r));
-            
-            int64:col_count = raw str_token_count(row_data, ",\0");
-            int64:c = 0i64;
-            while (c < col_count) {
-                string:cell = raw str_token(row_data, ",\0", c);
-                print(cell);
-                if (c < col_count - 1i64) {
-                    print(" | ");
+        while (r < max_vis) {
+            int64:idx = start_idx + r;
+            if (idx < row_count) {
+                string:row_data = raw str_token(wdg.text, "|\0", idx);
+                if (idx == sel) {
+                    if (wdg.focused == 1i32) { nitpick_display_set_reverse(1i32); }
+                    else { nitpick_display_set_fg(0i32); nitpick_display_set_bg(wdg.fg); }
+                } else {
+                    nitpick_display_set_fg(wdg.fg); nitpick_display_set_bg(wdg.bg);
                 }
-                c = c + 1i64;
+                
+                nitpick_display_move(wdg.x + 1i32, wdg.y + 1i32 + @cast<int32>(r));
+                
+                int64:col_count = raw str_token_count(row_data, ",\0");
+                int64:c = 0i64;
+                while (c < col_count) {
+                    string:cell = raw str_token(row_data, ",\0", c);
+                    print(" "); print(cell); print(" ");
+                    if (c < col_count - 1i64) {
+                        print("│");
+                    }
+                    c = c + 1i64;
+                }
+                
+                nitpick_display_set_reverse(0i32);
             }
-            
-            nitpick_display_set_reverse(0i32);
             r = r + 1i64;
         }
+        raw Tui_draw_scrollbar(wdg.x + wdg.w - 1i32, wdg.y, wdg.h, row_count, max_vis, start_idx);
     }
 
     pass NIL;

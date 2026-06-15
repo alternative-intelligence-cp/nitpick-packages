@@ -14,3 +14,4 @@ entry = "src/nitpick_args.npk"
 [dependencies]
 nitpick-cli = "path:../nitpick-cli"
 nitpick-vec = "path:../nitpick-vec"
+nitpick-log = "path:../nitpick-log"

@@ -3,7 +3,7 @@ name = "nitpick-url"
 version = "0.2.6"
 description = "URL parsing, encoding, and decoding for Nitpick"
 license = "MIT"
-repository = "https://github.com/alternative-intelligence-cp/aria-packages"
+repository = "https://github.com/alternative-intelligence-cp/nitpick-packages"
 
 [dependencies]
 

@@ -3,14 +3,14 @@ name = "nitpick-console"
 version = "0.11.2"
 authors = ["Nitpick Language Project"]
 license = "MIT"
-description = "Virtual 8-bit console address map and frame scheduler — Nitpick + aria-libc_mem"
+description = "Virtual 8-bit console address map and frame scheduler — Nitpick + nitpick-libc_mem"
 keywords = ["console", "virtual", "memory-map", "frame-scheduler"]
 categories = ["graphics"]
 
 [dependencies]
-aria-libc = "0.10.0"
+nitpick-libc = "0.10.0"
 
 [build]
 type = "library"
 entry = "src/nitpick_console.npk"
-link_libraries = ["aria_libc_mem"]
+link_libraries = ["nitpick_libc_mem"]

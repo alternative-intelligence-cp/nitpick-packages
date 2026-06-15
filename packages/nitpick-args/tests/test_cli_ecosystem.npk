@@ -1,7 +1,7 @@
 // test_cli_ecosystem.npk
-use "nitpick_args.npk".*;
-use "nitpick_log.npk".*;
-use "nitpick_cli.npk".*;
+use "../src/nitpick_args.npk".*;
+use "../../nitpick-log/src/nitpick_log.npk".*;
+use "../../nitpick-cli/src/nitpick_cli.npk".*;
 
 extern "libc" {
     func:printf = int32(string:fmt);

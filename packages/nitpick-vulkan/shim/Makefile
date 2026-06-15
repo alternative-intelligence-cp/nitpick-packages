@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -fPIC -O3
-LDFLAGS = -shared -lvulkan
+CFLAGS = -Wall -Wextra -fPIC -O3 $(shell pkg-config --cflags sdl2)
+LDFLAGS = -shared -lvulkan $(shell pkg-config --libs sdl2)
 
 TARGET = libnitpick_vulkan_shim.so
 SRC = vulkan_shim.c
