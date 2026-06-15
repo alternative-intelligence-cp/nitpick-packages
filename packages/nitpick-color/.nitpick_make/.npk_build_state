@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "test-nitpick-color": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-color",
+      "source_hash": "fnv1a:10089883565303380506",
+      "command_hash": 11187525739295936023,
+      "source_timestamp": 18446744069053395352,
+      "build_timestamp": 1781507736,
+      "build_duration_ms": 144,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "nitpick-color": {
+      "artifact_path": ".nitpick_make/build/libnitpick-color.a",
+      "source_hash": "fnv1a:3532959285505862906",
+      "command_hash": 14695981039346656037,
+      "source_timestamp": 18446744069052264474,
+      "build_timestamp": 1781507736,
+      "build_duration_ms": 73,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}
