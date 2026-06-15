@@ -1,69 +1,91 @@
-// test_nitpick_toml.npk — TOML parser tests (10 tests)
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
-use "../src/nitpick_toml.npk".*;
+use "nitpick_toml.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+extern "libc" { func:printf = int32(string:fmt); }
+extern "libc" { func:nitpick_libc_exit = NIL(int32:code); }
 
+int64:fail_cnt = 0i64;
 
+func:failsafe = int32(tbb32:err) { exit(1i32); };
+
+func:assert_eq_i32 = int64(int32:actual, int32:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i64);
+};
+
+func:assert_eq_i64 = int64(int64:actual, int64:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i64);
+};
 
 func:main = int32() {
-    int32:pass_count = 0i32;
+    drop(printf("--- nitpick-toml tests ---\n\0"));
     // Parse a TOML document
-    int32:n = raw toml_parse("title = \"TOML Test\"\nversion = 42\ndebug = true\npi = 3.14\n\n[server]\nhost = \"localhost\"\nport = 8080\n\n[database]\nname = \"mydb\"\nenabled = false\n");
+    int32:n = raw Toml.parse("title = \"TOML Test\"\nversion = 42\ndebug = true\npi = 3.14\n\n[server]\nhost = \"localhost\"\nport = 8080\n\n[database]\nname = \"mydb\"\nenabled = false\n");
 
     // T01: parse succeeds, returns entry count
-    if (n > 0i32) { drop(println("[PASS] T01 parse returns count")); }
-    if (n <= 0i32) { drop(println("[FAIL] T01 parse returns count")); }
+    if (n > 0i32) { drop(printf("[PASS] T01 parse returns count\n\0")); }
+    if (n <= 0i32) { fail_cnt += 1i64; drop(printf("[FAIL] T01 parse returns count\n\0")); }
 
     // T02: string value
-    int32:h1 = raw toml_has_key("title");
-    if (h1 == 1i32) { drop(println("[PASS] T02 has_key title")); }
-    if (h1 != 1i32) { drop(println("[FAIL] T02 has_key title")); }
+    int32:h1 = raw Toml.has_key("title");
+    drop raw assert_eq_i32(h1, 1i32, "T02 has_key title");
 
     // T03: int value
-    int64:ver = raw toml_get_int("version");
-    if (ver == 42i64) { drop(println("[PASS] T03 get_int version")); }
-    if (ver != 42i64) { drop(println("[FAIL] T03 get_int version")); }
+    int64:ver = raw Toml.get_int("version");
+    drop raw assert_eq_i64(ver, 42i64, "T03 get_int version");
 
     // T04: bool value
-    int32:dbg = raw toml_get_bool("debug");
-    if (dbg == 1i32) { drop(println("[PASS] T04 get_bool debug")); }
-    if (dbg != 1i32) { drop(println("[FAIL] T04 get_bool debug")); }
+    int32:dbg = raw Toml.get_bool("debug");
+    drop raw assert_eq_i32(dbg, 1i32, "T04 get_bool debug");
 
     // T05: table key (dotted path)
-    int64:port = raw toml_get_int("server.port");
-    if (port == 8080i64) { drop(println("[PASS] T05 get_int server.port")); }
-    if (port != 8080i64) { drop(println("[FAIL] T05 get_int server.port")); }
+    int64:port = raw Toml.get_int("server.port");
+    drop raw assert_eq_i64(port, 8080i64, "T05 get_int server.port");
 
     // T06: nested bool false
-    int32:en = raw toml_get_bool("database.enabled");
-    if (en == 0i32) { drop(println("[PASS] T06 get_bool database.enabled")); }
-    if (en != 0i32) { drop(println("[FAIL] T06 get_bool database.enabled")); }
+    int32:en = raw Toml.get_bool("database.enabled");
+    drop raw assert_eq_i32(en, 0i32, "T06 get_bool database.enabled");
 
     // T07: missing key
-    int32:miss = raw toml_has_key("nonexistent");
-    if (miss == 0i32) { drop(println("[PASS] T07 missing key")); }
-    if (miss != 0i32) { drop(println("[FAIL] T07 missing key")); }
+    int32:miss = raw Toml.has_key("nonexistent");
+    drop raw assert_eq_i32(miss, 0i32, "T07 missing key");
 
     // T08: set_string
-    int32:ss = raw toml_set_string("new.key", "hello");
-    if (ss == 0i32) { drop(println("[PASS] T08 set_string")); }
-    if (ss != 0i32) { drop(println("[FAIL] T08 set_string")); }
+    int32:ss = raw Toml.set_string("new.key", "hello");
+    drop raw assert_eq_i32(ss, 0i32, "T08 set_string");
 
     // T09: count
-    int32:c = raw toml_count();
-    if (c > 7i32) { drop(println("[PASS] T09 count")); }
-    if (c <= 7i32) { drop(println("[FAIL] T09 count")); }
+    int32:c = raw Toml.count();
+    if (c > 7i32) { drop(printf("[PASS] T09 count\n\0")); }
+    if (c <= 7i32) { fail_cnt += 1i64; drop(printf("[FAIL] T09 count\n\0")); }
 
     // T10: clear
-    raw toml_clear();
-    int32:c2 = raw toml_count();
-    if (c2 == 0i32) { drop(println("[PASS] T10 clear")); }
-    if (c2 != 0i32) { drop(println("[FAIL] T10 clear")); }
+    NIL:ign = raw Toml.clear();
+    int32:c2 = raw Toml.count();
+    drop raw assert_eq_i32(c2, 0i32, "T10 clear");
 
-    
-    drop(println("---"));
-    
-        drop(println("PASS: all tests passed"));
-    exit 0;
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+    drop(printf("--- ALL TESTS PASSED ---\n\0"));
+    exit(0i32);
 };

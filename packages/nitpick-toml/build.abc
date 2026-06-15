@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-toml"
+version = "0.1.0"
+
+[target.nitpick-toml]
+type = "library"
+sources = ["src/nitpick_toml.npk"]
+deps = []
+flags = ["-Lshim", "-lnitpick_toml_shim"]
+
+[target.test-nitpick-toml]
+type = "binary"
+sources = ["tests/test_nitpick_toml.npk"]
+deps = ["nitpick-toml"]
+flags = ["-I", "src", "-Lshim", "-lnitpick_toml_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_string", "-lnitpick_libc_mem", "-lnitpick_libc_io"]

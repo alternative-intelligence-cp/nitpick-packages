@@ -36,19 +36,38 @@ extern "nitpick_toml_shim" {
 
 // ── public API ──────────────────────────────────────────────────────
 
-pub func:toml_error      = string()               { pass(nitpick_toml_error()); };
-pub func:toml_parse      = int32(string:text)      { pass(nitpick_toml_parse(text)); };
-pub func:toml_parse_file = int32(string:path)      { pass(nitpick_toml_parse_file(path)); };
-pub func:toml_get_type   = int32(string:key)       { pass(nitpick_toml_get_type(key)); };
-pub func:toml_get_string = string(string:key)      { pass(nitpick_toml_get_string(key)); };
-pub func:toml_get_int    = int64(string:key)       { pass(nitpick_toml_get_int(key)); };
-pub func:toml_get_float  = flt64(string:key)       { pass(nitpick_toml_get_float(key)); };
-pub func:toml_get_bool   = int32(string:key)       { pass(nitpick_toml_get_bool(key)); };
-pub func:toml_has_key    = int32(string:key)       { pass(nitpick_toml_has_key(key)); };
-pub func:toml_set_string = int32(string:key, string:val) { pass(nitpick_toml_set_string(key, val)); };
-pub func:toml_set_int    = int32(string:key, int64:val)  { pass(nitpick_toml_set_int(key, val)); };
-pub func:toml_set_bool   = int32(string:key, int32:val)  { pass(nitpick_toml_set_bool(key, val)); };
-pub func:toml_count      = int32()                 { pass(nitpick_toml_count()); };
-pub func:toml_key_at     = string(int32:idx)       { pass(nitpick_toml_key_at(idx)); };
-pub func:toml_clear      = NIL()                   { nitpick_toml_clear(); pass(NIL); };
-pub func:toml_serialize  = string()                { pass(nitpick_toml_serialize()); };
+func:toml_error      = string()               { pass(nitpick_toml_error()); };
+func:toml_parse      = int32(string:text)      { pass(nitpick_toml_parse(text)); };
+func:toml_parse_file = int32(string:path)      { pass(nitpick_toml_parse_file(path)); };
+func:toml_get_type   = int32(string:key)       { pass(nitpick_toml_get_type(key)); };
+func:toml_get_string = string(string:key)      { pass(nitpick_toml_get_string(key)); };
+func:toml_get_int    = int64(string:key)       { pass(nitpick_toml_get_int(key)); };
+func:toml_get_float  = flt64(string:key)       { pass(nitpick_toml_get_float(key)); };
+func:toml_get_bool   = int32(string:key)       { pass(nitpick_toml_get_bool(key)); };
+func:toml_has_key    = int32(string:key)       { pass(nitpick_toml_has_key(key)); };
+func:toml_set_string = int32(string:key, string:val) { pass(nitpick_toml_set_string(key, val)); };
+func:toml_set_int    = int32(string:key, int64:val)  { pass(nitpick_toml_set_int(key, val)); };
+func:toml_set_bool   = int32(string:key, int32:val)  { pass(nitpick_toml_set_bool(key, val)); };
+func:toml_count      = int32()                 { pass(nitpick_toml_count()); };
+func:toml_key_at     = string(int32:idx)       { pass(nitpick_toml_key_at(idx)); };
+func:toml_clear      = NIL()                   { nitpick_toml_clear(); pass(NIL); };
+func:toml_serialize  = string()                { pass(nitpick_toml_serialize()); };
+
+pub Type:Toml = {
+    func:error = string() { pass raw toml_error(); };
+    func:parse = int32(string:text) { pass raw toml_parse(text); };
+    func:parse_file = int32(string:path) { pass raw toml_parse_file(path); };
+    func:get_type = int32(string:key) { pass raw toml_get_type(key); };
+    func:get_string = string(string:key) { pass raw toml_get_string(key); };
+    func:get_int = int64(string:key) { pass raw toml_get_int(key); };
+    func:get_float = flt64(string:key) { pass raw toml_get_float(key); };
+    func:get_bool = int32(string:key) { pass raw toml_get_bool(key); };
+    func:has_key = int32(string:key) { pass raw toml_has_key(key); };
+    func:set_string = int32(string:key, string:val) { pass raw toml_set_string(key, val); };
+    func:set_int = int32(string:key, int64:val) { pass raw toml_set_int(key, val); };
+    func:set_bool = int32(string:key, int32:val) { pass raw toml_set_bool(key, val); };
+    func:count = int32() { pass raw toml_count(); };
+    func:key_at = string(int32:idx) { pass raw toml_key_at(idx); };
+    func:clear = NIL() { drop raw toml_clear(); pass NIL; };
+    func:serialize = string() { pass raw toml_serialize(); };
+};

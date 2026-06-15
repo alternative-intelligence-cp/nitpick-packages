@@ -50,10 +50,7 @@ static void set_err(const char *msg) {
     snprintf(g_err, sizeof(g_err), "%s", msg);
 }
 
-static char *skip_ws(char *p) {
-    while (*p && (*p == ' ' || *p == '\t')) p++;
-    return p;
-}
+
 
 static int find_entry(const char *key) {
     for (int i = 0; i < g_count; i++) {
