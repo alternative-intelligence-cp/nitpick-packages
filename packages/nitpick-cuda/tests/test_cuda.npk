@@ -1,7 +1,7 @@
 // test_cuda.npk — Test CUDA Streams, Async Kernel Execution, and Profiling
 use "../src/nitpick_cuda.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:_err) { exit 1; };
 
 func:main = int32() {
     int32:err = raw cuda_init();
@@ -63,8 +63,7 @@ func:main = int32() {
     drop(cuda_memcpy_to_device_async(d_B, byte_size, cu_stream));
     drop(cuda_stream_synchronize(cu_stream));
 
-    // Load module and function
-    int64:module = raw cuda_module_load("kernel.ptx");
+    int64:module = raw cuda_module_load("tests/kernel.ptx");
     if (module == 0i64) {
         drop(println("Failed to load kernel.ptx"));
         exit 1;

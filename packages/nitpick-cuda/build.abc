@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-cuda"
+version = "0.1.0"
+
+[target.nitpick-cuda]
+type = "library"
+sources = ["src/nitpick_cuda.npk"]
+deps = []
+flags = ["-L.", "-lnitpick_cuda_shim", "-L/usr/local/cuda-13.3/targets/x86_64-linux/lib", "-lcudart", "-lcuda", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-nitpick-cuda]
+type = "binary"
+sources = ["tests/test_cuda.npk"]
+deps = []
+flags = ["-I", "src", "-L.", "-lnitpick_cuda_shim", "-L/usr/local/cuda-13.3/targets/x86_64-linux/lib", "-lcudart", "-lcuda", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
