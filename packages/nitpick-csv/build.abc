@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-csv"
+version = "0.2.2"
+
+[target.nitpick-csv]
+type = "library"
+sources = ["src/nitpick_csv.npk"]
+deps = []
+flags = ["-L.", "-lnitpick_csv_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-nitpick-csv]
+type = "binary"
+sources = ["tests/test_nitpick_csv.npk"]
+deps = []
+flags = ["-I", "src", "-L.", "-lnitpick_csv_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]

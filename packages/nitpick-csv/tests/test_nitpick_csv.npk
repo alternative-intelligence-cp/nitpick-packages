@@ -4,7 +4,7 @@ use "../src/nitpick_csv.npk".*;
 // Uses <=7 externs to stay under compiler complexity limit.
 // All string comparisons happen in C-side assertion helpers.
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:_err) { exit 1; };
 
 
 
