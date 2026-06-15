@@ -1,10 +1,10 @@
 extern "libc" { func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_fixed.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:_err) { exit 1; };
 
 func:main = int32() {
-    int32:pass_count = 0i32;
+    int32:_pass_count = 0i32;
     // Q32.32 constants: multiply the real value by 2^32 = 4294967296
     // 1.0 = 4294967296, 2.0 = 8589934592, 3.0 = 12884901888
     // 0.5 = 2147483648, 1.5 = 6442450944, 4.0 = 17179869184

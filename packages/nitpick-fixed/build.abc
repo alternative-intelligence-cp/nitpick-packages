@@ -1,4 +1,15 @@
-[build]
-name = "nitpick-fixed-tests"
-entry = "tests/test_nitpick_fixed.npk"
-output = "/tmp/test_fixed_bin"
+[project]
+name = "nitpick-fixed"
+version = "0.2.0"
+
+[target.nitpick-fixed]
+type = "library"
+sources = ["src/nitpick_fixed.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-fixed]
+type = "binary"
+sources = ["tests/test_nitpick_fixed.npk"]
+deps = []
+flags = ["-I", "src"]
