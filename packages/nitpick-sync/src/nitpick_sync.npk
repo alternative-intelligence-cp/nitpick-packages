@@ -14,7 +14,9 @@ extern "nitpick_libc_mem" {
     func:nitpick_libc_mem_write_i64  = void(int64:ptr, int64:offset, int64:val);
 }
 
-Type:WaitGroup = {
+pub fixed int64:DUMMY = 0i64;
+
+pub Type:WaitGroup = {
     func:create = int64() {
         int64:ptr = nitpick_libc_mem_malloc(24i64);
         if (ptr == 0i64) { pass 0i64; }
@@ -78,7 +80,7 @@ Type:WaitGroup = {
     };
 };
 
-Type:Semaphore = {
+pub Type:Semaphore = {
     func:create = int64(int64:initial_permits) {
         int64:ptr = nitpick_libc_mem_malloc(24i64);
         if (ptr == 0i64) { pass 0i64; }
@@ -134,7 +136,7 @@ Type:Semaphore = {
     };
 };
 
-Type:CountDownLatch = {
+pub Type:CountDownLatch = {
     func:create = int64(int64:count) {
         int64:ptr = nitpick_libc_mem_malloc(24i64);
         if (ptr == 0i64) { pass 0i64; }

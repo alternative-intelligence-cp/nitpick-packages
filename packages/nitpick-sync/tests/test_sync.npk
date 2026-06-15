@@ -1,6 +1,29 @@
-use "nitpick_test.npk".*;
 use "nitpick_sync.npk".*;
 use "thread.npk".*;
+
+extern "libc" { func:printf = int32(string:fmt); }
+extern "libc" { func:nitpick_libc_exit = NIL(int32:code); }
+
+int64:fail_cnt = 0i64;
+
+func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+func:assert_eq_i64 = int64(int64:actual, int64:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i64);
+};
 
 func:wg_worker = NIL(int64:wg) {
     NIL:ign1 = raw Thread.sleep_ms(10i64);
@@ -10,10 +33,11 @@ func:wg_worker = NIL(int64:wg) {
 
 func:test_waitgroup = NIL() {
     int64:wg = raw WaitGroup.create();
-    if (wg != 0i64) {
-        NIL:ign0 = raw test_assert("WaitGroup.create != 0", 1i32);
+    if (wg == 0i64) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] WaitGroup.create != 0\n\0"));
     } else {
-        NIL:ign0 = raw test_assert("WaitGroup.create != 0", 0i32);
+        drop(printf("[PASS] WaitGroup.create != 0\n\0"));
     }
 
     int32:ign1 = raw WaitGroup.add(wg, 3i64);
@@ -28,7 +52,7 @@ func:test_waitgroup = NIL() {
     int32:ignj4 = raw Thread.join(ign4);
     
     int32:ign6 = raw WaitGroup.destroy(wg);
-    NIL:ign7 = raw test_assert("WaitGroup done successfully", 1i32);
+    drop(printf("[PASS] WaitGroup done successfully\n\0"));
     pass NIL;
 };
 
@@ -40,10 +64,11 @@ func:latch_worker = NIL(int64:latch) {
 
 func:test_latch = NIL() {
     int64:latch = raw CountDownLatch.create(2i64);
-    if (latch != 0i64) {
-        NIL:ign0 = raw test_assert("CountDownLatch.create != 0", 1i32);
+    if (latch == 0i64) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] CountDownLatch.create != 0\n\0"));
     } else {
-        NIL:ign0 = raw test_assert("CountDownLatch.create != 0", 0i32);
+        drop(printf("[PASS] CountDownLatch.create != 0\n\0"));
     }
 
     int64:ign1 = raw Thread.spawn(@latch_worker, latch);
@@ -54,7 +79,7 @@ func:test_latch = NIL() {
     int32:ignj2 = raw Thread.join(ign2);
     
     int32:ign4 = raw CountDownLatch.destroy(latch);
-    NIL:ign5 = raw test_assert("CountDownLatch done successfully", 1i32);
+    drop(printf("[PASS] CountDownLatch done successfully\n\0"));
     pass NIL;
 };
 
@@ -67,10 +92,11 @@ func:sem_worker = NIL(int64:sem) {
 
 func:test_semaphore = NIL() {
     int64:sem = raw Semaphore.create(2i64);
-    if (sem != 0i64) {
-        NIL:ign0 = raw test_assert("Semaphore.create != 0", 1i32);
+    if (sem == 0i64) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] Semaphore.create != 0\n\0"));
     } else {
-        NIL:ign0 = raw test_assert("Semaphore.create != 0", 0i32);
+        drop(printf("[PASS] Semaphore.create != 0\n\0"));
     }
 
     int64:t1 = raw Thread.spawn(@sem_worker, sem);
@@ -84,21 +110,21 @@ func:test_semaphore = NIL() {
     int32:ign4 = raw Thread.join(t4);
     
     int32:ign5 = raw Semaphore.destroy(sem);
-    NIL:ign6 = raw test_assert("Semaphore done successfully", 1i32);
+    drop(printf("[PASS] Semaphore done successfully\n\0"));
     pass NIL;
 };
 
-pub func:main = int32() {
-    NIL:ign0 = raw test_begin("nitpick-sync tests");
+func:main = int32() {
+    drop(printf("--- nitpick-sync tests ---\n\0"));
     
     NIL:ign1 = raw test_waitgroup();
     NIL:ign2 = raw test_latch();
     NIL:ign3 = raw test_semaphore();
     
-    int32:ign = raw test_end();
-    return 0i32;
-};
-
-pub func:failsafe = int32(tbb32:err) {
-    exit 1i32;
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+    drop(printf("--- ALL TESTS PASSED ---\n\0"));
+    exit(0i32);
 };

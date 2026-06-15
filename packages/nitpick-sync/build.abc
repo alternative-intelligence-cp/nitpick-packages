@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-sync"
+version = "0.1.0"
+
+[target.nitpick-sync]
+type = "library"
+sources = ["src/nitpick_sync.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-sync]
+type = "binary"
+sources = ["tests/test_sync.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_mem", "-lnitpick_libc_mutex", "-lnitpick_libc_thread", "-lpthread"]
