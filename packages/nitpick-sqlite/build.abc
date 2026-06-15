@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-sqlite"
+version = "0.1.0"
+
+[target.nitpick-sqlite]
+type = "library"
+sources = ["src/nitpick_sqlite.npk"]
+deps = []
+flags = ["-Lshim/.nitpick_make/lib", "-lnitpick_sqlite", "-lsqlite3"]
+
+[target.test-nitpick-sqlite]
+type = "binary"
+sources = ["tests/test_nitpick_sqlite.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_sqlite", "-lsqlite3", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io"]

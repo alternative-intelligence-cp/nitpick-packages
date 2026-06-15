@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "test-nitpick-sqlite": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-sqlite",
+      "source_hash": "fnv1a:10428113511212463168",
+      "command_hash": 6284337550111345924,
+      "source_timestamp": 18446744069053432437,
+      "build_timestamp": 1781544820,
+      "build_duration_ms": 26,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "nitpick-sqlite": {
+      "artifact_path": ".nitpick_make/build/libnitpick-sqlite.a",
+      "source_hash": "fnv1a:16140822352472357297",
+      "command_hash": 17577613823019412222,
+      "source_timestamp": 18446744069053432437,
+      "build_timestamp": 1781544820,
+      "build_duration_ms": 104,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

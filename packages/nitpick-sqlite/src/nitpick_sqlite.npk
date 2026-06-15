@@ -52,7 +52,7 @@ extern "nitpick_sqlite_shim" {
 
 // ── public API: open / close ────────────────────────────────────────
 
-pub func:sqlite_open = int32(string:path) {
+func:sqlite_open = int32(string:path) {
     int32:db = nitpick_sqlite_open(path);
     if (db < 0i32) {
         fail(1i32);
@@ -60,26 +60,26 @@ pub func:sqlite_open = int32(string:path) {
     pass(db);
 };
 
-pub func:sqlite_disconnect = int32(int32:db_id) {
+func:sqlite_disconnect = int32(int32:db_id) {
     int32:r = nitpick_sqlite_disconnect(db_id);
     pass(r);
 };
 
 // ── public API: handle retrieval ────────────────────────────────────
 
-pub func:sqlite_db = int32() {
+func:sqlite_db = int32() {
     int32:r = nitpick_sqlite_last_db();
     pass(r);
 };
 
-pub func:sqlite_stmt = int32() {
+func:sqlite_stmt = int32() {
     int32:r = nitpick_sqlite_last_stmt();
     pass(r);
 };
 
 // ── public API: execute ─────────────────────────────────────────────
 
-pub func:sqlite_exec = int32(int32:db_id, string:sql) {
+func:sqlite_exec = int32(int32:db_id, string:sql) {
     int32:r = nitpick_sqlite_exec(db_id, sql);
     if (r == 0i32) {
         fail(2i32);
@@ -89,7 +89,7 @@ pub func:sqlite_exec = int32(int32:db_id, string:sql) {
 
 // ── public API: prepared statements ─────────────────────────────────
 
-pub func:sqlite_prepare = int32(int32:db_id, string:sql) {
+func:sqlite_prepare = int32(int32:db_id, string:sql) {
     int32:stmt = nitpick_sqlite_prepare(db_id, sql);
     if (stmt < 0i32) {
         fail(3i32);
@@ -97,75 +97,75 @@ pub func:sqlite_prepare = int32(int32:db_id, string:sql) {
     pass(stmt);
 };
 
-pub func:sqlite_end_stmt = int32(int32:stmt_id) {
+func:sqlite_end_stmt = int32(int32:stmt_id) {
     int32:r = nitpick_sqlite_finalize(stmt_id);
     pass(r);
 };
 
-pub func:sqlite_reset = int32(int32:stmt_id) {
+func:sqlite_reset = int32(int32:stmt_id) {
     int32:r = nitpick_sqlite_reset(stmt_id);
     pass(r);
 };
 
 // ── public API: bind parameters ─────────────────────────────────────
 
-pub func:sqlite_bind_int = int32(int32:stmt_id, int32:idx, int64:val) {
+func:sqlite_bind_int = int32(int32:stmt_id, int32:idx, int64:val) {
     int32:r = nitpick_sqlite_bind_int(stmt_id, idx, val);
     pass(r);
 };
 
-pub func:sqlite_bind_double = int32(int32:stmt_id, int32:idx, float64:val) {
+func:sqlite_bind_double = int32(int32:stmt_id, int32:idx, float64:val) {
     int32:r = nitpick_sqlite_bind_double(stmt_id, idx, val);
     pass(r);
 };
 
-pub func:sqlite_bind_text = int32(int32:stmt_id, int32:idx, string:val) {
+func:sqlite_bind_text = int32(int32:stmt_id, int32:idx, string:val) {
     int32:r = nitpick_sqlite_bind_text(stmt_id, idx, val);
     pass(r);
 };
 
-pub func:sqlite_bind_null = int32(int32:stmt_id, int32:idx) {
+func:sqlite_bind_null = int32(int32:stmt_id, int32:idx) {
     int32:r = nitpick_sqlite_bind_null(stmt_id, idx);
     pass(r);
 };
 
 // ── public API: step / fetch ────────────────────────────────────────
 
-pub func:sqlite_step = int32(int32:stmt_id) {
+func:sqlite_step = int32(int32:stmt_id) {
     int32:r = nitpick_sqlite_step(stmt_id);
     pass(r);
 };
 
 // ── public API: column accessors ────────────────────────────────────
 
-pub func:sqlite_column_count = int32() {
+func:sqlite_column_count = int32() {
     int32:r = nitpick_sqlite_column_count();
     pass(r);
 };
 
-pub func:sqlite_column_type = int32(int32:col) {
+func:sqlite_column_type = int32(int32:col) {
     int32:r = nitpick_sqlite_column_type(col);
     pass(r);
 };
 
-pub func:sqlite_column_int = int64(int32:col) {
+func:sqlite_column_int = int64(int32:col) {
     int64:r = nitpick_sqlite_column_int(col);
     pass(r);
 };
 
-pub func:sqlite_column_double = float64(int32:col) {
+func:sqlite_column_double = float64(int32:col) {
     float64:r = nitpick_sqlite_column_double(col);
     pass(r);
 };
 
-pub func:sqlite_column_is_null = int32(int32:col) {
+func:sqlite_column_is_null = int32(int32:col) {
     int32:r = nitpick_sqlite_column_is_null(col);
     pass(r);
 };
 
 // ── public API: transactions ────────────────────────────────────────
 
-pub func:sqlite_begin = int32(int32:db_id) {
+func:sqlite_begin = int32(int32:db_id) {
     int32:r = nitpick_sqlite_begin(db_id);
     if (r == 0i32) {
         fail(4i32);
@@ -173,7 +173,7 @@ pub func:sqlite_begin = int32(int32:db_id) {
     pass(r);
 };
 
-pub func:sqlite_commit = int32(int32:db_id) {
+func:sqlite_commit = int32(int32:db_id) {
     int32:r = nitpick_sqlite_commit(db_id);
     if (r == 0i32) {
         fail(5i32);
@@ -181,19 +181,45 @@ pub func:sqlite_commit = int32(int32:db_id) {
     pass(r);
 };
 
-pub func:sqlite_rollback = int32(int32:db_id) {
+func:sqlite_rollback = int32(int32:db_id) {
     int32:r = nitpick_sqlite_rollback(db_id);
     pass(r);
 };
 
 // ── public API: utility ─────────────────────────────────────────────
 
-pub func:sqlite_last_insert_id = int64(int32:db_id) {
+func:sqlite_last_insert_id = int64(int32:db_id) {
     int64:r = nitpick_sqlite_last_insert_id(db_id);
     pass(r);
 };
 
-pub func:sqlite_changes = int32(int32:db_id) {
+func:sqlite_changes = int32(int32:db_id) {
     int32:r = nitpick_sqlite_changes(db_id);
     pass(r);
+};
+
+pub Type:Sqlite = {
+    func:open = int32(string:path) { pass raw sqlite_open(path); };
+    func:disconnect = int32(int32:db_id) { pass raw sqlite_disconnect(db_id); };
+    func:db = int32() { pass raw sqlite_db(); };
+    func:stmt = int32() { pass raw sqlite_stmt(); };
+    func:exec = int32(int32:db_id, string:sql) { pass raw sqlite_exec(db_id, sql); };
+    func:prepare = int32(int32:db_id, string:sql) { pass raw sqlite_prepare(db_id, sql); };
+    func:end_stmt = int32(int32:stmt_id) { pass raw sqlite_end_stmt(stmt_id); };
+    func:reset = int32(int32:stmt_id) { pass raw sqlite_reset(stmt_id); };
+    func:bind_int = int32(int32:stmt_id, int32:idx, int64:val) { pass raw sqlite_bind_int(stmt_id, idx, val); };
+    func:bind_double = int32(int32:stmt_id, int32:idx, float64:val) { pass raw sqlite_bind_double(stmt_id, idx, val); };
+    func:bind_text = int32(int32:stmt_id, int32:idx, string:val) { pass raw sqlite_bind_text(stmt_id, idx, val); };
+    func:bind_null = int32(int32:stmt_id, int32:idx) { pass raw sqlite_bind_null(stmt_id, idx); };
+    func:step = int32(int32:stmt_id) { pass raw sqlite_step(stmt_id); };
+    func:column_count = int32() { pass raw sqlite_column_count(); };
+    func:column_type = int32(int32:col) { pass raw sqlite_column_type(col); };
+    func:column_int = int64(int32:col) { pass raw sqlite_column_int(col); };
+    func:column_double = float64(int32:col) { pass raw sqlite_column_double(col); };
+    func:column_is_null = int32(int32:col) { pass raw sqlite_column_is_null(col); };
+    func:begin = int32(int32:db_id) { pass raw sqlite_begin(db_id); };
+    func:commit = int32(int32:db_id) { pass raw sqlite_commit(db_id); };
+    func:rollback = int32(int32:db_id) { pass raw sqlite_rollback(db_id); };
+    func:last_insert_id = int64(int32:db_id) { pass raw sqlite_last_insert_id(db_id); };
+    func:changes = int32(int32:db_id) { pass raw sqlite_changes(db_id); };
 };
