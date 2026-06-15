@@ -1,27 +1,70 @@
-// test_nitpick_entangled.npk — EntangledPair LIB-26 test suite
-//
-// Tests: 20 cases covering ep_create, lean mutations (alpha/beta),
-// tilt mutations (alpha/beta/pair), coupling propagation, anti-coupling,
-// crystallization, observe_alpha/beta, ep_get_snap readback,
-// sync_count, crystallization_count, propagation_count, ring buffer.
-//
-// Memory:
-//   ep       — 12 float64 (EP cell)
-//   meta     — 5  int64   (ring buffer metadata)
-//   snaps    — capacity * 16 float64 (PairSnapshot ring buffer)
-//   snap     — 16 float64 (scratch for ep_get_snap)
-
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+// test_nitpick_entangled.npk
+extern "libc" { func:printf = int32(string:fmt); }
+extern "libc" { func:nitpick_libc_mem_malloc = int64(int64:size); }
 use "../src/nitpick_entangled.npk".*;
 
-extern "libc" { func:aria_alloc = int64(int64:size); }
+int64:fail_cnt = 0i64;
 
-extern "libc" { func:malloc = int64(int64:size); }
+func:failsafe = int32(tbb32:_err) {
+    drop _err;
+    exit 1i32;
+};
 
+func:assert_eq_i64 = int64(int64:actual, int64:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i64);
+};
 
-func:failsafe = int32(tbb32:_err) { exit 1; };
+func:assert_approx_f64 = int64(float64:actual, float64:expected, float64:tol, string:test_name) {
+    float64:diff = actual - expected;
+    if (diff < 0.0) { diff = 0.0 - diff; }
+    if (diff > tol) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i64);
+};
 
 func:main = int32() {
-    drop(println("PASS: all tests passed"));
-    exit 0;
+    int64:ep = nitpick_libc_mem_malloc(12i64 * 8i64);
+    int64:meta = nitpick_libc_mem_malloc(5i64 * 8i64);
+    int64:snaps = nitpick_libc_mem_malloc(16i64 * 16i64 * 8i64); // cap 16
+    
+    drop raw EntangledPair.create(ep, meta, snaps, 100.0, 0.5, 0.8, 16i64);
+    
+    float64:a_pbc = raw EntangledPair.alpha_pbc(ep);
+    drop assert_approx_f64(a_pbc, 50.0, 0.01, "T01 create alpha pbc\0");
+    
+    drop raw EntangledPair.lean_alpha_a(ep, meta, snaps, 10.0);
+    float64:a_pbc2 = raw EntangledPair.alpha_pbc(ep);
+    drop assert_approx_f64(a_pbc2, 40.0, 0.01, "T02 lean_alpha_a\0");
+    
+    drop raw EntangledPair.tilt_alpha(ep, meta, snaps, 0.1, 0i64);
+    float64:a_pbm = raw EntangledPair.alpha_pbm(ep);
+    drop assert_approx_f64(a_pbm, 0.001, 0.001, "T03 tilt_alpha both\0");
+    
+    int64:crys = raw EntangledPair.is_crystallized(ep);
+    drop assert_eq_i64(crys, 0i64, "T04 not crystallized\0");
+    
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+    drop(printf("SUCCESS: All tests passed.\n\0"));
+    exit 0i32;
 };
