@@ -1,4 +1,5 @@
 // test_nitpick_server.npk — 12-test suite for nitpick-server (v0.12.0)
+extern "libc" { func:printf = int32(string:fmt); }
 use "../src/nitpick_server.npk".*;
 
 extern "nitpick_libc_net" {
@@ -9,14 +10,45 @@ extern "nitpick_libc_net" {
     func:nitpick_libc_net_close       = int64(int64:fd);
 }
 
-func:failsafe = int32(tbb32:err_code) { exit 1; };
+int64:fail_cnt = 0i64;
 
-// ── helpers (call externs directly — no Result wrapping) ─────────────────────
+func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+func:assert_eq_i64 = int64(int64:actual, int64:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i64);
+};
+
+func:assert_eq_str = int64(string:actual, string:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i64);
+};
 
 func:cli_connect = int64(int64:port) {
     int64:fd = nitpick_libc_net_socket_tcp();
     if (fd < 0i64) { pass -1i64; }
-    int64:rv = nitpick_libc_net_connect(fd, "127.0.0.1", port);
+    int64:rv = nitpick_libc_net_connect(fd, "127.0.0.1\0", port);
     if (rv < 1i64) { nitpick_libc_net_close(fd); pass -1i64; }
     pass fd;
 };
@@ -26,165 +58,158 @@ func:cli_send = int64(int64:fd, string:data) {
 };
 
 func:cli_recv = string(int64:fd) {
-    pass nitpick_libc_net_recv(fd, 8192i64);
+    string:r = nitpick_libc_net_recv(fd, 8192i64);
+    pass r;
 };
 
 func:cli_close = int64(int64:fd) {
     pass nitpick_libc_net_close(fd);
 };
 
-// ── main ────────────────────────────────────────────────────────────────────
-
 func:main = int32() {
-    int32:pass_count = 0i32;
     int64:test_port = 19876i64;
 
     // T01: server listen
-    int64:srv = raw srv_listen("127.0.0.1", test_port, 8i64);
-    if (srv >= 0i64) { println("[PASS] T01 server listen"); pass_count += 1i32; }
-    if (srv < 0i64) { println("[FAIL] T01 server listen"); exit(1i32); }
+    int64:srv = raw Server.bind_and_listen("127.0.0.1\0", test_port, 8i64);
+    int64:srv_ok = 0i64;
+    if (srv >= 0i64) { srv_ok = 1i64; }
+    drop assert_eq_i64(srv_ok, 1i64, "T01 server listen\0");
+
+    if (srv < 0i64) {
+        exit 1i32;
+    }
 
     // T02: client connect + server accept
     int64:cli2 = raw cli_connect(test_port);
-    int64:cfd2 = raw srv_accept(srv);
+    int64:cfd2 = raw Server.accept_client(srv);
+    int64:accept_ok = 0i64;
     if (cli2 >= 0i64) {
-        if (cfd2 >= 0i64) { println("[PASS] T02 accept"); pass_count += 1i32; }
-        if (cfd2 < 0i64) { println("[FAIL] T02 accept fail"); }
+        if (cfd2 >= 0i64) { accept_ok = 1i64; }
     }
-    if (cli2 < 0i64) { println("[FAIL] T02 connect fail"); }
-    int64:_c2a = raw cli_close(cli2);
-    int64:_c2b = raw srv_close_client(cfd2);
+    drop assert_eq_i64(accept_ok, 1i64, "T02 accept\0");
+    drop raw cli_close(cli2);
+    drop raw Server.close_cli(cfd2);
 
     // T03: GET request parsing — method
     int64:cli3 = raw cli_connect(test_port);
-    int64:_s3 = raw cli_send(cli3, "GET /hello HTTP/1.1\r\nHost: localhost\r\n\r\n");
-    int64:cfd3 = raw srv_accept(srv);
-    int64:_r3 = raw srv_read_req(cfd3);
-    string:m3 = raw srv_req_method();
-    if (m3 == "GET") { println("[PASS] T03 method=GET"); pass_count += 1i32; }
-    if (m3 != "GET") { println("[FAIL] T03 method"); }
-    int64:_c3a = raw cli_close(cli3);
-    int64:_c3b = raw srv_close_client(cfd3);
+    drop raw cli_send(cli3, "GET /hello HTTP/1.1\r\nHost: localhost\r\n\r\n\0");
+    int64:cfd3 = raw Server.accept_client(srv);
+    drop raw Server.read_req(cfd3);
+    string:m3 = raw Server.method();
+    drop assert_eq_str(m3, "GET", "T03 method=GET\0");
+    drop raw cli_close(cli3);
+    drop raw Server.close_cli(cfd3);
 
     // T04: GET request parsing — path
     int64:cli4 = raw cli_connect(test_port);
-    int64:_s4 = raw cli_send(cli4, "GET /api/users HTTP/1.1\r\nHost: test\r\n\r\n");
-    int64:cfd4 = raw srv_accept(srv);
-    int64:_r4 = raw srv_read_req(cfd4);
-    string:p4 = raw srv_req_path();
-    if (p4 == "/api/users") { println("[PASS] T04 path=/api/users"); pass_count += 1i32; }
-    if (p4 != "/api/users") { println("[FAIL] T04 path"); }
-    int64:_c4a = raw cli_close(cli4);
-    int64:_c4b = raw srv_close_client(cfd4);
+    drop raw cli_send(cli4, "GET /api/users HTTP/1.1\r\nHost: test\r\n\r\n\0");
+    int64:cfd4 = raw Server.accept_client(srv);
+    drop raw Server.read_req(cfd4);
+    string:p4 = raw Server.uri_path();
+    drop assert_eq_str(p4, "/api/users", "T04 path=/api/users\0");
+    drop raw cli_close(cli4);
+    drop raw Server.close_cli(cfd4);
 
     // T05: query string parsing
     int64:cli5 = raw cli_connect(test_port);
-    int64:_s5 = raw cli_send(cli5, "GET /search?q=nitpick&page=1 HTTP/1.1\r\nHost: test\r\n\r\n");
-    int64:cfd5 = raw srv_accept(srv);
-    int64:_r5 = raw srv_read_req(cfd5);
-    string:q5 = raw srv_req_query();
-    if (q5 == "q=nitpick&page=1") { println("[PASS] T05 query string"); pass_count += 1i32; }
-    if (q5 != "q=nitpick&page=1") { println("[FAIL] T05 query"); }
-    int64:_c5a = raw cli_close(cli5);
-    int64:_c5b = raw srv_close_client(cfd5);
+    drop raw cli_send(cli5, "GET /search?q=nitpick&page=1 HTTP/1.1\r\nHost: test\r\n\r\n\0");
+    int64:cfd5 = raw Server.accept_client(srv);
+    drop raw Server.read_req(cfd5);
+    string:q5 = raw Server.query_str();
+    drop assert_eq_str(q5, "q=nitpick&page=1", "T05 query string\0");
+    drop raw cli_close(cli5);
+    drop raw Server.close_cli(cfd5);
 
     // T06: HTTP version
     int64:cli6 = raw cli_connect(test_port);
-    int64:_s6 = raw cli_send(cli6, "POST /data HTTP/1.1\r\nHost: test\r\n\r\n");
-    int64:cfd6 = raw srv_accept(srv);
-    int64:_r6 = raw srv_read_req(cfd6);
-    string:v6 = raw srv_req_ver();
-    if (v6 == "HTTP/1.1") { println("[PASS] T06 version=HTTP/1.1"); pass_count += 1i32; }
-    if (v6 != "HTTP/1.1") { println("[FAIL] T06 version"); }
-    int64:_c6a = raw cli_close(cli6);
-    int64:_c6b = raw srv_close_client(cfd6);
+    drop raw cli_send(cli6, "POST /data HTTP/1.1\r\nHost: test\r\n\r\n\0");
+    int64:cfd6 = raw Server.accept_client(srv);
+    drop raw Server.read_req(cfd6);
+    string:v6 = raw Server.http_ver();
+    drop assert_eq_str(v6, "HTTP/1.1", "T06 version=HTTP/1.1\0");
+    drop raw cli_close(cli6);
+    drop raw Server.close_cli(cfd6);
 
     // T07: header parsing
     int64:cli7 = raw cli_connect(test_port);
-    int64:_s7 = raw cli_send(cli7, "GET / HTTP/1.1\r\nHost: example.com\r\nAccept: text/html\r\nX-Custom: nitpick\r\n\r\n");
-    int64:cfd7 = raw srv_accept(srv);
-    int64:_r7 = raw srv_read_req(cfd7);
-    int64:hc7 = raw srv_req_hdr_count();
-    string:hv7 = raw srv_req_hdr("Host");
-    if (hc7 == 3i64) {
-        if (hv7 == "example.com") { println("[PASS] T07 headers"); pass_count += 1i32; }
-        if (hv7 != "example.com") { println("[FAIL] T07 host value"); }
-    }
-    if (hc7 != 3i64) { println("[FAIL] T07 header count"); }
-    int64:_c7a = raw cli_close(cli7);
-    int64:_c7b = raw srv_close_client(cfd7);
+    drop raw cli_send(cli7, "GET / HTTP/1.1\r\nHost: example.com\r\nAccept: text/html\r\nX-Custom: nitpick\r\n\r\n\0");
+    int64:cfd7 = raw Server.accept_client(srv);
+    drop raw Server.read_req(cfd7);
+    int64:hc7 = raw Server.hdr_count();
+    string:hv7 = raw Server.hdr("Host\0");
+    drop assert_eq_i64(hc7, 3i64, "T07 header count\0");
+    drop assert_eq_str(hv7, "example.com", "T07 host value\0");
+    drop raw cli_close(cli7);
+    drop raw Server.close_cli(cfd7);
 
     // T08: header by index
     int64:cli8 = raw cli_connect(test_port);
-    int64:_s8 = raw cli_send(cli8, "GET / HTTP/1.1\r\nX-First: one\r\nX-Second: two\r\n\r\n");
-    int64:cfd8 = raw srv_accept(srv);
-    int64:_r8 = raw srv_read_req(cfd8);
-    string:hn8 = raw srv_req_hdr_name(0i64);
-    string:hval8 = raw srv_req_hdr_value(1i64);
-    if (hn8 == "X-First") {
-        if (hval8 == "two") { println("[PASS] T08 header by index"); pass_count += 1i32; }
-        if (hval8 != "two") { println("[FAIL] T08 hdr value idx"); }
-    }
-    if (hn8 != "X-First") { println("[FAIL] T08 hdr name idx"); }
-    int64:_c8a = raw cli_close(cli8);
-    int64:_c8b = raw srv_close_client(cfd8);
+    drop raw cli_send(cli8, "GET / HTTP/1.1\r\nX-First: one\r\nX-Second: two\r\n\r\n\0");
+    int64:cfd8 = raw Server.accept_client(srv);
+    drop raw Server.read_req(cfd8);
+    string:hn8 = raw Server.hdr_name(0i64);
+    string:hval8 = raw Server.hdr_value(1i64);
+    drop assert_eq_str(hn8, "X-First", "T08 hdr name idx\0");
+    drop assert_eq_str(hval8, "two", "T08 hdr value idx\0");
+    drop raw cli_close(cli8);
+    drop raw Server.close_cli(cfd8);
 
     // T09: POST with body
     int64:cli9 = raw cli_connect(test_port);
-    int64:_s9 = raw cli_send(cli9, "POST /submit HTTP/1.1\r\nHost: test\r\nContent-Length: 11\r\n\r\nhello=world");
-    int64:cfd9 = raw srv_accept(srv);
-    int64:_r9 = raw srv_read_req(cfd9);
-    string:b9 = raw srv_req_body();
-    int64:bl9 = raw srv_req_body_len();
-    if (b9 == "hello=world") {
-        if (bl9 == 11i64) { println("[PASS] T09 POST body"); pass_count += 1i32; }
-        if (bl9 != 11i64) { println("[FAIL] T09 body len"); }
-    }
-    if (b9 != "hello=world") { println("[FAIL] T09 body"); }
-    int64:_c9a = raw cli_close(cli9);
-    int64:_c9b = raw srv_close_client(cfd9);
+    drop raw cli_send(cli9, "POST /submit HTTP/1.1\r\nHost: test\r\nContent-Length: 11\r\n\r\nhello=world\0");
+    int64:cfd9 = raw Server.accept_client(srv);
+    drop raw Server.read_req(cfd9);
+    string:b9 = raw Server.body();
+    int64:bl9 = raw Server.body_len();
+    drop assert_eq_str(b9, "hello=world", "T09 POST body\0");
+    drop assert_eq_i64(bl9, 11i64, "T09 POST body len\0");
+    drop raw cli_close(cli9);
+    drop raw Server.close_cli(cfd9);
 
     // T10: respond plain text
     int64:cli10 = raw cli_connect(test_port);
-    int64:_s10 = raw cli_send(cli10, "GET /ping HTTP/1.1\r\nHost: test\r\n\r\n");
-    int64:cfd10 = raw srv_accept(srv);
-    int64:_r10 = raw srv_read_req(cfd10);
-    int64:resp10 = raw srv_respond(cfd10, 200i64, "pong");
-    int64:_c10b = raw srv_close_client(cfd10);
+    drop raw cli_send(cli10, "GET /ping HTTP/1.1\r\nHost: test\r\n\r\n\0");
+    int64:cfd10 = raw Server.accept_client(srv);
+    drop raw Server.read_req(cfd10);
+    int64:resp10 = raw Server.send_text(cfd10, 200i64, "pong\0");
+    drop raw Server.close_cli(cfd10);
     string:recv10 = raw cli_recv(cli10);
-    int64:_c10a = raw cli_close(cli10);
-    if (resp10 == 1i64) { println("[PASS] T10 respond 200"); pass_count += 1i32; }
-    if (resp10 != 1i64) { println("[FAIL] T10 respond"); }
+    drop raw cli_close(cli10);
+    drop assert_eq_i64(resp10, 1i64, "T10 respond 200\0");
 
     // T11: respond with custom content type
     int64:cli11 = raw cli_connect(test_port);
-    int64:_s11 = raw cli_send(cli11, "GET /json HTTP/1.1\r\nHost: test\r\n\r\n");
-    int64:cfd11 = raw srv_accept(srv);
-    int64:_r11 = raw srv_read_req(cfd11);
-    int64:resp11 = raw srv_respond_typed(cfd11, 200i64, "application/json", "{\"ok\":true}");
-    int64:_c11b = raw srv_close_client(cfd11);
+    drop raw cli_send(cli11, "GET /json HTTP/1.1\r\nHost: test\r\n\r\n\0");
+    int64:cfd11 = raw Server.accept_client(srv);
+    drop raw Server.read_req(cfd11);
+    int64:resp11 = raw Server.send_typed(cfd11, 200i64, "application/json\0", "{\"ok\":true}\0");
+    drop raw Server.close_cli(cfd11);
     string:recv11 = raw cli_recv(cli11);
-    int64:_c11a = raw cli_close(cli11);
-    if (resp11 == 1i64) { println("[PASS] T11 respond typed json"); pass_count += 1i32; }
-    if (resp11 != 1i64) { println("[FAIL] T11 respond typed"); }
+    drop raw cli_close(cli11);
+    drop assert_eq_i64(resp11, 1i64, "T11 respond typed json\0");
 
     // T12: peer info
     int64:cli12 = raw cli_connect(test_port);
-    int64:_s12 = raw cli_send(cli12, "GET / HTTP/1.1\r\nHost: test\r\n\r\n");
-    int64:cfd12 = raw srv_accept(srv);
-    string:paddr12 = raw srv_peer_addr();
-    int64:pport12 = raw srv_peer_port();
-    if (paddr12 == "127.0.0.1") {
-        if (pport12 > 0i64) { println("[PASS] T12 peer info"); pass_count += 1i32; }
-        if (pport12 < 1i64) { println("[FAIL] T12 peer port"); }
+    drop raw cli_send(cli12, "GET / HTTP/1.1\r\nHost: test\r\n\r\n\0");
+    int64:cfd12 = raw Server.accept_client(srv);
+    string:paddr12 = raw Server.peer_ip();
+    int64:pport12 = raw Server.peer_port();
+    drop assert_eq_str(paddr12, "127.0.0.1", "T12 peer addr\0");
+    
+    int64:pport_ok = 0i64;
+    if (pport12 > 0i64) { pport_ok = 1i64; }
+    drop assert_eq_i64(pport_ok, 1i64, "T12 peer port > 0\0");
+
+    drop raw cli_close(cli12);
+    drop raw Server.close_cli(cfd12);
+
+    drop raw Server.close_srv(srv);
+
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
     }
-    if (paddr12 != "127.0.0.1") { println("[FAIL] T12 peer addr"); }
-    int64:_c12a = raw cli_close(cli12);
-    int64:_c12b = raw srv_close_client(cfd12);
 
-    // cleanup server
-    int64:_cs = raw srv_close(srv);
-
-    println("DONE");
-    exit 0;
+    drop(printf("SUCCESS: All tests passed.\n\0"));
+    exit 0i32;
 };

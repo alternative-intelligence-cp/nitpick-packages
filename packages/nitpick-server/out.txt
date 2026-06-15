@@ -1,0 +1,134 @@
+[1/2] Building test-nitpick-server...
+[1/2] Building nitpick-server...
+
+Build failed: 1 targets failed
+  Error: Failed to build test-nitpick-server: [1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 73, Column 27: Undefined identifier: 'Server_bind_and_listen'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 75, Column 9: Undefined identifier: 'srv'. Did you mean 'srv_ok'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 78, Column 9: Undefined identifier: 'srv'. Did you mean 'srv_ok'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 84, Column 28: Undefined identifier: 'Server_accept_client'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 87, Column 13: Undefined identifier: 'cfd2'. Did you mean 'cli2'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 91, Column 20: Undefined identifier: 'Server_close_cli'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 96, Column 28: Undefined identifier: 'Server_accept_client'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 97, Column 20: Undefined identifier: 'Server_read_req'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 98, Column 27: Undefined identifier: 'Server_method'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 99, Column 24: Undefined identifier: 'm3'. Did you mean 'cli3'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 101, Column 20: Undefined identifier: 'Server_close_cli'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 106, Column 28: Undefined identifier: 'Server_accept_client'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 107, Column 20: Undefined identifier: 'Server_read_req'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 108, Column 27: Undefined identifier: 'Server_uri_path'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 109, Column 24: Undefined identifier: 'p4'. Did you mean 'cli4'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 111, Column 20: Undefined identifier: 'Server_close_cli'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 116, Column 28: Undefined identifier: 'Server_accept_client'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 117, Column 20: Undefined identifier: 'Server_read_req'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 118, Column 27: Undefined identifier: 'Server_query_str'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 119, Column 24: Undefined identifier: 'q5'. Did you mean 'cli5'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 121, Column 20: Undefined identifier: 'Server_close_cli'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 126, Column 28: Undefined identifier: 'Server_accept_client'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 127, Column 20: Undefined identifier: 'Server_read_req'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 128, Column 27: Undefined identifier: 'Server_http_ver'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 129, Column 24: Undefined identifier: 'v6'. Did you mean 'cli6'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 131, Column 20: Undefined identifier: 'Server_close_cli'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 136, Column 28: Undefined identifier: 'Server_accept_client'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 137, Column 20: Undefined identifier: 'Server_read_req'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 138, Column 27: Undefined identifier: 'Server_hdr_count'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 139, Column 28: Undefined identifier: 'Server_hdr'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 140, Column 24: Undefined identifier: 'hc7'. Did you mean 'cli7'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 141, Column 24: Undefined identifier: 'hv7'. Did you mean 'cli7'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 143, Column 20: Undefined identifier: 'Server_close_cli'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 148, Column 28: Undefined identifier: 'Server_accept_client'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 149, Column 20: Undefined identifier: 'Server_read_req'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 150, Column 28: Undefined identifier: 'Server_hdr_name'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 151, Column 30: Undefined identifier: 'Server_hdr_value'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 152, Column 24: Undefined identifier: 'hn8'. Did you mean 'cli8'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 153, Column 24: Undefined identifier: 'hval8'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 155, Column 20: Undefined identifier: 'Server_close_cli'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 160, Column 28: Undefined identifier: 'Server_accept_client'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 161, Column 20: Undefined identifier: 'Server_read_req'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 162, Column 27: Undefined identifier: 'Server_body'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 163, Column 27: Undefined identifier: 'Server_body_len'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 164, Column 24: Undefined identifier: 'b9'. Did you mean 'cli9'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 165, Column 24: Undefined identifier: 'bl9'. Did you mean 'cli9'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 167, Column 20: Undefined identifier: 'Server_close_cli'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 172, Column 29: Undefined identifier: 'Server_accept_client'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 173, Column 20: Undefined identifier: 'Server_read_req'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 174, Column 30: Undefined identifier: 'Server_send_text'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 175, Column 20: Undefined identifier: 'Server_close_cli'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 178, Column 24: Undefined identifier: 'resp10'. Did you mean 'recv10'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 183, Column 29: Undefined identifier: 'Server_accept_client'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 184, Column 20: Undefined identifier: 'Server_read_req'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 185, Column 30: Undefined identifier: 'Server_send_typed'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 186, Column 20: Undefined identifier: 'Server_close_cli'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 189, Column 24: Undefined identifier: 'resp11'. Did you mean 'recv11'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 194, Column 29: Undefined identifier: 'Server_accept_client'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 195, Column 32: Undefined identifier: 'Server_peer_ip'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 196, Column 31: Undefined identifier: 'Server_peer_port'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 197, Column 24: Undefined identifier: 'paddr12'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 200, Column 9: Undefined identifier: 'pport12'. Did you mean 'pport_ok'?[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 204, Column 20: Undefined identifier: 'Server_close_cli'[0m
+
+[1m/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-server/tests/test_nitpick_server.npk:0:0: [0m[1;31merror[0m: [1mLine 206, Column 20: Undefined identifier: 'Server_close_srv'[0m
+
+[1mSummary: [0m[1;31m64 errors[0m
+

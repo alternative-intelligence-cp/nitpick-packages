@@ -1,12 +1,4 @@
 // nitpick_server.npk — HTTP/1.1 server for Nitpick (v0.12.0)
-//
-// Built on aria-libc server shim.
-// Import with: use "nitpick_server.npk".*;
-//
-// Server FDs and client FDs are int64 handles.
-// Flow: srv_listen → srv_accept → srv_read_req → accessors → srv_respond → srv_close_client
-//
-// v0.12.0: Rebuilt on aria-libc (replaces old nitpick_server_shim).
 
 extern "nitpick_libc_server" {
     // lifecycle
@@ -45,141 +37,37 @@ extern "nitpick_libc_server" {
     func:nitpick_libc_server_req_length = int64();
 }
 
-// ── Server lifecycle ────────────────────────────────────────────────────────
-
-pub func:srv_listen = int64(string:addr, int64:port, int64:backlog) {
-    pass nitpick_libc_server_listen(addr, port, backlog);
-};
-
-pub func:srv_accept = int64(int64:server_fd) {
-    pass nitpick_libc_server_accept(server_fd);
-};
-
-pub func:srv_close = int64(int64:fd) {
-    pass nitpick_libc_server_close(fd);
-};
-
-pub func:srv_close_client = int64(int64:client_fd) {
-    pass nitpick_libc_server_close_client(client_fd);
-};
-
-pub func:srv_error = string() {
-    pass nitpick_libc_server_error();
-};
-
-// ── Request parsing ─────────────────────────────────────────────────────────
-
-pub func:srv_read_req = int64(int64:client_fd) {
-    pass nitpick_libc_server_read_request(client_fd);
-};
-
-pub func:srv_req_method = string() {
-    pass nitpick_libc_server_req_method();
-};
-
-pub func:srv_req_path = string() {
-    pass nitpick_libc_server_req_path();
-};
-
-pub func:srv_req_query = string() {
-    pass nitpick_libc_server_req_query();
-};
-
-pub func:srv_req_ver = string() {
-    pass nitpick_libc_server_req_version();
-};
-
-pub func:srv_req_body = string() {
-    pass nitpick_libc_server_req_body();
-};
-
-pub func:srv_req_body_len = int64() {
-    pass nitpick_libc_server_req_body_length();
-};
-
-pub func:srv_req_hdr = string(string:name) {
-    pass nitpick_libc_server_req_header(name);
-};
-
-pub func:srv_req_hdr_count = int64() {
-    pass nitpick_libc_server_req_header_count();
-};
-
-pub func:srv_req_hdr_name = string(int64:idx) {
-    pass nitpick_libc_server_req_header_name(idx);
-};
-
-pub func:srv_req_hdr_value = string(int64:idx) {
-    pass nitpick_libc_server_req_header_value(idx);
-};
-
-// ── Peer info ───────────────────────────────────────────────────────────────
-
-pub func:srv_peer_addr = string() {
-    pass nitpick_libc_server_peer_addr();
-};
-
-pub func:srv_peer_port = int64() {
-    pass nitpick_libc_server_peer_port();
-};
-
-// ── Response ────────────────────────────────────────────────────────────────
-
-pub func:srv_respond = int64(int64:client_fd, int64:status_code, string:body) {
-    pass nitpick_libc_server_respond(client_fd, status_code, body);
-};
-
-pub func:srv_respond_hdrs = int64(int64:client_fd, int64:status_code, string:headers, string:body) {
-    pass nitpick_libc_server_respond_headers(client_fd, status_code, headers, body);
-};
-
-pub func:srv_respond_typed = int64(int64:client_fd, int64:status_code, string:ctype, string:body) {
-    pass nitpick_libc_server_respond_type(client_fd, status_code, ctype, body);
-};
-
-// ── Raw access ──────────────────────────────────────────────────────────────
-
-pub func:srv_req_raw_data = string() {
-    pass nitpick_libc_server_req_raw();
-};
-
-pub func:srv_req_raw_len = int64() {
-    pass nitpick_libc_server_req_length();
-};
-
-// ── Type wrapper ───────────────────────────────────────────────────────────
-
-Type:Server = {
+pub Type:Server = {
     // lifecycle
-    func:bind_and_listen = int64(string:addr, int64:port, int64:backlog) { pass raw srv_listen(addr, port, backlog); };
-    func:accept_client   = int64(int64:fd) { pass raw srv_accept(fd); };
-    func:close_srv       = int64(int64:fd) { pass raw srv_close(fd); };
-    func:close_cli       = int64(int64:fd) { pass raw srv_close_client(fd); };
-    func:last_error      = string() { pass raw srv_error(); };
+    func:bind_and_listen = int64(string:addr, int64:port, int64:backlog) { pass nitpick_libc_server_listen(addr, port, backlog); };
+    func:accept_client   = int64(int64:fd) { pass nitpick_libc_server_accept(fd); };
+    func:close_srv       = int64(int64:fd) { pass nitpick_libc_server_close(fd); };
+    func:close_cli       = int64(int64:fd) { pass nitpick_libc_server_close_client(fd); };
+    func:last_error      = string() { string:r = nitpick_libc_server_error(); pass r; };
 
     // request
-    func:read_req      = int64(int64:fd) { pass raw srv_read_req(fd); };
-    func:method        = string() { pass raw srv_req_method(); };
-    func:uri_path      = string() { pass raw srv_req_path(); };
-    func:query_str     = string() { pass raw srv_req_query(); };
-    func:http_ver      = string() { pass raw srv_req_ver(); };
-    func:body          = string() { pass raw srv_req_body(); };
-    func:body_len      = int64() { pass raw srv_req_body_len(); };
-    func:hdr           = string(string:name) { pass raw srv_req_hdr(name); };
-    func:hdr_count     = int64() { pass raw srv_req_hdr_count(); };
-    func:hdr_name      = string(int64:i) { pass raw srv_req_hdr_name(i); };
-    func:hdr_value     = string(int64:i) { pass raw srv_req_hdr_value(i); };
+    func:read_req      = int64(int64:fd) { pass nitpick_libc_server_read_request(fd); };
+    func:method        = string() { string:r = nitpick_libc_server_req_method(); pass r; };
+    func:uri_path      = string() { string:r = nitpick_libc_server_req_path(); pass r; };
+    func:query_str     = string() { string:r = nitpick_libc_server_req_query(); pass r; };
+    func:http_ver      = string() { string:r = nitpick_libc_server_req_version(); pass r; };
+    func:body          = string() { string:r = nitpick_libc_server_req_body(); pass r; };
+    func:body_len      = int64() { pass nitpick_libc_server_req_body_length(); };
+    func:hdr           = string(string:name) { string:r = nitpick_libc_server_req_header(name); pass r; };
+    func:hdr_count     = int64() { pass nitpick_libc_server_req_header_count(); };
+    func:hdr_name      = string(int64:i) { string:r = nitpick_libc_server_req_header_name(i); pass r; };
+    func:hdr_value     = string(int64:i) { string:r = nitpick_libc_server_req_header_value(i); pass r; };
 
     // peer
-    func:peer_ip   = string() { pass raw srv_peer_addr(); };
-    func:peer_port = int64() { pass raw srv_peer_port(); };
+    func:peer_ip   = string() { string:r = nitpick_libc_server_peer_addr(); pass r; };
+    func:peer_port = int64() { pass nitpick_libc_server_peer_port(); };
 
     // response
-    func:send_text   = int64(int64:fd, int64:code, string:body) { pass raw srv_respond(fd, code, body); };
-    func:send_hdrs   = int64(int64:fd, int64:code, string:hdrs, string:body) { pass raw srv_respond_hdrs(fd, code, hdrs, body); };
-    func:send_typed  = int64(int64:fd, int64:code, string:ct, string:body) { pass raw srv_respond_typed(fd, code, ct, body); };
+    func:send_text   = int64(int64:fd, int64:code, string:body) { pass nitpick_libc_server_respond(fd, code, body); };
+    func:send_hdrs   = int64(int64:fd, int64:code, string:hdrs, string:body) { pass nitpick_libc_server_respond_headers(fd, code, hdrs, body); };
+    func:send_typed  = int64(int64:fd, int64:code, string:ct, string:body) { pass nitpick_libc_server_respond_type(fd, code, ct, body); };
 
     // raw
-    func:raw_req = string() { pass raw srv_req_raw_data(); };
-    func:raw_len = int64() { pass raw srv_req_raw_len(); };
+    func:raw_req = string() { string:r = nitpick_libc_server_req_raw(); pass r; };
+    func:raw_len = int64() { pass nitpick_libc_server_req_length(); };
 };

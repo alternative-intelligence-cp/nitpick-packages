@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-server"
+version = "0.12.0"
+
+[target.nitpick-server]
+type = "library"
+sources = ["src/nitpick_server.npk"]
+deps = []
+flags = ["-Lshim/.nitpick_make/lib", "-lnitpick_server"]
+
+[target.test-nitpick-server]
+type = "binary"
+sources = ["tests/test_nitpick_server.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_server", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_net"]

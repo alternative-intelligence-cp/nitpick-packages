@@ -1,0 +1,5 @@
+use "src/nitpick_server.npk".*;
+func:main = int32() {
+    int64:srv = raw Srv.bind_and_listen("127.0.0.1\\0", 1234i64, 8i64);
+    exit 0;
+};
