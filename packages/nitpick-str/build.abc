@@ -1,9 +1,15 @@
-targets {
-    lib "nitpick-str" {
-        src = "src/nitpick_str.npk"
-    }
+[project]
+name = "nitpick-str"
+version = "0.1.0"
 
-    bin "test-nitpick-str" {
-        src = "tests/test_nitpick_str.npk"
-    }
-}
+[target.nitpick-str]
+type = "library"
+sources = ["src/nitpick_str.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-str]
+type = "binary"
+sources = ["tests/test_nitpick_str.npk"]
+deps = ["nitpick-str"]
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_string", "-lnitpick_libc_mem", "-lnitpick_libc_io"]

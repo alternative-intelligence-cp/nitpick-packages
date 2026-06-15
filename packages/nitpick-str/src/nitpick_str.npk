@@ -43,7 +43,7 @@
 
 /// Return the character at position i as a 1-char string.
 /// Returns "" when i is out of range.
-pub func:str_char_at = string(string:s, int64:i) {
+func:str_char_at = string(string:s, int64:i) {
     int64:len = string_length(s);
     if (i < 0i64) {
         pass("");
@@ -60,7 +60,7 @@ pub func:str_char_at = string(string:s, int64:i) {
 /// Return the substring from start to the end of s.
 /// Equivalent to string_substring(s, start, string_length(s)).
 /// Returns "" when start >= length.
-pub func:str_slice = string(string:s, int64:start) {
+func:str_slice = string(string:s, int64:start) {
     int64:len = string_length(s);
     if (start >= len) {
         pass("");
@@ -75,7 +75,7 @@ pub func:str_slice = string(string:s, int64:start) {
 
 /// Return the part of s before the first occurrence of delim.
 /// Returns the whole string if delim is not found.
-pub func:str_before = string(string:s, string:delim) {
+func:str_before = string(string:s, string:delim) {
     int64:idx = string_index_of(s, delim);
     if (idx < 0i64) {
         pass(s);
@@ -86,7 +86,7 @@ pub func:str_before = string(string:s, string:delim) {
 
 /// Return the part of s after the first occurrence of delim.
 /// Returns "" if delim is not found.
-pub func:str_after = string(string:s, string:delim) {
+func:str_after = string(string:s, string:delim) {
     int64:idx = string_index_of(s, delim);
     if (idx < 0i64) {
         pass("");
@@ -100,7 +100,7 @@ pub func:str_after = string(string:s, string:delim) {
 
 /// Return the part of s before the LAST occurrence of delim.
 /// Returns the whole string if delim is not found.
-pub func:str_before_last = string(string:s, string:delim) {
+func:str_before_last = string(string:s, string:delim) {
     // Scan forward, tracking last occurrence
     int64:last = 0i64 - 1i64;
     int64:dlen = string_length(delim);
@@ -130,7 +130,7 @@ pub func:str_before_last = string(string:s, string:delim) {
 
 /// Return the part of s after the LAST occurrence of delim.
 /// Returns "" if delim is not found.
-pub func:str_after_last = string(string:s, string:delim) {
+func:str_after_last = string(string:s, string:delim) {
     int64:last = 0i64 - 1i64;
     int64:dlen = string_length(delim);
     int64:slen = string_length(s);
@@ -161,7 +161,7 @@ pub func:str_after_last = string(string:s, string:delim) {
 /// Return the text between the first occurrence of open_ and the first
 /// subsequent occurrence of close_.
 /// Returns "" if either delimiter is missing or close_ precedes open_.
-pub func:str_between = string(string:s, string:open_, string:close_) {
+func:str_between = string(string:s, string:open_, string:close_) {
     int64:oi = string_index_of(s, open_);
     if (oi < 0i64) {
         pass("");
@@ -183,7 +183,7 @@ pub func:str_between = string(string:s, string:open_, string:close_) {
 
 /// Replace the first occurrence of old_ in s with new_.
 /// Returns s unchanged if old_ is not found.
-pub func:str_replace = string(string:s, string:old_, string:new_) {
+func:str_replace = string(string:s, string:old_, string:new_) {
     int64:idx = string_index_of(s, old_);
     if (idx < 0i64) {
         pass(s);
@@ -199,7 +199,7 @@ pub func:str_replace = string(string:s, string:old_, string:new_) {
 
 /// Replace every occurrence of old_ in s with new_ (up to 256 occurrences).
 /// Returns s unchanged if old_ is not found.
-pub func:str_replace_all = string(string:s, string:old_, string:new_) {
+func:str_replace_all = string(string:s, string:old_, string:new_) {
     string:result = s;
     int64:old_len = string_length(old_);
     till(256, 1) {
@@ -218,7 +218,7 @@ pub func:str_replace_all = string(string:s, string:old_, string:new_) {
 };
 
 /// Remove prefix from s if present; otherwise return s unchanged.
-pub func:str_remove_prefix = string(string:s, string:prefix) {
+func:str_remove_prefix = string(string:s, string:prefix) {
     if (string_starts_with(s, prefix)) {
         int64:plen = string_length(prefix);
         int64:slen = string_length(s);
@@ -229,7 +229,7 @@ pub func:str_remove_prefix = string(string:s, string:prefix) {
 };
 
 /// Remove suffix from s if present; otherwise return s unchanged.
-pub func:str_remove_suffix = string(string:s, string:suffix) {
+func:str_remove_suffix = string(string:s, string:suffix) {
     if (string_ends_with(s, suffix)) {
         int64:slen = string_length(s);
         int64:sufflen = string_length(suffix);
@@ -244,7 +244,7 @@ pub func:str_remove_suffix = string(string:s, string:suffix) {
 
 /// Count how many times sub appears in s (non-overlapping).
 /// Returns 0 if sub is empty or not found.
-pub func:str_count = int64(string:s, string:sub) {
+func:str_count = int64(string:s, string:sub) {
     int64:count = 0i64;
     int64:sublen = string_length(sub);
     if (sublen <= 0i64) {
@@ -273,7 +273,7 @@ pub func:str_count = int64(string:s, string:sub) {
 
 /// Count the number of lines in s (= number of '\n' characters + 1).
 /// An empty string is considered 1 line.
-pub func:str_line_count = int64(string:s) {
+func:str_line_count = int64(string:s) {
     if (string_is_empty(s)) {
         pass(1i64);
     } else {
@@ -284,7 +284,7 @@ pub func:str_line_count = int64(string:s) {
 
 /// Return true if s is empty or contains only ASCII whitespace (space, tab,
 /// \r, \n).  Uses: trim → empty check.
-pub func:str_is_blank = bool(string:s) {
+func:str_is_blank = bool(string:s) {
     string:trimmed = string_trim(s);
     pass(string_is_empty(trimmed));
 };
@@ -298,7 +298,7 @@ pub func:str_is_blank = bool(string:s) {
 /// Count how many delim-separated tokens are in s.
 /// "a:b:c" with delim ":" → 3
 /// "hello" with delim ":" → 1
-pub func:str_token_count = int64(string:s, string:delim) {
+func:str_token_count = int64(string:s, string:delim) {
     if (string_is_empty(s)) {
         pass(0i64);
     } else {
@@ -309,7 +309,7 @@ pub func:str_token_count = int64(string:s, string:delim) {
 
 /// Return the Nth (0-based) token of s split by delim.
 /// Returns "" when n is out of range.
-pub func:str_token = string(string:s, string:delim, int64:n) {
+func:str_token = string(string:s, string:delim, int64:n) {
     string:rest = s;
     int64:i = 0i64;
     int64:found = 0i64; // 1 once we've reached token n
@@ -343,4 +343,23 @@ pub func:str_token = string(string:s, string:delim, int64:n) {
     } else {
         pass(result);
     }
+};
+
+pub Type:Str = {
+    func:char_at = string(string:s, int64:i) { pass raw str_char_at(s, i); };
+    func:slice = string(string:s, int64:start) { pass raw str_slice(s, start); };
+    func:before = string(string:s, string:delim) { pass raw str_before(s, delim); };
+    func:after = string(string:s, string:delim) { pass raw str_after(s, delim); };
+    func:before_last = string(string:s, string:delim) { pass raw str_before_last(s, delim); };
+    func:after_last = string(string:s, string:delim) { pass raw str_after_last(s, delim); };
+    func:between = string(string:s, string:open_, string:close_) { pass raw str_between(s, open_, close_); };
+    func:replace = string(string:s, string:old_, string:new_) { pass raw str_replace(s, old_, new_); };
+    func:replace_all = string(string:s, string:old_, string:new_) { pass raw str_replace_all(s, old_, new_); };
+    func:remove_prefix = string(string:s, string:prefix) { pass raw str_remove_prefix(s, prefix); };
+    func:remove_suffix = string(string:s, string:suffix) { pass raw str_remove_suffix(s, suffix); };
+    func:count = int64(string:s, string:sub) { pass raw str_count(s, sub); };
+    func:line_count = int64(string:s) { pass raw str_line_count(s); };
+    func:is_blank = bool(string:s) { pass raw str_is_blank(s); };
+    func:token_count = int64(string:s, string:delim) { pass raw str_token_count(s, delim); };
+    func:token = string(string:s, string:delim, int64:n) { pass raw str_token(s, delim, n); };
 };
