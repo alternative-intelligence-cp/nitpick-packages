@@ -278,6 +278,12 @@ int32_t nitpick_gtk4_add_button(const char *label) {
     return id;
 }
 
+void nitpick_gtk4_button_set_label(int32_t id, const char *label) {
+    if (id >= 0 && id < g_widget_count && g_widgets[id]) {
+        gtk_button_set_label(GTK_BUTTON(g_widgets[id]), label);
+    }
+}
+
 /* Entry (text input) */
 int32_t nitpick_gtk4_add_entry(const char *placeholder) {
     if (!g_box) return -1;

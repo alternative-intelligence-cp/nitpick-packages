@@ -45,6 +45,7 @@ extern "nitpick_gtk4_shim" {
 
     // widgets: button
     func:nitpick_gtk4_add_button = int32(string:label);
+    func:nitpick_gtk4_button_set_label = void(int32:id, string:label);
 
     // widgets: entry
     func:nitpick_gtk4_add_entry      = int32(string:placeholder);
@@ -277,6 +278,11 @@ pub func:gtk4_label_set_text = NIL(int32:id, string:text) {
 pub func:gtk4_add_button = int32(string:label) {
     int32:r = nitpick_gtk4_add_button(label);
     pass(r);
+};
+
+pub func:gtk4_button_set_label = NIL(int32:id, string:label) {
+    nitpick_gtk4_button_set_label(id, label);
+    pass(NIL);
 };
 
 pub func:gtk4_add_entry = int32(string:placeholder) {
