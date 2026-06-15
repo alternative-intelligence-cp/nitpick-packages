@@ -5,23 +5,23 @@
     "compiler_hash": ""
   },
   "targets": {
-    "nitpick-endian": {
-      "artifact_path": ".nitpick_make/build/libnitpick-endian.a",
-      "source_hash": "fnv1a:2111002571705943310",
-      "command_hash": 14695981039346656037,
-      "source_timestamp": 18446744069052264471,
-      "build_timestamp": 1781508385,
-      "build_duration_ms": 0,
+    "test-nitpick-endian": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-endian",
+      "source_hash": "fnv1a:1314768836228205789",
+      "command_hash": 14661747852347956807,
+      "source_timestamp": 18446744069053432836,
+      "build_timestamp": 1781545219,
+      "build_duration_ms": 197,
       "dependencies": [],
       "implicit_inputs": []
     },
-    "test-nitpick-endian": {
-      "artifact_path": ".nitpick_make/build/test-nitpick-endian",
-      "source_hash": "fnv1a:15989570144469918665",
-      "command_hash": 14661747852347956807,
-      "source_timestamp": 18446744069053396000,
-      "build_timestamp": 1781508385,
-      "build_duration_ms": 0,
+    "nitpick-endian": {
+      "artifact_path": ".nitpick_make/build/libnitpick-endian.a",
+      "source_hash": "fnv1a:13259204366780885123",
+      "command_hash": 14695981039346656037,
+      "source_timestamp": 18446744069053432836,
+      "build_timestamp": 1781545219,
+      "build_duration_ms": 91,
       "dependencies": [],
       "implicit_inputs": []
     }
