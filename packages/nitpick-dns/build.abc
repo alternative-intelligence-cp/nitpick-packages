@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-dns"
+version = "0.12.0"
+
+[target.nitpick-dns]
+type = "library"
+sources = ["src/nitpick_dns.npk"]
+deps = []
+flags = ["-L.", "-lnitpick_dns_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_net", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-nitpick-dns]
+type = "binary"
+sources = ["tests/test_nitpick_dns.npk"]
+deps = []
+flags = ["-I", "src", "-L.", "-lnitpick_dns_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_net", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
