@@ -83,6 +83,7 @@ func:safe_tetris_get_next_type = int32(int32:idx)
 };
 
 func:failsafe = int32(tbb32:err) {
+    tbb32:_unused = err;
     exit 1i32;
 };
 
@@ -124,8 +125,8 @@ func:draw_block = NIL(int32:x, int32:y, int32:t, int32:a) {
     int32:r = raw get_color_r(t);
     int32:g = raw get_color_g(t);
     int32:b = raw get_color_b(t);
-    raw rl_draw_rectangle(x, y, 30i32, 30i32, r, g, b, a);
-    raw rl_draw_rectangle_lines(x, y, 30i32, 30i32, 255i32, 255i32, 255i32, a);
+    raw Raylib.draw_rectangle(x, y, 30i32, 30i32, r, g, b, a);
+    raw Raylib.draw_rectangle_lines(x, y, 30i32, 30i32, 255i32, 255i32, 255i32, a);
     pass NIL;
 };
 
@@ -149,27 +150,27 @@ func:draw_shape = NIL(int32:x, int32:y, int32:t, int32:rot, int32:a)
 };
 
 func:main = int32() {
-    raw rl_init_window(600i32, 700i32, "Nitpick Tetris\0");
-    raw rl_set_target_fps(60i32);
-    raw rl_init_audio_device();
+    raw Raylib.init_window(600i32, 700i32, "Nitpick Tetris\0");
+    raw Raylib.set_target_fps(60i32);
+    raw Raylib.init_audio_device();
 
-    raw mongo_init();
+    raw Mongo.init();
 
     tetris_init();
     
     int32:high_score = 0i32;
-    int32:db_conn = raw mongo_connect("mongodb://localhost:27017\0");
+    int32:db_conn = raw Mongo.connect("mongodb://localhost:27017\0");
     if (db_conn >= 0i32) {
-        int32:cursor = raw mongo_find(db_conn, "nitpick_games\0", "tetris_save\0", "{\"save_id\": 1}\0", "\0");
+        int32:cursor = raw Mongo.find(db_conn, "nitpick_games\0", "tetris_save\0", "{\"save_id\": 1}\0", "\0");
         if (cursor >= 0i32) {
-            string:doc = raw mongo_cursor_next(cursor);
-            if (string_length(doc) > 0i64) {
-                int32:jp = raw json_parse(doc);
+            string:doc = raw Mongo.cursor_next(cursor);
+            if (Str.length(doc) > 0i64) {
+                int32:jp = raw Json.parse(doc);
                 if (jp == 1i32) {
-                    high_score = @cast<int32>(raw json_get_int("high_score\0"));
+                    high_score = @cast_unchecked<int32>(raw Json.get_int("high_score\0"));
                 }
             }
-            int32:_c = raw mongo_cursor_close(cursor);
+            int32:_c = raw Mongo.cursor_close(cursor);
         }
     }
 
@@ -177,27 +178,27 @@ func:main = int32() {
     int32:grid_offset_x = 150i32;
     int32:grid_offset_y = 50i32;
 
-    while (raw rl_window_should_close() == 0i32) {
+    while (raw Raylib.window_should_close() == 0i32) {
         int32:st = raw safe_tetris_get_state();
         
         if (st == 0i32) {
-            if (raw rl_is_key_pressed(257i32) == 1i32) {
+            if (raw Raylib.is_key_pressed(257i32) == 1i32) {
                 tetris_start();
             }
         }
         
         if (st == 2i32) {
-            if (raw rl_is_key_pressed(257i32) == 1i32) {
+            if (raw Raylib.is_key_pressed(257i32) == 1i32) {
                 // save high score
                 int32:s = tetris_get_score();
                 if (s > high_score) {
                     high_score = s;
                     if (db_conn >= 0i32) {
-                        string:jstr = string_concat("{\"save_id\": 1, \"high_score\": ", string_from_int(high_score));
-                        jstr = string_concat(jstr, "}");
+                        string:jstr = Str.concat("{\"save_id\": 1, \"high_score\": ", Str.from_int(high_score));
+                        jstr = Str.concat(jstr, "}");
                         string:qstr = "{\"save_id\": 1}\0";
-                        int32:_d2 = raw mongo_delete(db_conn, "nitpick_games\0", "tetris_save\0", qstr);
-                        int32:_i2 = raw mongo_insert(db_conn, "nitpick_games\0", "tetris_save\0", string_concat(jstr, "\0"));
+                        int32:_d2 = raw Mongo.delete(db_conn, "nitpick_games\0", "tetris_save\0", qstr);
+                        int32:_i2 = raw Mongo.insert(db_conn, "nitpick_games\0", "tetris_save\0", Str.concat(jstr, "\0"));
                     }
                 }
                 tetris_start();
@@ -212,13 +213,13 @@ func:main = int32() {
             int32:hold = 0i32;
             int32:gs = 0i32;
             
-            if (raw rl_is_key_pressed(263i32) == 1i32) { dx = 0i32 - 1i32; }
-            if (raw rl_is_key_pressed(262i32) == 1i32) { dx = 1i32; }
-            if (raw rl_is_key_pressed(265i32) == 1i32 || raw rl_is_key_pressed(88i32) == 1i32) { rd = 1i32; }
-            if (raw rl_is_key_pressed(90i32) == 1i32) { rd = 0i32 - 1i32; }
-            if (raw rl_is_key_down(264i32) == 1i32) { sd = 1i32; }
-            if (raw rl_is_key_pressed(32i32) == 1i32) { hd = 1i32; }
-            if (raw rl_is_key_pressed(67i32) == 1i32) { hold = 1i32; }
+            if (raw Raylib.is_key_pressed(263i32) == 1i32) { dx = 0i32 - 1i32; }
+            if (raw Raylib.is_key_pressed(262i32) == 1i32) { dx = 1i32; }
+            if (raw Raylib.is_key_pressed(265i32) == 1i32 || raw Raylib.is_key_pressed(88i32) == 1i32) { rd = 1i32; }
+            if (raw Raylib.is_key_pressed(90i32) == 1i32) { rd = 0i32 - 1i32; }
+            if (raw Raylib.is_key_down(264i32) == 1i32) { sd = 1i32; }
+            if (raw Raylib.is_key_pressed(32i32) == 1i32) { hd = 1i32; }
+            if (raw Raylib.is_key_pressed(67i32) == 1i32) { hold = 1i32; }
             
             int32:level = tetris_get_level();
             int32:fall_speed = 60i32 - (level * 2i32);
@@ -230,13 +231,13 @@ func:main = int32() {
                 fall_timer = 0i32;
             }
             
-            if (raw rl_is_key_pressed(80i32) == 1i32) {
+            if (raw Raylib.is_key_pressed(80i32) == 1i32) {
                 raw safe_tetris_set_state(3i32);
             } else {
                 tetris_update(dx, rd, sd, hd, hold, gs);
             }
         } else if (st == 3i32) {
-            if (raw rl_is_key_pressed(80i32) == 1i32) {
+            if (raw Raylib.is_key_pressed(80i32) == 1i32) {
                 raw safe_tetris_set_state(1i32);
             }
         } else if (st == 4i32) {
@@ -244,25 +245,25 @@ func:main = int32() {
         }
         
         int32:evt = tetris_get_last_event();
-        if (evt == 1i32) { int32:_e = raw rl_gen_beep(220i32, 40i32, 0i32, 0.5f32); }
-        if (evt == 2i32) { int32:_e = raw rl_gen_beep(330i32, 40i32, 0i32, 0.5f32); }
-        if (evt == 3i32) { int32:_e = raw rl_gen_beep(150i32, 70i32, 0i32, 0.5f32); }
-        if (evt == 4i32) { int32:_e = raw rl_gen_beep(440i32, 120i32, 0i32, 0.5f32); }
-        if (evt == 5i32) { int32:_e = raw rl_gen_beep(880i32, 200i32, 1i32, 0.5f32); }
-        if (evt == 6i32) { int32:_e = raw rl_gen_beep(660i32, 160i32, 3i32, 0.5f32); }
-        if (evt == 7i32) { int32:_e = raw rl_gen_beep(110i32, 450i32, 0i32, 0.5f32); }
+        if (evt == 1i32) { int32:_e = raw Raylib.gen_beep(220i32, 40i32, 0i32, 0.5f32); }
+        if (evt == 2i32) { int32:_e = raw Raylib.gen_beep(330i32, 40i32, 0i32, 0.5f32); }
+        if (evt == 3i32) { int32:_e = raw Raylib.gen_beep(150i32, 70i32, 0i32, 0.5f32); }
+        if (evt == 4i32) { int32:_e = raw Raylib.gen_beep(440i32, 120i32, 0i32, 0.5f32); }
+        if (evt == 5i32) { int32:_e = raw Raylib.gen_beep(880i32, 200i32, 1i32, 0.5f32); }
+        if (evt == 6i32) { int32:_e = raw Raylib.gen_beep(660i32, 160i32, 3i32, 0.5f32); }
+        if (evt == 7i32) { int32:_e = raw Raylib.gen_beep(110i32, 450i32, 0i32, 0.5f32); }
         tetris_clear_event();
 
         // Draw
-        raw rl_begin_drawing();
-        raw rl_clear_background(30i32, 30i32, 30i32, 255i32);
+        raw Raylib.begin_drawing();
+        raw Raylib.clear_background(30i32, 30i32, 30i32, 255i32);
         
         if (st == 0i32) {
-            raw rl_draw_text("NITPICK TETRIS\0", 150i32, 250i32, 40i32, 255i32, 255i32, 255i32, 255i32);
-            raw rl_draw_text("Press ENTER to Start\0", 180i32, 320i32, 20i32, 200i32, 200i32, 200i32, 255i32);
+            raw Raylib.draw_text("NITPICK TETRIS\0", 150i32, 250i32, 40i32, 255i32, 255i32, 255i32, 255i32);
+            raw Raylib.draw_text("Press ENTER to Start\0", 180i32, 320i32, 20i32, 200i32, 200i32, 200i32, 255i32);
         } else {
             // Draw grid lines
-            raw rl_draw_rectangle_lines(grid_offset_x - 2i32, grid_offset_y - 2i32, 304i32, 604i32, 255i32, 255i32, 255i32, 255i32);
+            raw Raylib.draw_rectangle_lines(grid_offset_x - 2i32, grid_offset_y - 2i32, 304i32, 604i32, 255i32, 255i32, 255i32, 255i32);
             
             // Draw cells
             int32:row = 0i32;
@@ -295,14 +296,14 @@ func:main = int32() {
             }
             
             // Draw Hold
-            raw rl_draw_text("HOLD\0", 20i32, 50i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+            raw Raylib.draw_text("HOLD\0", 20i32, 50i32, 20i32, 255i32, 255i32, 255i32, 255i32);
             int32:ht = raw safe_tetris_get_hold_type();
             if (ht != 0i32) {
                 raw draw_shape(20i32, 80i32, ht, 0i32, 255i32);
             }
             
             // Draw Next
-            raw rl_draw_text("NEXT\0", 480i32, 50i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+            raw Raylib.draw_text("NEXT\0", 480i32, 50i32, 20i32, 255i32, 255i32, 255i32, 255i32);
             int32:n0 = raw safe_tetris_get_next_type(0i32);
             int32:n1 = raw safe_tetris_get_next_type(1i32);
             int32:n2 = raw safe_tetris_get_next_type(2i32);
@@ -311,35 +312,35 @@ func:main = int32() {
             if (n2 != 0i32) { raw draw_shape(480i32, 320i32, n2, 0i32, 255i32); }
             
             // UI Text
-            raw rl_draw_text(string_concat(string_concat("Score: ", string_from_int(tetris_get_score())), "\0"), 20i32, 250i32, 20i32, 255i32, 255i32, 255i32, 255i32);
-            raw rl_draw_text(string_concat(string_concat("Level: ", string_from_int(tetris_get_level())), "\0"), 20i32, 280i32, 20i32, 255i32, 255i32, 255i32, 255i32);
-            raw rl_draw_text(string_concat(string_concat("Lines: ", string_from_int(tetris_get_lines())), "\0"), 20i32, 310i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+            raw Raylib.draw_text(Str.concat(Str.concat("Score: ", Str.from_int(tetris_get_score())), "\0"), 20i32, 250i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+            raw Raylib.draw_text(Str.concat(Str.concat("Level: ", Str.from_int(tetris_get_level())), "\0"), 20i32, 280i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+            raw Raylib.draw_text(Str.concat(Str.concat("Lines: ", Str.from_int(tetris_get_lines())), "\0"), 20i32, 310i32, 20i32, 255i32, 255i32, 255i32, 255i32);
             
             if (high_score > 0i32) {
-                raw rl_draw_text("HIGH SCORE\0", 20i32, 400i32, 20i32, 255i32, 255i32, 0i32, 255i32);
-                raw rl_draw_text(string_concat(string_from_int(high_score), "\0"), 20i32, 430i32, 20i32, 255i32, 255i32, 0i32, 255i32);
+                raw Raylib.draw_text("HIGH SCORE\0", 20i32, 400i32, 20i32, 255i32, 255i32, 0i32, 255i32);
+                raw Raylib.draw_text(Str.concat(Str.from_int(high_score), "\0"), 20i32, 430i32, 20i32, 255i32, 255i32, 0i32, 255i32);
             }
 
             if (st == 3i32) {
-                raw rl_draw_rectangle(0i32, 0i32, 600i32, 700i32, 0i32, 0i32, 0i32, 150i32);
-                raw rl_draw_text("PAUSED\0", 230i32, 300i32, 40i32, 255i32, 255i32, 255i32, 255i32);
+                raw Raylib.draw_rectangle(0i32, 0i32, 600i32, 700i32, 0i32, 0i32, 0i32, 150i32);
+                raw Raylib.draw_text("PAUSED\0", 230i32, 300i32, 40i32, 255i32, 255i32, 255i32, 255i32);
             }
             if (st == 2i32) {
-                raw rl_draw_rectangle(0i32, 0i32, 600i32, 700i32, 0i32, 0i32, 0i32, 150i32);
-                raw rl_draw_text("GAME OVER\0", 200i32, 300i32, 40i32, 255i32, 0i32, 0i32, 255i32);
-                raw rl_draw_text("Press ENTER to Retry\0", 180i32, 360i32, 20i32, 255i32, 255i32, 255i32, 255i32);
+                raw Raylib.draw_rectangle(0i32, 0i32, 600i32, 700i32, 0i32, 0i32, 0i32, 150i32);
+                raw Raylib.draw_text("GAME OVER\0", 200i32, 300i32, 40i32, 255i32, 0i32, 0i32, 255i32);
+                raw Raylib.draw_text("Press ENTER to Retry\0", 180i32, 360i32, 20i32, 255i32, 255i32, 255i32, 255i32);
             }
         }
         
-        raw rl_end_drawing();
+        raw Raylib.end_drawing();
     }
     
     if (db_conn >= 0i32) {
-        int32:_d = raw mongo_disconnect(db_conn);
+        int32:_d = raw Mongo.disconnect(db_conn);
     }
-    raw mongo_cleanup();
+    raw Mongo.cleanup();
     
-    raw rl_close_audio_device();
-    raw rl_close_window();
+    raw Raylib.close_audio_device();
+    raw Raylib.close_window();
     exit 0i32;
 };

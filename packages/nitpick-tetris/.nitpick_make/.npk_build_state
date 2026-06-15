@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-tetris": {
+      "artifact_path": ".nitpick_make/build/nitpick-tetris",
+      "source_hash": "fnv1a:11762381873150673257",
+      "command_hash": 14695981039346656037,
+      "source_timestamp": 18446744069053433573,
+      "build_timestamp": 1781545969,
+      "build_duration_ms": 37,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

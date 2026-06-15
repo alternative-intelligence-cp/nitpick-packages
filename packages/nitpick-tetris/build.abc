@@ -1,0 +1,35 @@
+[project]
+name = "nitpick-tetris"
+version = "0.1.0"
+
+[target.nitpick-tetris]
+type = "binary"
+sources = ["src/main.npk"]
+deps = [
+    "nitpick-raylib",
+    "nitpick-str",
+    "nitpick-rand",
+    "nitpick-math",
+    "nitpick-conv",
+    "nitpick-mongo",
+    "nitpick-json",
+    "nitpick-orm"
+]
+flags = [
+    "-I", "src",
+    "-I", "../nitpick-raylib/src",
+    "-I", "../nitpick-str/src",
+    "-I", "../nitpick-rand/src",
+    "-I", "../nitpick-math/src",
+    "-I", "../nitpick-conv/src",
+    "-I", "../nitpick-mongo/src",
+    "-I", "../nitpick-json/src",
+    "-I", "../nitpick-orm/src",
+    "-Lshim", "-ltetris_shim",
+    "-L../nitpick-raylib/shim", "-lnitpick_raylib_shim",
+    "-L../nitpick-mongo/shim", "-lnitpick_mongo_shim",
+    "-L../nitpick-json/shim", "-lnitpick_json_shim",
+    "-L../nitpick-orm/shim", "-lnitpick_orm_shim",
+    "-L../../../nitpick-libc/shim", "-lnitpick_libc_string", "-lnitpick_libc_mem", "-lnitpick_libc_io", "-lnitpick_libc_math",
+    "-lraylib", "-lmongoc-1.0", "-lbson-1.0", "-lm", "-lpthread", "-ldl", "-lrt", "-lX11", "-latomic"
+]
