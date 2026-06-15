@@ -116,7 +116,7 @@ pub func:route_error = string() {
 
 // ── Type wrapper ───────────────────────────────────────────────────────────
 
-Type:Router = {
+pub Type:Router = {
     // registration
     func:add_route  = int64(string:method, string:pat, int64:hid) { pass raw route_add(method, pat, hid); };
     func:on_get     = int64(string:pat, int64:hid) { pass raw route_get(pat, hid); };
