@@ -1,20 +1,74 @@
-// test_nitpick_resource_mem.npk — LIB-24  test suite  (nitpick-resource-mem)
-//
-// 20 deterministic tests covering read/write constraints, expiry semantics,
-// peek, is_live, status, and resource-nitpick_left accounting.
-//
-// Status code reference (stored in result[2]):
-//   0 = RM_LIVE      1 = RM_WRITE_OK   2 = RM_EXP_READS
-//   3 = RM_EXP_WRITES  4 = RM_EXP_TTL
-//   result[0]: 1 = ok,  0 = error
-//   Unlimited sentinel: 0i64 - 1i64 = -1
+// test_nitpick_resource_mem.npk
 
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+extern "libc" { func:printf = int32(string:fmt); }
+extern "libc" { func:npk_mem_read_int64 = int64(int64:ptr, int64:offset); }
+
+use "../../../../nitpick-libc/src/_alloc.npk".*;
 use "../src/nitpick_resource_mem.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+int64:fail_cnt = 0i64;
+
+func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+func:assert_eq = int32(int64:actual, int64:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i32);
+};
+
+func:test_mem = int32() {
+    int64:cell = raw libc_malloc(72i64);
+    int64:out_result = raw libc_malloc(48i64);
+
+    drop ResourceMem.create(cell, 42i64, 2i64, 2i64, ResourceMem.NO_LIMIT(), 0i64);
+
+    int64:live_stat = raw ResourceMem.status(cell);
+    drop assert_eq(live_stat, 0i64, "T01 Initial status is live\0");
+
+    drop ResourceMem.read(cell, out_result);
+    drop assert_eq(npk_mem_read_int64(out_result, 0i64), 1i64, "T02 Read 1 success\0");
+    drop assert_eq(npk_mem_read_int64(out_result, 8i64), 42i64, "T03 Read 1 value correct\0");
+
+    drop ResourceMem.write(cell, 99i64, out_result);
+    drop assert_eq(npk_mem_read_int64(out_result, 0i64), 1i64, "T04 Write 1 success\0");
+    drop assert_eq(npk_mem_read_int64(out_result, 16i64), 1i64, "T05 Write status is WRITE_OK\0");
+
+    drop ResourceMem.read(cell, out_result);
+    drop assert_eq(npk_mem_read_int64(out_result, 0i64), 1i64, "T06 Read 2 success\0");
+    drop assert_eq(npk_mem_read_int64(out_result, 8i64), 99i64, "T07 Read 2 value correct\0");
+
+    drop ResourceMem.read(cell, out_result);
+    drop assert_eq(npk_mem_read_int64(out_result, 0i64), 0i64, "T08 Read 3 fails (max reads exceeded)\0");
+    drop assert_eq(npk_mem_read_int64(out_result, 16i64), 2i64, "T09 Status is EXP_READS\0");
+
+    drop ResourceMem.write(cell, 100i64, out_result);
+    drop assert_eq(npk_mem_read_int64(out_result, 0i64), 0i64, "T10 Write fails on expired cell\0");
+
+    drop libc_release(cell);
+    drop libc_release(out_result);
+
+    pass 0i32;
+};
 
 func:main = int32() {
-    drop(println("PASS: all tests passed"));
-    exit 0;
+    drop test_mem();
+
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+
+    drop(printf("SUCCESS: All tests passed.\n\0"));
+    exit 0i32;
 };
