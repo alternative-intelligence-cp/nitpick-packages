@@ -137,17 +137,17 @@ func:_ep_snap = NIL(float64[]:ep, int64[]:meta, float64[]:snaps,
     float64:a_pbc   = ep[0i64];
     float64:a_pbm   = ep[1i64];
     float64:a_width = ep[2i64];
-    float64:a_a     = dg_opt_a(a_pbc, a_pbm, a_width);
-    float64:a_b     = dg_opt_b(a_pbc, a_pbm, a_width);
-    int64:a_dec     = dg_decision_code(a_pbc, a_pbm, a_width);
+    float64:a_a     = raw dg_opt_a(a_pbc, a_pbm, a_width);
+    float64:a_b     = raw dg_opt_b(a_pbc, a_pbm, a_width);
+    int64:a_dec     = raw dg_decision_code(a_pbc, a_pbm, a_width);
 
     // Beta side (offset 5)
     float64:b_pbc   = ep[5i64];
     float64:b_pbm   = ep[6i64];
     float64:b_width = ep[7i64];
-    float64:b_a     = dg_opt_a(b_pbc, b_pbm, b_width);
-    float64:b_b     = dg_opt_b(b_pbc, b_pbm, b_width);
-    int64:b_dec     = dg_decision_code(b_pbc, b_pbm, b_width);
+    float64:b_a     = raw dg_opt_a(b_pbc, b_pbm, b_width);
+    float64:b_b     = raw dg_opt_b(b_pbc, b_pbm, b_width);
+    int64:b_dec     = raw dg_decision_code(b_pbc, b_pbm, b_width);
 
     // Crystallized: both pbm >= crystal_threshold
     float64:thresh    = ep[11i64];

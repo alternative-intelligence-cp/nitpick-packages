@@ -7,7 +7,7 @@
 [project]
 name = "nitpick-entangled"
 version = "0.1.0"
-compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
+compiler = "/home/randy/Workspace/REPOS/nitpick/build/nitpickc"
 
 [target.nitpick-entangled]
 type = "library"
