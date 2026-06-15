@@ -1,0 +1,13 @@
+[project]
+name = "nitpick-uuid"
+version = "0.1.0"
+
+[target.nitpick-uuid]
+type = "library"
+sources = ["src/nitpick_uuid.npk"]
+
+[target.test_uuid]
+type = "binary"
+sources = ["tests/test_nitpick_uuid.npk"]
+deps = ["nitpick-uuid"]
+flags = ["-I", "src"]
