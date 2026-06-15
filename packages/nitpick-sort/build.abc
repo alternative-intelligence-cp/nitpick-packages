@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-sort"
+version = "0.1.0"
+
+[target.nitpick-sort]
+type = "library"
+sources = ["src/nitpick_sort.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-sort]
+type = "binary"
+sources = ["tests/test_nitpick_sort.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]

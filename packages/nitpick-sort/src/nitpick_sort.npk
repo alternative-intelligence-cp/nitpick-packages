@@ -8,17 +8,17 @@
 //
 // v0.11.1: New pure Nitpick package.
 
-extern "aria_libc_mem" {
-    func:aria_libc_mem_read_i64    = int64(int64:ptr, int64:offset);
-    func:aria_libc_mem_write_i64   = void(int64:ptr, int64:offset, int64:val);
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_read_i64    = int64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_i64   = void(int64:ptr, int64:offset, int64:val);
 }
 
 // ── swap helper ─────────────────────────────────────────────────────────────
 func:sort_swap = int32(int64:arr, int64:a, int64:b) {
-    int64:va = aria_libc_mem_read_i64(arr, a * 8i64);
-    int64:vb = aria_libc_mem_read_i64(arr, b * 8i64);
-    aria_libc_mem_write_i64(arr, a * 8i64, vb);
-    aria_libc_mem_write_i64(arr, b * 8i64, va);
+    int64:va = nitpick_libc_mem_read_i64(arr, a * 8i64);
+    int64:vb = nitpick_libc_mem_read_i64(arr, b * 8i64);
+    nitpick_libc_mem_write_i64(arr, a * 8i64, vb);
+    nitpick_libc_mem_write_i64(arr, b * 8i64, va);
     pass 0i32;
 };
 
@@ -26,7 +26,7 @@ func:sort_swap = int32(int64:arr, int64:a, int64:b) {
 func:sort_insertion_range = int32(int64:arr, int64:lo, int64:hi) {
     int64:i = lo + 1i64;
     loop(lo + 1i64, hi + 1i64, 1i64) {
-        int64:key = aria_libc_mem_read_i64(arr, i * 8i64);
+        int64:key = nitpick_libc_mem_read_i64(arr, i * 8i64);
         int64:j = i - 1i64;
         int64:done = 0i64;
         loop(0i64, i - lo, 1i64) {
@@ -34,17 +34,17 @@ func:sort_insertion_range = int32(int64:arr, int64:lo, int64:hi) {
                 if (j < lo) {
                     done = 1i64;
                 } else {
-                    int64:vj = aria_libc_mem_read_i64(arr, j * 8i64);
+                    int64:vj = nitpick_libc_mem_read_i64(arr, j * 8i64);
                     if (vj <= key) {
                         done = 1i64;
                     } else {
-                        aria_libc_mem_write_i64(arr, (j + 1i64) * 8i64, vj);
+                        nitpick_libc_mem_write_i64(arr, (j + 1i64) * 8i64, vj);
                         j -= 1i64;
                     }
                 }
             }
         }
-        aria_libc_mem_write_i64(arr, (j + 1i64) * 8i64, key);
+        nitpick_libc_mem_write_i64(arr, (j + 1i64) * 8i64, key);
         i += 1i64;
     }
     pass 0i32;
@@ -52,11 +52,11 @@ func:sort_insertion_range = int32(int64:arr, int64:lo, int64:hi) {
 
 // ── quicksort partition (Lomuto) ────────────────────────────────────────────
 func:sort_partition = int64(int64:arr, int64:lo, int64:hi) {
-    int64:pivot = aria_libc_mem_read_i64(arr, hi * 8i64);
+    int64:pivot = nitpick_libc_mem_read_i64(arr, hi * 8i64);
     int64:i = lo - 1i64;
     int64:j = lo;
     loop(lo, hi, 1i64) {
-        int64:vj = aria_libc_mem_read_i64(arr, j * 8i64);
+        int64:vj = nitpick_libc_mem_read_i64(arr, j * 8i64);
         if (vj <= pivot) {
             i += 1i64;
             drop sort_swap(arr, i, j);
@@ -72,27 +72,27 @@ func:sort_quick_impl = int32(int64:arr, int64:lo, int64:hi) {
     if (lo >= hi) { pass 0i32; }
     // for small subarrays use insertion sort
     if (hi - lo < 16i64) {
-        drop sort_insertion_range(arr, lo, hi);
+        drop raw sort_insertion_range(arr, lo, hi);
         pass 0i32;
     }
-    int64:p = sort_partition(arr, lo, hi);
-    drop sort_quick_impl(arr, lo, p - 1i64);
-    drop sort_quick_impl(arr, p + 1i64, hi);
+    int64:p = raw sort_partition(arr, lo, hi);
+    drop raw sort_quick_impl(arr, lo, p - 1i64);
+    drop raw sort_quick_impl(arr, p + 1i64, hi);
     pass 0i32;
 };
 
-Type:Sort = {
+pub Type:Sort = {
     // quicksort(arr, len) — in-place quicksort (ascending).
     func:quicksort = int32(int64:arr, int64:len) {
         if (len <= 1i64) { pass 0i32; }
-        drop sort_quick_impl(arr, 0i64, len - 1i64);
+        drop raw sort_quick_impl(arr, 0i64, len - 1i64);
         pass 0i32;
     };
 
     // insertion_sort(arr, len) — in-place insertion sort (ascending).
     func:insertion_sort = int32(int64:arr, int64:len) {
         if (len <= 1i64) { pass 0i32; }
-        drop sort_insertion_range(arr, 0i64, len - 1i64);
+        drop raw sort_insertion_range(arr, 0i64, len - 1i64);
         pass 0i32;
     };
 
@@ -101,8 +101,8 @@ Type:Sort = {
         if (len <= 1i64) { pass 1i32; }
         int64:i = 0i64;
         loop(0i64, len - 1i64, 1i64) {
-            int64:a = aria_libc_mem_read_i64(arr, i * 8i64);
-            int64:b = aria_libc_mem_read_i64(arr, (i + 1i64) * 8i64);
+            int64:a = nitpick_libc_mem_read_i64(arr, i * 8i64);
+            int64:b = nitpick_libc_mem_read_i64(arr, (i + 1i64) * 8i64);
             if (a > b) { pass 0i32; }
             i += 1i64;
         }
@@ -123,10 +123,10 @@ Type:Sort = {
 
     // min(arr, len) — return minimum value.
     func:min = int64(int64:arr, int64:len) {
-        int64:m = aria_libc_mem_read_i64(arr, 0i64);
+        int64:m = nitpick_libc_mem_read_i64(arr, 0i64);
         int64:i = 1i64;
         loop(1i64, len, 1i64) {
-            int64:v = aria_libc_mem_read_i64(arr, i * 8i64);
+            int64:v = nitpick_libc_mem_read_i64(arr, i * 8i64);
             if (v < m) { m = v; }
             i += 1i64;
         }
@@ -135,10 +135,10 @@ Type:Sort = {
 
     // max(arr, len) — return maximum value.
     func:max = int64(int64:arr, int64:len) {
-        int64:m = aria_libc_mem_read_i64(arr, 0i64);
+        int64:m = nitpick_libc_mem_read_i64(arr, 0i64);
         int64:i = 1i64;
         loop(1i64, len, 1i64) {
-            int64:v = aria_libc_mem_read_i64(arr, i * 8i64);
+            int64:v = nitpick_libc_mem_read_i64(arr, i * 8i64);
             if (v > m) { m = v; }
             i += 1i64;
         }
@@ -150,7 +150,7 @@ Type:Sort = {
         int64:s = 0i64;
         int64:i = 0i64;
         loop(0i64, len, 1i64) {
-            s += aria_libc_mem_read_i64(arr, i * 8i64);
+            s += nitpick_libc_mem_read_i64(arr, i * 8i64);
             i += 1i64;
         }
         pass s;
@@ -164,7 +164,7 @@ Type:Sort = {
         loop(0i64, 64i64, 1i64) {
             if (lo > hi) { pass 0i64 - 1i64; }
             int64:mid = lo + (hi - lo) / 2i64;
-            int64:v = aria_libc_mem_read_i64(arr, mid * 8i64);
+            int64:v = nitpick_libc_mem_read_i64(arr, mid * 8i64);
             if (v == target) { pass mid; }
             if (v < target) {
                 lo = mid + 1i64;
