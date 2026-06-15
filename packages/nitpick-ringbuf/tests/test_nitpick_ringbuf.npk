@@ -1,68 +1,107 @@
 // test_nitpick_ringbuf.npk — 12-test suite for nitpick-ringbuf (v0.11.1)
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+extern "libc" { func:printf = int32(string:fmt); }
 use "../src/nitpick_ringbuf.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+int64:fail_cnt = 0i64;
+
+func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+func:assert_eq_i32 = int32(int32:actual, int32:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i32);
+};
+
+func:assert_eq_i64 = int64(int64:actual, int64:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass 0i64;
+};
 
 func:main = int32() {
-    int32:pass_count = 0i32;
     int64:rb = raw RingBuf.create(4i64);
 
     // T01: initially empty
     int32:e1 = raw RingBuf.is_empty(rb);
-    if (e1 == 1i32) { println("[PASS] T01 empty"); } else { println("[FAIL] T01"); }
+    drop assert_eq_i32(e1, 1i32, "T01 empty\0");
 
     // T02: size = 0
     int64:sz0 = raw RingBuf.size(rb);
-    if (sz0 == 0i64) { println("[PASS] T02 size=0"); } else { println("[FAIL] T02"); }
+    drop assert_eq_i64(sz0, 0i64, "T02 size=0\0");
 
     // T03: capacity
     int64:cap = raw RingBuf.capacity(rb);
-    if (cap == 4i64) { println("[PASS] T03 cap=4"); } else { println("[FAIL] T03"); }
+    drop assert_eq_i64(cap, 4i64, "T03 cap=4\0");
 
     // T04: push and size
-    drop RingBuf.push(rb, 10i64);
-    drop RingBuf.push(rb, 20i64);
+    drop raw RingBuf.push(rb, 10i64);
+    drop raw RingBuf.push(rb, 20i64);
     int64:sz2 = raw RingBuf.size(rb);
-    if (sz2 == 2i64) { println("[PASS] T04 size=2"); } else { println("[FAIL] T04"); }
+    drop assert_eq_i64(sz2, 2i64, "T04 size=2\0");
 
     // T05: peek
     int64:pk = raw RingBuf.peek(rb);
-    if (pk == 10i64) { println("[PASS] T05 peek=10"); } else { println("[FAIL] T05"); }
+    drop assert_eq_i64(pk, 10i64, "T05 peek=10\0");
 
     // T06: pop FIFO
     int64:p1 = raw RingBuf.pop(rb);
-    if (p1 == 10i64) { println("[PASS] T06 pop=10"); } else { println("[FAIL] T06"); }
+    drop assert_eq_i64(p1, 10i64, "T06 pop=10\0");
 
     // T07: pop second
     int64:p2 = raw RingBuf.pop(rb);
-    if (p2 == 20i64) { println("[PASS] T07 pop=20"); } else { println("[FAIL] T07"); }
+    drop assert_eq_i64(p2, 20i64, "T07 pop=20\0");
 
     // T08: empty after pops
     int32:e2 = raw RingBuf.is_empty(rb);
-    if (e2 == 1i32) { println("[PASS] T08 empty again"); } else { println("[FAIL] T08"); }
+    drop assert_eq_i32(e2, 1i32, "T08 empty again\0");
 
     // T09: fill to capacity
-    drop RingBuf.push(rb, 1i64);
-    drop RingBuf.push(rb, 2i64);
-    drop RingBuf.push(rb, 3i64);
-    drop RingBuf.push(rb, 4i64);
+    drop raw RingBuf.push(rb, 1i64);
+    drop raw RingBuf.push(rb, 2i64);
+    drop raw RingBuf.push(rb, 3i64);
+    drop raw RingBuf.push(rb, 4i64);
     int32:fl = raw RingBuf.is_full(rb);
-    if (fl == 1i32) { println("[PASS] T09 full"); } else { println("[FAIL] T09"); }
+    drop assert_eq_i32(fl, 1i32, "T09 full\0");
 
     // T10: not empty when full
     int32:e3 = raw RingBuf.is_empty(rb);
-    if (e3 == 0i32) { println("[PASS] T10 not empty"); } else { println("[FAIL] T10"); }
+    drop assert_eq_i32(e3, 0i32, "T10 not empty\0");
 
     // T11: pop from full wraps correctly
     int64:p3 = raw RingBuf.pop(rb);
-    if (p3 == 1i64) { println("[PASS] T11 pop=1"); } else { println("[FAIL] T11"); }
+    drop assert_eq_i64(p3, 1i64, "T11 pop=1\0");
 
     // T12: wrap-around push+pop
-    drop RingBuf.push(rb, 5i64);
+    drop raw RingBuf.push(rb, 5i64);
     int64:p4 = raw RingBuf.pop(rb);
-    if (p4 == 2i64) { println("[PASS] T12 wrap pop=2"); } else { println("[FAIL] T12"); }
+    drop assert_eq_i64(p4, 2i64, "T12 wrap pop=2\0");
 
-    drop RingBuf.destroy(rb);
+    drop raw RingBuf.destroy(rb);
+
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+
+    drop(printf("SUCCESS: All tests passed.\n\0"));
     exit 0i32;
 };

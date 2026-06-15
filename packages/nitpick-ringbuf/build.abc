@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-ringbuf"
+version = "0.11.1"
+
+[target.nitpick-ringbuf]
+type = "library"
+sources = ["src/nitpick_ringbuf.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem"]
+
+[target.test-nitpick-ringbuf]
+type = "binary"
+sources = ["tests/test_nitpick_ringbuf.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_mem"]
