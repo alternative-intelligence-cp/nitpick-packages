@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-ftp"
+version = "0.12.2"
+
+[target.nitpick-ftp]
+type = "library"
+sources = ["src/nitpick_ftp.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-ftp]
+type = "binary"
+sources = ["tests/test_nitpick_ftp.npk"]
+deps = []
+flags = ["-I", "src"]

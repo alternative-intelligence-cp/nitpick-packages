@@ -2,7 +2,7 @@
 extern "libc" { func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_ftp.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:_err) { exit 1; };
 
 func:test_create_cmds = int32() {
     int32:pc = 0i32;
@@ -98,7 +98,7 @@ func:test_parse_reply = int32() {
 
     int32:_r2 = raw ftp_parse_reply(h, "550 No such file");
     string:code12 = raw ftp_reply_code(h);
-    string:cls12 = raw ftp_reply_class(h);
+    string:_cls12 = raw ftp_reply_class(h);
     int32:t12 = 0i32;
     if (string_contains(code12, "550")) { t12 = 1i32; }
     if (t12 == 1i32) { println("[PASS] T12 reply_code=550"); pc += 1i32; }
@@ -108,11 +108,11 @@ func:test_parse_reply = int32() {
 };
 
 func:main = int32() {
-    int32:pass_count = 0i32;
-    int32:p1 = raw test_create_cmds();
-    int32:p2 = raw test_nav_cmds();
-    int32:p3 = raw test_transfer_cmds();
-    int32:p4 = raw test_parse_reply();
+    int32:_pass_count = 0i32;
+    int32:_p1 = raw test_create_cmds();
+    int32:_p2 = raw test_nav_cmds();
+    int32:_p3 = raw test_transfer_cmds();
+    int32:_p4 = raw test_parse_reply();
     println("DONE");
     
     drop(println("---"));
