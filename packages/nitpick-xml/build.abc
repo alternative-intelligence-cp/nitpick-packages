@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-xml"
+version = "0.1.0"
+
+[target.nitpick-xml]
+type = "library"
+sources = ["src/nitpick_xml.npk"]
+deps = []
+flags = ["-Lshim/.nitpick_make/lib", "-lnitpick_xml_shim"]
+
+[target.test-nitpick-xml]
+type = "binary"
+sources = ["tests/test_nitpick_xml.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim/.nitpick_make/lib", "-lnitpick_xml_shim"]

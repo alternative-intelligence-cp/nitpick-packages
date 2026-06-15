@@ -7,15 +7,17 @@ extern "nitpick_xml_shim" {
     func:nitpick_xml_count_tag  = int32(string:tag);
     func:nitpick_xml_has_tag    = int32(string:tag);
     func:nitpick_xml_node_count = int32();
-    func:nitpick_xml_clear      = void();
+    func:nitpick_xml_clear      = NIL();
     func:nitpick_xml_get_path   = string(string:path);
 }
 
-pub func:parse = int32(string:xml) { pass(nitpick_xml_parse(xml)); };
-pub func:get_text = string(string:tag) { pass(nitpick_xml_get_text(tag)); };
-pub func:get_attr = string(string:tag, string:attr_name) { pass(nitpick_xml_get_attr(tag, attr_name)); };
-pub func:count_tag = int32(string:tag) { pass(nitpick_xml_count_tag(tag)); };
-pub func:has_tag = int32(string:tag) { pass(nitpick_xml_has_tag(tag)); };
-pub func:node_count = int32() { pass(nitpick_xml_node_count()); };
-pub func:clear = void() { nitpick_xml_clear(); };
-pub func:get_path = string(string:path) { pass(nitpick_xml_get_path(path)); };
+pub Type:XML = {
+    func:parse = int32(string:xml) { pass(nitpick_xml_parse(xml)); };
+    func:get_text = string(string:tag) { pass(nitpick_xml_get_text(tag)); };
+    func:get_attr = string(string:tag, string:attr_name) { pass(nitpick_xml_get_attr(tag, attr_name)); };
+    func:count_tag = int32(string:tag) { pass(nitpick_xml_count_tag(tag)); };
+    func:has_tag = int32(string:tag) { pass(nitpick_xml_has_tag(tag)); };
+    func:node_count = int32() { pass(nitpick_xml_node_count()); };
+    func:clear = NIL() { nitpick_xml_clear(); pass NIL; };
+    func:get_path = string(string:path) { pass(nitpick_xml_get_path(path)); };
+};

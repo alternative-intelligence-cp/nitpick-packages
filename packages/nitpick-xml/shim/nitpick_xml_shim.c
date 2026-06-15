@@ -29,7 +29,7 @@ typedef struct {
 
 static xml_node_t nodes[MAX_NODES];
 static int node_count = 0;
-static char query_result[MAX_TEXT];
+
 
 /* ---- skip whitespace ---- */
 static const char *skip_ws(const char *p) {
