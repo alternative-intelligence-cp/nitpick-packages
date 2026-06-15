@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-glob"
+version = "0.12.3"
+
+[target.nitpick-glob]
+type = "library"
+sources = ["src/nitpick_glob.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-glob]
+type = "binary"
+sources = ["tests/test_nitpick_glob.npk"]
+deps = []
+flags = ["-I", "src"]

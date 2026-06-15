@@ -2,7 +2,7 @@
 extern "libc" { func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_glob.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:_err) { exit 1; };
 
 func:test_basic = int32() {
     int32:pc = 0i32;
@@ -104,11 +104,11 @@ func:test_meta = int32() {
 };
 
 func:main = int32() {
-    int32:pass_count = 0i32;
-    int32:p1 = raw test_basic();
-    int32:p2 = raw test_wildcard();
-    int32:p3 = raw test_question();
-    int32:p4 = raw test_meta();
+    int32:_pass_count = 0i32;
+    int32:_p1 = raw test_basic();
+    int32:_p2 = raw test_wildcard();
+    int32:_p3 = raw test_question();
+    int32:_p4 = raw test_meta();
     println("DONE");
     
     drop(println("---"));
