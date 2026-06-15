@@ -1,0 +1,9 @@
+[project]
+name = "nitpick-web-template"
+version = "0.1.0"
+
+[target.web_template_bin]
+type = "binary"
+sources = ["src/main.npk"]
+deps = ["nitpick-server", "nitpick-router", "nitpick-db-pool", "nitpick-postgres", "nitpick-orm", "nitpick-str"]
+flags = ["-I", "src"]
