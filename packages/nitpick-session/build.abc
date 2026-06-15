@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-session"
+version = "0.12.1"
+
+[target.nitpick-session]
+type = "library"
+sources = ["src/nitpick_session.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-session]
+type = "binary"
+sources = ["tests/test_nitpick_session.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io"]
