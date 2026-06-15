@@ -1,24 +1,15 @@
-# build.abc — nitpick-decision-t package
-#
-# Targets:
-#   nitpick-decision-t       — compiled library for downstream packages
-#   test-nitpick-decision-t  — test binary
-#
-# malloc/free are from libc, always linked by the C runtime.
-
 [project]
 name = "nitpick-decision-t"
 version = "0.1.0"
-compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
 
 [target.nitpick-decision-t]
 type = "library"
 sources = ["src/nitpick_decision_t.npk"]
 deps = []
-flags = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem"]
 
 [target.test-nitpick-decision-t]
 type = "binary"
 sources = ["tests/test_nitpick_decision_t.npk"]
 deps = []
-flags = []
+flags = ["-I", "src", "-I", "../nitpick-str/src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
