@@ -1,0 +1,42 @@
+// test_db_pool_exhaustion.npk
+extern "libc" {
+    func:printf = int32(string:fmt, int32:v);
+    func:puts = int32(string:msg);
+}
+use "../src/nitpick_db_pool.npk".*;
+
+func:failsafe = int32(tbb32:err) {
+    if (err.to_int() == 2i32) {
+        drop(puts("PASS: T02 Pool exhaustion triggered fail(2)"));
+        exit 1i32; // Catch in test.sh
+    }
+    drop(puts("FAIL: Unexpected error code"));
+    exit 1i32;
+};
+
+func:main = int32() {
+    raw db_pool_init();
+
+    int32:c1 = raw db_pool_add(10i32);
+    int32:c2 = raw db_pool_add(20i32);
+    int32:c3 = raw db_pool_add(30i32);
+    drop(c1); drop(c2); drop(c3);
+    
+    // Acquire all 3
+    drop(raw db_pool_acquire());
+    drop(raw db_pool_acquire());
+    drop(raw db_pool_acquire());
+
+    drop(puts("PASS: T01 Successfully acquired all available connections"));
+
+    // Acquire 4th -> should trigger < 0
+    int32:r4 = raw db_pool_acquire();
+    if (r4 < 0i32) {
+        drop(puts("PASS: T02 Pool exhaustion triggered fail(2)"));
+        exit 0i32;
+    }
+    
+    printf("r4 value: %d\n", r4);
+    drop(puts("FAIL: Pool exhaustion did not trigger fail"));
+    exit 1i32;
+};

@@ -1,0 +1,60 @@
+// test_db_pool.npk
+extern "libc" {
+    func:printf = int32(string:fmt, int32:v);
+    func:puts = int32(string:msg);
+}
+use "../src/nitpick_db_pool.npk".*;
+
+func:failsafe = int32(tbb32:_err) {
+    drop(puts("FAIL: Uncaught fail() inside pool logic"));
+    exit 1i32;
+};
+
+func:main = int32() {
+    raw db_pool_init();
+
+    // Add some mock connection handles: 100, 200, 300
+    int32:c1 = raw db_pool_add(100i32);
+    int32:c2 = raw db_pool_add(200i32);
+    int32:c3 = raw db_pool_add(300i32);
+    drop(c1); drop(c2); drop(c3);
+    
+    // Acquire the first one
+    int32:acq1 = raw db_pool_acquire();
+    if (acq1 == 100i32) {
+        drop(puts("PASS: T01 Acquire first conn"));
+    } else {
+        drop(puts("FAIL: T01 Acquire first conn"));
+        exit 1i32;
+    }
+
+    // Acquire the second one
+    int32:acq2 = raw db_pool_acquire();
+    if (acq2 == 200i32) {
+        drop(puts("PASS: T02 Acquire second conn"));
+    } else {
+        drop(puts("FAIL: T02 Acquire second conn"));
+        exit 1i32;
+    }
+
+    // Release the first one
+    int32:rel = raw db_pool_release(100i32);
+    if (rel == 1i32) {
+        drop(puts("PASS: T03 Release first conn"));
+    } else {
+        drop(puts("FAIL: T03 Release first conn"));
+        exit 1i32;
+    }
+
+    // Acquire again, should get the first one since we released it!
+    int32:acq3 = raw db_pool_acquire();
+    if (acq3 == 100i32) {
+        drop(puts("PASS: T04 Re-acquire released conn"));
+    } else {
+        drop(puts("FAIL: T04 Re-acquire released conn"));
+        exit 1i32;
+    }
+    
+    drop(puts("ALL TESTS PASSED"));
+    exit 0i32;
+};

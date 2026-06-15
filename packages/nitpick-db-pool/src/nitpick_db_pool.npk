@@ -9,31 +9,21 @@ extern "nitpick_db_pool_shim" {
     func:nitpick_pool_release = int32(int32:conn_id);
 }
 
-pub func:db_pool_init = NIL() {
-    int32:_ = nitpick_pool_init();
-    pass(NIL);
-};
+pub Type:DbPool = {
+    func:init = NIL() {
+        int32:_ = nitpick_pool_init();
+        pass(NIL);
+    };
 
-pub func:db_pool_add = int32(int32:conn) {
-    int32:r = nitpick_pool_add(conn);
-    if (r < 0i32) {
-        fail(1i32);
-    }
-    pass(r);
-};
+    func:add = int32(int32:conn) {
+        pass nitpick_pool_add(conn);
+    };
 
-pub func:db_pool_acquire = int32() {
-    int32:r = nitpick_pool_acquire();
-    if (r < 0i32) {
-        fail(2i32);
-    }
-    pass(r);
-};
+    func:acquire = int32() {
+        pass nitpick_pool_acquire();
+    };
 
-pub func:db_pool_release = int32(int32:conn) {
-    int32:r = nitpick_pool_release(conn);
-    if (r < 0i32) {
-        fail(3i32);
-    }
-    pass(r);
+    func:release = int32(int32:conn) {
+        pass nitpick_pool_release(conn);
+    };
 };
