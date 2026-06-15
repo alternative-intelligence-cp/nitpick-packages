@@ -1,10 +1,10 @@
 extern "libc" { func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_endian.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:_err) { exit 1; };
 
 func:main = int32() {
-    int32:pass_count = 0i32;
+    int32:_pass_count = 0i32;
     // T01: rev16(0x0102=258) == 0x0201=513
     uint64:r01 = raw rev16(258u64);
     uint64:f01 = 0u64; if (r01 == 513u64) { f01 = 1u64; }

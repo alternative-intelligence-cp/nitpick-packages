@@ -1,0 +1,14 @@
+[project]
+name = "nitpick-endian"
+version = "0.2.0"
+
+[target.nitpick-endian]
+type = "library"
+sources = ["src/nitpick_endian.npk"]
+deps = []
+
+[target.test-nitpick-endian]
+type = "binary"
+sources = ["tests/test_nitpick_endian.npk"]
+deps = []
+flags = ["-I", "src"]
