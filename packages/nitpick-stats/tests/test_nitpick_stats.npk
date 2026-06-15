@@ -1,78 +1,118 @@
-// test_nitpick_stats.npk — 12-test suite for nitpick-stats (v0.11.1)
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+// test_nitpick_stats.npk
+extern "libc" { func:printf = int32(string:fmt); }
+extern "libc" { func:nitpick_libc_exit = NIL(int32:code); }
 use "../src/nitpick_stats.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+int64:fail_cnt = 0i64;
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+func:assert_eq_i64 = int64(int64:actual, int64:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i64);
+};
+
+func:assert_approx_f64 = int64(flt64:actual, flt64:expected, flt64:tol, string:test_name) {
+    flt64:diff = actual - expected;
+    if (diff < 0.0) { diff = 0.0 - diff; }
+    if (diff > tol) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i64);
+};
 
 func:main = int32() {
-    int32:pass_count = 0i32;
     int64:s = raw Stats.create(16i64);
-    drop Stats.push(s, 10.0);
-    drop Stats.push(s, 20.0);
-    drop Stats.push(s, 30.0);
-    drop Stats.push(s, 40.0);
-    drop Stats.push(s, 50.0);
+    drop raw Stats.push(s, 10.0);
+    drop raw Stats.push(s, 20.0);
+    drop raw Stats.push(s, 30.0);
+    drop raw Stats.push(s, 40.0);
+    drop raw Stats.push(s, 50.0);
 
     // T01: count
     int64:n = raw Stats.count(s);
-    if (n == 5i64) { println("[PASS] T01 count=5"); } else { println("[FAIL] T01"); }
+    drop assert_eq_i64(n, 5i64, "T01 count=5\0");
 
     // T02: sum
     flt64:sm = raw Stats.sum(s);
-    if (sm == 150.0) { println("[PASS] T02 sum=150"); } else { println("[FAIL] T02"); }
+    drop assert_approx_f64(sm, 150.0, 0.01, "T02 sum=150\0");
 
     // T03: mean
     flt64:m = raw Stats.mean(s);
-    if (m == 30.0) { println("[PASS] T03 mean=30"); } else { println("[FAIL] T03"); }
+    drop assert_approx_f64(m, 30.0, 0.01, "T03 mean=30\0");
 
     // T04: min
     flt64:mn = raw Stats.min(s);
-    if (mn == 10.0) { println("[PASS] T04 min=10"); } else { println("[FAIL] T04"); }
+    drop assert_approx_f64(mn, 10.0, 0.01, "T04 min=10\0");
 
     // T05: max
     flt64:mx = raw Stats.max(s);
-    if (mx == 50.0) { println("[PASS] T05 max=50"); } else { println("[FAIL] T05"); }
+    drop assert_approx_f64(mx, 50.0, 0.01, "T05 max=50\0");
 
     // T06: range
     flt64:rg = raw Stats.range(s);
-    if (rg == 40.0) { println("[PASS] T06 range=40"); } else { println("[FAIL] T06"); }
+    drop assert_approx_f64(rg, 40.0, 0.01, "T06 range=40\0");
 
     // T07: median (odd count)
     flt64:med = raw Stats.median(s);
-    if (med == 30.0) { println("[PASS] T07 median=30"); } else { println("[FAIL] T07"); }
+    drop assert_approx_f64(med, 30.0, 0.01, "T07 median=30\0");
 
     // T08: variance (200)
     flt64:v = raw Stats.variance(s);
-    if (v == 200.0) { println("[PASS] T08 var=200"); } else { println("[FAIL] T08"); }
+    drop assert_approx_f64(v, 200.0, 0.01, "T08 var=200\0");
 
     // T09: get element
     flt64:g2 = raw Stats.get(s, 2i64);
-    if (g2 == 30.0) { println("[PASS] T09 get[2]=30"); } else { println("[FAIL] T09"); }
+    drop assert_approx_f64(g2, 30.0, 0.01, "T09 get[2]=30\0");
 
     // T10: mode
-    drop Stats.push(s, 30.0);
+    drop raw Stats.push(s, 30.0);
     flt64:mo = raw Stats.mode(s);
-    if (mo == 30.0) { println("[PASS] T10 mode=30"); } else { println("[FAIL] T10"); }
+    drop assert_approx_f64(mo, 30.0, 0.01, "T10 mode=30\0");
 
     // T11: clear and count
-    drop Stats.clear(s);
+    drop raw Stats.clear(s);
     int64:n2 = raw Stats.count(s);
-    if (n2 == 0i64) { println("[PASS] T11 clear"); } else { println("[FAIL] T11"); }
+    drop assert_eq_i64(n2, 0i64, "T11 clear\0");
 
     // T12: correlation (perfect positive)
     int64:s1 = raw Stats.create(8i64);
     int64:s2 = raw Stats.create(8i64);
-    drop Stats.push(s1, 1.0);
-    drop Stats.push(s1, 2.0);
-    drop Stats.push(s1, 3.0);
-    drop Stats.push(s2, 2.0);
-    drop Stats.push(s2, 4.0);
-    drop Stats.push(s2, 6.0);
+    drop raw Stats.push(s1, 1.0);
+    drop raw Stats.push(s1, 2.0);
+    drop raw Stats.push(s1, 3.0);
+    drop raw Stats.push(s2, 2.0);
+    drop raw Stats.push(s2, 4.0);
+    drop raw Stats.push(s2, 6.0);
     flt64:cor = raw Stats.correlation(s1, s2);
-    if (cor == 1.0) { println("[PASS] T12 corr=1"); } else { println("[FAIL] T12"); }
+    drop assert_approx_f64(cor, 1.0, 0.01, "T12 corr=1\0");
 
-    drop Stats.destroy(s1);
-    drop Stats.destroy(s2);
-    drop Stats.destroy(s);
+    drop raw Stats.destroy(s1);
+    drop raw Stats.destroy(s2);
+    drop raw Stats.destroy(s);
+
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+    drop(printf("SUCCESS: All tests passed.\n\0"));
     exit 0i32;
 };

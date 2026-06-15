@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-stats"
+version = "0.1.1"
+
+[target.nitpick-stats]
+type = "library"
+sources = ["src/nitpick_stats.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-stats]
+type = "binary"
+sources = ["tests/test_nitpick_stats.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_mem", "-lnitpick_libc_math", "-lm"]
