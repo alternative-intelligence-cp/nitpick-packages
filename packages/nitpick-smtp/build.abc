@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-smtp"
+version = "0.12.2"
+
+[target.nitpick-smtp]
+type = "library"
+sources = ["src/nitpick_smtp.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-smtp]
+type = "binary"
+sources = ["tests/test_nitpick_smtp.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io"]

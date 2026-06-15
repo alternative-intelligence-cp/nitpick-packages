@@ -4,11 +4,11 @@
 // Import with: use "nitpick_smtp.npk".*;
 //
 // Builds SMTP command strings, constructs email messages, and parses replies.
-// Actual socket I/O is handled by aria-socket at the application level.
+// Actual socket I/O is handled by nitpick-socket at the application level.
 
 // ── Session ─────────────────────────────────────────────────────────────────
 
-pub func:smtp_create = int64() {
+func:smtp_create = int64() {
     int64:h = ahash(256);
     ahset(h, "_last_cmd", "");
     ahset(h, "_reply_code", "");
@@ -19,57 +19,57 @@ pub func:smtp_create = int64() {
 
 // ── Commands ────────────────────────────────────────────────────────────────
 
-pub func:smtp_cmd_ehlo = string(int64:h, string:domain) {
+func:smtp_cmd_ehlo = string(int64:h, string:domain) {
     ahset(h, "_last_cmd", "EHLO");
     string:cmd = string_concat("EHLO ", domain);
     cmd = string_concat(cmd, "\n");
     pass cmd;
 };
 
-pub func:smtp_cmd_helo = string(int64:h, string:domain) {
+func:smtp_cmd_helo = string(int64:h, string:domain) {
     ahset(h, "_last_cmd", "HELO");
     string:cmd = string_concat("HELO ", domain);
     cmd = string_concat(cmd, "\n");
     pass cmd;
 };
 
-pub func:smtp_cmd_mail_from = string(int64:h, string:addr) {
+func:smtp_cmd_mail_from = string(int64:h, string:addr) {
     ahset(h, "_last_cmd", "MAIL");
     string:cmd = string_concat("MAIL FROM:<", addr);
     cmd = string_concat(cmd, ">\n");
     pass cmd;
 };
 
-pub func:smtp_cmd_rcpt_to = string(int64:h, string:addr) {
+func:smtp_cmd_rcpt_to = string(int64:h, string:addr) {
     ahset(h, "_last_cmd", "RCPT");
     string:cmd = string_concat("RCPT TO:<", addr);
     cmd = string_concat(cmd, ">\n");
     pass cmd;
 };
 
-pub func:smtp_cmd_data = string(int64:h) {
+func:smtp_cmd_data = string(int64:h) {
     ahset(h, "_last_cmd", "DATA");
     pass "DATA\n";
 };
 
-pub func:smtp_cmd_quit = string(int64:h) {
+func:smtp_cmd_quit = string(int64:h) {
     ahset(h, "_last_cmd", "QUIT");
     pass "QUIT\n";
 };
 
-pub func:smtp_cmd_rset = string(int64:h) {
+func:smtp_cmd_rset = string(int64:h) {
     ahset(h, "_last_cmd", "RSET");
     pass "RSET\n";
 };
 
-pub func:smtp_cmd_noop = string(int64:h) {
+func:smtp_cmd_noop = string(int64:h) {
     ahset(h, "_last_cmd", "NOOP");
     pass "NOOP\n";
 };
 
 // ── Message builder ─────────────────────────────────────────────────────────
 
-pub func:smtp_build_message = string(int64:h, string:from_addr, string:to_addr, string:subj, string:body_text) {
+func:smtp_build_message = string(int64:h, string:from_addr, string:to_addr, string:subj, string:body_text) {
     string:msg = string_concat("From: ", from_addr);
     msg = string_concat(msg, "\nTo: ");
     msg = string_concat(msg, to_addr);
@@ -83,7 +83,7 @@ pub func:smtp_build_message = string(int64:h, string:from_addr, string:to_addr, 
 
 // ── Reply parsing ───────────────────────────────────────────────────────────
 
-pub func:smtp_parse_reply = int32(int64:h, string:line_str) {
+func:smtp_parse_reply = int32(int64:h, string:line_str) {
     int64:slen = string_length(line_str);
     if (slen < 3i64) { pass 1i32; }
     string:code = string_substring(line_str, 0i64, 3i64);
@@ -100,22 +100,22 @@ pub func:smtp_parse_reply = int32(int64:h, string:line_str) {
     pass 0i32;
 };
 
-pub func:smtp_reply_code = string(int64:h) {
+func:smtp_reply_code = string(int64:h) {
     string:v = ahget(h, "_reply_code");
     pass v;
 };
 
-pub func:smtp_reply_class = string(int64:h) {
+func:smtp_reply_class = string(int64:h) {
     string:v = ahget(h, "_reply_class");
     pass v;
 };
 
-pub func:smtp_reply_msg = string(int64:h) {
+func:smtp_reply_msg = string(int64:h) {
     string:v = ahget(h, "_reply_msg");
     pass v;
 };
 
-pub func:smtp_last_cmd = string(int64:h) {
+func:smtp_last_cmd = string(int64:h) {
     string:v = ahget(h, "_last_cmd");
     pass v;
 };
