@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-compress"
+version = "0.11.2"
+
+[target.nitpick-compress]
+type = "library"
+sources = ["src/nitpick_compress.npk"]
+deps = []
+flags = ["-L.", "-lnitpick_compress_shim", "-lz", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-nitpick-compress]
+type = "binary"
+sources = ["tests/test_nitpick_compress.npk"]
+deps = []
+flags = ["-I", "src", "-L.", "-lnitpick_compress_shim", "-lz", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
