@@ -118,20 +118,20 @@ entry:
   %h2 = load i32, ptr %h.addr, align 4
   %str_struct_ffi = load %struct.NpkString, ptr %title, align 8
   %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
-  %calltmp = call ptr @aria_rl_init_window(i32 %w1, i32 %h2, ptr %str_data_ffi)
+  %calltmp = call ptr @nitpick_rl_init_window(i32 %w1, i32 %h2, ptr %str_data_ffi)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
 define { %struct.NIL, ptr, i8 } @rl_close_window() {
 entry:
-  %calltmp = call ptr @aria_rl_close_window()
+  %calltmp = call ptr @nitpick_rl_close_window()
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
 define { i32, ptr, i8 } @rl_window_should_close() {
 entry:
   %r = alloca i32, align 4
-  %calltmp = call i32 @aria_rl_window_should_close()
+  %calltmp = call i32 @nitpick_rl_window_should_close()
   store i32 %calltmp, ptr %r, align 4
   %r1 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
@@ -143,7 +143,7 @@ entry:
 define { i32, ptr, i8 } @rl_is_window_ready() {
 entry:
   %r = alloca i32, align 4
-  %calltmp = call i32 @aria_rl_is_window_ready()
+  %calltmp = call i32 @nitpick_rl_is_window_ready()
   store i32 %calltmp, ptr %r, align 4
   %r1 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
@@ -154,7 +154,7 @@ entry:
 
 define { %struct.NIL, ptr, i8 } @rl_toggle_fullscreen() {
 entry:
-  %calltmp = call ptr @aria_rl_toggle_fullscreen()
+  %calltmp = call ptr @nitpick_rl_toggle_fullscreen()
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -166,7 +166,7 @@ entry:
   store i32 %h, ptr %h.addr, align 4
   %w1 = load i32, ptr %w.addr, align 4
   %h2 = load i32, ptr %h.addr, align 4
-  %calltmp = call ptr @aria_rl_set_window_size(i32 %w1, i32 %h2)
+  %calltmp = call ptr @nitpick_rl_set_window_size(i32 %w1, i32 %h2)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -174,14 +174,14 @@ define { %struct.NIL, ptr, i8 } @rl_set_window_title(ptr %title) {
 entry:
   %str_struct_ffi = load %struct.NpkString, ptr %title, align 8
   %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
-  %calltmp = call ptr @aria_rl_set_window_title(ptr %str_data_ffi)
+  %calltmp = call ptr @nitpick_rl_set_window_title(ptr %str_data_ffi)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
 define { i32, ptr, i8 } @rl_get_screen_width() {
 entry:
   %r = alloca i32, align 4
-  %calltmp = call i32 @aria_rl_get_screen_width()
+  %calltmp = call i32 @nitpick_rl_get_screen_width()
   store i32 %calltmp, ptr %r, align 4
   %r1 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
@@ -193,7 +193,7 @@ entry:
 define { i32, ptr, i8 } @rl_get_screen_height() {
 entry:
   %r = alloca i32, align 4
-  %calltmp = call i32 @aria_rl_get_screen_height()
+  %calltmp = call i32 @nitpick_rl_get_screen_height()
   store i32 %calltmp, ptr %r, align 4
   %r1 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
@@ -204,13 +204,13 @@ entry:
 
 define { %struct.NIL, ptr, i8 } @rl_begin_drawing() {
 entry:
-  %calltmp = call ptr @aria_rl_begin_drawing()
+  %calltmp = call ptr @nitpick_rl_begin_drawing()
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
 define { %struct.NIL, ptr, i8 } @rl_end_drawing() {
 entry:
-  %calltmp = call ptr @aria_rl_end_drawing()
+  %calltmp = call ptr @nitpick_rl_end_drawing()
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -228,7 +228,7 @@ entry:
   %g2 = load i32, ptr %g.addr, align 4
   %b3 = load i32, ptr %b.addr, align 4
   %a4 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_clear_background(i32 %r1, i32 %g2, i32 %b3, i32 %a4)
+  %calltmp = call ptr @nitpick_rl_clear_background(i32 %r1, i32 %g2, i32 %b3, i32 %a4)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -237,14 +237,14 @@ entry:
   %fps.addr = alloca i32, align 4
   store i32 %fps, ptr %fps.addr, align 4
   %fps1 = load i32, ptr %fps.addr, align 4
-  %calltmp = call ptr @aria_rl_set_target_fps(i32 %fps1)
+  %calltmp = call ptr @nitpick_rl_set_target_fps(i32 %fps1)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
 define { i32, ptr, i8 } @rl_get_fps() {
 entry:
   %r = alloca i32, align 4
-  %calltmp = call i32 @aria_rl_get_fps()
+  %calltmp = call i32 @nitpick_rl_get_fps()
   store i32 %calltmp, ptr %r, align 4
   %r1 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
@@ -256,7 +256,7 @@ entry:
 define { float, ptr, i8 } @rl_get_frame_time() {
 entry:
   %r = alloca float, align 4
-  %calltmp = call float @aria_rl_get_frame_time()
+  %calltmp = call float @nitpick_rl_get_frame_time()
   store float %calltmp, ptr %r, align 4
   %r1 = load float, ptr %r, align 4
   %result.val = insertvalue { float, ptr, i8 } undef, float %r1, 0
@@ -268,7 +268,7 @@ entry:
 define { double, ptr, i8 } @rl_get_time() {
 entry:
   %r = alloca double, align 8
-  %calltmp = call double @aria_rl_get_time()
+  %calltmp = call double @nitpick_rl_get_time()
   store double %calltmp, ptr %r, align 8
   %r1 = load double, ptr %r, align 8
   %result.val = insertvalue { double, ptr, i8 } undef, double %r1, 0
@@ -297,7 +297,7 @@ entry:
   %g4 = load i32, ptr %g.addr, align 4
   %b5 = load i32, ptr %b.addr, align 4
   %a6 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_pixel(i32 %x1, i32 %y2, i32 %r3, i32 %g4, i32 %b5, i32 %a6)
+  %calltmp = call ptr @nitpick_rl_draw_pixel(i32 %x1, i32 %y2, i32 %r3, i32 %g4, i32 %b5, i32 %a6)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -327,7 +327,7 @@ entry:
   %g6 = load i32, ptr %g.addr, align 4
   %b7 = load i32, ptr %b.addr, align 4
   %a8 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_line(i32 %x11, i32 %y12, i32 %x23, i32 %y24, i32 %r5, i32 %g6, i32 %b7, i32 %a8)
+  %calltmp = call ptr @nitpick_rl_draw_line(i32 %x11, i32 %y12, i32 %x23, i32 %y24, i32 %r5, i32 %g6, i32 %b7, i32 %a8)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -354,7 +354,7 @@ entry:
   %g5 = load i32, ptr %g.addr, align 4
   %b6 = load i32, ptr %b.addr, align 4
   %a7 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_circle(i32 %cx1, i32 %cy2, float %radius3, i32 %r4, i32 %g5, i32 %b6, i32 %a7)
+  %calltmp = call ptr @nitpick_rl_draw_circle(i32 %cx1, i32 %cy2, float %radius3, i32 %r4, i32 %g5, i32 %b6, i32 %a7)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -381,7 +381,7 @@ entry:
   %g5 = load i32, ptr %g.addr, align 4
   %b6 = load i32, ptr %b.addr, align 4
   %a7 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_circle_lines(i32 %cx1, i32 %cy2, float %radius3, i32 %r4, i32 %g5, i32 %b6, i32 %a7)
+  %calltmp = call ptr @nitpick_rl_draw_circle_lines(i32 %cx1, i32 %cy2, float %radius3, i32 %r4, i32 %g5, i32 %b6, i32 %a7)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -411,7 +411,7 @@ entry:
   %g6 = load i32, ptr %g.addr, align 4
   %b7 = load i32, ptr %b.addr, align 4
   %a8 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_rectangle(i32 %x1, i32 %y2, i32 %w3, i32 %h4, i32 %r5, i32 %g6, i32 %b7, i32 %a8)
+  %calltmp = call ptr @nitpick_rl_draw_rectangle(i32 %x1, i32 %y2, i32 %w3, i32 %h4, i32 %r5, i32 %g6, i32 %b7, i32 %a8)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -441,7 +441,7 @@ entry:
   %g6 = load i32, ptr %g.addr, align 4
   %b7 = load i32, ptr %b.addr, align 4
   %a8 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_rectangle_lines(i32 %x1, i32 %y2, i32 %w3, i32 %h4, i32 %r5, i32 %g6, i32 %b7, i32 %a8)
+  %calltmp = call ptr @nitpick_rl_draw_rectangle_lines(i32 %x1, i32 %y2, i32 %w3, i32 %h4, i32 %r5, i32 %g6, i32 %b7, i32 %a8)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -477,8 +477,208 @@ entry:
   %g8 = load i32, ptr %g.addr, align 4
   %b9 = load i32, ptr %b.addr, align 4
   %a10 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_triangle(float %x11, float %y12, float %x23, float %y24, float %x35, float %y36, i32 %r7, i32 %g8, i32 %b9, i32 %a10)
+  %calltmp = call ptr @nitpick_rl_draw_triangle(float %x11, float %y12, float %x23, float %y24, float %x35, float %y36, i32 %r7, i32 %g8, i32 %b9, i32 %a10)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { i32, ptr, i8 } @rl_create_camera_3d(float %pos_x, float %pos_y, float %pos_z, float %tar_x, float %tar_y, float %tar_z, float %up_x, float %up_y, float %up_z, float %fovy, i32 %projection) {
+entry:
+  %pos_x.addr = alloca float, align 4
+  store float %pos_x, ptr %pos_x.addr, align 4
+  %pos_y.addr = alloca float, align 4
+  store float %pos_y, ptr %pos_y.addr, align 4
+  %pos_z.addr = alloca float, align 4
+  store float %pos_z, ptr %pos_z.addr, align 4
+  %tar_x.addr = alloca float, align 4
+  store float %tar_x, ptr %tar_x.addr, align 4
+  %tar_y.addr = alloca float, align 4
+  store float %tar_y, ptr %tar_y.addr, align 4
+  %tar_z.addr = alloca float, align 4
+  store float %tar_z, ptr %tar_z.addr, align 4
+  %up_x.addr = alloca float, align 4
+  store float %up_x, ptr %up_x.addr, align 4
+  %up_y.addr = alloca float, align 4
+  store float %up_y, ptr %up_y.addr, align 4
+  %up_z.addr = alloca float, align 4
+  store float %up_z, ptr %up_z.addr, align 4
+  %fovy.addr = alloca float, align 4
+  store float %fovy, ptr %fovy.addr, align 4
+  %projection.addr = alloca i32, align 4
+  store i32 %projection, ptr %projection.addr, align 4
+  %r = alloca i32, align 4
+  %pos_x1 = load float, ptr %pos_x.addr, align 4
+  %pos_y2 = load float, ptr %pos_y.addr, align 4
+  %pos_z3 = load float, ptr %pos_z.addr, align 4
+  %tar_x4 = load float, ptr %tar_x.addr, align 4
+  %tar_y5 = load float, ptr %tar_y.addr, align 4
+  %tar_z6 = load float, ptr %tar_z.addr, align 4
+  %up_x7 = load float, ptr %up_x.addr, align 4
+  %up_y8 = load float, ptr %up_y.addr, align 4
+  %up_z9 = load float, ptr %up_z.addr, align 4
+  %fovy10 = load float, ptr %fovy.addr, align 4
+  %projection11 = load i32, ptr %projection.addr, align 4
+  %calltmp = call i32 @nitpick_rl_create_camera_3d(float %pos_x1, float %pos_y2, float %pos_z3, float %tar_x4, float %tar_y5, float %tar_z6, float %up_x7, float %up_y8, float %up_z9, float %fovy10, i32 %projection11)
+  store i32 %calltmp, ptr %r, align 4
+  %r12 = load i32, ptr %r, align 4
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r12, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define { %struct.NIL, ptr, i8 } @rl_destroy_camera_3d(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call ptr @nitpick_rl_destroy_camera_3d(i32 %handle1)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_update_camera_3d(i32 %handle, i32 %mode) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %mode.addr = alloca i32, align 4
+  store i32 %mode, ptr %mode.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %mode2 = load i32, ptr %mode.addr, align 4
+  %calltmp = call ptr @nitpick_rl_update_camera_3d(i32 %handle1, i32 %mode2)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_begin_mode_3d_camera(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call ptr @nitpick_rl_begin_mode_3d_camera(i32 %handle1)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { float, ptr, i8 } @rl_get_camera_3d_pos_x(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %r = alloca float, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call float @nitpick_rl_get_camera_3d_pos_x(i32 %handle1)
+  store float %calltmp, ptr %r, align 4
+  %r2 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r2, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_camera_3d_pos_y(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %r = alloca float, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call float @nitpick_rl_get_camera_3d_pos_y(i32 %handle1)
+  store float %calltmp, ptr %r, align 4
+  %r2 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r2, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_camera_3d_pos_z(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %r = alloca float, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call float @nitpick_rl_get_camera_3d_pos_z(i32 %handle1)
+  store float %calltmp, ptr %r, align 4
+  %r2 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r2, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_camera_3d_target_x(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %r = alloca float, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call float @nitpick_rl_get_camera_3d_target_x(i32 %handle1)
+  store float %calltmp, ptr %r, align 4
+  %r2 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r2, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_camera_3d_target_y(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %r = alloca float, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call float @nitpick_rl_get_camera_3d_target_y(i32 %handle1)
+  store float %calltmp, ptr %r, align 4
+  %r2 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r2, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_camera_3d_target_z(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %r = alloca float, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call float @nitpick_rl_get_camera_3d_target_z(i32 %handle1)
+  store float %calltmp, ptr %r, align 4
+  %r2 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r2, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { i32, ptr, i8 } @CAMERA_CUSTOM() {
+entry:
+  ret { i32, ptr, i8 } zeroinitializer
+}
+
+define { i32, ptr, i8 } @CAMERA_FREE() {
+entry:
+  ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
+}
+
+define { i32, ptr, i8 } @CAMERA_ORBITAL() {
+entry:
+  ret { i32, ptr, i8 } { i32 2, ptr null, i8 0 }
+}
+
+define { i32, ptr, i8 } @CAMERA_FIRST_PERSON() {
+entry:
+  ret { i32, ptr, i8 } { i32 3, ptr null, i8 0 }
+}
+
+define { i32, ptr, i8 } @CAMERA_THIRD_PERSON() {
+entry:
+  ret { i32, ptr, i8 } { i32 4, ptr null, i8 0 }
+}
+
+define { i32, ptr, i8 } @CAMERA_PERSPECTIVE() {
+entry:
+  ret { i32, ptr, i8 } zeroinitializer
+}
+
+define { i32, ptr, i8 } @CAMERA_ORTHOGRAPHIC() {
+entry:
+  ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
 }
 
 define { %struct.NIL, ptr, i8 } @rl_begin_mode_3d(float %pos_x, float %pos_y, float %pos_z, float %tar_x, float %tar_y, float %tar_z, float %up_x, float %up_y, float %up_z, float %fovy, i32 %projection) {
@@ -516,13 +716,13 @@ entry:
   %up_z9 = load float, ptr %up_z.addr, align 4
   %fovy10 = load float, ptr %fovy.addr, align 4
   %projection11 = load i32, ptr %projection.addr, align 4
-  %calltmp = call ptr @aria_rl_begin_mode_3d(float %pos_x1, float %pos_y2, float %pos_z3, float %tar_x4, float %tar_y5, float %tar_z6, float %up_x7, float %up_y8, float %up_z9, float %fovy10, i32 %projection11)
+  %calltmp = call ptr @nitpick_rl_begin_mode_3d(float %pos_x1, float %pos_y2, float %pos_z3, float %tar_x4, float %tar_y5, float %tar_z6, float %up_x7, float %up_y8, float %up_z9, float %fovy10, i32 %projection11)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
 define { %struct.NIL, ptr, i8 } @rl_end_mode_3d() {
 entry:
-  %calltmp = call ptr @aria_rl_end_mode_3d()
+  %calltmp = call ptr @nitpick_rl_end_mode_3d()
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -558,7 +758,7 @@ entry:
   %g8 = load i32, ptr %g.addr, align 4
   %b9 = load i32, ptr %b.addr, align 4
   %a10 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_cube(float %x1, float %y2, float %z3, float %width4, float %height5, float %length6, i32 %r7, i32 %g8, i32 %b9, i32 %a10)
+  %calltmp = call ptr @nitpick_rl_draw_cube(float %x1, float %y2, float %z3, float %width4, float %height5, float %length6, i32 %r7, i32 %g8, i32 %b9, i32 %a10)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -594,7 +794,7 @@ entry:
   %g8 = load i32, ptr %g.addr, align 4
   %b9 = load i32, ptr %b.addr, align 4
   %a10 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_cube_wires(float %x1, float %y2, float %z3, float %width4, float %height5, float %length6, i32 %r7, i32 %g8, i32 %b9, i32 %a10)
+  %calltmp = call ptr @nitpick_rl_draw_cube_wires(float %x1, float %y2, float %z3, float %width4, float %height5, float %length6, i32 %r7, i32 %g8, i32 %b9, i32 %a10)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -624,7 +824,7 @@ entry:
   %g6 = load i32, ptr %g.addr, align 4
   %b7 = load i32, ptr %b.addr, align 4
   %a8 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_sphere(float %x1, float %y2, float %z3, float %radius4, i32 %r5, i32 %g6, i32 %b7, i32 %a8)
+  %calltmp = call ptr @nitpick_rl_draw_sphere(float %x1, float %y2, float %z3, float %radius4, i32 %r5, i32 %g6, i32 %b7, i32 %a8)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -660,7 +860,7 @@ entry:
   %g8 = load i32, ptr %g.addr, align 4
   %b9 = load i32, ptr %b.addr, align 4
   %a10 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_sphere_wires(float %x1, float %y2, float %z3, float %radius4, i32 %rings5, i32 %slices6, i32 %r7, i32 %g8, i32 %b9, i32 %a10)
+  %calltmp = call ptr @nitpick_rl_draw_sphere_wires(float %x1, float %y2, float %z3, float %radius4, i32 %rings5, i32 %slices6, i32 %r7, i32 %g8, i32 %b9, i32 %a10)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -672,7 +872,7 @@ entry:
   store float %spacing, ptr %spacing.addr, align 4
   %slices1 = load i32, ptr %slices.addr, align 4
   %spacing2 = load float, ptr %spacing.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_grid(i32 %slices1, float %spacing2)
+  %calltmp = call ptr @nitpick_rl_draw_grid(i32 %slices1, float %spacing2)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -681,7 +881,7 @@ entry:
   %r = alloca i32, align 4
   %str_struct_ffi = load %struct.NpkString, ptr %path, align 8
   %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
-  %calltmp = call i32 @aria_rl_load_model(ptr %str_data_ffi)
+  %calltmp = call i32 @nitpick_rl_load_model(ptr %str_data_ffi)
   store i32 %calltmp, ptr %r, align 4
   %r1 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
@@ -695,7 +895,7 @@ entry:
   %handle.addr = alloca i32, align 4
   store i32 %handle, ptr %handle.addr, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call ptr @aria_rl_unload_model(i32 %handle1)
+  %calltmp = call ptr @nitpick_rl_unload_model(i32 %handle1)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -728,8 +928,46 @@ entry:
   %g7 = load i32, ptr %g.addr, align 4
   %b8 = load i32, ptr %b.addr, align 4
   %a9 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_model(i32 %handle1, float %x2, float %y3, float %z4, float %scale5, i32 %r6, i32 %g7, i32 %b8, i32 %a9)
+  %calltmp = call ptr @nitpick_rl_draw_model(i32 %handle1, float %x2, float %y3, float %z4, float %scale5, i32 %r6, i32 %g7, i32 %b8, i32 %a9)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_set_model_material_texture(i32 %model_handle, i32 %material_idx, i32 %map_type, i32 %tex_handle) {
+entry:
+  %model_handle.addr = alloca i32, align 4
+  store i32 %model_handle, ptr %model_handle.addr, align 4
+  %material_idx.addr = alloca i32, align 4
+  store i32 %material_idx, ptr %material_idx.addr, align 4
+  %map_type.addr = alloca i32, align 4
+  store i32 %map_type, ptr %map_type.addr, align 4
+  %tex_handle.addr = alloca i32, align 4
+  store i32 %tex_handle, ptr %tex_handle.addr, align 4
+  %model_handle1 = load i32, ptr %model_handle.addr, align 4
+  %material_idx2 = load i32, ptr %material_idx.addr, align 4
+  %map_type3 = load i32, ptr %map_type.addr, align 4
+  %tex_handle4 = load i32, ptr %tex_handle.addr, align 4
+  %calltmp = call ptr @nitpick_rl_set_model_material_texture(i32 %model_handle1, i32 %material_idx2, i32 %map_type3, i32 %tex_handle4)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { i32, ptr, i8 } @MATERIAL_MAP_ALBEDO() {
+entry:
+  ret { i32, ptr, i8 } zeroinitializer
+}
+
+define { i32, ptr, i8 } @MATERIAL_MAP_METALNESS() {
+entry:
+  ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
+}
+
+define { i32, ptr, i8 } @MATERIAL_MAP_NORMAL() {
+entry:
+  ret { i32, ptr, i8 } { i32 2, ptr null, i8 0 }
+}
+
+define { i32, ptr, i8 } @MATERIAL_MAP_ROUGHNESS() {
+entry:
+  ret { i32, ptr, i8 } { i32 3, ptr null, i8 0 }
 }
 
 define { %struct.NIL, ptr, i8 } @rl_draw_text(ptr %text, i32 %x, i32 %y, i32 %font_size, i32 %r, i32 %g, i32 %b, i32 %a) {
@@ -757,7 +995,7 @@ entry:
   %g5 = load i32, ptr %g.addr, align 4
   %b6 = load i32, ptr %b.addr, align 4
   %a7 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_text(ptr %str_data_ffi, i32 %x1, i32 %y2, i32 %font_size3, i32 %r4, i32 %g5, i32 %b6, i32 %a7)
+  %calltmp = call ptr @nitpick_rl_draw_text(ptr %str_data_ffi, i32 %x1, i32 %y2, i32 %font_size3, i32 %r4, i32 %g5, i32 %b6, i32 %a7)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -769,7 +1007,7 @@ entry:
   store i32 %y, ptr %y.addr, align 4
   %x1 = load i32, ptr %x.addr, align 4
   %y2 = load i32, ptr %y.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_fps(i32 %x1, i32 %y2)
+  %calltmp = call ptr @nitpick_rl_draw_fps(i32 %x1, i32 %y2)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -781,7 +1019,7 @@ entry:
   %str_struct_ffi = load %struct.NpkString, ptr %text, align 8
   %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
   %font_size1 = load i32, ptr %font_size.addr, align 4
-  %calltmp = call i32 @aria_rl_measure_text(ptr %str_data_ffi, i32 %font_size1)
+  %calltmp = call i32 @nitpick_rl_measure_text(ptr %str_data_ffi, i32 %font_size1)
   store i32 %calltmp, ptr %r, align 4
   %r2 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r2, 0
@@ -796,7 +1034,7 @@ entry:
   store i32 %key, ptr %key.addr, align 4
   %r = alloca i32, align 4
   %key1 = load i32, ptr %key.addr, align 4
-  %calltmp = call i32 @aria_rl_is_key_pressed(i32 %key1)
+  %calltmp = call i32 @nitpick_rl_is_key_pressed(i32 %key1)
   store i32 %calltmp, ptr %r, align 4
   %r2 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r2, 0
@@ -811,7 +1049,7 @@ entry:
   store i32 %key, ptr %key.addr, align 4
   %r = alloca i32, align 4
   %key1 = load i32, ptr %key.addr, align 4
-  %calltmp = call i32 @aria_rl_is_key_down(i32 %key1)
+  %calltmp = call i32 @nitpick_rl_is_key_down(i32 %key1)
   store i32 %calltmp, ptr %r, align 4
   %r2 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r2, 0
@@ -826,7 +1064,7 @@ entry:
   store i32 %key, ptr %key.addr, align 4
   %r = alloca i32, align 4
   %key1 = load i32, ptr %key.addr, align 4
-  %calltmp = call i32 @aria_rl_is_key_released(i32 %key1)
+  %calltmp = call i32 @nitpick_rl_is_key_released(i32 %key1)
   store i32 %calltmp, ptr %r, align 4
   %r2 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r2, 0
@@ -838,7 +1076,7 @@ entry:
 define { i32, ptr, i8 } @rl_get_key_pressed() {
 entry:
   %r = alloca i32, align 4
-  %calltmp = call i32 @aria_rl_get_key_pressed()
+  %calltmp = call i32 @nitpick_rl_get_key_pressed()
   store i32 %calltmp, ptr %r, align 4
   %r1 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
@@ -850,7 +1088,7 @@ entry:
 define { i32, ptr, i8 } @rl_get_mouse_x() {
 entry:
   %r = alloca i32, align 4
-  %calltmp = call i32 @aria_rl_get_mouse_x()
+  %calltmp = call i32 @nitpick_rl_get_mouse_x()
   store i32 %calltmp, ptr %r, align 4
   %r1 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
@@ -862,7 +1100,7 @@ entry:
 define { i32, ptr, i8 } @rl_get_mouse_y() {
 entry:
   %r = alloca i32, align 4
-  %calltmp = call i32 @aria_rl_get_mouse_y()
+  %calltmp = call i32 @nitpick_rl_get_mouse_y()
   store i32 %calltmp, ptr %r, align 4
   %r1 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
@@ -877,7 +1115,7 @@ entry:
   store i32 %button, ptr %button.addr, align 4
   %r = alloca i32, align 4
   %button1 = load i32, ptr %button.addr, align 4
-  %calltmp = call i32 @aria_rl_is_mouse_button_pressed(i32 %button1)
+  %calltmp = call i32 @nitpick_rl_is_mouse_button_pressed(i32 %button1)
   store i32 %calltmp, ptr %r, align 4
   %r2 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r2, 0
@@ -892,7 +1130,7 @@ entry:
   store i32 %button, ptr %button.addr, align 4
   %r = alloca i32, align 4
   %button1 = load i32, ptr %button.addr, align 4
-  %calltmp = call i32 @aria_rl_is_mouse_button_down(i32 %button1)
+  %calltmp = call i32 @nitpick_rl_is_mouse_button_down(i32 %button1)
   store i32 %calltmp, ptr %r, align 4
   %r2 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r2, 0
@@ -904,7 +1142,7 @@ entry:
 define { float, ptr, i8 } @rl_get_mouse_wheel_move() {
 entry:
   %r = alloca float, align 4
-  %calltmp = call float @aria_rl_get_mouse_wheel_move()
+  %calltmp = call float @nitpick_rl_get_mouse_wheel_move()
   store float %calltmp, ptr %r, align 4
   %r1 = load float, ptr %r, align 4
   %result.val = insertvalue { float, ptr, i8 } undef, float %r1, 0
@@ -1098,7 +1336,7 @@ entry:
   %r = alloca i32, align 4
   %str_struct_ffi = load %struct.NpkString, ptr %path, align 8
   %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
-  %calltmp = call i32 @aria_rl_load_texture(ptr %str_data_ffi)
+  %calltmp = call i32 @nitpick_rl_load_texture(ptr %str_data_ffi)
   store i32 %calltmp, ptr %r, align 4
   %r1 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
@@ -1112,7 +1350,7 @@ entry:
   %handle.addr = alloca i32, align 4
   store i32 %handle, ptr %handle.addr, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call ptr @aria_rl_unload_texture(i32 %handle1)
+  %calltmp = call ptr @nitpick_rl_unload_texture(i32 %handle1)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1122,7 +1360,7 @@ entry:
   store i32 %handle, ptr %handle.addr, align 4
   %r = alloca i32, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call i32 @aria_rl_is_texture_valid(i32 %handle1)
+  %calltmp = call i32 @nitpick_rl_is_texture_valid(i32 %handle1)
   store i32 %calltmp, ptr %r, align 4
   %r2 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r2, 0
@@ -1137,7 +1375,7 @@ entry:
   store i32 %handle, ptr %handle.addr, align 4
   %r = alloca i32, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call i32 @aria_rl_get_texture_width(i32 %handle1)
+  %calltmp = call i32 @nitpick_rl_get_texture_width(i32 %handle1)
   store i32 %calltmp, ptr %r, align 4
   %r2 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r2, 0
@@ -1152,7 +1390,7 @@ entry:
   store i32 %handle, ptr %handle.addr, align 4
   %r = alloca i32, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call i32 @aria_rl_get_texture_height(i32 %handle1)
+  %calltmp = call i32 @nitpick_rl_get_texture_height(i32 %handle1)
   store i32 %calltmp, ptr %r, align 4
   %r2 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r2, 0
@@ -1184,7 +1422,7 @@ entry:
   %g5 = load i32, ptr %g.addr, align 4
   %b6 = load i32, ptr %b.addr, align 4
   %a7 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_texture(i32 %handle1, i32 %x2, i32 %y3, i32 %r4, i32 %g5, i32 %b6, i32 %a7)
+  %calltmp = call ptr @nitpick_rl_draw_texture(i32 %handle1, i32 %x2, i32 %y3, i32 %r4, i32 %g5, i32 %b6, i32 %a7)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1217,7 +1455,7 @@ entry:
   %g7 = load i32, ptr %g.addr, align 4
   %b8 = load i32, ptr %b.addr, align 4
   %a9 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_texture_ex(i32 %handle1, float %x2, float %y3, float %rotation4, float %scale5, i32 %r6, i32 %g7, i32 %b8, i32 %a9)
+  %calltmp = call ptr @nitpick_rl_draw_texture_ex(i32 %handle1, float %x2, float %y3, float %rotation4, float %scale5, i32 %r6, i32 %g7, i32 %b8, i32 %a9)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1256,7 +1494,7 @@ entry:
   %g9 = load i32, ptr %g.addr, align 4
   %b10 = load i32, ptr %b.addr, align 4
   %a11 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_texture_rec(i32 %handle1, float %sx2, float %sy3, float %sw4, float %sh5, float %dx6, float %dy7, i32 %r8, i32 %g9, i32 %b10, i32 %a11)
+  %calltmp = call ptr @nitpick_rl_draw_texture_rec(i32 %handle1, float %sx2, float %sy3, float %sw4, float %sh5, float %dx6, float %dy7, i32 %r8, i32 %g9, i32 %b10, i32 %a11)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1310,26 +1548,26 @@ entry:
   %g14 = load i32, ptr %g.addr, align 4
   %b15 = load i32, ptr %b.addr, align 4
   %a16 = load i32, ptr %a.addr, align 4
-  %calltmp = call ptr @aria_rl_draw_texture_pro(i32 %handle1, float %sx2, float %sy3, float %sw4, float %sh5, float %dx6, float %dy7, float %dw8, float %dh9, float %ox10, float %oy11, float %rotation12, i32 %r13, i32 %g14, i32 %b15, i32 %a16)
+  %calltmp = call ptr @nitpick_rl_draw_texture_pro(i32 %handle1, float %sx2, float %sy3, float %sw4, float %sh5, float %dx6, float %dy7, float %dw8, float %dh9, float %ox10, float %oy11, float %rotation12, i32 %r13, i32 %g14, i32 %b15, i32 %a16)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
 define { %struct.NIL, ptr, i8 } @rl_init_audio_device() {
 entry:
-  %calltmp = call ptr @aria_rl_init_audio_device()
+  %calltmp = call ptr @nitpick_rl_init_audio_device()
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
 define { %struct.NIL, ptr, i8 } @rl_close_audio_device() {
 entry:
-  %calltmp = call ptr @aria_rl_close_audio_device()
+  %calltmp = call ptr @nitpick_rl_close_audio_device()
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
 define { i32, ptr, i8 } @rl_is_audio_device_ready() {
 entry:
   %r = alloca i32, align 4
-  %calltmp = call i32 @aria_rl_is_audio_device_ready()
+  %calltmp = call i32 @nitpick_rl_is_audio_device_ready()
   store i32 %calltmp, ptr %r, align 4
   %r1 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
@@ -1343,7 +1581,7 @@ entry:
   %vol.addr = alloca float, align 4
   store float %vol, ptr %vol.addr, align 4
   %vol1 = load float, ptr %vol.addr, align 4
-  %calltmp = call ptr @aria_rl_set_master_volume(float %vol1)
+  %calltmp = call ptr @nitpick_rl_set_master_volume(float %vol1)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1352,7 +1590,7 @@ entry:
   %r = alloca i32, align 4
   %str_struct_ffi = load %struct.NpkString, ptr %path, align 8
   %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
-  %calltmp = call i32 @aria_rl_load_sound(ptr %str_data_ffi)
+  %calltmp = call i32 @nitpick_rl_load_sound(ptr %str_data_ffi)
   store i32 %calltmp, ptr %r, align 4
   %r1 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
@@ -1366,7 +1604,7 @@ entry:
   %handle.addr = alloca i32, align 4
   store i32 %handle, ptr %handle.addr, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call ptr @aria_rl_unload_sound(i32 %handle1)
+  %calltmp = call ptr @nitpick_rl_unload_sound(i32 %handle1)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1375,7 +1613,7 @@ entry:
   %handle.addr = alloca i32, align 4
   store i32 %handle, ptr %handle.addr, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call ptr @aria_rl_play_sound(i32 %handle1)
+  %calltmp = call ptr @nitpick_rl_play_sound(i32 %handle1)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1384,7 +1622,7 @@ entry:
   %handle.addr = alloca i32, align 4
   store i32 %handle, ptr %handle.addr, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call ptr @aria_rl_stop_sound(i32 %handle1)
+  %calltmp = call ptr @nitpick_rl_stop_sound(i32 %handle1)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1394,7 +1632,7 @@ entry:
   store i32 %handle, ptr %handle.addr, align 4
   %r = alloca i32, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call i32 @aria_rl_is_sound_playing(i32 %handle1)
+  %calltmp = call i32 @nitpick_rl_is_sound_playing(i32 %handle1)
   store i32 %calltmp, ptr %r, align 4
   %r2 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r2, 0
@@ -1411,7 +1649,7 @@ entry:
   store float %vol, ptr %vol.addr, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
   %vol2 = load float, ptr %vol.addr, align 4
-  %calltmp = call ptr @aria_rl_set_sound_volume(i32 %handle1, float %vol2)
+  %calltmp = call ptr @nitpick_rl_set_sound_volume(i32 %handle1, float %vol2)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1420,7 +1658,7 @@ entry:
   %r = alloca i32, align 4
   %str_struct_ffi = load %struct.NpkString, ptr %path, align 8
   %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
-  %calltmp = call i32 @aria_rl_load_music(ptr %str_data_ffi)
+  %calltmp = call i32 @nitpick_rl_load_music(ptr %str_data_ffi)
   store i32 %calltmp, ptr %r, align 4
   %r1 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
@@ -1434,7 +1672,7 @@ entry:
   %handle.addr = alloca i32, align 4
   store i32 %handle, ptr %handle.addr, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call ptr @aria_rl_unload_music(i32 %handle1)
+  %calltmp = call ptr @nitpick_rl_unload_music(i32 %handle1)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1443,7 +1681,7 @@ entry:
   %handle.addr = alloca i32, align 4
   store i32 %handle, ptr %handle.addr, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call ptr @aria_rl_play_music(i32 %handle1)
+  %calltmp = call ptr @nitpick_rl_play_music(i32 %handle1)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1452,7 +1690,7 @@ entry:
   %handle.addr = alloca i32, align 4
   store i32 %handle, ptr %handle.addr, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call ptr @aria_rl_stop_music(i32 %handle1)
+  %calltmp = call ptr @nitpick_rl_stop_music(i32 %handle1)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1461,7 +1699,7 @@ entry:
   %handle.addr = alloca i32, align 4
   store i32 %handle, ptr %handle.addr, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call ptr @aria_rl_update_music(i32 %handle1)
+  %calltmp = call ptr @nitpick_rl_update_music(i32 %handle1)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1470,7 +1708,7 @@ entry:
   %handle.addr = alloca i32, align 4
   store i32 %handle, ptr %handle.addr, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call ptr @aria_rl_pause_music(i32 %handle1)
+  %calltmp = call ptr @nitpick_rl_pause_music(i32 %handle1)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1479,7 +1717,7 @@ entry:
   %handle.addr = alloca i32, align 4
   store i32 %handle, ptr %handle.addr, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call ptr @aria_rl_resume_music(i32 %handle1)
+  %calltmp = call ptr @nitpick_rl_resume_music(i32 %handle1)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1489,7 +1727,7 @@ entry:
   store i32 %handle, ptr %handle.addr, align 4
   %r = alloca i32, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call i32 @aria_rl_is_music_playing(i32 %handle1)
+  %calltmp = call i32 @nitpick_rl_is_music_playing(i32 %handle1)
   store i32 %calltmp, ptr %r, align 4
   %r2 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r2, 0
@@ -1506,7 +1744,7 @@ entry:
   store float %vol, ptr %vol.addr, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
   %vol2 = load float, ptr %vol.addr, align 4
-  %calltmp = call ptr @aria_rl_set_music_volume(i32 %handle1, float %vol2)
+  %calltmp = call ptr @nitpick_rl_set_music_volume(i32 %handle1, float %vol2)
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
@@ -1516,7 +1754,7 @@ entry:
   store i32 %handle, ptr %handle.addr, align 4
   %r = alloca float, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call float @aria_rl_get_music_time_length(i32 %handle1)
+  %calltmp = call float @nitpick_rl_get_music_time_length(i32 %handle1)
   store float %calltmp, ptr %r, align 4
   %r2 = load float, ptr %r, align 4
   %result.val = insertvalue { float, ptr, i8 } undef, float %r2, 0
@@ -1531,7 +1769,7 @@ entry:
   store i32 %handle, ptr %handle.addr, align 4
   %r = alloca float, align 4
   %handle1 = load i32, ptr %handle.addr, align 4
-  %calltmp = call float @aria_rl_get_music_time_played(i32 %handle1)
+  %calltmp = call float @nitpick_rl_get_music_time_played(i32 %handle1)
   store float %calltmp, ptr %r, align 4
   %r2 = load float, ptr %r, align 4
   %result.val = insertvalue { float, ptr, i8 } undef, float %r2, 0
@@ -1546,7 +1784,7 @@ entry:
   store i32 %gamepad, ptr %gamepad.addr, align 4
   %r = alloca i32, align 4
   %gamepad1 = load i32, ptr %gamepad.addr, align 4
-  %calltmp = call i32 @aria_rl_is_gamepad_available(i32 %gamepad1)
+  %calltmp = call i32 @nitpick_rl_is_gamepad_available(i32 %gamepad1)
   store i32 %calltmp, ptr %r, align 4
   %r2 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r2, 0
@@ -1564,7 +1802,7 @@ entry:
   %r = alloca i32, align 4
   %gamepad1 = load i32, ptr %gamepad.addr, align 4
   %button2 = load i32, ptr %button.addr, align 4
-  %calltmp = call i32 @aria_rl_is_gamepad_button_pressed(i32 %gamepad1, i32 %button2)
+  %calltmp = call i32 @nitpick_rl_is_gamepad_button_pressed(i32 %gamepad1, i32 %button2)
   store i32 %calltmp, ptr %r, align 4
   %r3 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r3, 0
@@ -1582,7 +1820,7 @@ entry:
   %r = alloca i32, align 4
   %gamepad1 = load i32, ptr %gamepad.addr, align 4
   %button2 = load i32, ptr %button.addr, align 4
-  %calltmp = call i32 @aria_rl_is_gamepad_button_down(i32 %gamepad1, i32 %button2)
+  %calltmp = call i32 @nitpick_rl_is_gamepad_button_down(i32 %gamepad1, i32 %button2)
   store i32 %calltmp, ptr %r, align 4
   %r3 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r3, 0
@@ -1600,7 +1838,7 @@ entry:
   %r = alloca i32, align 4
   %gamepad1 = load i32, ptr %gamepad.addr, align 4
   %button2 = load i32, ptr %button.addr, align 4
-  %calltmp = call i32 @aria_rl_is_gamepad_button_released(i32 %gamepad1, i32 %button2)
+  %calltmp = call i32 @nitpick_rl_is_gamepad_button_released(i32 %gamepad1, i32 %button2)
   store i32 %calltmp, ptr %r, align 4
   %r3 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r3, 0
@@ -1618,7 +1856,7 @@ entry:
   %r = alloca float, align 4
   %gamepad1 = load i32, ptr %gamepad.addr, align 4
   %axis2 = load i32, ptr %axis.addr, align 4
-  %calltmp = call float @aria_rl_get_gamepad_axis_movement(i32 %gamepad1, i32 %axis2)
+  %calltmp = call float @nitpick_rl_get_gamepad_axis_movement(i32 %gamepad1, i32 %axis2)
   store float %calltmp, ptr %r, align 4
   %r3 = load float, ptr %r, align 4
   %result.val = insertvalue { float, ptr, i8 } undef, float %r3, 0
@@ -1642,7 +1880,7 @@ entry:
   %dur_ms2 = load i32, ptr %dur_ms.addr, align 4
   %wave3 = load i32, ptr %wave.addr, align 4
   %vol4 = load float, ptr %vol.addr, align 4
-  %calltmp = call i32 @aria_rl_gen_beep(i32 %freq1, i32 %dur_ms2, i32 %wave3, float %vol4)
+  %calltmp = call i32 @nitpick_rl_gen_beep(i32 %freq1, i32 %dur_ms2, i32 %wave3, float %vol4)
   store i32 %calltmp, ptr %r, align 4
   %r5 = load i32, ptr %r, align 4
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r5, 0
@@ -1756,181 +1994,886 @@ entry:
   ret { i32, ptr, i8 } { i32 3, ptr null, i8 0 }
 }
 
-declare ptr @aria_rl_init_window(i32, i32, ptr)
-
-declare ptr @aria_rl_close_window()
-
-declare i32 @aria_rl_window_should_close()
-
-declare i32 @aria_rl_is_window_ready()
-
-declare i32 @aria_rl_is_window_fullscreen()
-
-declare ptr @aria_rl_toggle_fullscreen()
-
-declare ptr @aria_rl_set_window_size(i32, i32)
-
-declare ptr @aria_rl_set_window_title(ptr)
-
-declare ptr @aria_rl_set_window_position(i32, i32)
-
-declare i32 @aria_rl_get_screen_width()
-
-declare i32 @aria_rl_get_screen_height()
-
-declare ptr @aria_rl_begin_drawing()
-
-declare ptr @aria_rl_end_drawing()
-
-declare ptr @aria_rl_clear_background(i32, i32, i32, i32)
-
-declare ptr @aria_rl_set_target_fps(i32)
-
-declare i32 @aria_rl_get_fps()
-
-declare float @aria_rl_get_frame_time()
-
-declare double @aria_rl_get_time()
-
-declare ptr @aria_rl_draw_pixel(i32, i32, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_line(i32, i32, i32, i32, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_circle(i32, i32, float, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_circle_lines(i32, i32, float, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_rectangle(i32, i32, i32, i32, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_rectangle_lines(i32, i32, i32, i32, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_triangle(float, float, float, float, float, float, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_triangle_lines(float, float, float, float, float, float, i32, i32, i32, i32)
-
-declare ptr @aria_rl_begin_mode_3d(float, float, float, float, float, float, float, float, float, float, i32)
-
-declare ptr @aria_rl_end_mode_3d()
-
-declare ptr @aria_rl_draw_cube(float, float, float, float, float, float, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_cube_wires(float, float, float, float, float, float, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_sphere(float, float, float, float, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_sphere_wires(float, float, float, float, i32, i32, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_grid(i32, float)
-
-declare i32 @aria_rl_load_model(ptr)
-
-declare ptr @aria_rl_unload_model(i32)
-
-declare ptr @aria_rl_draw_model(i32, float, float, float, float, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_text(ptr, i32, i32, i32, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_fps(i32, i32)
-
-declare i32 @aria_rl_measure_text(ptr, i32)
-
-declare i32 @aria_rl_is_key_pressed(i32)
-
-declare i32 @aria_rl_is_key_down(i32)
-
-declare i32 @aria_rl_is_key_released(i32)
-
-declare i32 @aria_rl_is_key_up(i32)
-
-declare i32 @aria_rl_get_key_pressed()
-
-declare i32 @aria_rl_get_mouse_x()
-
-declare i32 @aria_rl_get_mouse_y()
-
-declare i32 @aria_rl_is_mouse_button_pressed(i32)
-
-declare i32 @aria_rl_is_mouse_button_down(i32)
-
-declare i32 @aria_rl_is_mouse_button_released(i32)
-
-declare float @aria_rl_get_mouse_wheel_move()
-
-declare ptr @aria_rl_set_mouse_position(i32, i32)
-
-declare ptr @aria_rl_set_mouse_cursor(i32)
-
-declare i32 @aria_rl_load_texture(ptr)
-
-declare ptr @aria_rl_unload_texture(i32)
-
-declare i32 @aria_rl_is_texture_valid(i32)
-
-declare i32 @aria_rl_get_texture_width(i32)
-
-declare i32 @aria_rl_get_texture_height(i32)
-
-declare ptr @aria_rl_draw_texture(i32, i32, i32, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_texture_ex(i32, float, float, float, float, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_texture_rec(i32, float, float, float, float, float, float, i32, i32, i32, i32)
-
-declare ptr @aria_rl_draw_texture_pro(i32, float, float, float, float, float, float, float, float, float, float, float, i32, i32, i32, i32)
-
-declare ptr @aria_rl_init_audio_device()
-
-declare ptr @aria_rl_close_audio_device()
-
-declare i32 @aria_rl_is_audio_device_ready()
-
-declare ptr @aria_rl_set_master_volume(float)
-
-declare i32 @aria_rl_load_sound(ptr)
-
-declare ptr @aria_rl_unload_sound(i32)
-
-declare ptr @aria_rl_play_sound(i32)
-
-declare ptr @aria_rl_stop_sound(i32)
-
-declare i32 @aria_rl_is_sound_playing(i32)
-
-declare ptr @aria_rl_set_sound_volume(i32, float)
-
-declare i32 @aria_rl_load_music(ptr)
-
-declare ptr @aria_rl_unload_music(i32)
-
-declare ptr @aria_rl_play_music(i32)
-
-declare ptr @aria_rl_stop_music(i32)
-
-declare ptr @aria_rl_update_music(i32)
-
-declare ptr @aria_rl_pause_music(i32)
-
-declare ptr @aria_rl_resume_music(i32)
-
-declare i32 @aria_rl_is_music_playing(i32)
-
-declare ptr @aria_rl_set_music_volume(i32, float)
-
-declare float @aria_rl_get_music_time_length(i32)
-
-declare float @aria_rl_get_music_time_played(i32)
-
-declare i32 @aria_rl_is_gamepad_available(i32)
-
-declare i32 @aria_rl_is_gamepad_button_pressed(i32, i32)
-
-declare i32 @aria_rl_is_gamepad_button_down(i32, i32)
-
-declare i32 @aria_rl_is_gamepad_button_released(i32, i32)
-
-declare float @aria_rl_get_gamepad_axis_movement(i32, i32)
-
-declare i32 @aria_rl_gen_beep(i32, i32, i32, float)
+define { %struct.NIL, ptr, i8 } @rl_draw_line_ex(float %x1, float %y1, float %x2, float %y2, float %thick, i32 %r, i32 %g, i32 %b, i32 %a) {
+entry:
+  %x1.addr = alloca float, align 4
+  store float %x1, ptr %x1.addr, align 4
+  %y1.addr = alloca float, align 4
+  store float %y1, ptr %y1.addr, align 4
+  %x2.addr = alloca float, align 4
+  store float %x2, ptr %x2.addr, align 4
+  %y2.addr = alloca float, align 4
+  store float %y2, ptr %y2.addr, align 4
+  %thick.addr = alloca float, align 4
+  store float %thick, ptr %thick.addr, align 4
+  %r.addr = alloca i32, align 4
+  store i32 %r, ptr %r.addr, align 4
+  %g.addr = alloca i32, align 4
+  store i32 %g, ptr %g.addr, align 4
+  %b.addr = alloca i32, align 4
+  store i32 %b, ptr %b.addr, align 4
+  %a.addr = alloca i32, align 4
+  store i32 %a, ptr %a.addr, align 4
+  %x11 = load float, ptr %x1.addr, align 4
+  %y12 = load float, ptr %y1.addr, align 4
+  %x23 = load float, ptr %x2.addr, align 4
+  %y24 = load float, ptr %y2.addr, align 4
+  %thick5 = load float, ptr %thick.addr, align 4
+  %r6 = load i32, ptr %r.addr, align 4
+  %g7 = load i32, ptr %g.addr, align 4
+  %b8 = load i32, ptr %b.addr, align 4
+  %a9 = load i32, ptr %a.addr, align 4
+  %calltmp = call ptr @nitpick_rl_draw_line_ex(float %x11, float %y12, float %x23, float %y24, float %thick5, i32 %r6, i32 %g7, i32 %b8, i32 %a9)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_draw_rectangle_rounded(float %x, float %y, float %w, float %h, float %roundness, i32 %segments, i32 %r, i32 %g, i32 %b, i32 %a) {
+entry:
+  %x.addr = alloca float, align 4
+  store float %x, ptr %x.addr, align 4
+  %y.addr = alloca float, align 4
+  store float %y, ptr %y.addr, align 4
+  %w.addr = alloca float, align 4
+  store float %w, ptr %w.addr, align 4
+  %h.addr = alloca float, align 4
+  store float %h, ptr %h.addr, align 4
+  %roundness.addr = alloca float, align 4
+  store float %roundness, ptr %roundness.addr, align 4
+  %segments.addr = alloca i32, align 4
+  store i32 %segments, ptr %segments.addr, align 4
+  %r.addr = alloca i32, align 4
+  store i32 %r, ptr %r.addr, align 4
+  %g.addr = alloca i32, align 4
+  store i32 %g, ptr %g.addr, align 4
+  %b.addr = alloca i32, align 4
+  store i32 %b, ptr %b.addr, align 4
+  %a.addr = alloca i32, align 4
+  store i32 %a, ptr %a.addr, align 4
+  %x1 = load float, ptr %x.addr, align 4
+  %y2 = load float, ptr %y.addr, align 4
+  %w3 = load float, ptr %w.addr, align 4
+  %h4 = load float, ptr %h.addr, align 4
+  %roundness5 = load float, ptr %roundness.addr, align 4
+  %segments6 = load i32, ptr %segments.addr, align 4
+  %r7 = load i32, ptr %r.addr, align 4
+  %g8 = load i32, ptr %g.addr, align 4
+  %b9 = load i32, ptr %b.addr, align 4
+  %a10 = load i32, ptr %a.addr, align 4
+  %calltmp = call ptr @nitpick_rl_draw_rectangle_rounded(float %x1, float %y2, float %w3, float %h4, float %roundness5, i32 %segments6, i32 %r7, i32 %g8, i32 %b9, i32 %a10)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_draw_rectangle_rounded_lines(float %x, float %y, float %w, float %h, float %roundness, i32 %segments, i32 %r, i32 %g, i32 %b, i32 %a) {
+entry:
+  %x.addr = alloca float, align 4
+  store float %x, ptr %x.addr, align 4
+  %y.addr = alloca float, align 4
+  store float %y, ptr %y.addr, align 4
+  %w.addr = alloca float, align 4
+  store float %w, ptr %w.addr, align 4
+  %h.addr = alloca float, align 4
+  store float %h, ptr %h.addr, align 4
+  %roundness.addr = alloca float, align 4
+  store float %roundness, ptr %roundness.addr, align 4
+  %segments.addr = alloca i32, align 4
+  store i32 %segments, ptr %segments.addr, align 4
+  %r.addr = alloca i32, align 4
+  store i32 %r, ptr %r.addr, align 4
+  %g.addr = alloca i32, align 4
+  store i32 %g, ptr %g.addr, align 4
+  %b.addr = alloca i32, align 4
+  store i32 %b, ptr %b.addr, align 4
+  %a.addr = alloca i32, align 4
+  store i32 %a, ptr %a.addr, align 4
+  %x1 = load float, ptr %x.addr, align 4
+  %y2 = load float, ptr %y.addr, align 4
+  %w3 = load float, ptr %w.addr, align 4
+  %h4 = load float, ptr %h.addr, align 4
+  %roundness5 = load float, ptr %roundness.addr, align 4
+  %segments6 = load i32, ptr %segments.addr, align 4
+  %r7 = load i32, ptr %r.addr, align 4
+  %g8 = load i32, ptr %g.addr, align 4
+  %b9 = load i32, ptr %b.addr, align 4
+  %a10 = load i32, ptr %a.addr, align 4
+  %calltmp = call ptr @nitpick_rl_draw_rectangle_rounded_lines(float %x1, float %y2, float %w3, float %h4, float %roundness5, i32 %segments6, i32 %r7, i32 %g8, i32 %b9, i32 %a10)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_begin_mode_2d(float %offset_x, float %offset_y, float %target_x, float %target_y, float %rotation, float %zoom) {
+entry:
+  %offset_x.addr = alloca float, align 4
+  store float %offset_x, ptr %offset_x.addr, align 4
+  %offset_y.addr = alloca float, align 4
+  store float %offset_y, ptr %offset_y.addr, align 4
+  %target_x.addr = alloca float, align 4
+  store float %target_x, ptr %target_x.addr, align 4
+  %target_y.addr = alloca float, align 4
+  store float %target_y, ptr %target_y.addr, align 4
+  %rotation.addr = alloca float, align 4
+  store float %rotation, ptr %rotation.addr, align 4
+  %zoom.addr = alloca float, align 4
+  store float %zoom, ptr %zoom.addr, align 4
+  %offset_x1 = load float, ptr %offset_x.addr, align 4
+  %offset_y2 = load float, ptr %offset_y.addr, align 4
+  %target_x3 = load float, ptr %target_x.addr, align 4
+  %target_y4 = load float, ptr %target_y.addr, align 4
+  %rotation5 = load float, ptr %rotation.addr, align 4
+  %zoom6 = load float, ptr %zoom.addr, align 4
+  %calltmp = call ptr @nitpick_rl_begin_mode_2d(float %offset_x1, float %offset_y2, float %target_x3, float %target_y4, float %rotation5, float %zoom6)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_end_mode_2d() {
+entry:
+  %calltmp = call ptr @nitpick_rl_end_mode_2d()
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { float, ptr, i8 } @rl_get_screen_to_world_2d_x(float %pos_x, float %pos_y, float %offset_x, float %offset_y, float %target_x, float %target_y, float %rotation, float %zoom) {
+entry:
+  %pos_x.addr = alloca float, align 4
+  store float %pos_x, ptr %pos_x.addr, align 4
+  %pos_y.addr = alloca float, align 4
+  store float %pos_y, ptr %pos_y.addr, align 4
+  %offset_x.addr = alloca float, align 4
+  store float %offset_x, ptr %offset_x.addr, align 4
+  %offset_y.addr = alloca float, align 4
+  store float %offset_y, ptr %offset_y.addr, align 4
+  %target_x.addr = alloca float, align 4
+  store float %target_x, ptr %target_x.addr, align 4
+  %target_y.addr = alloca float, align 4
+  store float %target_y, ptr %target_y.addr, align 4
+  %rotation.addr = alloca float, align 4
+  store float %rotation, ptr %rotation.addr, align 4
+  %zoom.addr = alloca float, align 4
+  store float %zoom, ptr %zoom.addr, align 4
+  %r = alloca float, align 4
+  %pos_x1 = load float, ptr %pos_x.addr, align 4
+  %pos_y2 = load float, ptr %pos_y.addr, align 4
+  %offset_x3 = load float, ptr %offset_x.addr, align 4
+  %offset_y4 = load float, ptr %offset_y.addr, align 4
+  %target_x5 = load float, ptr %target_x.addr, align 4
+  %target_y6 = load float, ptr %target_y.addr, align 4
+  %rotation7 = load float, ptr %rotation.addr, align 4
+  %zoom8 = load float, ptr %zoom.addr, align 4
+  %calltmp = call float @nitpick_rl_get_screen_to_world_2d_x(float %pos_x1, float %pos_y2, float %offset_x3, float %offset_y4, float %target_x5, float %target_y6, float %rotation7, float %zoom8)
+  store float %calltmp, ptr %r, align 4
+  %r9 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r9, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_screen_to_world_2d_y(float %pos_x, float %pos_y, float %offset_x, float %offset_y, float %target_x, float %target_y, float %rotation, float %zoom) {
+entry:
+  %pos_x.addr = alloca float, align 4
+  store float %pos_x, ptr %pos_x.addr, align 4
+  %pos_y.addr = alloca float, align 4
+  store float %pos_y, ptr %pos_y.addr, align 4
+  %offset_x.addr = alloca float, align 4
+  store float %offset_x, ptr %offset_x.addr, align 4
+  %offset_y.addr = alloca float, align 4
+  store float %offset_y, ptr %offset_y.addr, align 4
+  %target_x.addr = alloca float, align 4
+  store float %target_x, ptr %target_x.addr, align 4
+  %target_y.addr = alloca float, align 4
+  store float %target_y, ptr %target_y.addr, align 4
+  %rotation.addr = alloca float, align 4
+  store float %rotation, ptr %rotation.addr, align 4
+  %zoom.addr = alloca float, align 4
+  store float %zoom, ptr %zoom.addr, align 4
+  %r = alloca float, align 4
+  %pos_x1 = load float, ptr %pos_x.addr, align 4
+  %pos_y2 = load float, ptr %pos_y.addr, align 4
+  %offset_x3 = load float, ptr %offset_x.addr, align 4
+  %offset_y4 = load float, ptr %offset_y.addr, align 4
+  %target_x5 = load float, ptr %target_x.addr, align 4
+  %target_y6 = load float, ptr %target_y.addr, align 4
+  %rotation7 = load float, ptr %rotation.addr, align 4
+  %zoom8 = load float, ptr %zoom.addr, align 4
+  %calltmp = call float @nitpick_rl_get_screen_to_world_2d_y(float %pos_x1, float %pos_y2, float %offset_x3, float %offset_y4, float %target_x5, float %target_y6, float %rotation7, float %zoom8)
+  store float %calltmp, ptr %r, align 4
+  %r9 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r9, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_world_to_screen_2d_x(float %pos_x, float %pos_y, float %offset_x, float %offset_y, float %target_x, float %target_y, float %rotation, float %zoom) {
+entry:
+  %pos_x.addr = alloca float, align 4
+  store float %pos_x, ptr %pos_x.addr, align 4
+  %pos_y.addr = alloca float, align 4
+  store float %pos_y, ptr %pos_y.addr, align 4
+  %offset_x.addr = alloca float, align 4
+  store float %offset_x, ptr %offset_x.addr, align 4
+  %offset_y.addr = alloca float, align 4
+  store float %offset_y, ptr %offset_y.addr, align 4
+  %target_x.addr = alloca float, align 4
+  store float %target_x, ptr %target_x.addr, align 4
+  %target_y.addr = alloca float, align 4
+  store float %target_y, ptr %target_y.addr, align 4
+  %rotation.addr = alloca float, align 4
+  store float %rotation, ptr %rotation.addr, align 4
+  %zoom.addr = alloca float, align 4
+  store float %zoom, ptr %zoom.addr, align 4
+  %r = alloca float, align 4
+  %pos_x1 = load float, ptr %pos_x.addr, align 4
+  %pos_y2 = load float, ptr %pos_y.addr, align 4
+  %offset_x3 = load float, ptr %offset_x.addr, align 4
+  %offset_y4 = load float, ptr %offset_y.addr, align 4
+  %target_x5 = load float, ptr %target_x.addr, align 4
+  %target_y6 = load float, ptr %target_y.addr, align 4
+  %rotation7 = load float, ptr %rotation.addr, align 4
+  %zoom8 = load float, ptr %zoom.addr, align 4
+  %calltmp = call float @nitpick_rl_get_world_to_screen_2d_x(float %pos_x1, float %pos_y2, float %offset_x3, float %offset_y4, float %target_x5, float %target_y6, float %rotation7, float %zoom8)
+  store float %calltmp, ptr %r, align 4
+  %r9 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r9, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_get_world_to_screen_2d_y(float %pos_x, float %pos_y, float %offset_x, float %offset_y, float %target_x, float %target_y, float %rotation, float %zoom) {
+entry:
+  %pos_x.addr = alloca float, align 4
+  store float %pos_x, ptr %pos_x.addr, align 4
+  %pos_y.addr = alloca float, align 4
+  store float %pos_y, ptr %pos_y.addr, align 4
+  %offset_x.addr = alloca float, align 4
+  store float %offset_x, ptr %offset_x.addr, align 4
+  %offset_y.addr = alloca float, align 4
+  store float %offset_y, ptr %offset_y.addr, align 4
+  %target_x.addr = alloca float, align 4
+  store float %target_x, ptr %target_x.addr, align 4
+  %target_y.addr = alloca float, align 4
+  store float %target_y, ptr %target_y.addr, align 4
+  %rotation.addr = alloca float, align 4
+  store float %rotation, ptr %rotation.addr, align 4
+  %zoom.addr = alloca float, align 4
+  store float %zoom, ptr %zoom.addr, align 4
+  %r = alloca float, align 4
+  %pos_x1 = load float, ptr %pos_x.addr, align 4
+  %pos_y2 = load float, ptr %pos_y.addr, align 4
+  %offset_x3 = load float, ptr %offset_x.addr, align 4
+  %offset_y4 = load float, ptr %offset_y.addr, align 4
+  %target_x5 = load float, ptr %target_x.addr, align 4
+  %target_y6 = load float, ptr %target_y.addr, align 4
+  %rotation7 = load float, ptr %rotation.addr, align 4
+  %zoom8 = load float, ptr %zoom.addr, align 4
+  %calltmp = call float @nitpick_rl_get_world_to_screen_2d_y(float %pos_x1, float %pos_y2, float %offset_x3, float %offset_y4, float %target_x5, float %target_y6, float %rotation7, float %zoom8)
+  store float %calltmp, ptr %r, align 4
+  %r9 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r9, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { i32, ptr, i8 } @rl_load_font(ptr %path) {
+entry:
+  %r = alloca i32, align 4
+  %str_struct_ffi = load %struct.NpkString, ptr %path, align 8
+  %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
+  %calltmp = call i32 @nitpick_rl_load_font(ptr %str_data_ffi)
+  store i32 %calltmp, ptr %r, align 4
+  %r1 = load i32, ptr %r, align 4
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r1, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define { %struct.NIL, ptr, i8 } @rl_unload_font(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call ptr @nitpick_rl_unload_font(i32 %handle1)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_draw_text_ex(i32 %font_handle, ptr %text, float %x, float %y, float %font_size, float %spacing, i32 %r, i32 %g, i32 %b, i32 %a) {
+entry:
+  %font_handle.addr = alloca i32, align 4
+  store i32 %font_handle, ptr %font_handle.addr, align 4
+  %x.addr = alloca float, align 4
+  store float %x, ptr %x.addr, align 4
+  %y.addr = alloca float, align 4
+  store float %y, ptr %y.addr, align 4
+  %font_size.addr = alloca float, align 4
+  store float %font_size, ptr %font_size.addr, align 4
+  %spacing.addr = alloca float, align 4
+  store float %spacing, ptr %spacing.addr, align 4
+  %r.addr = alloca i32, align 4
+  store i32 %r, ptr %r.addr, align 4
+  %g.addr = alloca i32, align 4
+  store i32 %g, ptr %g.addr, align 4
+  %b.addr = alloca i32, align 4
+  store i32 %b, ptr %b.addr, align 4
+  %a.addr = alloca i32, align 4
+  store i32 %a, ptr %a.addr, align 4
+  %font_handle1 = load i32, ptr %font_handle.addr, align 4
+  %str_struct_ffi = load %struct.NpkString, ptr %text, align 8
+  %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
+  %x2 = load float, ptr %x.addr, align 4
+  %y3 = load float, ptr %y.addr, align 4
+  %font_size4 = load float, ptr %font_size.addr, align 4
+  %spacing5 = load float, ptr %spacing.addr, align 4
+  %r6 = load i32, ptr %r.addr, align 4
+  %g7 = load i32, ptr %g.addr, align 4
+  %b8 = load i32, ptr %b.addr, align 4
+  %a9 = load i32, ptr %a.addr, align 4
+  %calltmp = call ptr @nitpick_rl_draw_text_ex(i32 %font_handle1, ptr %str_data_ffi, float %x2, float %y3, float %font_size4, float %spacing5, i32 %r6, i32 %g7, i32 %b8, i32 %a9)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { float, ptr, i8 } @rl_measure_text_ex_x(i32 %font_handle, ptr %text, float %font_size, float %spacing) {
+entry:
+  %font_handle.addr = alloca i32, align 4
+  store i32 %font_handle, ptr %font_handle.addr, align 4
+  %font_size.addr = alloca float, align 4
+  store float %font_size, ptr %font_size.addr, align 4
+  %spacing.addr = alloca float, align 4
+  store float %spacing, ptr %spacing.addr, align 4
+  %r = alloca float, align 4
+  %font_handle1 = load i32, ptr %font_handle.addr, align 4
+  %str_struct_ffi = load %struct.NpkString, ptr %text, align 8
+  %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
+  %font_size2 = load float, ptr %font_size.addr, align 4
+  %spacing3 = load float, ptr %spacing.addr, align 4
+  %calltmp = call float @nitpick_rl_measure_text_ex_x(i32 %font_handle1, ptr %str_data_ffi, float %font_size2, float %spacing3)
+  store float %calltmp, ptr %r, align 4
+  %r4 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r4, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { float, ptr, i8 } @rl_measure_text_ex_y(i32 %font_handle, ptr %text, float %font_size, float %spacing) {
+entry:
+  %font_handle.addr = alloca i32, align 4
+  store i32 %font_handle, ptr %font_handle.addr, align 4
+  %font_size.addr = alloca float, align 4
+  store float %font_size, ptr %font_size.addr, align 4
+  %spacing.addr = alloca float, align 4
+  store float %spacing, ptr %spacing.addr, align 4
+  %r = alloca float, align 4
+  %font_handle1 = load i32, ptr %font_handle.addr, align 4
+  %str_struct_ffi = load %struct.NpkString, ptr %text, align 8
+  %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
+  %font_size2 = load float, ptr %font_size.addr, align 4
+  %spacing3 = load float, ptr %spacing.addr, align 4
+  %calltmp = call float @nitpick_rl_measure_text_ex_y(i32 %font_handle1, ptr %str_data_ffi, float %font_size2, float %spacing3)
+  store float %calltmp, ptr %r, align 4
+  %r4 = load float, ptr %r, align 4
+  %result.val = insertvalue { float, ptr, i8 } undef, float %r4, 0
+  %result.err = insertvalue { float, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { float, ptr, i8 } %result.err, i8 0, 2
+  ret { float, ptr, i8 } %result.is_error
+}
+
+define { i32, ptr, i8 } @rl_check_collision_recs(float %x1, float %y1, float %w1, float %h1, float %x2, float %y2, float %w2, float %h2) {
+entry:
+  %x1.addr = alloca float, align 4
+  store float %x1, ptr %x1.addr, align 4
+  %y1.addr = alloca float, align 4
+  store float %y1, ptr %y1.addr, align 4
+  %w1.addr = alloca float, align 4
+  store float %w1, ptr %w1.addr, align 4
+  %h1.addr = alloca float, align 4
+  store float %h1, ptr %h1.addr, align 4
+  %x2.addr = alloca float, align 4
+  store float %x2, ptr %x2.addr, align 4
+  %y2.addr = alloca float, align 4
+  store float %y2, ptr %y2.addr, align 4
+  %w2.addr = alloca float, align 4
+  store float %w2, ptr %w2.addr, align 4
+  %h2.addr = alloca float, align 4
+  store float %h2, ptr %h2.addr, align 4
+  %r = alloca i32, align 4
+  %x11 = load float, ptr %x1.addr, align 4
+  %y12 = load float, ptr %y1.addr, align 4
+  %w13 = load float, ptr %w1.addr, align 4
+  %h14 = load float, ptr %h1.addr, align 4
+  %x25 = load float, ptr %x2.addr, align 4
+  %y26 = load float, ptr %y2.addr, align 4
+  %w27 = load float, ptr %w2.addr, align 4
+  %h28 = load float, ptr %h2.addr, align 4
+  %calltmp = call i32 @nitpick_rl_check_collision_recs(float %x11, float %y12, float %w13, float %h14, float %x25, float %y26, float %w27, float %h28)
+  store i32 %calltmp, ptr %r, align 4
+  %r9 = load i32, ptr %r, align 4
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r9, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define { i32, ptr, i8 } @rl_check_collision_circles(float %x1, float %y1, float %r1, float %x2, float %y2, float %r2) {
+entry:
+  %x1.addr = alloca float, align 4
+  store float %x1, ptr %x1.addr, align 4
+  %y1.addr = alloca float, align 4
+  store float %y1, ptr %y1.addr, align 4
+  %r1.addr = alloca float, align 4
+  store float %r1, ptr %r1.addr, align 4
+  %x2.addr = alloca float, align 4
+  store float %x2, ptr %x2.addr, align 4
+  %y2.addr = alloca float, align 4
+  store float %y2, ptr %y2.addr, align 4
+  %r2.addr = alloca float, align 4
+  store float %r2, ptr %r2.addr, align 4
+  %r = alloca i32, align 4
+  %x11 = load float, ptr %x1.addr, align 4
+  %y12 = load float, ptr %y1.addr, align 4
+  %r13 = load float, ptr %r1.addr, align 4
+  %x24 = load float, ptr %x2.addr, align 4
+  %y25 = load float, ptr %y2.addr, align 4
+  %r26 = load float, ptr %r2.addr, align 4
+  %calltmp = call i32 @nitpick_rl_check_collision_circles(float %x11, float %y12, float %r13, float %x24, float %y25, float %r26)
+  store i32 %calltmp, ptr %r, align 4
+  %r7 = load i32, ptr %r, align 4
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r7, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define { i32, ptr, i8 } @rl_check_collision_point_rec(float %px, float %py, float %rx, float %ry, float %rw, float %rh) {
+entry:
+  %px.addr = alloca float, align 4
+  store float %px, ptr %px.addr, align 4
+  %py.addr = alloca float, align 4
+  store float %py, ptr %py.addr, align 4
+  %rx.addr = alloca float, align 4
+  store float %rx, ptr %rx.addr, align 4
+  %ry.addr = alloca float, align 4
+  store float %ry, ptr %ry.addr, align 4
+  %rw.addr = alloca float, align 4
+  store float %rw, ptr %rw.addr, align 4
+  %rh.addr = alloca float, align 4
+  store float %rh, ptr %rh.addr, align 4
+  %r = alloca i32, align 4
+  %px1 = load float, ptr %px.addr, align 4
+  %py2 = load float, ptr %py.addr, align 4
+  %rx3 = load float, ptr %rx.addr, align 4
+  %ry4 = load float, ptr %ry.addr, align 4
+  %rw5 = load float, ptr %rw.addr, align 4
+  %rh6 = load float, ptr %rh.addr, align 4
+  %calltmp = call i32 @nitpick_rl_check_collision_point_rec(float %px1, float %py2, float %rx3, float %ry4, float %rw5, float %rh6)
+  store i32 %calltmp, ptr %r, align 4
+  %r7 = load i32, ptr %r, align 4
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r7, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define { i32, ptr, i8 } @rl_load_shader(ptr %vs_path, ptr %fs_path) {
+entry:
+  %r = alloca i32, align 4
+  %str_struct_ffi = load %struct.NpkString, ptr %vs_path, align 8
+  %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
+  %str_struct_ffi1 = load %struct.NpkString, ptr %fs_path, align 8
+  %str_data_ffi2 = extractvalue %struct.NpkString %str_struct_ffi1, 0
+  %calltmp = call i32 @nitpick_rl_load_shader(ptr %str_data_ffi, ptr %str_data_ffi2)
+  store i32 %calltmp, ptr %r, align 4
+  %r3 = load i32, ptr %r, align 4
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r3, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define { %struct.NIL, ptr, i8 } @rl_unload_shader(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call ptr @nitpick_rl_unload_shader(i32 %handle1)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_begin_shader_mode(i32 %handle) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %calltmp = call ptr @nitpick_rl_begin_shader_mode(i32 %handle1)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_end_shader_mode() {
+entry:
+  %calltmp = call ptr @nitpick_rl_end_shader_mode()
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { i32, ptr, i8 } @rl_get_shader_location(i32 %handle, ptr %uniform_name) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %r = alloca i32, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %str_struct_ffi = load %struct.NpkString, ptr %uniform_name, align 8
+  %str_data_ffi = extractvalue %struct.NpkString %str_struct_ffi, 0
+  %calltmp = call i32 @nitpick_rl_get_shader_location(i32 %handle1, ptr %str_data_ffi)
+  store i32 %calltmp, ptr %r, align 4
+  %r2 = load i32, ptr %r, align 4
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %r2, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define { %struct.NIL, ptr, i8 } @rl_set_shader_value_float(i32 %handle, i32 %locIndex, float %val) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %locIndex.addr = alloca i32, align 4
+  store i32 %locIndex, ptr %locIndex.addr, align 4
+  %val.addr = alloca float, align 4
+  store float %val, ptr %val.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %locIndex2 = load i32, ptr %locIndex.addr, align 4
+  %val3 = load float, ptr %val.addr, align 4
+  %calltmp = call ptr @nitpick_rl_set_shader_value_float(i32 %handle1, i32 %locIndex2, float %val3)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_set_shader_value_int(i32 %handle, i32 %locIndex, i32 %val) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %locIndex.addr = alloca i32, align 4
+  store i32 %locIndex, ptr %locIndex.addr, align 4
+  %val.addr = alloca i32, align 4
+  store i32 %val, ptr %val.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %locIndex2 = load i32, ptr %locIndex.addr, align 4
+  %val3 = load i32, ptr %val.addr, align 4
+  %calltmp = call ptr @nitpick_rl_set_shader_value_int(i32 %handle1, i32 %locIndex2, i32 %val3)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_set_shader_value_vec2(i32 %handle, i32 %locIndex, float %x, float %y) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %locIndex.addr = alloca i32, align 4
+  store i32 %locIndex, ptr %locIndex.addr, align 4
+  %x.addr = alloca float, align 4
+  store float %x, ptr %x.addr, align 4
+  %y.addr = alloca float, align 4
+  store float %y, ptr %y.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %locIndex2 = load i32, ptr %locIndex.addr, align 4
+  %x3 = load float, ptr %x.addr, align 4
+  %y4 = load float, ptr %y.addr, align 4
+  %calltmp = call ptr @nitpick_rl_set_shader_value_vec2(i32 %handle1, i32 %locIndex2, float %x3, float %y4)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_set_shader_value_vec3(i32 %handle, i32 %locIndex, float %x, float %y, float %z) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %locIndex.addr = alloca i32, align 4
+  store i32 %locIndex, ptr %locIndex.addr, align 4
+  %x.addr = alloca float, align 4
+  store float %x, ptr %x.addr, align 4
+  %y.addr = alloca float, align 4
+  store float %y, ptr %y.addr, align 4
+  %z.addr = alloca float, align 4
+  store float %z, ptr %z.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %locIndex2 = load i32, ptr %locIndex.addr, align 4
+  %x3 = load float, ptr %x.addr, align 4
+  %y4 = load float, ptr %y.addr, align 4
+  %z5 = load float, ptr %z.addr, align 4
+  %calltmp = call ptr @nitpick_rl_set_shader_value_vec3(i32 %handle1, i32 %locIndex2, float %x3, float %y4, float %z5)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define { %struct.NIL, ptr, i8 } @rl_set_shader_value_vec4(i32 %handle, i32 %locIndex, float %x, float %y, float %z, float %w) {
+entry:
+  %handle.addr = alloca i32, align 4
+  store i32 %handle, ptr %handle.addr, align 4
+  %locIndex.addr = alloca i32, align 4
+  store i32 %locIndex, ptr %locIndex.addr, align 4
+  %x.addr = alloca float, align 4
+  store float %x, ptr %x.addr, align 4
+  %y.addr = alloca float, align 4
+  store float %y, ptr %y.addr, align 4
+  %z.addr = alloca float, align 4
+  store float %z, ptr %z.addr, align 4
+  %w.addr = alloca float, align 4
+  store float %w, ptr %w.addr, align 4
+  %handle1 = load i32, ptr %handle.addr, align 4
+  %locIndex2 = load i32, ptr %locIndex.addr, align 4
+  %x3 = load float, ptr %x.addr, align 4
+  %y4 = load float, ptr %y.addr, align 4
+  %z5 = load float, ptr %z.addr, align 4
+  %w6 = load float, ptr %w.addr, align 4
+  %calltmp = call ptr @nitpick_rl_set_shader_value_vec4(i32 %handle1, i32 %locIndex2, float %x3, float %y4, float %z5, float %w6)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+declare ptr @nitpick_rl_init_window(i32, i32, ptr)
+
+declare ptr @nitpick_rl_close_window()
+
+declare i32 @nitpick_rl_window_should_close()
+
+declare i32 @nitpick_rl_is_window_ready()
+
+declare i32 @nitpick_rl_is_window_fullscreen()
+
+declare ptr @nitpick_rl_toggle_fullscreen()
+
+declare ptr @nitpick_rl_set_window_size(i32, i32)
+
+declare ptr @nitpick_rl_set_window_title(ptr)
+
+declare ptr @nitpick_rl_set_window_position(i32, i32)
+
+declare i32 @nitpick_rl_get_screen_width()
+
+declare i32 @nitpick_rl_get_screen_height()
+
+declare ptr @nitpick_rl_begin_drawing()
+
+declare ptr @nitpick_rl_end_drawing()
+
+declare ptr @nitpick_rl_clear_background(i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_set_target_fps(i32)
+
+declare i32 @nitpick_rl_get_fps()
+
+declare float @nitpick_rl_get_frame_time()
+
+declare double @nitpick_rl_get_time()
+
+declare ptr @nitpick_rl_draw_pixel(i32, i32, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_line(i32, i32, i32, i32, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_circle(i32, i32, float, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_circle_lines(i32, i32, float, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_rectangle(i32, i32, i32, i32, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_rectangle_lines(i32, i32, i32, i32, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_triangle(float, float, float, float, float, float, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_triangle_lines(float, float, float, float, float, float, i32, i32, i32, i32)
+
+declare i32 @nitpick_rl_create_camera_3d(float, float, float, float, float, float, float, float, float, float, i32)
+
+declare ptr @nitpick_rl_destroy_camera_3d(i32)
+
+declare ptr @nitpick_rl_update_camera_3d(i32, i32)
+
+declare ptr @nitpick_rl_begin_mode_3d_camera(i32)
+
+declare float @nitpick_rl_get_camera_3d_pos_x(i32)
+
+declare float @nitpick_rl_get_camera_3d_pos_y(i32)
+
+declare float @nitpick_rl_get_camera_3d_pos_z(i32)
+
+declare float @nitpick_rl_get_camera_3d_target_x(i32)
+
+declare float @nitpick_rl_get_camera_3d_target_y(i32)
+
+declare float @nitpick_rl_get_camera_3d_target_z(i32)
+
+declare ptr @nitpick_rl_begin_mode_3d(float, float, float, float, float, float, float, float, float, float, i32)
+
+declare ptr @nitpick_rl_end_mode_3d()
+
+declare ptr @nitpick_rl_draw_cube(float, float, float, float, float, float, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_cube_wires(float, float, float, float, float, float, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_sphere(float, float, float, float, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_sphere_wires(float, float, float, float, i32, i32, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_grid(i32, float)
+
+declare i32 @nitpick_rl_load_model(ptr)
+
+declare ptr @nitpick_rl_unload_model(i32)
+
+declare ptr @nitpick_rl_draw_model(i32, float, float, float, float, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_set_model_material_texture(i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_text(ptr, i32, i32, i32, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_fps(i32, i32)
+
+declare i32 @nitpick_rl_measure_text(ptr, i32)
+
+declare i32 @nitpick_rl_is_key_pressed(i32)
+
+declare i32 @nitpick_rl_is_key_down(i32)
+
+declare i32 @nitpick_rl_is_key_released(i32)
+
+declare i32 @nitpick_rl_is_key_up(i32)
+
+declare i32 @nitpick_rl_get_key_pressed()
+
+declare i32 @nitpick_rl_get_mouse_x()
+
+declare i32 @nitpick_rl_get_mouse_y()
+
+declare i32 @nitpick_rl_is_mouse_button_pressed(i32)
+
+declare i32 @nitpick_rl_is_mouse_button_down(i32)
+
+declare i32 @nitpick_rl_is_mouse_button_released(i32)
+
+declare float @nitpick_rl_get_mouse_wheel_move()
+
+declare ptr @nitpick_rl_set_mouse_position(i32, i32)
+
+declare ptr @nitpick_rl_set_mouse_cursor(i32)
+
+declare i32 @nitpick_rl_load_texture(ptr)
+
+declare ptr @nitpick_rl_unload_texture(i32)
+
+declare i32 @nitpick_rl_is_texture_valid(i32)
+
+declare i32 @nitpick_rl_get_texture_width(i32)
+
+declare i32 @nitpick_rl_get_texture_height(i32)
+
+declare ptr @nitpick_rl_draw_texture(i32, i32, i32, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_texture_ex(i32, float, float, float, float, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_texture_rec(i32, float, float, float, float, float, float, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_texture_pro(i32, float, float, float, float, float, float, float, float, float, float, float, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_init_audio_device()
+
+declare ptr @nitpick_rl_close_audio_device()
+
+declare i32 @nitpick_rl_is_audio_device_ready()
+
+declare ptr @nitpick_rl_set_master_volume(float)
+
+declare i32 @nitpick_rl_load_sound(ptr)
+
+declare ptr @nitpick_rl_unload_sound(i32)
+
+declare ptr @nitpick_rl_play_sound(i32)
+
+declare ptr @nitpick_rl_stop_sound(i32)
+
+declare i32 @nitpick_rl_is_sound_playing(i32)
+
+declare ptr @nitpick_rl_set_sound_volume(i32, float)
+
+declare i32 @nitpick_rl_load_music(ptr)
+
+declare ptr @nitpick_rl_unload_music(i32)
+
+declare ptr @nitpick_rl_play_music(i32)
+
+declare ptr @nitpick_rl_stop_music(i32)
+
+declare ptr @nitpick_rl_update_music(i32)
+
+declare ptr @nitpick_rl_pause_music(i32)
+
+declare ptr @nitpick_rl_resume_music(i32)
+
+declare i32 @nitpick_rl_is_music_playing(i32)
+
+declare ptr @nitpick_rl_set_music_volume(i32, float)
+
+declare float @nitpick_rl_get_music_time_length(i32)
+
+declare float @nitpick_rl_get_music_time_played(i32)
+
+declare i32 @nitpick_rl_is_gamepad_available(i32)
+
+declare i32 @nitpick_rl_is_gamepad_button_pressed(i32, i32)
+
+declare i32 @nitpick_rl_is_gamepad_button_down(i32, i32)
+
+declare i32 @nitpick_rl_is_gamepad_button_released(i32, i32)
+
+declare float @nitpick_rl_get_gamepad_axis_movement(i32, i32)
+
+declare i32 @nitpick_rl_gen_beep(i32, i32, i32, float)
+
+declare ptr @nitpick_rl_draw_line_ex(float, float, float, float, float, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_rectangle_rounded(float, float, float, float, float, i32, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_draw_rectangle_rounded_lines(float, float, float, float, float, i32, i32, i32, i32, i32)
+
+declare ptr @nitpick_rl_begin_mode_2d(float, float, float, float, float, float)
+
+declare ptr @nitpick_rl_end_mode_2d()
+
+declare float @nitpick_rl_get_screen_to_world_2d_x(float, float, float, float, float, float, float, float)
+
+declare float @nitpick_rl_get_screen_to_world_2d_y(float, float, float, float, float, float, float, float)
+
+declare float @nitpick_rl_get_world_to_screen_2d_x(float, float, float, float, float, float, float, float)
+
+declare float @nitpick_rl_get_world_to_screen_2d_y(float, float, float, float, float, float, float, float)
+
+declare i32 @nitpick_rl_load_font(ptr)
+
+declare ptr @nitpick_rl_unload_font(i32)
+
+declare ptr @nitpick_rl_draw_text_ex(i32, ptr, float, float, float, float, i32, i32, i32, i32)
+
+declare float @nitpick_rl_measure_text_ex_x(i32, ptr, float, float)
+
+declare float @nitpick_rl_measure_text_ex_y(i32, ptr, float, float)
+
+declare i32 @nitpick_rl_check_collision_recs(float, float, float, float, float, float, float, float)
+
+declare i32 @nitpick_rl_check_collision_circles(float, float, float, float, float, float)
+
+declare i32 @nitpick_rl_check_collision_point_rec(float, float, float, float, float, float)
+
+declare i32 @nitpick_rl_load_shader(ptr, ptr)
+
+declare ptr @nitpick_rl_unload_shader(i32)
+
+declare ptr @nitpick_rl_begin_shader_mode(i32)
+
+declare ptr @nitpick_rl_end_shader_mode()
+
+declare i32 @nitpick_rl_get_shader_location(i32, ptr)
+
+declare ptr @nitpick_rl_set_shader_value_float(i32, i32, float)
+
+declare ptr @nitpick_rl_set_shader_value_int(i32, i32, i32)
+
+declare ptr @nitpick_rl_set_shader_value_vec2(i32, i32, float, float)
+
+declare ptr @nitpick_rl_set_shader_value_vec3(i32, i32, float, float, float)
+
+declare ptr @nitpick_rl_set_shader_value_vec4(i32, i32, float, float, float, float)
 
 define i32 @__nitpick_raylib_init() {
 entry:
@@ -2932,8 +3875,12 @@ entry:
   store i8 %nit_or_call13, ptr %ro0b, align 1
   %rx0b14 = load i8, ptr %rx0b, align 1
   %X15 = load i8, ptr %X, align 1
-  %eqtmp = icmp eq i8 %rx0b14, %X15
-  %ifcond = icmp ne i1 %eqtmp, false
+  %nit.cmp.l.err = icmp eq i8 %rx0b14, -128
+  %nit.cmp.r.err = icmp eq i8 %X15, -128
+  %nit.cmp.anyerr = or i1 %nit.cmp.l.err, %nit.cmp.r.err
+  %nit.cmp.normal = icmp eq i8 %rx0b14, %X15
+  %nit.cmp.sticky = select i1 %nit.cmp.anyerr, i1 false, i1 %nit.cmp.normal
+  %ifcond = icmp ne i1 %nit.cmp.sticky, false
   br i1 %ifcond, label %then, label %ifcont
 
 then:                                             ; preds = %entry
@@ -2942,336 +3889,396 @@ then:                                             ; preds = %entry
 ifcont:                                           ; preds = %entry
   %ro0b16 = load i8, ptr %ro0b, align 1
   %O17 = load i8, ptr %O, align 1
-  %eqtmp18 = icmp eq i8 %ro0b16, %O17
-  %ifcond19 = icmp ne i1 %eqtmp18, false
-  br i1 %ifcond19, label %then20, label %ifcont21
+  %nit.cmp.l.err18 = icmp eq i8 %ro0b16, -128
+  %nit.cmp.r.err19 = icmp eq i8 %O17, -128
+  %nit.cmp.anyerr20 = or i1 %nit.cmp.l.err18, %nit.cmp.r.err19
+  %nit.cmp.normal21 = icmp eq i8 %ro0b16, %O17
+  %nit.cmp.sticky22 = select i1 %nit.cmp.anyerr20, i1 false, i1 %nit.cmp.normal21
+  %ifcond23 = icmp ne i1 %nit.cmp.sticky22, false
+  br i1 %ifcond23, label %then24, label %ifcont25
 
-then20:                                           ; preds = %ifcont
+then24:                                           ; preds = %ifcont
   ret { i32, ptr, i8 } { i32 -1, ptr null, i8 0 }
 
-ifcont21:                                         ; preds = %ifcont
+ifcont25:                                         ; preds = %ifcont
   %rx1a = alloca i8, align 1
-  %b22 = load %Wave9, ptr %b_alloca, align 1
-  %u = extractvalue %Wave9 %b22, 3
-  %b23 = load %Wave9, ptr %b_alloca, align 1
-  %v = extractvalue %Wave9 %b23, 4
-  %nit_and_call24 = call i8 @npk_nit_and(i8 %u, i8 %v)
-  store i8 %nit_and_call24, ptr %rx1a, align 1
-  %rx1b = alloca i8, align 1
-  %rx1a25 = load i8, ptr %rx1a, align 1
   %b26 = load %Wave9, ptr %b_alloca, align 1
-  %w = extractvalue %Wave9 %b26, 5
-  %nit_and_call27 = call i8 @npk_nit_and(i8 %rx1a25, i8 %w)
-  store i8 %nit_and_call27, ptr %rx1b, align 1
-  %ro1a = alloca i8, align 1
-  %b28 = load %Wave9, ptr %b_alloca, align 1
-  %u29 = extractvalue %Wave9 %b28, 3
+  %u = extractvalue %Wave9 %b26, 3
+  %b27 = load %Wave9, ptr %b_alloca, align 1
+  %v = extractvalue %Wave9 %b27, 4
+  %nit_and_call28 = call i8 @npk_nit_and(i8 %u, i8 %v)
+  store i8 %nit_and_call28, ptr %rx1a, align 1
+  %rx1b = alloca i8, align 1
+  %rx1a29 = load i8, ptr %rx1a, align 1
   %b30 = load %Wave9, ptr %b_alloca, align 1
-  %v31 = extractvalue %Wave9 %b30, 4
-  %nit_or_call32 = call i8 @npk_nit_or(i8 %u29, i8 %v31)
-  store i8 %nit_or_call32, ptr %ro1a, align 1
-  %ro1b = alloca i8, align 1
-  %ro1a33 = load i8, ptr %ro1a, align 1
+  %w = extractvalue %Wave9 %b30, 5
+  %nit_and_call31 = call i8 @npk_nit_and(i8 %rx1a29, i8 %w)
+  store i8 %nit_and_call31, ptr %rx1b, align 1
+  %ro1a = alloca i8, align 1
+  %b32 = load %Wave9, ptr %b_alloca, align 1
+  %u33 = extractvalue %Wave9 %b32, 3
   %b34 = load %Wave9, ptr %b_alloca, align 1
-  %w35 = extractvalue %Wave9 %b34, 5
-  %nit_or_call36 = call i8 @npk_nit_or(i8 %ro1a33, i8 %w35)
-  store i8 %nit_or_call36, ptr %ro1b, align 1
-  %rx1b37 = load i8, ptr %rx1b, align 1
-  %X38 = load i8, ptr %X, align 1
-  %eqtmp39 = icmp eq i8 %rx1b37, %X38
-  %ifcond40 = icmp ne i1 %eqtmp39, false
-  br i1 %ifcond40, label %then41, label %ifcont42
+  %v35 = extractvalue %Wave9 %b34, 4
+  %nit_or_call36 = call i8 @npk_nit_or(i8 %u33, i8 %v35)
+  store i8 %nit_or_call36, ptr %ro1a, align 1
+  %ro1b = alloca i8, align 1
+  %ro1a37 = load i8, ptr %ro1a, align 1
+  %b38 = load %Wave9, ptr %b_alloca, align 1
+  %w39 = extractvalue %Wave9 %b38, 5
+  %nit_or_call40 = call i8 @npk_nit_or(i8 %ro1a37, i8 %w39)
+  store i8 %nit_or_call40, ptr %ro1b, align 1
+  %rx1b41 = load i8, ptr %rx1b, align 1
+  %X42 = load i8, ptr %X, align 1
+  %nit.cmp.l.err43 = icmp eq i8 %rx1b41, -128
+  %nit.cmp.r.err44 = icmp eq i8 %X42, -128
+  %nit.cmp.anyerr45 = or i1 %nit.cmp.l.err43, %nit.cmp.r.err44
+  %nit.cmp.normal46 = icmp eq i8 %rx1b41, %X42
+  %nit.cmp.sticky47 = select i1 %nit.cmp.anyerr45, i1 false, i1 %nit.cmp.normal46
+  %ifcond48 = icmp ne i1 %nit.cmp.sticky47, false
+  br i1 %ifcond48, label %then49, label %ifcont50
 
-then41:                                           ; preds = %ifcont21
+then49:                                           ; preds = %ifcont25
   ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
 
-ifcont42:                                         ; preds = %ifcont21
-  %ro1b43 = load i8, ptr %ro1b, align 1
-  %O44 = load i8, ptr %O, align 1
-  %eqtmp45 = icmp eq i8 %ro1b43, %O44
-  %ifcond46 = icmp ne i1 %eqtmp45, false
-  br i1 %ifcond46, label %then47, label %ifcont48
+ifcont50:                                         ; preds = %ifcont25
+  %ro1b51 = load i8, ptr %ro1b, align 1
+  %O52 = load i8, ptr %O, align 1
+  %nit.cmp.l.err53 = icmp eq i8 %ro1b51, -128
+  %nit.cmp.r.err54 = icmp eq i8 %O52, -128
+  %nit.cmp.anyerr55 = or i1 %nit.cmp.l.err53, %nit.cmp.r.err54
+  %nit.cmp.normal56 = icmp eq i8 %ro1b51, %O52
+  %nit.cmp.sticky57 = select i1 %nit.cmp.anyerr55, i1 false, i1 %nit.cmp.normal56
+  %ifcond58 = icmp ne i1 %nit.cmp.sticky57, false
+  br i1 %ifcond58, label %then59, label %ifcont60
 
-then47:                                           ; preds = %ifcont42
+then59:                                           ; preds = %ifcont50
   ret { i32, ptr, i8 } { i32 -1, ptr null, i8 0 }
 
-ifcont48:                                         ; preds = %ifcont42
+ifcont60:                                         ; preds = %ifcont50
   %rx2a = alloca i8, align 1
-  %b49 = load %Wave9, ptr %b_alloca, align 1
-  %x = extractvalue %Wave9 %b49, 6
-  %b50 = load %Wave9, ptr %b_alloca, align 1
-  %y = extractvalue %Wave9 %b50, 7
-  %nit_and_call51 = call i8 @npk_nit_and(i8 %x, i8 %y)
-  store i8 %nit_and_call51, ptr %rx2a, align 1
-  %rx2b = alloca i8, align 1
-  %rx2a52 = load i8, ptr %rx2a, align 1
-  %b53 = load %Wave9, ptr %b_alloca, align 1
-  %z = extractvalue %Wave9 %b53, 8
-  %nit_and_call54 = call i8 @npk_nit_and(i8 %rx2a52, i8 %z)
-  store i8 %nit_and_call54, ptr %rx2b, align 1
-  %ro2a = alloca i8, align 1
-  %b55 = load %Wave9, ptr %b_alloca, align 1
-  %x56 = extractvalue %Wave9 %b55, 6
-  %b57 = load %Wave9, ptr %b_alloca, align 1
-  %y58 = extractvalue %Wave9 %b57, 7
-  %nit_or_call59 = call i8 @npk_nit_or(i8 %x56, i8 %y58)
-  store i8 %nit_or_call59, ptr %ro2a, align 1
-  %ro2b = alloca i8, align 1
-  %ro2a60 = load i8, ptr %ro2a, align 1
   %b61 = load %Wave9, ptr %b_alloca, align 1
-  %z62 = extractvalue %Wave9 %b61, 8
-  %nit_or_call63 = call i8 @npk_nit_or(i8 %ro2a60, i8 %z62)
-  store i8 %nit_or_call63, ptr %ro2b, align 1
-  %rx2b64 = load i8, ptr %rx2b, align 1
-  %X65 = load i8, ptr %X, align 1
-  %eqtmp66 = icmp eq i8 %rx2b64, %X65
-  %ifcond67 = icmp ne i1 %eqtmp66, false
-  br i1 %ifcond67, label %then68, label %ifcont69
+  %x = extractvalue %Wave9 %b61, 6
+  %b62 = load %Wave9, ptr %b_alloca, align 1
+  %y = extractvalue %Wave9 %b62, 7
+  %nit_and_call63 = call i8 @npk_nit_and(i8 %x, i8 %y)
+  store i8 %nit_and_call63, ptr %rx2a, align 1
+  %rx2b = alloca i8, align 1
+  %rx2a64 = load i8, ptr %rx2a, align 1
+  %b65 = load %Wave9, ptr %b_alloca, align 1
+  %z = extractvalue %Wave9 %b65, 8
+  %nit_and_call66 = call i8 @npk_nit_and(i8 %rx2a64, i8 %z)
+  store i8 %nit_and_call66, ptr %rx2b, align 1
+  %ro2a = alloca i8, align 1
+  %b67 = load %Wave9, ptr %b_alloca, align 1
+  %x68 = extractvalue %Wave9 %b67, 6
+  %b69 = load %Wave9, ptr %b_alloca, align 1
+  %y70 = extractvalue %Wave9 %b69, 7
+  %nit_or_call71 = call i8 @npk_nit_or(i8 %x68, i8 %y70)
+  store i8 %nit_or_call71, ptr %ro2a, align 1
+  %ro2b = alloca i8, align 1
+  %ro2a72 = load i8, ptr %ro2a, align 1
+  %b73 = load %Wave9, ptr %b_alloca, align 1
+  %z74 = extractvalue %Wave9 %b73, 8
+  %nit_or_call75 = call i8 @npk_nit_or(i8 %ro2a72, i8 %z74)
+  store i8 %nit_or_call75, ptr %ro2b, align 1
+  %rx2b76 = load i8, ptr %rx2b, align 1
+  %X77 = load i8, ptr %X, align 1
+  %nit.cmp.l.err78 = icmp eq i8 %rx2b76, -128
+  %nit.cmp.r.err79 = icmp eq i8 %X77, -128
+  %nit.cmp.anyerr80 = or i1 %nit.cmp.l.err78, %nit.cmp.r.err79
+  %nit.cmp.normal81 = icmp eq i8 %rx2b76, %X77
+  %nit.cmp.sticky82 = select i1 %nit.cmp.anyerr80, i1 false, i1 %nit.cmp.normal81
+  %ifcond83 = icmp ne i1 %nit.cmp.sticky82, false
+  br i1 %ifcond83, label %then84, label %ifcont85
 
-then68:                                           ; preds = %ifcont48
+then84:                                           ; preds = %ifcont60
   ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
 
-ifcont69:                                         ; preds = %ifcont48
-  %ro2b70 = load i8, ptr %ro2b, align 1
-  %O71 = load i8, ptr %O, align 1
-  %eqtmp72 = icmp eq i8 %ro2b70, %O71
-  %ifcond73 = icmp ne i1 %eqtmp72, false
-  br i1 %ifcond73, label %then74, label %ifcont75
+ifcont85:                                         ; preds = %ifcont60
+  %ro2b86 = load i8, ptr %ro2b, align 1
+  %O87 = load i8, ptr %O, align 1
+  %nit.cmp.l.err88 = icmp eq i8 %ro2b86, -128
+  %nit.cmp.r.err89 = icmp eq i8 %O87, -128
+  %nit.cmp.anyerr90 = or i1 %nit.cmp.l.err88, %nit.cmp.r.err89
+  %nit.cmp.normal91 = icmp eq i8 %ro2b86, %O87
+  %nit.cmp.sticky92 = select i1 %nit.cmp.anyerr90, i1 false, i1 %nit.cmp.normal91
+  %ifcond93 = icmp ne i1 %nit.cmp.sticky92, false
+  br i1 %ifcond93, label %then94, label %ifcont95
 
-then74:                                           ; preds = %ifcont69
+then94:                                           ; preds = %ifcont85
   ret { i32, ptr, i8 } { i32 -1, ptr null, i8 0 }
 
-ifcont75:                                         ; preds = %ifcont69
+ifcont95:                                         ; preds = %ifcont85
   %cx0a = alloca i8, align 1
-  %b76 = load %Wave9, ptr %b_alloca, align 1
-  %r77 = extractvalue %Wave9 %b76, 0
-  %b78 = load %Wave9, ptr %b_alloca, align 1
-  %u79 = extractvalue %Wave9 %b78, 3
-  %nit_and_call80 = call i8 @npk_nit_and(i8 %r77, i8 %u79)
-  store i8 %nit_and_call80, ptr %cx0a, align 1
+  %b96 = load %Wave9, ptr %b_alloca, align 1
+  %r97 = extractvalue %Wave9 %b96, 0
+  %b98 = load %Wave9, ptr %b_alloca, align 1
+  %u99 = extractvalue %Wave9 %b98, 3
+  %nit_and_call100 = call i8 @npk_nit_and(i8 %r97, i8 %u99)
+  store i8 %nit_and_call100, ptr %cx0a, align 1
   %cx0b = alloca i8, align 1
-  %cx0a81 = load i8, ptr %cx0a, align 1
-  %b82 = load %Wave9, ptr %b_alloca, align 1
-  %x83 = extractvalue %Wave9 %b82, 6
-  %nit_and_call84 = call i8 @npk_nit_and(i8 %cx0a81, i8 %x83)
-  store i8 %nit_and_call84, ptr %cx0b, align 1
+  %cx0a101 = load i8, ptr %cx0a, align 1
+  %b102 = load %Wave9, ptr %b_alloca, align 1
+  %x103 = extractvalue %Wave9 %b102, 6
+  %nit_and_call104 = call i8 @npk_nit_and(i8 %cx0a101, i8 %x103)
+  store i8 %nit_and_call104, ptr %cx0b, align 1
   %co0a = alloca i8, align 1
-  %b85 = load %Wave9, ptr %b_alloca, align 1
-  %r86 = extractvalue %Wave9 %b85, 0
-  %b87 = load %Wave9, ptr %b_alloca, align 1
-  %u88 = extractvalue %Wave9 %b87, 3
-  %nit_or_call89 = call i8 @npk_nit_or(i8 %r86, i8 %u88)
-  store i8 %nit_or_call89, ptr %co0a, align 1
+  %b105 = load %Wave9, ptr %b_alloca, align 1
+  %r106 = extractvalue %Wave9 %b105, 0
+  %b107 = load %Wave9, ptr %b_alloca, align 1
+  %u108 = extractvalue %Wave9 %b107, 3
+  %nit_or_call109 = call i8 @npk_nit_or(i8 %r106, i8 %u108)
+  store i8 %nit_or_call109, ptr %co0a, align 1
   %co0b = alloca i8, align 1
-  %co0a90 = load i8, ptr %co0a, align 1
-  %b91 = load %Wave9, ptr %b_alloca, align 1
-  %x92 = extractvalue %Wave9 %b91, 6
-  %nit_or_call93 = call i8 @npk_nit_or(i8 %co0a90, i8 %x92)
-  store i8 %nit_or_call93, ptr %co0b, align 1
-  %cx0b94 = load i8, ptr %cx0b, align 1
-  %X95 = load i8, ptr %X, align 1
-  %eqtmp96 = icmp eq i8 %cx0b94, %X95
-  %ifcond97 = icmp ne i1 %eqtmp96, false
-  br i1 %ifcond97, label %then98, label %ifcont99
+  %co0a110 = load i8, ptr %co0a, align 1
+  %b111 = load %Wave9, ptr %b_alloca, align 1
+  %x112 = extractvalue %Wave9 %b111, 6
+  %nit_or_call113 = call i8 @npk_nit_or(i8 %co0a110, i8 %x112)
+  store i8 %nit_or_call113, ptr %co0b, align 1
+  %cx0b114 = load i8, ptr %cx0b, align 1
+  %X115 = load i8, ptr %X, align 1
+  %nit.cmp.l.err116 = icmp eq i8 %cx0b114, -128
+  %nit.cmp.r.err117 = icmp eq i8 %X115, -128
+  %nit.cmp.anyerr118 = or i1 %nit.cmp.l.err116, %nit.cmp.r.err117
+  %nit.cmp.normal119 = icmp eq i8 %cx0b114, %X115
+  %nit.cmp.sticky120 = select i1 %nit.cmp.anyerr118, i1 false, i1 %nit.cmp.normal119
+  %ifcond121 = icmp ne i1 %nit.cmp.sticky120, false
+  br i1 %ifcond121, label %then122, label %ifcont123
 
-then98:                                           ; preds = %ifcont75
+then122:                                          ; preds = %ifcont95
   ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
 
-ifcont99:                                         ; preds = %ifcont75
-  %co0b100 = load i8, ptr %co0b, align 1
-  %O101 = load i8, ptr %O, align 1
-  %eqtmp102 = icmp eq i8 %co0b100, %O101
-  %ifcond103 = icmp ne i1 %eqtmp102, false
-  br i1 %ifcond103, label %then104, label %ifcont105
+ifcont123:                                        ; preds = %ifcont95
+  %co0b124 = load i8, ptr %co0b, align 1
+  %O125 = load i8, ptr %O, align 1
+  %nit.cmp.l.err126 = icmp eq i8 %co0b124, -128
+  %nit.cmp.r.err127 = icmp eq i8 %O125, -128
+  %nit.cmp.anyerr128 = or i1 %nit.cmp.l.err126, %nit.cmp.r.err127
+  %nit.cmp.normal129 = icmp eq i8 %co0b124, %O125
+  %nit.cmp.sticky130 = select i1 %nit.cmp.anyerr128, i1 false, i1 %nit.cmp.normal129
+  %ifcond131 = icmp ne i1 %nit.cmp.sticky130, false
+  br i1 %ifcond131, label %then132, label %ifcont133
 
-then104:                                          ; preds = %ifcont99
+then132:                                          ; preds = %ifcont123
   ret { i32, ptr, i8 } { i32 -1, ptr null, i8 0 }
 
-ifcont105:                                        ; preds = %ifcont99
+ifcont133:                                        ; preds = %ifcont123
   %cx1a = alloca i8, align 1
-  %b106 = load %Wave9, ptr %b_alloca, align 1
-  %s107 = extractvalue %Wave9 %b106, 1
-  %b108 = load %Wave9, ptr %b_alloca, align 1
-  %v109 = extractvalue %Wave9 %b108, 4
-  %nit_and_call110 = call i8 @npk_nit_and(i8 %s107, i8 %v109)
-  store i8 %nit_and_call110, ptr %cx1a, align 1
-  %cx1b = alloca i8, align 1
-  %cx1a111 = load i8, ptr %cx1a, align 1
-  %b112 = load %Wave9, ptr %b_alloca, align 1
-  %y113 = extractvalue %Wave9 %b112, 7
-  %nit_and_call114 = call i8 @npk_nit_and(i8 %cx1a111, i8 %y113)
-  store i8 %nit_and_call114, ptr %cx1b, align 1
-  %co1a = alloca i8, align 1
-  %b115 = load %Wave9, ptr %b_alloca, align 1
-  %s116 = extractvalue %Wave9 %b115, 1
-  %b117 = load %Wave9, ptr %b_alloca, align 1
-  %v118 = extractvalue %Wave9 %b117, 4
-  %nit_or_call119 = call i8 @npk_nit_or(i8 %s116, i8 %v118)
-  store i8 %nit_or_call119, ptr %co1a, align 1
-  %co1b = alloca i8, align 1
-  %co1a120 = load i8, ptr %co1a, align 1
-  %b121 = load %Wave9, ptr %b_alloca, align 1
-  %y122 = extractvalue %Wave9 %b121, 7
-  %nit_or_call123 = call i8 @npk_nit_or(i8 %co1a120, i8 %y122)
-  store i8 %nit_or_call123, ptr %co1b, align 1
-  %cx1b124 = load i8, ptr %cx1b, align 1
-  %X125 = load i8, ptr %X, align 1
-  %eqtmp126 = icmp eq i8 %cx1b124, %X125
-  %ifcond127 = icmp ne i1 %eqtmp126, false
-  br i1 %ifcond127, label %then128, label %ifcont129
-
-then128:                                          ; preds = %ifcont105
-  ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
-
-ifcont129:                                        ; preds = %ifcont105
-  %co1b130 = load i8, ptr %co1b, align 1
-  %O131 = load i8, ptr %O, align 1
-  %eqtmp132 = icmp eq i8 %co1b130, %O131
-  %ifcond133 = icmp ne i1 %eqtmp132, false
-  br i1 %ifcond133, label %then134, label %ifcont135
-
-then134:                                          ; preds = %ifcont129
-  ret { i32, ptr, i8 } { i32 -1, ptr null, i8 0 }
-
-ifcont135:                                        ; preds = %ifcont129
-  %cx2a = alloca i8, align 1
+  %b134 = load %Wave9, ptr %b_alloca, align 1
+  %s135 = extractvalue %Wave9 %b134, 1
   %b136 = load %Wave9, ptr %b_alloca, align 1
-  %t137 = extractvalue %Wave9 %b136, 2
-  %b138 = load %Wave9, ptr %b_alloca, align 1
-  %w139 = extractvalue %Wave9 %b138, 5
-  %nit_and_call140 = call i8 @npk_nit_and(i8 %t137, i8 %w139)
-  store i8 %nit_and_call140, ptr %cx2a, align 1
-  %cx2b = alloca i8, align 1
-  %cx2a141 = load i8, ptr %cx2a, align 1
-  %b142 = load %Wave9, ptr %b_alloca, align 1
-  %z143 = extractvalue %Wave9 %b142, 8
-  %nit_and_call144 = call i8 @npk_nit_and(i8 %cx2a141, i8 %z143)
-  store i8 %nit_and_call144, ptr %cx2b, align 1
-  %co2a = alloca i8, align 1
+  %v137 = extractvalue %Wave9 %b136, 4
+  %nit_and_call138 = call i8 @npk_nit_and(i8 %s135, i8 %v137)
+  store i8 %nit_and_call138, ptr %cx1a, align 1
+  %cx1b = alloca i8, align 1
+  %cx1a139 = load i8, ptr %cx1a, align 1
+  %b140 = load %Wave9, ptr %b_alloca, align 1
+  %y141 = extractvalue %Wave9 %b140, 7
+  %nit_and_call142 = call i8 @npk_nit_and(i8 %cx1a139, i8 %y141)
+  store i8 %nit_and_call142, ptr %cx1b, align 1
+  %co1a = alloca i8, align 1
+  %b143 = load %Wave9, ptr %b_alloca, align 1
+  %s144 = extractvalue %Wave9 %b143, 1
   %b145 = load %Wave9, ptr %b_alloca, align 1
-  %t146 = extractvalue %Wave9 %b145, 2
-  %b147 = load %Wave9, ptr %b_alloca, align 1
-  %w148 = extractvalue %Wave9 %b147, 5
-  %nit_or_call149 = call i8 @npk_nit_or(i8 %t146, i8 %w148)
-  store i8 %nit_or_call149, ptr %co2a, align 1
-  %co2b = alloca i8, align 1
-  %co2a150 = load i8, ptr %co2a, align 1
-  %b151 = load %Wave9, ptr %b_alloca, align 1
-  %z152 = extractvalue %Wave9 %b151, 8
-  %nit_or_call153 = call i8 @npk_nit_or(i8 %co2a150, i8 %z152)
-  store i8 %nit_or_call153, ptr %co2b, align 1
-  %cx2b154 = load i8, ptr %cx2b, align 1
-  %X155 = load i8, ptr %X, align 1
-  %eqtmp156 = icmp eq i8 %cx2b154, %X155
-  %ifcond157 = icmp ne i1 %eqtmp156, false
-  br i1 %ifcond157, label %then158, label %ifcont159
+  %v146 = extractvalue %Wave9 %b145, 4
+  %nit_or_call147 = call i8 @npk_nit_or(i8 %s144, i8 %v146)
+  store i8 %nit_or_call147, ptr %co1a, align 1
+  %co1b = alloca i8, align 1
+  %co1a148 = load i8, ptr %co1a, align 1
+  %b149 = load %Wave9, ptr %b_alloca, align 1
+  %y150 = extractvalue %Wave9 %b149, 7
+  %nit_or_call151 = call i8 @npk_nit_or(i8 %co1a148, i8 %y150)
+  store i8 %nit_or_call151, ptr %co1b, align 1
+  %cx1b152 = load i8, ptr %cx1b, align 1
+  %X153 = load i8, ptr %X, align 1
+  %nit.cmp.l.err154 = icmp eq i8 %cx1b152, -128
+  %nit.cmp.r.err155 = icmp eq i8 %X153, -128
+  %nit.cmp.anyerr156 = or i1 %nit.cmp.l.err154, %nit.cmp.r.err155
+  %nit.cmp.normal157 = icmp eq i8 %cx1b152, %X153
+  %nit.cmp.sticky158 = select i1 %nit.cmp.anyerr156, i1 false, i1 %nit.cmp.normal157
+  %ifcond159 = icmp ne i1 %nit.cmp.sticky158, false
+  br i1 %ifcond159, label %then160, label %ifcont161
 
-then158:                                          ; preds = %ifcont135
+then160:                                          ; preds = %ifcont133
   ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
 
-ifcont159:                                        ; preds = %ifcont135
-  %co2b160 = load i8, ptr %co2b, align 1
-  %O161 = load i8, ptr %O, align 1
-  %eqtmp162 = icmp eq i8 %co2b160, %O161
-  %ifcond163 = icmp ne i1 %eqtmp162, false
-  br i1 %ifcond163, label %then164, label %ifcont165
+ifcont161:                                        ; preds = %ifcont133
+  %co1b162 = load i8, ptr %co1b, align 1
+  %O163 = load i8, ptr %O, align 1
+  %nit.cmp.l.err164 = icmp eq i8 %co1b162, -128
+  %nit.cmp.r.err165 = icmp eq i8 %O163, -128
+  %nit.cmp.anyerr166 = or i1 %nit.cmp.l.err164, %nit.cmp.r.err165
+  %nit.cmp.normal167 = icmp eq i8 %co1b162, %O163
+  %nit.cmp.sticky168 = select i1 %nit.cmp.anyerr166, i1 false, i1 %nit.cmp.normal167
+  %ifcond169 = icmp ne i1 %nit.cmp.sticky168, false
+  br i1 %ifcond169, label %then170, label %ifcont171
 
-then164:                                          ; preds = %ifcont159
+then170:                                          ; preds = %ifcont161
   ret { i32, ptr, i8 } { i32 -1, ptr null, i8 0 }
 
-ifcont165:                                        ; preds = %ifcont159
-  %dx0a = alloca i8, align 1
-  %b166 = load %Wave9, ptr %b_alloca, align 1
-  %r167 = extractvalue %Wave9 %b166, 0
-  %b168 = load %Wave9, ptr %b_alloca, align 1
-  %v169 = extractvalue %Wave9 %b168, 4
-  %nit_and_call170 = call i8 @npk_nit_and(i8 %r167, i8 %v169)
-  store i8 %nit_and_call170, ptr %dx0a, align 1
-  %dx0b = alloca i8, align 1
-  %dx0a171 = load i8, ptr %dx0a, align 1
+ifcont171:                                        ; preds = %ifcont161
+  %cx2a = alloca i8, align 1
   %b172 = load %Wave9, ptr %b_alloca, align 1
-  %z173 = extractvalue %Wave9 %b172, 8
-  %nit_and_call174 = call i8 @npk_nit_and(i8 %dx0a171, i8 %z173)
-  store i8 %nit_and_call174, ptr %dx0b, align 1
-  %do0a = alloca i8, align 1
-  %b175 = load %Wave9, ptr %b_alloca, align 1
-  %r176 = extractvalue %Wave9 %b175, 0
-  %b177 = load %Wave9, ptr %b_alloca, align 1
-  %v178 = extractvalue %Wave9 %b177, 4
-  %nit_or_call179 = call i8 @npk_nit_or(i8 %r176, i8 %v178)
-  store i8 %nit_or_call179, ptr %do0a, align 1
-  %do0b = alloca i8, align 1
-  %do0a180 = load i8, ptr %do0a, align 1
+  %t173 = extractvalue %Wave9 %b172, 2
+  %b174 = load %Wave9, ptr %b_alloca, align 1
+  %w175 = extractvalue %Wave9 %b174, 5
+  %nit_and_call176 = call i8 @npk_nit_and(i8 %t173, i8 %w175)
+  store i8 %nit_and_call176, ptr %cx2a, align 1
+  %cx2b = alloca i8, align 1
+  %cx2a177 = load i8, ptr %cx2a, align 1
+  %b178 = load %Wave9, ptr %b_alloca, align 1
+  %z179 = extractvalue %Wave9 %b178, 8
+  %nit_and_call180 = call i8 @npk_nit_and(i8 %cx2a177, i8 %z179)
+  store i8 %nit_and_call180, ptr %cx2b, align 1
+  %co2a = alloca i8, align 1
   %b181 = load %Wave9, ptr %b_alloca, align 1
-  %z182 = extractvalue %Wave9 %b181, 8
-  %nit_or_call183 = call i8 @npk_nit_or(i8 %do0a180, i8 %z182)
-  store i8 %nit_or_call183, ptr %do0b, align 1
-  %dx0b184 = load i8, ptr %dx0b, align 1
-  %X185 = load i8, ptr %X, align 1
-  %eqtmp186 = icmp eq i8 %dx0b184, %X185
-  %ifcond187 = icmp ne i1 %eqtmp186, false
-  br i1 %ifcond187, label %then188, label %ifcont189
+  %t182 = extractvalue %Wave9 %b181, 2
+  %b183 = load %Wave9, ptr %b_alloca, align 1
+  %w184 = extractvalue %Wave9 %b183, 5
+  %nit_or_call185 = call i8 @npk_nit_or(i8 %t182, i8 %w184)
+  store i8 %nit_or_call185, ptr %co2a, align 1
+  %co2b = alloca i8, align 1
+  %co2a186 = load i8, ptr %co2a, align 1
+  %b187 = load %Wave9, ptr %b_alloca, align 1
+  %z188 = extractvalue %Wave9 %b187, 8
+  %nit_or_call189 = call i8 @npk_nit_or(i8 %co2a186, i8 %z188)
+  store i8 %nit_or_call189, ptr %co2b, align 1
+  %cx2b190 = load i8, ptr %cx2b, align 1
+  %X191 = load i8, ptr %X, align 1
+  %nit.cmp.l.err192 = icmp eq i8 %cx2b190, -128
+  %nit.cmp.r.err193 = icmp eq i8 %X191, -128
+  %nit.cmp.anyerr194 = or i1 %nit.cmp.l.err192, %nit.cmp.r.err193
+  %nit.cmp.normal195 = icmp eq i8 %cx2b190, %X191
+  %nit.cmp.sticky196 = select i1 %nit.cmp.anyerr194, i1 false, i1 %nit.cmp.normal195
+  %ifcond197 = icmp ne i1 %nit.cmp.sticky196, false
+  br i1 %ifcond197, label %then198, label %ifcont199
 
-then188:                                          ; preds = %ifcont165
+then198:                                          ; preds = %ifcont171
   ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
 
-ifcont189:                                        ; preds = %ifcont165
-  %do0b190 = load i8, ptr %do0b, align 1
-  %O191 = load i8, ptr %O, align 1
-  %eqtmp192 = icmp eq i8 %do0b190, %O191
-  %ifcond193 = icmp ne i1 %eqtmp192, false
-  br i1 %ifcond193, label %then194, label %ifcont195
+ifcont199:                                        ; preds = %ifcont171
+  %co2b200 = load i8, ptr %co2b, align 1
+  %O201 = load i8, ptr %O, align 1
+  %nit.cmp.l.err202 = icmp eq i8 %co2b200, -128
+  %nit.cmp.r.err203 = icmp eq i8 %O201, -128
+  %nit.cmp.anyerr204 = or i1 %nit.cmp.l.err202, %nit.cmp.r.err203
+  %nit.cmp.normal205 = icmp eq i8 %co2b200, %O201
+  %nit.cmp.sticky206 = select i1 %nit.cmp.anyerr204, i1 false, i1 %nit.cmp.normal205
+  %ifcond207 = icmp ne i1 %nit.cmp.sticky206, false
+  br i1 %ifcond207, label %then208, label %ifcont209
 
-then194:                                          ; preds = %ifcont189
+then208:                                          ; preds = %ifcont199
   ret { i32, ptr, i8 } { i32 -1, ptr null, i8 0 }
 
-ifcont195:                                        ; preds = %ifcont189
+ifcont209:                                        ; preds = %ifcont199
+  %dx0a = alloca i8, align 1
+  %b210 = load %Wave9, ptr %b_alloca, align 1
+  %r211 = extractvalue %Wave9 %b210, 0
+  %b212 = load %Wave9, ptr %b_alloca, align 1
+  %v213 = extractvalue %Wave9 %b212, 4
+  %nit_and_call214 = call i8 @npk_nit_and(i8 %r211, i8 %v213)
+  store i8 %nit_and_call214, ptr %dx0a, align 1
+  %dx0b = alloca i8, align 1
+  %dx0a215 = load i8, ptr %dx0a, align 1
+  %b216 = load %Wave9, ptr %b_alloca, align 1
+  %z217 = extractvalue %Wave9 %b216, 8
+  %nit_and_call218 = call i8 @npk_nit_and(i8 %dx0a215, i8 %z217)
+  store i8 %nit_and_call218, ptr %dx0b, align 1
+  %do0a = alloca i8, align 1
+  %b219 = load %Wave9, ptr %b_alloca, align 1
+  %r220 = extractvalue %Wave9 %b219, 0
+  %b221 = load %Wave9, ptr %b_alloca, align 1
+  %v222 = extractvalue %Wave9 %b221, 4
+  %nit_or_call223 = call i8 @npk_nit_or(i8 %r220, i8 %v222)
+  store i8 %nit_or_call223, ptr %do0a, align 1
+  %do0b = alloca i8, align 1
+  %do0a224 = load i8, ptr %do0a, align 1
+  %b225 = load %Wave9, ptr %b_alloca, align 1
+  %z226 = extractvalue %Wave9 %b225, 8
+  %nit_or_call227 = call i8 @npk_nit_or(i8 %do0a224, i8 %z226)
+  store i8 %nit_or_call227, ptr %do0b, align 1
+  %dx0b228 = load i8, ptr %dx0b, align 1
+  %X229 = load i8, ptr %X, align 1
+  %nit.cmp.l.err230 = icmp eq i8 %dx0b228, -128
+  %nit.cmp.r.err231 = icmp eq i8 %X229, -128
+  %nit.cmp.anyerr232 = or i1 %nit.cmp.l.err230, %nit.cmp.r.err231
+  %nit.cmp.normal233 = icmp eq i8 %dx0b228, %X229
+  %nit.cmp.sticky234 = select i1 %nit.cmp.anyerr232, i1 false, i1 %nit.cmp.normal233
+  %ifcond235 = icmp ne i1 %nit.cmp.sticky234, false
+  br i1 %ifcond235, label %then236, label %ifcont237
+
+then236:                                          ; preds = %ifcont209
+  ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
+
+ifcont237:                                        ; preds = %ifcont209
+  %do0b238 = load i8, ptr %do0b, align 1
+  %O239 = load i8, ptr %O, align 1
+  %nit.cmp.l.err240 = icmp eq i8 %do0b238, -128
+  %nit.cmp.r.err241 = icmp eq i8 %O239, -128
+  %nit.cmp.anyerr242 = or i1 %nit.cmp.l.err240, %nit.cmp.r.err241
+  %nit.cmp.normal243 = icmp eq i8 %do0b238, %O239
+  %nit.cmp.sticky244 = select i1 %nit.cmp.anyerr242, i1 false, i1 %nit.cmp.normal243
+  %ifcond245 = icmp ne i1 %nit.cmp.sticky244, false
+  br i1 %ifcond245, label %then246, label %ifcont247
+
+then246:                                          ; preds = %ifcont237
+  ret { i32, ptr, i8 } { i32 -1, ptr null, i8 0 }
+
+ifcont247:                                        ; preds = %ifcont237
   %dx1a = alloca i8, align 1
-  %b196 = load %Wave9, ptr %b_alloca, align 1
-  %t197 = extractvalue %Wave9 %b196, 2
-  %b198 = load %Wave9, ptr %b_alloca, align 1
-  %v199 = extractvalue %Wave9 %b198, 4
-  %nit_and_call200 = call i8 @npk_nit_and(i8 %t197, i8 %v199)
-  store i8 %nit_and_call200, ptr %dx1a, align 1
+  %b248 = load %Wave9, ptr %b_alloca, align 1
+  %t249 = extractvalue %Wave9 %b248, 2
+  %b250 = load %Wave9, ptr %b_alloca, align 1
+  %v251 = extractvalue %Wave9 %b250, 4
+  %nit_and_call252 = call i8 @npk_nit_and(i8 %t249, i8 %v251)
+  store i8 %nit_and_call252, ptr %dx1a, align 1
   %dx1b = alloca i8, align 1
-  %dx1a201 = load i8, ptr %dx1a, align 1
-  %b202 = load %Wave9, ptr %b_alloca, align 1
-  %x203 = extractvalue %Wave9 %b202, 6
-  %nit_and_call204 = call i8 @npk_nit_and(i8 %dx1a201, i8 %x203)
-  store i8 %nit_and_call204, ptr %dx1b, align 1
+  %dx1a253 = load i8, ptr %dx1a, align 1
+  %b254 = load %Wave9, ptr %b_alloca, align 1
+  %x255 = extractvalue %Wave9 %b254, 6
+  %nit_and_call256 = call i8 @npk_nit_and(i8 %dx1a253, i8 %x255)
+  store i8 %nit_and_call256, ptr %dx1b, align 1
   %do1a = alloca i8, align 1
-  %b205 = load %Wave9, ptr %b_alloca, align 1
-  %t206 = extractvalue %Wave9 %b205, 2
-  %b207 = load %Wave9, ptr %b_alloca, align 1
-  %v208 = extractvalue %Wave9 %b207, 4
-  %nit_or_call209 = call i8 @npk_nit_or(i8 %t206, i8 %v208)
-  store i8 %nit_or_call209, ptr %do1a, align 1
+  %b257 = load %Wave9, ptr %b_alloca, align 1
+  %t258 = extractvalue %Wave9 %b257, 2
+  %b259 = load %Wave9, ptr %b_alloca, align 1
+  %v260 = extractvalue %Wave9 %b259, 4
+  %nit_or_call261 = call i8 @npk_nit_or(i8 %t258, i8 %v260)
+  store i8 %nit_or_call261, ptr %do1a, align 1
   %do1b = alloca i8, align 1
-  %do1a210 = load i8, ptr %do1a, align 1
-  %b211 = load %Wave9, ptr %b_alloca, align 1
-  %x212 = extractvalue %Wave9 %b211, 6
-  %nit_or_call213 = call i8 @npk_nit_or(i8 %do1a210, i8 %x212)
-  store i8 %nit_or_call213, ptr %do1b, align 1
-  %dx1b214 = load i8, ptr %dx1b, align 1
-  %X215 = load i8, ptr %X, align 1
-  %eqtmp216 = icmp eq i8 %dx1b214, %X215
-  %ifcond217 = icmp ne i1 %eqtmp216, false
-  br i1 %ifcond217, label %then218, label %ifcont219
+  %do1a262 = load i8, ptr %do1a, align 1
+  %b263 = load %Wave9, ptr %b_alloca, align 1
+  %x264 = extractvalue %Wave9 %b263, 6
+  %nit_or_call265 = call i8 @npk_nit_or(i8 %do1a262, i8 %x264)
+  store i8 %nit_or_call265, ptr %do1b, align 1
+  %dx1b266 = load i8, ptr %dx1b, align 1
+  %X267 = load i8, ptr %X, align 1
+  %nit.cmp.l.err268 = icmp eq i8 %dx1b266, -128
+  %nit.cmp.r.err269 = icmp eq i8 %X267, -128
+  %nit.cmp.anyerr270 = or i1 %nit.cmp.l.err268, %nit.cmp.r.err269
+  %nit.cmp.normal271 = icmp eq i8 %dx1b266, %X267
+  %nit.cmp.sticky272 = select i1 %nit.cmp.anyerr270, i1 false, i1 %nit.cmp.normal271
+  %ifcond273 = icmp ne i1 %nit.cmp.sticky272, false
+  br i1 %ifcond273, label %then274, label %ifcont275
 
-then218:                                          ; preds = %ifcont195
+then274:                                          ; preds = %ifcont247
   ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
 
-ifcont219:                                        ; preds = %ifcont195
-  %do1b220 = load i8, ptr %do1b, align 1
-  %O221 = load i8, ptr %O, align 1
-  %eqtmp222 = icmp eq i8 %do1b220, %O221
-  %ifcond223 = icmp ne i1 %eqtmp222, false
-  br i1 %ifcond223, label %then224, label %ifcont225
+ifcont275:                                        ; preds = %ifcont247
+  %do1b276 = load i8, ptr %do1b, align 1
+  %O277 = load i8, ptr %O, align 1
+  %nit.cmp.l.err278 = icmp eq i8 %do1b276, -128
+  %nit.cmp.r.err279 = icmp eq i8 %O277, -128
+  %nit.cmp.anyerr280 = or i1 %nit.cmp.l.err278, %nit.cmp.r.err279
+  %nit.cmp.normal281 = icmp eq i8 %do1b276, %O277
+  %nit.cmp.sticky282 = select i1 %nit.cmp.anyerr280, i1 false, i1 %nit.cmp.normal281
+  %ifcond283 = icmp ne i1 %nit.cmp.sticky282, false
+  br i1 %ifcond283, label %then284, label %ifcont285
 
-then224:                                          ; preds = %ifcont219
+then284:                                          ; preds = %ifcont275
   ret { i32, ptr, i8 } { i32 -1, ptr null, i8 0 }
 
-ifcont225:                                        ; preds = %ifcont219
+ifcont285:                                        ; preds = %ifcont275
   ret { i32, ptr, i8 } zeroinitializer
 }
 
@@ -3547,8 +4554,12 @@ entry:
   %r.ptr = getelementptr inbounds %Wave9, ptr %b_alloca, i32 0, i32 0
   %r = load i8, ptr %r.ptr, align 1
   %zn1 = load i8, ptr %zn, align 1
-  %netmp = icmp ne i8 %r, %zn1
-  %ifcond = icmp ne i1 %netmp, false
+  %nit.cmp.l.err = icmp eq i8 %r, -128
+  %nit.cmp.r.err = icmp eq i8 %zn1, -128
+  %nit.cmp.anyerr = or i1 %nit.cmp.l.err, %nit.cmp.r.err
+  %nit.cmp.normal = icmp ne i8 %r, %zn1
+  %nit.cmp.sticky = select i1 %nit.cmp.anyerr, i1 true, i1 %nit.cmp.normal
+  %ifcond = icmp ne i1 %nit.cmp.sticky, false
   br i1 %ifcond, label %then, label %ifcont
 
 then:                                             ; preds = %entry
@@ -3561,124 +4572,156 @@ ifcont:                                           ; preds = %then, %entry
   %s.ptr = getelementptr inbounds %Wave9, ptr %b_alloca, i32 0, i32 1
   %s = load i8, ptr %s.ptr, align 1
   %zn3 = load i8, ptr %zn, align 1
-  %netmp4 = icmp ne i8 %s, %zn3
-  %ifcond5 = icmp ne i1 %netmp4, false
-  br i1 %ifcond5, label %then6, label %ifcont9
+  %nit.cmp.l.err4 = icmp eq i8 %s, -128
+  %nit.cmp.r.err5 = icmp eq i8 %zn3, -128
+  %nit.cmp.anyerr6 = or i1 %nit.cmp.l.err4, %nit.cmp.r.err5
+  %nit.cmp.normal7 = icmp ne i8 %s, %zn3
+  %nit.cmp.sticky8 = select i1 %nit.cmp.anyerr6, i1 true, i1 %nit.cmp.normal7
+  %ifcond9 = icmp ne i1 %nit.cmp.sticky8, false
+  br i1 %ifcond9, label %then10, label %ifcont13
 
-then6:                                            ; preds = %ifcont
-  %count7 = load i32, ptr %count, align 4
-  %addtmp8 = add i32 %count7, 1
-  store i32 %addtmp8, ptr %count, align 4
-  br label %ifcont9
+then10:                                           ; preds = %ifcont
+  %count11 = load i32, ptr %count, align 4
+  %addtmp12 = add i32 %count11, 1
+  store i32 %addtmp12, ptr %count, align 4
+  br label %ifcont13
 
-ifcont9:                                          ; preds = %then6, %ifcont
+ifcont13:                                         ; preds = %then10, %ifcont
   %t.ptr = getelementptr inbounds %Wave9, ptr %b_alloca, i32 0, i32 2
   %t = load i8, ptr %t.ptr, align 1
-  %zn10 = load i8, ptr %zn, align 1
-  %netmp11 = icmp ne i8 %t, %zn10
-  %ifcond12 = icmp ne i1 %netmp11, false
-  br i1 %ifcond12, label %then13, label %ifcont16
+  %zn14 = load i8, ptr %zn, align 1
+  %nit.cmp.l.err15 = icmp eq i8 %t, -128
+  %nit.cmp.r.err16 = icmp eq i8 %zn14, -128
+  %nit.cmp.anyerr17 = or i1 %nit.cmp.l.err15, %nit.cmp.r.err16
+  %nit.cmp.normal18 = icmp ne i8 %t, %zn14
+  %nit.cmp.sticky19 = select i1 %nit.cmp.anyerr17, i1 true, i1 %nit.cmp.normal18
+  %ifcond20 = icmp ne i1 %nit.cmp.sticky19, false
+  br i1 %ifcond20, label %then21, label %ifcont24
 
-then13:                                           ; preds = %ifcont9
-  %count14 = load i32, ptr %count, align 4
-  %addtmp15 = add i32 %count14, 1
-  store i32 %addtmp15, ptr %count, align 4
-  br label %ifcont16
+then21:                                           ; preds = %ifcont13
+  %count22 = load i32, ptr %count, align 4
+  %addtmp23 = add i32 %count22, 1
+  store i32 %addtmp23, ptr %count, align 4
+  br label %ifcont24
 
-ifcont16:                                         ; preds = %then13, %ifcont9
+ifcont24:                                         ; preds = %then21, %ifcont13
   %u.ptr = getelementptr inbounds %Wave9, ptr %b_alloca, i32 0, i32 3
   %u = load i8, ptr %u.ptr, align 1
-  %zn17 = load i8, ptr %zn, align 1
-  %netmp18 = icmp ne i8 %u, %zn17
-  %ifcond19 = icmp ne i1 %netmp18, false
-  br i1 %ifcond19, label %then20, label %ifcont23
+  %zn25 = load i8, ptr %zn, align 1
+  %nit.cmp.l.err26 = icmp eq i8 %u, -128
+  %nit.cmp.r.err27 = icmp eq i8 %zn25, -128
+  %nit.cmp.anyerr28 = or i1 %nit.cmp.l.err26, %nit.cmp.r.err27
+  %nit.cmp.normal29 = icmp ne i8 %u, %zn25
+  %nit.cmp.sticky30 = select i1 %nit.cmp.anyerr28, i1 true, i1 %nit.cmp.normal29
+  %ifcond31 = icmp ne i1 %nit.cmp.sticky30, false
+  br i1 %ifcond31, label %then32, label %ifcont35
 
-then20:                                           ; preds = %ifcont16
-  %count21 = load i32, ptr %count, align 4
-  %addtmp22 = add i32 %count21, 1
-  store i32 %addtmp22, ptr %count, align 4
-  br label %ifcont23
+then32:                                           ; preds = %ifcont24
+  %count33 = load i32, ptr %count, align 4
+  %addtmp34 = add i32 %count33, 1
+  store i32 %addtmp34, ptr %count, align 4
+  br label %ifcont35
 
-ifcont23:                                         ; preds = %then20, %ifcont16
+ifcont35:                                         ; preds = %then32, %ifcont24
   %v.ptr = getelementptr inbounds %Wave9, ptr %b_alloca, i32 0, i32 4
   %v = load i8, ptr %v.ptr, align 1
-  %zn24 = load i8, ptr %zn, align 1
-  %netmp25 = icmp ne i8 %v, %zn24
-  %ifcond26 = icmp ne i1 %netmp25, false
-  br i1 %ifcond26, label %then27, label %ifcont30
+  %zn36 = load i8, ptr %zn, align 1
+  %nit.cmp.l.err37 = icmp eq i8 %v, -128
+  %nit.cmp.r.err38 = icmp eq i8 %zn36, -128
+  %nit.cmp.anyerr39 = or i1 %nit.cmp.l.err37, %nit.cmp.r.err38
+  %nit.cmp.normal40 = icmp ne i8 %v, %zn36
+  %nit.cmp.sticky41 = select i1 %nit.cmp.anyerr39, i1 true, i1 %nit.cmp.normal40
+  %ifcond42 = icmp ne i1 %nit.cmp.sticky41, false
+  br i1 %ifcond42, label %then43, label %ifcont46
 
-then27:                                           ; preds = %ifcont23
-  %count28 = load i32, ptr %count, align 4
-  %addtmp29 = add i32 %count28, 1
-  store i32 %addtmp29, ptr %count, align 4
-  br label %ifcont30
+then43:                                           ; preds = %ifcont35
+  %count44 = load i32, ptr %count, align 4
+  %addtmp45 = add i32 %count44, 1
+  store i32 %addtmp45, ptr %count, align 4
+  br label %ifcont46
 
-ifcont30:                                         ; preds = %then27, %ifcont23
+ifcont46:                                         ; preds = %then43, %ifcont35
   %w.ptr = getelementptr inbounds %Wave9, ptr %b_alloca, i32 0, i32 5
   %w = load i8, ptr %w.ptr, align 1
-  %zn31 = load i8, ptr %zn, align 1
-  %netmp32 = icmp ne i8 %w, %zn31
-  %ifcond33 = icmp ne i1 %netmp32, false
-  br i1 %ifcond33, label %then34, label %ifcont37
+  %zn47 = load i8, ptr %zn, align 1
+  %nit.cmp.l.err48 = icmp eq i8 %w, -128
+  %nit.cmp.r.err49 = icmp eq i8 %zn47, -128
+  %nit.cmp.anyerr50 = or i1 %nit.cmp.l.err48, %nit.cmp.r.err49
+  %nit.cmp.normal51 = icmp ne i8 %w, %zn47
+  %nit.cmp.sticky52 = select i1 %nit.cmp.anyerr50, i1 true, i1 %nit.cmp.normal51
+  %ifcond53 = icmp ne i1 %nit.cmp.sticky52, false
+  br i1 %ifcond53, label %then54, label %ifcont57
 
-then34:                                           ; preds = %ifcont30
-  %count35 = load i32, ptr %count, align 4
-  %addtmp36 = add i32 %count35, 1
-  store i32 %addtmp36, ptr %count, align 4
-  br label %ifcont37
+then54:                                           ; preds = %ifcont46
+  %count55 = load i32, ptr %count, align 4
+  %addtmp56 = add i32 %count55, 1
+  store i32 %addtmp56, ptr %count, align 4
+  br label %ifcont57
 
-ifcont37:                                         ; preds = %then34, %ifcont30
+ifcont57:                                         ; preds = %then54, %ifcont46
   %x.ptr = getelementptr inbounds %Wave9, ptr %b_alloca, i32 0, i32 6
   %x = load i8, ptr %x.ptr, align 1
-  %zn38 = load i8, ptr %zn, align 1
-  %netmp39 = icmp ne i8 %x, %zn38
-  %ifcond40 = icmp ne i1 %netmp39, false
-  br i1 %ifcond40, label %then41, label %ifcont44
+  %zn58 = load i8, ptr %zn, align 1
+  %nit.cmp.l.err59 = icmp eq i8 %x, -128
+  %nit.cmp.r.err60 = icmp eq i8 %zn58, -128
+  %nit.cmp.anyerr61 = or i1 %nit.cmp.l.err59, %nit.cmp.r.err60
+  %nit.cmp.normal62 = icmp ne i8 %x, %zn58
+  %nit.cmp.sticky63 = select i1 %nit.cmp.anyerr61, i1 true, i1 %nit.cmp.normal62
+  %ifcond64 = icmp ne i1 %nit.cmp.sticky63, false
+  br i1 %ifcond64, label %then65, label %ifcont68
 
-then41:                                           ; preds = %ifcont37
-  %count42 = load i32, ptr %count, align 4
-  %addtmp43 = add i32 %count42, 1
-  store i32 %addtmp43, ptr %count, align 4
-  br label %ifcont44
+then65:                                           ; preds = %ifcont57
+  %count66 = load i32, ptr %count, align 4
+  %addtmp67 = add i32 %count66, 1
+  store i32 %addtmp67, ptr %count, align 4
+  br label %ifcont68
 
-ifcont44:                                         ; preds = %then41, %ifcont37
+ifcont68:                                         ; preds = %then65, %ifcont57
   %y.ptr = getelementptr inbounds %Wave9, ptr %b_alloca, i32 0, i32 7
   %y = load i8, ptr %y.ptr, align 1
-  %zn45 = load i8, ptr %zn, align 1
-  %netmp46 = icmp ne i8 %y, %zn45
-  %ifcond47 = icmp ne i1 %netmp46, false
-  br i1 %ifcond47, label %then48, label %ifcont51
+  %zn69 = load i8, ptr %zn, align 1
+  %nit.cmp.l.err70 = icmp eq i8 %y, -128
+  %nit.cmp.r.err71 = icmp eq i8 %zn69, -128
+  %nit.cmp.anyerr72 = or i1 %nit.cmp.l.err70, %nit.cmp.r.err71
+  %nit.cmp.normal73 = icmp ne i8 %y, %zn69
+  %nit.cmp.sticky74 = select i1 %nit.cmp.anyerr72, i1 true, i1 %nit.cmp.normal73
+  %ifcond75 = icmp ne i1 %nit.cmp.sticky74, false
+  br i1 %ifcond75, label %then76, label %ifcont79
 
-then48:                                           ; preds = %ifcont44
-  %count49 = load i32, ptr %count, align 4
-  %addtmp50 = add i32 %count49, 1
-  store i32 %addtmp50, ptr %count, align 4
-  br label %ifcont51
+then76:                                           ; preds = %ifcont68
+  %count77 = load i32, ptr %count, align 4
+  %addtmp78 = add i32 %count77, 1
+  store i32 %addtmp78, ptr %count, align 4
+  br label %ifcont79
 
-ifcont51:                                         ; preds = %then48, %ifcont44
+ifcont79:                                         ; preds = %then76, %ifcont68
   %z.ptr = getelementptr inbounds %Wave9, ptr %b_alloca, i32 0, i32 8
   %z = load i8, ptr %z.ptr, align 1
-  %zn52 = load i8, ptr %zn, align 1
-  %netmp53 = icmp ne i8 %z, %zn52
-  %ifcond54 = icmp ne i1 %netmp53, false
-  br i1 %ifcond54, label %then55, label %ifcont58
+  %zn80 = load i8, ptr %zn, align 1
+  %nit.cmp.l.err81 = icmp eq i8 %z, -128
+  %nit.cmp.r.err82 = icmp eq i8 %zn80, -128
+  %nit.cmp.anyerr83 = or i1 %nit.cmp.l.err81, %nit.cmp.r.err82
+  %nit.cmp.normal84 = icmp ne i8 %z, %zn80
+  %nit.cmp.sticky85 = select i1 %nit.cmp.anyerr83, i1 true, i1 %nit.cmp.normal84
+  %ifcond86 = icmp ne i1 %nit.cmp.sticky85, false
+  br i1 %ifcond86, label %then87, label %ifcont90
 
-then55:                                           ; preds = %ifcont51
-  %count56 = load i32, ptr %count, align 4
-  %addtmp57 = add i32 %count56, 1
-  store i32 %addtmp57, ptr %count, align 4
-  br label %ifcont58
+then87:                                           ; preds = %ifcont79
+  %count88 = load i32, ptr %count, align 4
+  %addtmp89 = add i32 %count88, 1
+  store i32 %addtmp89, ptr %count, align 4
+  br label %ifcont90
 
-ifcont58:                                         ; preds = %then55, %ifcont51
-  %count59 = load i32, ptr %count, align 4
-  %eqtmp = icmp eq i32 %count59, 9
-  %ifcond60 = icmp ne i1 %eqtmp, false
-  br i1 %ifcond60, label %then61, label %ifcont62
+ifcont90:                                         ; preds = %then87, %ifcont79
+  %count91 = load i32, ptr %count, align 4
+  %eqtmp = icmp eq i32 %count91, 9
+  %ifcond92 = icmp ne i1 %eqtmp, false
+  br i1 %ifcond92, label %then93, label %ifcont94
 
-then61:                                           ; preds = %ifcont58
+then93:                                           ; preds = %ifcont90
   ret { i32, ptr, i8 } { i32 1, ptr null, i8 0 }
 
-ifcont62:                                         ; preds = %ifcont58
+ifcont94:                                         ; preds = %ifcont90
   ret { i32, ptr, i8 } zeroinitializer
 }
 
@@ -3686,6 +4729,7 @@ define { i32, ptr, i8 } @failsafe(i32 %err) {
 entry:
   %err.addr = alloca i32, align 4
   store i32 %err, ptr %err.addr, align 4
+  %err1 = load i32, ptr %err.addr, align 4
   %calltmp = call { %struct.NIL, ptr, i8 } @rl_close_window()
   %raw.value = extractvalue { %struct.NIL, ptr, i8 } %calltmp, 0
   call void @exit(i32 1) #0
@@ -3750,25 +4794,25 @@ entry:
   store i32 150, ptr %cell_size, align 4
   br label %whilecond
 
-whilecond:                                        ; preds = %ifcont256, %entry
+whilecond:                                        ; preds = %ifcont271, %entry
   %calltmp13 = call { i32, ptr, i8 } @rl_window_should_close()
   %raw.value14 = extractvalue { i32, ptr, i8 } %calltmp13, 0
   %eqtmp = icmp eq i32 %raw.value14, 0
   %whilecond15 = icmp ne i1 %eqtmp, false
-  br i1 %whilecond15, label %whilebody, label %afterwhile259
+  br i1 %whilecond15, label %whilebody, label %afterwhile274
 
 whilebody:                                        ; preds = %whilecond
   %game_over16 = load i32, ptr %game_over, align 4
   %eqtmp17 = icmp eq i32 %game_over16, 0
   %ifcond = icmp ne i1 %eqtmp17, false
-  br i1 %ifcond, label %then, label %else102
+  br i1 %ifcond, label %then, label %else105
 
 then:                                             ; preds = %whilebody
   %calltmp18 = call { i32, ptr, i8 } @rl_is_mouse_button_pressed(i32 0)
   %raw.value19 = extractvalue { i32, ptr, i8 } %calltmp18, 0
   %eqtmp20 = icmp eq i32 %raw.value19, 1
   %ifcond21 = icmp ne i1 %eqtmp20, false
-  br i1 %ifcond21, label %then22, label %ifcont101
+  br i1 %ifcond21, label %then22, label %ifcont104
 
 then22:                                           ; preds = %then
   %mx = alloca i32, align 4
@@ -3796,7 +4840,7 @@ and.rhs:                                          ; preds = %then22
 and.merge:                                        ; preds = %and.rhs, %then22
   %and.result = phi i1 [ false, %then22 ], [ %and.rhs31, %and.rhs ]
   %ifcond32 = icmp ne i1 %and.result, false
-  br i1 %ifcond32, label %then33, label %ifcont100
+  br i1 %ifcond32, label %then33, label %ifcont103
 
 then33:                                           ; preds = %and.merge
   %my34 = load i32, ptr %my, align 4
@@ -3816,7 +4860,7 @@ and.rhs38:                                        ; preds = %then33
 and.merge44:                                      ; preds = %and.rhs38, %then33
   %and.result45 = phi i1 [ false, %then33 ], [ %and.rhs43, %and.rhs38 ]
   %ifcond46 = icmp ne i1 %and.result45, false
-  br i1 %ifcond46, label %then47, label %ifcont99
+  br i1 %ifcond46, label %then47, label %ifcont102
 
 then47:                                           ; preds = %and.merge44
   %col = alloca i32, align 4
@@ -3851,324 +4895,344 @@ then47:                                           ; preds = %and.merge44
   store i8 %raw.value64, ptr %cell_val, align 1
   %cell_val65 = load i8, ptr %cell_val, align 1
   %zn66 = load i8, ptr %zn, align 1
-  %eqtmp67 = icmp eq i8 %cell_val65, %zn66
-  %ifcond68 = icmp ne i1 %eqtmp67, false
-  br i1 %ifcond68, label %then69, label %ifcont98
+  %nit.cmp.l.err = icmp eq i8 %cell_val65, -128
+  %nit.cmp.r.err = icmp eq i8 %zn66, -128
+  %nit.cmp.anyerr = or i1 %nit.cmp.l.err, %nit.cmp.r.err
+  %nit.cmp.normal = icmp eq i8 %cell_val65, %zn66
+  %nit.cmp.sticky = select i1 %nit.cmp.anyerr, i1 false, i1 %nit.cmp.normal
+  %ifcond67 = icmp ne i1 %nit.cmp.sticky, false
+  br i1 %ifcond67, label %then68, label %ifcont101
 
-then69:                                           ; preds = %then47
-  %board70 = load %Wave9, ptr %board, align 1
-  %idx71 = load i32, ptr %idx, align 4
-  %current_player72 = load i8, ptr %current_player, align 1
-  %calltmp73 = call { %Wave9, ptr, i8 } @set_cell(%Wave9 %board70, i32 %idx71, i8 %current_player72)
-  %raw.value74 = extractvalue { %Wave9, ptr, i8 } %calltmp73, 0
-  store %Wave9 %raw.value74, ptr %board, align 1
-  %board75 = load %Wave9, ptr %board, align 1
-  %calltmp76 = call { i32, ptr, i8 } @check_winner(%Wave9 %board75)
-  %raw.value77 = extractvalue { i32, ptr, i8 } %calltmp76, 0
-  store i32 %raw.value77, ptr %winner, align 4
-  %winner78 = load i32, ptr %winner, align 4
-  %netmp = icmp ne i32 %winner78, 0
-  %ifcond79 = icmp ne i1 %netmp, false
-  br i1 %ifcond79, label %then80, label %else
+then68:                                           ; preds = %then47
+  %board69 = load %Wave9, ptr %board, align 1
+  %idx70 = load i32, ptr %idx, align 4
+  %current_player71 = load i8, ptr %current_player, align 1
+  %calltmp72 = call { %Wave9, ptr, i8 } @set_cell(%Wave9 %board69, i32 %idx70, i8 %current_player71)
+  %raw.value73 = extractvalue { %Wave9, ptr, i8 } %calltmp72, 0
+  store %Wave9 %raw.value73, ptr %board, align 1
+  %board74 = load %Wave9, ptr %board, align 1
+  %calltmp75 = call { i32, ptr, i8 } @check_winner(%Wave9 %board74)
+  %raw.value76 = extractvalue { i32, ptr, i8 } %calltmp75, 0
+  store i32 %raw.value76, ptr %winner, align 4
+  %winner77 = load i32, ptr %winner, align 4
+  %netmp = icmp ne i32 %winner77, 0
+  %ifcond78 = icmp ne i1 %netmp, false
+  br i1 %ifcond78, label %then79, label %else
 
-then80:                                           ; preds = %then69
+then79:                                           ; preds = %then68
   store i32 1, ptr %game_over, align 4
-  br label %ifcont97
-
-else:                                             ; preds = %then69
-  %board81 = load %Wave9, ptr %board, align 1
-  %calltmp82 = call { i32, ptr, i8 } @check_draw(%Wave9 %board81)
-  %raw.value83 = extractvalue { i32, ptr, i8 } %calltmp82, 0
-  %eqtmp84 = icmp eq i32 %raw.value83, 1
-  %ifcond85 = icmp ne i1 %eqtmp84, false
-  br i1 %ifcond85, label %then86, label %else87
-
-then86:                                           ; preds = %else
-  store i32 1, ptr %game_over, align 4
-  store i32 0, ptr %winner, align 4
-  br label %ifcont96
-
-else87:                                           ; preds = %else
-  %current_player88 = load i8, ptr %current_player, align 1
-  %X89 = load i8, ptr %X, align 1
-  %eqtmp90 = icmp eq i8 %current_player88, %X89
-  %ifcond91 = icmp ne i1 %eqtmp90, false
-  br i1 %ifcond91, label %then92, label %else94
-
-then92:                                           ; preds = %else87
-  %O93 = load i8, ptr %O, align 1
-  store i8 %O93, ptr %current_player, align 1
-  br label %ifcont
-
-else94:                                           ; preds = %else87
-  %X95 = load i8, ptr %X, align 1
-  store i8 %X95, ptr %current_player, align 1
-  br label %ifcont
-
-ifcont:                                           ; preds = %else94, %then92
-  br label %ifcont96
-
-ifcont96:                                         ; preds = %ifcont, %then86
-  br label %ifcont97
-
-ifcont97:                                         ; preds = %ifcont96, %then80
-  br label %ifcont98
-
-ifcont98:                                         ; preds = %ifcont97, %then47
-  br label %ifcont99
-
-ifcont99:                                         ; preds = %ifcont98, %and.merge44
   br label %ifcont100
 
-ifcont100:                                        ; preds = %ifcont99, %and.merge
+else:                                             ; preds = %then68
+  %board80 = load %Wave9, ptr %board, align 1
+  %calltmp81 = call { i32, ptr, i8 } @check_draw(%Wave9 %board80)
+  %raw.value82 = extractvalue { i32, ptr, i8 } %calltmp81, 0
+  %eqtmp83 = icmp eq i32 %raw.value82, 1
+  %ifcond84 = icmp ne i1 %eqtmp83, false
+  br i1 %ifcond84, label %then85, label %else86
+
+then85:                                           ; preds = %else
+  store i32 1, ptr %game_over, align 4
+  store i32 0, ptr %winner, align 4
+  br label %ifcont99
+
+else86:                                           ; preds = %else
+  %current_player87 = load i8, ptr %current_player, align 1
+  %X88 = load i8, ptr %X, align 1
+  %nit.cmp.l.err89 = icmp eq i8 %current_player87, -128
+  %nit.cmp.r.err90 = icmp eq i8 %X88, -128
+  %nit.cmp.anyerr91 = or i1 %nit.cmp.l.err89, %nit.cmp.r.err90
+  %nit.cmp.normal92 = icmp eq i8 %current_player87, %X88
+  %nit.cmp.sticky93 = select i1 %nit.cmp.anyerr91, i1 false, i1 %nit.cmp.normal92
+  %ifcond94 = icmp ne i1 %nit.cmp.sticky93, false
+  br i1 %ifcond94, label %then95, label %else97
+
+then95:                                           ; preds = %else86
+  %O96 = load i8, ptr %O, align 1
+  store i8 %O96, ptr %current_player, align 1
+  br label %ifcont
+
+else97:                                           ; preds = %else86
+  %X98 = load i8, ptr %X, align 1
+  store i8 %X98, ptr %current_player, align 1
+  br label %ifcont
+
+ifcont:                                           ; preds = %else97, %then95
+  br label %ifcont99
+
+ifcont99:                                         ; preds = %ifcont, %then85
+  br label %ifcont100
+
+ifcont100:                                        ; preds = %ifcont99, %then79
   br label %ifcont101
 
-ifcont101:                                        ; preds = %ifcont100, %then
-  br label %ifcont128
+ifcont101:                                        ; preds = %ifcont100, %then47
+  br label %ifcont102
 
-else102:                                          ; preds = %whilebody
-  %calltmp103 = call { i32, ptr, i8 } @rl_is_key_pressed(i32 82)
-  %raw.value104 = extractvalue { i32, ptr, i8 } %calltmp103, 0
-  %eqtmp105 = icmp eq i32 %raw.value104, 1
-  %ifcond106 = icmp ne i1 %eqtmp105, false
-  br i1 %ifcond106, label %then107, label %ifcont127
+ifcont102:                                        ; preds = %ifcont101, %and.merge44
+  br label %ifcont103
 
-then107:                                          ; preds = %else102
-  %zn108 = load i8, ptr %zn, align 1
-  %r.ptr109 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 0
-  store i8 %zn108, ptr %r.ptr109, align 1
-  %zn110 = load i8, ptr %zn, align 1
-  %s.ptr111 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 1
-  store i8 %zn110, ptr %s.ptr111, align 1
-  %zn112 = load i8, ptr %zn, align 1
-  %t.ptr113 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 2
-  store i8 %zn112, ptr %t.ptr113, align 1
-  %zn114 = load i8, ptr %zn, align 1
-  %u.ptr115 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 3
-  store i8 %zn114, ptr %u.ptr115, align 1
-  %zn116 = load i8, ptr %zn, align 1
-  %v.ptr117 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 4
-  store i8 %zn116, ptr %v.ptr117, align 1
-  %zn118 = load i8, ptr %zn, align 1
-  %w.ptr119 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 5
-  store i8 %zn118, ptr %w.ptr119, align 1
-  %zn120 = load i8, ptr %zn, align 1
-  %x.ptr121 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 6
-  store i8 %zn120, ptr %x.ptr121, align 1
-  %zn122 = load i8, ptr %zn, align 1
-  %y.ptr123 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 7
-  store i8 %zn122, ptr %y.ptr123, align 1
-  %zn124 = load i8, ptr %zn, align 1
-  %z.ptr125 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 8
-  store i8 %zn124, ptr %z.ptr125, align 1
-  %X126 = load i8, ptr %X, align 1
-  store i8 %X126, ptr %current_player, align 1
+ifcont103:                                        ; preds = %ifcont102, %and.merge
+  br label %ifcont104
+
+ifcont104:                                        ; preds = %ifcont103, %then
+  br label %ifcont131
+
+else105:                                          ; preds = %whilebody
+  %calltmp106 = call { i32, ptr, i8 } @rl_is_key_pressed(i32 82)
+  %raw.value107 = extractvalue { i32, ptr, i8 } %calltmp106, 0
+  %eqtmp108 = icmp eq i32 %raw.value107, 1
+  %ifcond109 = icmp ne i1 %eqtmp108, false
+  br i1 %ifcond109, label %then110, label %ifcont130
+
+then110:                                          ; preds = %else105
+  %zn111 = load i8, ptr %zn, align 1
+  %r.ptr112 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 0
+  store i8 %zn111, ptr %r.ptr112, align 1
+  %zn113 = load i8, ptr %zn, align 1
+  %s.ptr114 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 1
+  store i8 %zn113, ptr %s.ptr114, align 1
+  %zn115 = load i8, ptr %zn, align 1
+  %t.ptr116 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 2
+  store i8 %zn115, ptr %t.ptr116, align 1
+  %zn117 = load i8, ptr %zn, align 1
+  %u.ptr118 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 3
+  store i8 %zn117, ptr %u.ptr118, align 1
+  %zn119 = load i8, ptr %zn, align 1
+  %v.ptr120 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 4
+  store i8 %zn119, ptr %v.ptr120, align 1
+  %zn121 = load i8, ptr %zn, align 1
+  %w.ptr122 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 5
+  store i8 %zn121, ptr %w.ptr122, align 1
+  %zn123 = load i8, ptr %zn, align 1
+  %x.ptr124 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 6
+  store i8 %zn123, ptr %x.ptr124, align 1
+  %zn125 = load i8, ptr %zn, align 1
+  %y.ptr126 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 7
+  store i8 %zn125, ptr %y.ptr126, align 1
+  %zn127 = load i8, ptr %zn, align 1
+  %z.ptr128 = getelementptr inbounds %Wave9, ptr %board, i32 0, i32 8
+  store i8 %zn127, ptr %z.ptr128, align 1
+  %X129 = load i8, ptr %X, align 1
+  store i8 %X129, ptr %current_player, align 1
   store i32 0, ptr %game_over, align 4
   store i32 0, ptr %winner, align 4
-  br label %ifcont127
+  br label %ifcont130
 
-ifcont127:                                        ; preds = %then107, %else102
-  br label %ifcont128
+ifcont130:                                        ; preds = %then110, %else105
+  br label %ifcont131
 
-ifcont128:                                        ; preds = %ifcont127, %ifcont101
-  %calltmp129 = call { %struct.NIL, ptr, i8 } @rl_begin_drawing()
-  %raw.value130 = extractvalue { %struct.NIL, ptr, i8 } %calltmp129, 0
-  %calltmp131 = call { %struct.NIL, ptr, i8 } @rl_clear_background(i32 240, i32 240, i32 240, i32 255)
-  %raw.value132 = extractvalue { %struct.NIL, ptr, i8 } %calltmp131, 0
-  %calltmp133 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.22, i32 250, i32 20, i32 30, i32 50, i32 50, i32 50, i32 255)
-  %raw.value134 = extractvalue { %struct.NIL, ptr, i8 } %calltmp133, 0
-  %game_over135 = load i32, ptr %game_over, align 4
-  %eqtmp136 = icmp eq i32 %game_over135, 0
-  %ifcond137 = icmp ne i1 %eqtmp136, false
-  br i1 %ifcond137, label %then138, label %else150
+ifcont131:                                        ; preds = %ifcont130, %ifcont104
+  %calltmp132 = call { %struct.NIL, ptr, i8 } @rl_begin_drawing()
+  %raw.value133 = extractvalue { %struct.NIL, ptr, i8 } %calltmp132, 0
+  %calltmp134 = call { %struct.NIL, ptr, i8 } @rl_clear_background(i32 240, i32 240, i32 240, i32 255)
+  %raw.value135 = extractvalue { %struct.NIL, ptr, i8 } %calltmp134, 0
+  %calltmp136 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.22, i32 250, i32 20, i32 30, i32 50, i32 50, i32 50, i32 255)
+  %raw.value137 = extractvalue { %struct.NIL, ptr, i8 } %calltmp136, 0
+  %game_over138 = load i32, ptr %game_over, align 4
+  %eqtmp139 = icmp eq i32 %game_over138, 0
+  %ifcond140 = icmp ne i1 %eqtmp139, false
+  br i1 %ifcond140, label %then141, label %else157
 
-then138:                                          ; preds = %ifcont128
-  %current_player139 = load i8, ptr %current_player, align 1
-  %X140 = load i8, ptr %X, align 1
-  %eqtmp141 = icmp eq i8 %current_player139, %X140
-  %ifcond142 = icmp ne i1 %eqtmp141, false
-  br i1 %ifcond142, label %then143, label %else146
+then141:                                          ; preds = %ifcont131
+  %current_player142 = load i8, ptr %current_player, align 1
+  %X143 = load i8, ptr %X, align 1
+  %nit.cmp.l.err144 = icmp eq i8 %current_player142, -128
+  %nit.cmp.r.err145 = icmp eq i8 %X143, -128
+  %nit.cmp.anyerr146 = or i1 %nit.cmp.l.err144, %nit.cmp.r.err145
+  %nit.cmp.normal147 = icmp eq i8 %current_player142, %X143
+  %nit.cmp.sticky148 = select i1 %nit.cmp.anyerr146, i1 false, i1 %nit.cmp.normal147
+  %ifcond149 = icmp ne i1 %nit.cmp.sticky148, false
+  br i1 %ifcond149, label %then150, label %else153
 
-then143:                                          ; preds = %then138
-  %calltmp144 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.24, i32 350, i32 540, i32 30, i32 200, i32 40, i32 40, i32 255)
-  %raw.value145 = extractvalue { %struct.NIL, ptr, i8 } %calltmp144, 0
-  br label %ifcont149
-
-else146:                                          ; preds = %then138
-  %calltmp147 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.26, i32 350, i32 540, i32 30, i32 40, i32 100, i32 200, i32 255)
-  %raw.value148 = extractvalue { %struct.NIL, ptr, i8 } %calltmp147, 0
-  br label %ifcont149
-
-ifcont149:                                        ; preds = %else146, %then143
-  br label %ifcont153
-
-else150:                                          ; preds = %ifcont128
-  %calltmp151 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.28, i32 270, i32 540, i32 25, i32 100, i32 100, i32 100, i32 255)
+then150:                                          ; preds = %then141
+  %calltmp151 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.24, i32 350, i32 540, i32 30, i32 200, i32 40, i32 40, i32 255)
   %raw.value152 = extractvalue { %struct.NIL, ptr, i8 } %calltmp151, 0
-  br label %ifcont153
+  br label %ifcont156
 
-ifcont153:                                        ; preds = %else150, %ifcont149
-  %grid_x154 = load i32, ptr %grid_x, align 4
-  %addtmp155 = add i32 %grid_x154, 145
-  %grid_y156 = load i32, ptr %grid_y, align 4
-  %calltmp157 = call { %struct.NIL, ptr, i8 } @rl_draw_rectangle(i32 %addtmp155, i32 %grid_y156, i32 10, i32 450, i32 50, i32 50, i32 50, i32 255)
-  %raw.value158 = extractvalue { %struct.NIL, ptr, i8 } %calltmp157, 0
-  %grid_x159 = load i32, ptr %grid_x, align 4
-  %addtmp160 = add i32 %grid_x159, 295
-  %grid_y161 = load i32, ptr %grid_y, align 4
-  %calltmp162 = call { %struct.NIL, ptr, i8 } @rl_draw_rectangle(i32 %addtmp160, i32 %grid_y161, i32 10, i32 450, i32 50, i32 50, i32 50, i32 255)
-  %raw.value163 = extractvalue { %struct.NIL, ptr, i8 } %calltmp162, 0
-  %grid_x164 = load i32, ptr %grid_x, align 4
-  %grid_y165 = load i32, ptr %grid_y, align 4
-  %addtmp166 = add i32 %grid_y165, 145
-  %calltmp167 = call { %struct.NIL, ptr, i8 } @rl_draw_rectangle(i32 %grid_x164, i32 %addtmp166, i32 450, i32 10, i32 50, i32 50, i32 50, i32 255)
-  %raw.value168 = extractvalue { %struct.NIL, ptr, i8 } %calltmp167, 0
-  %grid_x169 = load i32, ptr %grid_x, align 4
-  %grid_y170 = load i32, ptr %grid_y, align 4
-  %addtmp171 = add i32 %grid_y170, 295
-  %calltmp172 = call { %struct.NIL, ptr, i8 } @rl_draw_rectangle(i32 %grid_x169, i32 %addtmp171, i32 450, i32 10, i32 50, i32 50, i32 50, i32 255)
-  %raw.value173 = extractvalue { %struct.NIL, ptr, i8 } %calltmp172, 0
-  %row174 = alloca i32, align 4
-  store i32 0, ptr %row174, align 4
-  br label %whilecond175
+else153:                                          ; preds = %then141
+  %calltmp154 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.26, i32 350, i32 540, i32 30, i32 40, i32 100, i32 200, i32 255)
+  %raw.value155 = extractvalue { %struct.NIL, ptr, i8 } %calltmp154, 0
+  br label %ifcont156
 
-whilecond175:                                     ; preds = %afterwhile, %ifcont153
-  %row176 = load i32, ptr %row174, align 4
-  %lttmp177 = icmp slt i32 %row176, 3
-  %whilecond178 = icmp ne i1 %lttmp177, false
-  br i1 %whilecond178, label %whilebody179, label %afterwhile231
+ifcont156:                                        ; preds = %else153, %then150
+  br label %ifcont160
 
-whilebody179:                                     ; preds = %whilecond175
-  %col180 = alloca i32, align 4
-  store i32 0, ptr %col180, align 4
-  br label %whilecond181
+else157:                                          ; preds = %ifcont131
+  %calltmp158 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.28, i32 270, i32 540, i32 25, i32 100, i32 100, i32 100, i32 255)
+  %raw.value159 = extractvalue { %struct.NIL, ptr, i8 } %calltmp158, 0
+  br label %ifcont160
 
-whilecond181:                                     ; preds = %ifcont226, %whilebody179
-  %col182 = load i32, ptr %col180, align 4
-  %lttmp183 = icmp slt i32 %col182, 3
-  %whilecond184 = icmp ne i1 %lttmp183, false
-  br i1 %whilecond184, label %whilebody185, label %afterwhile
+ifcont160:                                        ; preds = %else157, %ifcont156
+  %grid_x161 = load i32, ptr %grid_x, align 4
+  %addtmp162 = add i32 %grid_x161, 145
+  %grid_y163 = load i32, ptr %grid_y, align 4
+  %calltmp164 = call { %struct.NIL, ptr, i8 } @rl_draw_rectangle(i32 %addtmp162, i32 %grid_y163, i32 10, i32 450, i32 50, i32 50, i32 50, i32 255)
+  %raw.value165 = extractvalue { %struct.NIL, ptr, i8 } %calltmp164, 0
+  %grid_x166 = load i32, ptr %grid_x, align 4
+  %addtmp167 = add i32 %grid_x166, 295
+  %grid_y168 = load i32, ptr %grid_y, align 4
+  %calltmp169 = call { %struct.NIL, ptr, i8 } @rl_draw_rectangle(i32 %addtmp167, i32 %grid_y168, i32 10, i32 450, i32 50, i32 50, i32 50, i32 255)
+  %raw.value170 = extractvalue { %struct.NIL, ptr, i8 } %calltmp169, 0
+  %grid_x171 = load i32, ptr %grid_x, align 4
+  %grid_y172 = load i32, ptr %grid_y, align 4
+  %addtmp173 = add i32 %grid_y172, 145
+  %calltmp174 = call { %struct.NIL, ptr, i8 } @rl_draw_rectangle(i32 %grid_x171, i32 %addtmp173, i32 450, i32 10, i32 50, i32 50, i32 50, i32 255)
+  %raw.value175 = extractvalue { %struct.NIL, ptr, i8 } %calltmp174, 0
+  %grid_x176 = load i32, ptr %grid_x, align 4
+  %grid_y177 = load i32, ptr %grid_y, align 4
+  %addtmp178 = add i32 %grid_y177, 295
+  %calltmp179 = call { %struct.NIL, ptr, i8 } @rl_draw_rectangle(i32 %grid_x176, i32 %addtmp178, i32 450, i32 10, i32 50, i32 50, i32 50, i32 255)
+  %raw.value180 = extractvalue { %struct.NIL, ptr, i8 } %calltmp179, 0
+  %row181 = alloca i32, align 4
+  store i32 0, ptr %row181, align 4
+  br label %whilecond182
 
-whilebody185:                                     ; preds = %whilecond181
-  %idx186 = alloca i32, align 4
-  %row187 = load i32, ptr %row174, align 4
-  %multmp188 = mul i32 %row187, 3
-  %col189 = load i32, ptr %col180, align 4
-  %addtmp190 = add i32 %multmp188, %col189
-  store i32 %addtmp190, ptr %idx186, align 4
+whilecond182:                                     ; preds = %afterwhile, %ifcont160
+  %row183 = load i32, ptr %row181, align 4
+  %lttmp184 = icmp slt i32 %row183, 3
+  %whilecond185 = icmp ne i1 %lttmp184, false
+  br i1 %whilecond185, label %whilebody186, label %afterwhile246
+
+whilebody186:                                     ; preds = %whilecond182
+  %col187 = alloca i32, align 4
+  store i32 0, ptr %col187, align 4
+  br label %whilecond188
+
+whilecond188:                                     ; preds = %ifcont241, %whilebody186
+  %col189 = load i32, ptr %col187, align 4
+  %lttmp190 = icmp slt i32 %col189, 3
+  %whilecond191 = icmp ne i1 %lttmp190, false
+  br i1 %whilecond191, label %whilebody192, label %afterwhile
+
+whilebody192:                                     ; preds = %whilecond188
+  %idx193 = alloca i32, align 4
+  %row194 = load i32, ptr %row181, align 4
+  %multmp195 = mul i32 %row194, 3
+  %col196 = load i32, ptr %col187, align 4
+  %addtmp197 = add i32 %multmp195, %col196
+  store i32 %addtmp197, ptr %idx193, align 4
   %val = alloca i8, align 1
-  %board191 = load %Wave9, ptr %board, align 1
-  %idx192 = load i32, ptr %idx186, align 4
-  %calltmp193 = call { i8, ptr, i8 } @get_cell(%Wave9 %board191, i32 %idx192)
-  %raw.value194 = extractvalue { i8, ptr, i8 } %calltmp193, 0
-  store i8 %raw.value194, ptr %val, align 1
+  %board198 = load %Wave9, ptr %board, align 1
+  %idx199 = load i32, ptr %idx193, align 4
+  %calltmp200 = call { i8, ptr, i8 } @get_cell(%Wave9 %board198, i32 %idx199)
+  %raw.value201 = extractvalue { i8, ptr, i8 } %calltmp200, 0
+  store i8 %raw.value201, ptr %val, align 1
   %cx = alloca i32, align 4
-  %grid_x195 = load i32, ptr %grid_x, align 4
-  %col196 = load i32, ptr %col180, align 4
-  %cell_size197 = load i32, ptr %cell_size, align 4
-  %multmp198 = mul i32 %col196, %cell_size197
-  %addtmp199 = add i32 %grid_x195, %multmp198
-  %addtmp200 = add i32 %addtmp199, 40
-  store i32 %addtmp200, ptr %cx, align 4
+  %grid_x202 = load i32, ptr %grid_x, align 4
+  %col203 = load i32, ptr %col187, align 4
+  %cell_size204 = load i32, ptr %cell_size, align 4
+  %multmp205 = mul i32 %col203, %cell_size204
+  %addtmp206 = add i32 %grid_x202, %multmp205
+  %addtmp207 = add i32 %addtmp206, 40
+  store i32 %addtmp207, ptr %cx, align 4
   %cy = alloca i32, align 4
-  %grid_y201 = load i32, ptr %grid_y, align 4
-  %row202 = load i32, ptr %row174, align 4
-  %cell_size203 = load i32, ptr %cell_size, align 4
-  %multmp204 = mul i32 %row202, %cell_size203
-  %addtmp205 = add i32 %grid_y201, %multmp204
-  %addtmp206 = add i32 %addtmp205, 25
-  store i32 %addtmp206, ptr %cy, align 4
-  %val207 = load i8, ptr %val, align 1
-  %X208 = load i8, ptr %X, align 1
-  %eqtmp209 = icmp eq i8 %val207, %X208
-  %ifcond210 = icmp ne i1 %eqtmp209, false
-  br i1 %ifcond210, label %then211, label %ifcont216
+  %grid_y208 = load i32, ptr %grid_y, align 4
+  %row209 = load i32, ptr %row181, align 4
+  %cell_size210 = load i32, ptr %cell_size, align 4
+  %multmp211 = mul i32 %row209, %cell_size210
+  %addtmp212 = add i32 %grid_y208, %multmp211
+  %addtmp213 = add i32 %addtmp212, 25
+  store i32 %addtmp213, ptr %cy, align 4
+  %val214 = load i8, ptr %val, align 1
+  %X215 = load i8, ptr %X, align 1
+  %nit.cmp.l.err216 = icmp eq i8 %val214, -128
+  %nit.cmp.r.err217 = icmp eq i8 %X215, -128
+  %nit.cmp.anyerr218 = or i1 %nit.cmp.l.err216, %nit.cmp.r.err217
+  %nit.cmp.normal219 = icmp eq i8 %val214, %X215
+  %nit.cmp.sticky220 = select i1 %nit.cmp.anyerr218, i1 false, i1 %nit.cmp.normal219
+  %ifcond221 = icmp ne i1 %nit.cmp.sticky220, false
+  br i1 %ifcond221, label %then222, label %ifcont227
 
-then211:                                          ; preds = %whilebody185
-  %cx212 = load i32, ptr %cx, align 4
-  %cy213 = load i32, ptr %cy, align 4
-  %calltmp214 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.30, i32 %cx212, i32 %cy213, i32 100, i32 200, i32 40, i32 40, i32 255)
-  %raw.value215 = extractvalue { %struct.NIL, ptr, i8 } %calltmp214, 0
-  br label %ifcont216
+then222:                                          ; preds = %whilebody192
+  %cx223 = load i32, ptr %cx, align 4
+  %cy224 = load i32, ptr %cy, align 4
+  %calltmp225 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.30, i32 %cx223, i32 %cy224, i32 100, i32 200, i32 40, i32 40, i32 255)
+  %raw.value226 = extractvalue { %struct.NIL, ptr, i8 } %calltmp225, 0
+  br label %ifcont227
 
-ifcont216:                                        ; preds = %then211, %whilebody185
-  %val217 = load i8, ptr %val, align 1
-  %O218 = load i8, ptr %O, align 1
-  %eqtmp219 = icmp eq i8 %val217, %O218
-  %ifcond220 = icmp ne i1 %eqtmp219, false
-  br i1 %ifcond220, label %then221, label %ifcont226
+ifcont227:                                        ; preds = %then222, %whilebody192
+  %val228 = load i8, ptr %val, align 1
+  %O229 = load i8, ptr %O, align 1
+  %nit.cmp.l.err230 = icmp eq i8 %val228, -128
+  %nit.cmp.r.err231 = icmp eq i8 %O229, -128
+  %nit.cmp.anyerr232 = or i1 %nit.cmp.l.err230, %nit.cmp.r.err231
+  %nit.cmp.normal233 = icmp eq i8 %val228, %O229
+  %nit.cmp.sticky234 = select i1 %nit.cmp.anyerr232, i1 false, i1 %nit.cmp.normal233
+  %ifcond235 = icmp ne i1 %nit.cmp.sticky234, false
+  br i1 %ifcond235, label %then236, label %ifcont241
 
-then221:                                          ; preds = %ifcont216
-  %cx222 = load i32, ptr %cx, align 4
-  %cy223 = load i32, ptr %cy, align 4
-  %calltmp224 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.32, i32 %cx222, i32 %cy223, i32 100, i32 40, i32 100, i32 200, i32 255)
-  %raw.value225 = extractvalue { %struct.NIL, ptr, i8 } %calltmp224, 0
-  br label %ifcont226
+then236:                                          ; preds = %ifcont227
+  %cx237 = load i32, ptr %cx, align 4
+  %cy238 = load i32, ptr %cy, align 4
+  %calltmp239 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.32, i32 %cx237, i32 %cy238, i32 100, i32 40, i32 100, i32 200, i32 255)
+  %raw.value240 = extractvalue { %struct.NIL, ptr, i8 } %calltmp239, 0
+  br label %ifcont241
 
-ifcont226:                                        ; preds = %then221, %ifcont216
-  %col227 = load i32, ptr %col180, align 4
-  %addtmp228 = add i32 %col227, 1
-  store i32 %addtmp228, ptr %col180, align 4
+ifcont241:                                        ; preds = %then236, %ifcont227
+  %col242 = load i32, ptr %col187, align 4
+  %addtmp243 = add i32 %col242, 1
+  store i32 %addtmp243, ptr %col187, align 4
   call void @npk_gc_safepoint()
-  br label %whilecond181
+  br label %whilecond188
 
-afterwhile:                                       ; preds = %whilecond181
-  %row229 = load i32, ptr %row174, align 4
-  %addtmp230 = add i32 %row229, 1
-  store i32 %addtmp230, ptr %row174, align 4
+afterwhile:                                       ; preds = %whilecond188
+  %row244 = load i32, ptr %row181, align 4
+  %addtmp245 = add i32 %row244, 1
+  store i32 %addtmp245, ptr %row181, align 4
   call void @npk_gc_safepoint()
-  br label %whilecond175
+  br label %whilecond182
 
-afterwhile231:                                    ; preds = %whilecond175
-  %game_over232 = load i32, ptr %game_over, align 4
-  %eqtmp233 = icmp eq i32 %game_over232, 1
-  %ifcond234 = icmp ne i1 %eqtmp233, false
-  br i1 %ifcond234, label %then235, label %ifcont256
+afterwhile246:                                    ; preds = %whilecond182
+  %game_over247 = load i32, ptr %game_over, align 4
+  %eqtmp248 = icmp eq i32 %game_over247, 1
+  %ifcond249 = icmp ne i1 %eqtmp248, false
+  br i1 %ifcond249, label %then250, label %ifcont271
 
-then235:                                          ; preds = %afterwhile231
-  %calltmp236 = call { %struct.NIL, ptr, i8 } @rl_draw_rectangle(i32 0, i32 250, i32 800, i32 100, i32 0, i32 0, i32 0, i32 200)
-  %raw.value237 = extractvalue { %struct.NIL, ptr, i8 } %calltmp236, 0
-  %winner238 = load i32, ptr %winner, align 4
-  %eqtmp239 = icmp eq i32 %winner238, 1
-  %ifcond240 = icmp ne i1 %eqtmp239, false
-  br i1 %ifcond240, label %then241, label %else244
+then250:                                          ; preds = %afterwhile246
+  %calltmp251 = call { %struct.NIL, ptr, i8 } @rl_draw_rectangle(i32 0, i32 250, i32 800, i32 100, i32 0, i32 0, i32 0, i32 200)
+  %raw.value252 = extractvalue { %struct.NIL, ptr, i8 } %calltmp251, 0
+  %winner253 = load i32, ptr %winner, align 4
+  %eqtmp254 = icmp eq i32 %winner253, 1
+  %ifcond255 = icmp ne i1 %eqtmp254, false
+  br i1 %ifcond255, label %then256, label %else259
 
-then241:                                          ; preds = %then235
-  %calltmp242 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.34, i32 300, i32 280, i32 50, i32 255, i32 100, i32 100, i32 255)
-  %raw.value243 = extractvalue { %struct.NIL, ptr, i8 } %calltmp242, 0
-  br label %ifcont255
-
-else244:                                          ; preds = %then235
-  %winner245 = load i32, ptr %winner, align 4
-  %eqtmp246 = icmp eq i32 %winner245, -1
-  %ifcond247 = icmp ne i1 %eqtmp246, false
-  br i1 %ifcond247, label %then248, label %else251
-
-then248:                                          ; preds = %else244
-  %calltmp249 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.36, i32 300, i32 280, i32 50, i32 100, i32 200, i32 255, i32 255)
-  %raw.value250 = extractvalue { %struct.NIL, ptr, i8 } %calltmp249, 0
-  br label %ifcont254
-
-else251:                                          ; preds = %else244
-  %calltmp252 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.38, i32 320, i32 280, i32 50, i32 200, i32 200, i32 200, i32 255)
-  %raw.value253 = extractvalue { %struct.NIL, ptr, i8 } %calltmp252, 0
-  br label %ifcont254
-
-ifcont254:                                        ; preds = %else251, %then248
-  br label %ifcont255
-
-ifcont255:                                        ; preds = %ifcont254, %then241
-  br label %ifcont256
-
-ifcont256:                                        ; preds = %ifcont255, %afterwhile231
-  %calltmp257 = call { %struct.NIL, ptr, i8 } @rl_end_drawing()
+then256:                                          ; preds = %then250
+  %calltmp257 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.34, i32 300, i32 280, i32 50, i32 255, i32 100, i32 100, i32 255)
   %raw.value258 = extractvalue { %struct.NIL, ptr, i8 } %calltmp257, 0
+  br label %ifcont270
+
+else259:                                          ; preds = %then250
+  %winner260 = load i32, ptr %winner, align 4
+  %eqtmp261 = icmp eq i32 %winner260, -1
+  %ifcond262 = icmp ne i1 %eqtmp261, false
+  br i1 %ifcond262, label %then263, label %else266
+
+then263:                                          ; preds = %else259
+  %calltmp264 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.36, i32 300, i32 280, i32 50, i32 100, i32 200, i32 255, i32 255)
+  %raw.value265 = extractvalue { %struct.NIL, ptr, i8 } %calltmp264, 0
+  br label %ifcont269
+
+else266:                                          ; preds = %else259
+  %calltmp267 = call { %struct.NIL, ptr, i8 } @rl_draw_text(ptr @.str.38, i32 320, i32 280, i32 50, i32 200, i32 200, i32 200, i32 255)
+  %raw.value268 = extractvalue { %struct.NIL, ptr, i8 } %calltmp267, 0
+  br label %ifcont269
+
+ifcont269:                                        ; preds = %else266, %then263
+  br label %ifcont270
+
+ifcont270:                                        ; preds = %ifcont269, %then256
+  br label %ifcont271
+
+ifcont271:                                        ; preds = %ifcont270, %afterwhile246
+  %calltmp272 = call { %struct.NIL, ptr, i8 } @rl_end_drawing()
+  %raw.value273 = extractvalue { %struct.NIL, ptr, i8 } %calltmp272, 0
   call void @npk_gc_safepoint()
   br label %whilecond
 
-afterwhile259:                                    ; preds = %whilecond
-  %calltmp260 = call { %struct.NIL, ptr, i8 } @rl_close_window()
-  %raw.value261 = extractvalue { %struct.NIL, ptr, i8 } %calltmp260, 0
+afterwhile274:                                    ; preds = %whilecond
+  %calltmp275 = call { %struct.NIL, ptr, i8 } @rl_close_window()
+  %raw.value276 = extractvalue { %struct.NIL, ptr, i8 } %calltmp275, 0
   call void @exit(i32 0) #0
   unreachable
 }

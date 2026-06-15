@@ -1,9 +1,0 @@
-[package]
-name = "nitpick-tictactoe"
-version = "0.1.0"
-description = "Tic-Tac-Toe GUI"
-authors = ["Nitpick Devs"]
-
-[dependencies]
-nitpick_raylib = { path = "../nitpick-raylib" }
-nitpick_str = { path = "../nitpick-str" }

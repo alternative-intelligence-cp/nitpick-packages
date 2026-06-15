@@ -93,13 +93,14 @@ func:check_draw = int32(Wave9:b) {
 };
 
 func:failsafe = int32(tbb32:err) {
-    raw rl_close_window();
+    drop(err);
+    raw Raylib.close_window();
     exit 1i32;
 };
 
 func:main = int32() {
-    raw rl_init_window(800i32, 600i32, "Nitpick Tic-Tac-Toe\0");
-    raw rl_set_target_fps(60i32);
+    raw Raylib.init_window(800i32, 600i32, "Nitpick Tic-Tac-Toe\0");
+    raw Raylib.set_target_fps(60i32);
     
     nit:X = nit_from_int(1);
     nit:O = nit_from_int(-1);
@@ -118,14 +119,14 @@ func:main = int32() {
     int32:grid_y = 75i32;
     int32:cell_size = 150i32;
     
-    while (raw rl_window_should_close() == 0i32) {
+    while (raw Raylib.window_should_close() == 0i32) {
         
         // --- Input Handling ---
         if (game_over == 0i32) {
             // Check mouse click (0 = left click)
-            if ((raw rl_is_mouse_button_pressed(0i32)) == 1i32) {
-                int32:mx = raw rl_get_mouse_x();
-                int32:my = raw rl_get_mouse_y();
+            if ((raw Raylib.is_mouse_button_pressed(0i32)) == 1i32) {
+                int32:mx = raw Raylib.get_mouse_x();
+                int32:my = raw Raylib.get_mouse_y();
                 
                 // Inside grid?
                 if (mx >= grid_x && mx < grid_x + 450i32) {
@@ -162,7 +163,7 @@ func:main = int32() {
             }
         } else {
             // Check restart via 'R' key (82)
-            if ((raw rl_is_key_pressed(82i32)) == 1i32) {
+            if ((raw Raylib.is_key_pressed(82i32)) == 1i32) {
                 board.r = zn; board.s = zn; board.t = zn;
                 board.u = zn; board.v = zn; board.w = zn;
                 board.x = zn; board.y = zn; board.z = zn;
@@ -173,29 +174,29 @@ func:main = int32() {
         }
         
         // --- Rendering ---
-        raw rl_begin_drawing();
-        raw rl_clear_background(240i32, 240i32, 240i32, 255i32); // Off-white
+        raw Raylib.begin_drawing();
+        raw Raylib.clear_background(240i32, 240i32, 240i32, 255i32); // Off-white
         
         // Header
-        raw rl_draw_text("Nitpick Tic-Tac-Toe\0", 250i32, 20i32, 30i32, 50i32, 50i32, 50i32, 255i32);
+        raw Raylib.draw_text("Nitpick Tic-Tac-Toe\0", 250i32, 20i32, 30i32, 50i32, 50i32, 50i32, 255i32);
         
         if (game_over == 0i32) {
             if (current_player == X) {
-                raw rl_draw_text("Turn: X\0", 350i32, 540i32, 30i32, 200i32, 40i32, 40i32, 255i32);
+                raw Raylib.draw_text("Turn: X\0", 350i32, 540i32, 30i32, 200i32, 40i32, 40i32, 255i32);
             } else {
-                raw rl_draw_text("Turn: O\0", 350i32, 540i32, 30i32, 40i32, 100i32, 200i32, 255i32);
+                raw Raylib.draw_text("Turn: O\0", 350i32, 540i32, 30i32, 40i32, 100i32, 200i32, 255i32);
             }
         } else {
-            raw rl_draw_text("Press 'R' to restart\0", 270i32, 540i32, 25i32, 100i32, 100i32, 100i32, 255i32);
+            raw Raylib.draw_text("Press 'R' to restart\0", 270i32, 540i32, 25i32, 100i32, 100i32, 100i32, 255i32);
         }
         
         // Draw grid lines
         // Verticals
-        raw rl_draw_rectangle(grid_x + 145i32, grid_y, 10i32, 450i32, 50i32, 50i32, 50i32, 255i32);
-        raw rl_draw_rectangle(grid_x + 295i32, grid_y, 10i32, 450i32, 50i32, 50i32, 50i32, 255i32);
+        raw Raylib.draw_rectangle(grid_x + 145i32, grid_y, 10i32, 450i32, 50i32, 50i32, 50i32, 255i32);
+        raw Raylib.draw_rectangle(grid_x + 295i32, grid_y, 10i32, 450i32, 50i32, 50i32, 50i32, 255i32);
         // Horizontals
-        raw rl_draw_rectangle(grid_x, grid_y + 145i32, 450i32, 10i32, 50i32, 50i32, 50i32, 255i32);
-        raw rl_draw_rectangle(grid_x, grid_y + 295i32, 450i32, 10i32, 50i32, 50i32, 50i32, 255i32);
+        raw Raylib.draw_rectangle(grid_x, grid_y + 145i32, 450i32, 10i32, 50i32, 50i32, 50i32, 255i32);
+        raw Raylib.draw_rectangle(grid_x, grid_y + 295i32, 450i32, 10i32, 50i32, 50i32, 50i32, 255i32);
         
         // Draw pieces
         int32:row = 0i32;
@@ -209,10 +210,10 @@ func:main = int32() {
                 int32:cy = grid_y + (row * cell_size) + 25i32;
                 
                 if (val == X) {
-                    raw rl_draw_text("X\0", cx, cy, 100i32, 200i32, 40i32, 40i32, 255i32);
+                    raw Raylib.draw_text("X\0", cx, cy, 100i32, 200i32, 40i32, 40i32, 255i32);
                 }
                 if (val == O) {
-                    raw rl_draw_text("O\0", cx, cy, 100i32, 40i32, 100i32, 200i32, 255i32);
+                    raw Raylib.draw_text("O\0", cx, cy, 100i32, 40i32, 100i32, 200i32, 255i32);
                 }
                 col = col + 1i32;
             }
@@ -221,21 +222,21 @@ func:main = int32() {
         
         // Draw game over banner
         if (game_over == 1i32) {
-            raw rl_draw_rectangle(0i32, 250i32, 800i32, 100i32, 0i32, 0i32, 0i32, 200i32);
+            raw Raylib.draw_rectangle(0i32, 250i32, 800i32, 100i32, 0i32, 0i32, 0i32, 200i32);
             if (winner == 1i32) {
-                raw rl_draw_text("X WINS!\0", 300i32, 280i32, 50i32, 255i32, 100i32, 100i32, 255i32);
+                raw Raylib.draw_text("X WINS!\0", 300i32, 280i32, 50i32, 255i32, 100i32, 100i32, 255i32);
             } else {
                 if (winner == -1i32) {
-                    raw rl_draw_text("O WINS!\0", 300i32, 280i32, 50i32, 100i32, 200i32, 255i32, 255i32);
+                    raw Raylib.draw_text("O WINS!\0", 300i32, 280i32, 50i32, 100i32, 200i32, 255i32, 255i32);
                 } else {
-                    raw rl_draw_text("DRAW!\0", 320i32, 280i32, 50i32, 200i32, 200i32, 200i32, 255i32);
+                    raw Raylib.draw_text("DRAW!\0", 320i32, 280i32, 50i32, 200i32, 200i32, 200i32, 255i32);
                 }
             }
         }
         
-        raw rl_end_drawing();
+        raw Raylib.end_drawing();
     }
     
-    raw rl_close_window();
+    raw Raylib.close_window();
     exit 0i32;
 };
