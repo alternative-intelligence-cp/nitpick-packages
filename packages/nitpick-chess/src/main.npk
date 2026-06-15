@@ -10,7 +10,7 @@ extern "libc" {
     func:chess_apply_move = int32(int32:from_sq, int32:to_sq);
 }
 
-func:failsafe = int32(tbb32:err) {
+func:failsafe = int32(tbb32:_err) {
     exit 1i32;
 };
 

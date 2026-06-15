@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-chess": {
+      "artifact_path": ".nitpick_make/build/nitpick-chess",
+      "source_hash": "fnv1a:12362249367723752742",
+      "command_hash": 3566569383868552192,
+      "source_timestamp": 18446744069053395251,
+      "build_timestamp": 1781507635,
+      "build_duration_ms": 293,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

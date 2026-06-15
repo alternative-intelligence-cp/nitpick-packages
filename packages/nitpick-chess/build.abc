@@ -1,0 +1,8 @@
+[project]
+name = "nitpick-chess"
+version = "0.1.0"
+
+[target.nitpick-chess]
+type = "binary"
+sources = ["src/main.npk"]
+flags = ["-I", "src", "-I", "../nitpick-raylib/src", "-I", "../nitpick-str/src", "-I", "../nitpick-rand/src", "-I", "../nitpick-math/src", "-I", "../nitpick-conv/src", "-L.", "-lchess_shims", "-lraylib", "-latomic", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io", "-lnitpick_libc_math", "-lm"]
