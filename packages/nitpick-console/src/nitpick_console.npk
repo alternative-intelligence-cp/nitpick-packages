@@ -52,7 +52,7 @@ func:bus_zone = int32(int32:addr) {
 };
 
 func:bus_in_zone = int32(int32:addr, int32:zone_id) {
-    int32:z = bus_zone(addr);
+    int32:z = raw bus_zone(addr);
     if (z == zone_id) { pass 1i32; }
     pass 0i32;
 };

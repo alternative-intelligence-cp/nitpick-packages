@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-console"
+version = "0.11.2"
+
+[target.nitpick-console]
+type = "library"
+sources = ["src/nitpick_console.npk"]
+deps = []
+flags = ["-L.", "-lnitpick_console_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-nitpick-console]
+type = "binary"
+sources = ["tests/test_nitpick_console.npk"]
+deps = []
+flags = ["-I", "src", "-L.", "-lnitpick_console_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
