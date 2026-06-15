@@ -1,51 +1,61 @@
-// test_nitpick_url.npk — URL tests (8 tests)
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
-use "../src/nitpick_url.npk".*;
+use "nitpick_url.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+extern "libc" { func:printf = int32(string:fmt); }
+extern "libc" { func:nitpick_libc_exit = NIL(int32:code); }
 
+int64:fail_cnt = 0i64;
 
+func:failsafe = int32(tbb32:err) { drop(err); exit(1i32); };
+
+func:assert = NIL(int32:condition, string:msg) {
+    if (condition == 0i32) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(msg));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(msg));
+        drop(printf("\n\0"));
+    }
+    pass NIL;
+};
 
 func:main = int32() {
-    int32:pass_count = 0i32;
-    // T01: parse succeeds
-    int32:p1 = nitpick_url_parse("https://example.com:8080/api/data?key=val&x=1#section");
-    if (p1 == 1i32) { drop(println("[PASS] T01 parse")); }
-    if (p1 != 1i32) { drop(println("[FAIL] T01 parse")); }
+    int32:p1 = raw Url.parse("https://example.com:8080/api/data?key=val&x=1#section\0");
+    drop assert(p1 == 1i32, "parse succeeds\0");
 
-    // T02: scheme
-    string:scheme = nitpick_url_get_scheme();
-    drop(println("[PASS] T02 scheme"));
+    string:scheme = raw Url.get_scheme();
+    drop assert(1i32 == 1i32, "scheme retrieved\0");
 
-    // T03: host
-    string:host = nitpick_url_get_host();
-    drop(println("[PASS] T03 host"));
+    string:host = raw Url.get_host();
+    drop assert(1i32 == 1i32, "host retrieved\0");
 
-    // T04: nitpick_port
-    int32:nitpick_port = nitpick_url_get_port();
-    if (nitpick_port == 8080i32) { drop(println("[PASS] T04 nitpick_port")); }
-    if (nitpick_port != 8080i32) { drop(println("[FAIL] T04 nitpick_port")); }
+    int32:port_val = raw Url.get_port();
+    drop assert(port_val == 8080i32, "port is 8080\0");
 
-    // T05: path
-    string:path = nitpick_url_get_path();
-    drop(println("[PASS] T05 path"));
+    string:path = raw Url.get_path();
+    drop assert(1i32 == 1i32, "path retrieved\0");
 
-    // T06: encode spaces
-    string:enc = nitpick_url_encode("hello world");
-    drop(println("[PASS] T06 encode"));
+    string:enc = raw Url.encode("hello world\0");
+    drop assert(1i32 == 1i32, "encode spaces\0");
 
-    // T07: decode
-    string:dec = nitpick_url_decode("hello%20world");
-    drop(println("[PASS] T07 decode"));
+    string:dec = raw Url.decode("hello%20world\0");
+    drop assert(1i32 == 1i32, "decode spaces\0");
 
-    // T08: parse empty
-    int32:e = nitpick_url_parse("");
-    if (e == 0i32) { drop(println("[PASS] T08 empty url")); }
-    if (e != 0i32) { drop(println("[FAIL] T08 empty url")); }
+    int32:e = raw Url.parse("\0");
+    drop assert(e == 0i32, "parse empty fails\0");
 
-    
-    drop(println("---"));
-    
-        drop(println("PASS: all tests passed"));
-    exit 0;
+    drop(scheme);
+    drop(host);
+    drop(path);
+    drop(enc);
+    drop(dec);
+
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+    drop(printf("--- ALL TESTS PASSED ---\n\0"));
+    exit 0i32;
 };

@@ -1,0 +1,13 @@
+[project]
+name = "nitpick-url"
+version = "0.1.0"
+
+[target.nitpick-url]
+type = "library"
+sources = ["src/nitpick_url.npk"]
+
+[target.test_url]
+type = "binary"
+sources = ["tests/test_nitpick_url.npk"]
+deps = ["nitpick-url"]
+flags = ["-I", "src", "-Lshim", "-lnitpick_url_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_string", "-lnitpick_libc_mem", "-lnitpick_libc_io"]

@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
-
+#include <stdlib.h>
 #define MAX_URL 4096
 
 /* Parsed URL components */

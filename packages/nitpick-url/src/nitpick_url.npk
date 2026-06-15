@@ -12,38 +12,41 @@ extern "nitpick_url_shim" {
     func:nitpick_url_decode       = string(string:input);
 }
 
-pub func:parse = int32(string:url) {
+
+pub Type:Url = {
+    func:parse = int32(string:url) {
     pass(nitpick_url_parse(url));
 };
 
-pub func:get_scheme = string() {
+    func:get_scheme = string() {
     pass(nitpick_url_get_scheme());
 };
 
-pub func:get_host = string() {
+    func:get_host = string() {
     pass(nitpick_url_get_host());
 };
 
-pub func:get_port = int32() {
+    func:get_port = int32() {
     pass(nitpick_url_get_port());
 };
 
-pub func:get_path = string() {
+    func:get_path = string() {
     pass(nitpick_url_get_path());
 };
 
-pub func:get_query = string() {
+    func:get_query = string() {
     pass(nitpick_url_get_query());
 };
 
-pub func:get_fragment = string() {
+    func:get_fragment = string() {
     pass(nitpick_url_get_fragment());
 };
 
-pub func:encode = string(string:input) {
+    func:encode = string(string:input) {
     pass(nitpick_url_encode(input));
 };
 
-pub func:decode = string(string:input) {
-    pass(nitpick_url_decode(input));
+    func:decode = string(string:input) {
+        pass(nitpick_url_decode(input));
+    };
 };
