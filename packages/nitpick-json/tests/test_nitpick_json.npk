@@ -9,7 +9,7 @@ extern "libc" { func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_json.npk".*;
 use "stdlib/print_utils.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:_err) { exit 1; };
 
 func:main = int32() {
     string:doc = "{\"user\": {\"name\": \"Alice\", \"age\": 30, \"active\": true}, \"tags\": [\"admin\", \"user\"]}";

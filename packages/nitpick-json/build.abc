@@ -1,25 +1,15 @@
-# build.abc — nitpick-json package (LIB-22)
-#
-# Targets:
-#   nitpick-json       — compiled library for downstream packages
-#   test-nitpick-json  — test binary; imports src via `use "../src/nitpick_json.npk".*;`
-#
-# Note: aria_string_byte_at is defined in the Nitpick runtime (strings.cpp).
-# malloc/free are from libc, always linked by the C runtime.
-
 [project]
 name = "nitpick-json"
-version = "0.1.0"
-compiler = "/home/randy/Workspace/REPOS/aria/build/ariac"
+version = "0.2.0"
 
 [target.nitpick-json]
 type = "library"
 sources = ["src/nitpick_json.npk"]
 deps = []
-flags = []
+flags = ["-L.", "-lnitpick_json_shim"]
 
 [target.test-nitpick-json]
 type = "binary"
 sources = ["tests/test_nitpick_json.npk"]
 deps = []
-flags = []
+flags = ["-I", "src", "-L.", "-lnitpick_json_shim"]
