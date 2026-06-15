@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-zigzag": {
+      "artifact_path": ".nitpick_make/build/libnitpick-zigzag.a",
+      "source_hash": "fnv1a:17650208426831734435",
+      "command_hash": 14695981039346656037,
+      "source_timestamp": 18446744069052264471,
+      "build_timestamp": 1781529650,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-nitpick-zigzag": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-zigzag",
+      "source_hash": "fnv1a:3906703274019574180",
+      "command_hash": 12010444766172603295,
+      "source_timestamp": 18446744069053417259,
+      "build_timestamp": 1781529650,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

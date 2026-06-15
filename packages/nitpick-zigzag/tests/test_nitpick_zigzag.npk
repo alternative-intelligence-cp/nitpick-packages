@@ -1,142 +1,143 @@
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
-use "../src/nitpick_zigzag.npk".*;
+extern "libc" { func:printf = int32(string:fmt); }
+int32:fail_cnt = 0i32;
+use "nitpick_zigzag.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:err) { drop(err); exit 1i32; };
 
 func:main = int32() {
     int32:pass_count = 0i32;
     // T01: encode(0) == 0
-    uint64:e0 = raw zz_encode(0i64);
+    uint64:e0 = raw Zigzag.encode(0i64);
     if (e0 == 0u64) {
-        print("[PASS] T01 zz_encode(0)==0\n");
+        drop(printf("[PASS] T01 zz_encode(0)==0\n\0"));
     } else {
-        print("[FAIL] T01 zz_encode(0)==0\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T01 zz_encode(0)==0\n\0"));
     }
 
     // T02: encode(-1) == 1
-    uint64:em1 = raw zz_encode(0i64 - 1i64);
+    uint64:em1 = raw Zigzag.encode(0i64 - 1i64);
     if (em1 == 1u64) {
-        print("[PASS] T02 zz_encode(-1)==1\n");
+        drop(printf("[PASS] T02 zz_encode(-1)==1\n\0"));
     } else {
-        print("[FAIL] T02 zz_encode(-1)==1\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T02 zz_encode(-1)==1\n\0"));
     }
 
     // T03: encode(1) == 2
-    uint64:e1 = raw zz_encode(1i64);
+    uint64:e1 = raw Zigzag.encode(1i64);
     if (e1 == 2u64) {
-        print("[PASS] T03 zz_encode(1)==2\n");
+        drop(printf("[PASS] T03 zz_encode(1)==2\n\0"));
     } else {
-        print("[FAIL] T03 zz_encode(1)==2\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T03 zz_encode(1)==2\n\0"));
     }
 
     // T04: encode(-2) == 3
-    uint64:em2 = raw zz_encode(0i64 - 2i64);
+    uint64:em2 = raw Zigzag.encode(0i64 - 2i64);
     if (em2 == 3u64) {
-        print("[PASS] T04 zz_encode(-2)==3\n");
+        drop(printf("[PASS] T04 zz_encode(-2)==3\n\0"));
     } else {
-        print("[FAIL] T04 zz_encode(-2)==3\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T04 zz_encode(-2)==3\n\0"));
     }
 
     // T05: decode(0) == 0
-    int64:d0 = raw zz_decode(0u64);
+    int64:d0 = raw Zigzag.decode(0u64);
     if (d0 == 0i64) {
-        print("[PASS] T05 zz_decode(0)==0\n");
+        drop(printf("[PASS] T05 zz_decode(0)==0\n\0"));
     } else {
-        print("[FAIL] T05 zz_decode(0)==0\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T05 zz_decode(0)==0\n\0"));
     }
 
     // T06: decode(1) == -1
-    int64:d1 = raw zz_decode(1u64);
+    int64:d1 = raw Zigzag.decode(1u64);
     int64:neg1 = 0i64 - 1i64;
     if (d1 == neg1) {
-        print("[PASS] T06 zz_decode(1)==-1\n");
+        drop(printf("[PASS] T06 zz_decode(1)==-1\n\0"));
     } else {
-        print("[FAIL] T06 zz_decode(1)==-1\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T06 zz_decode(1)==-1\n\0"));
     }
 
     // T07: decode(2) == 1
-    int64:d2 = raw zz_decode(2u64);
+    int64:d2 = raw Zigzag.decode(2u64);
     if (d2 == 1i64) {
-        print("[PASS] T07 zz_decode(2)==1\n");
+        drop(printf("[PASS] T07 zz_decode(2)==1\n\0"));
     } else {
-        print("[FAIL] T07 zz_decode(2)==1\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T07 zz_decode(2)==1\n\0"));
     }
 
     // T08: decode(3) == -2
-    int64:d3 = raw zz_decode(3u64);
+    int64:d3 = raw Zigzag.decode(3u64);
     int64:neg2 = 0i64 - 2i64;
     if (d3 == neg2) {
-        print("[PASS] T08 zz_decode(3)==-2\n");
+        drop(printf("[PASS] T08 zz_decode(3)==-2\n\0"));
     } else {
-        print("[FAIL] T08 zz_decode(3)==-2\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T08 zz_decode(3)==-2\n\0"));
     }
 
     // T09: roundtrip(42) == 42
-    int64:rt42 = raw zz_roundtrip(42i64);
+    int64:rt42 = raw Zigzag.roundtrip(42i64);
     if (rt42 == 42i64) {
-        print("[PASS] T09 zz_roundtrip(42)==42\n");
+        drop(printf("[PASS] T09 zz_roundtrip(42)==42\n\0"));
     } else {
-        print("[FAIL] T09 zz_roundtrip(42)==42\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T09 zz_roundtrip(42)==42\n\0"));
     }
 
     // T10: roundtrip(-99) == -99
-    int64:rtneg99 = raw zz_roundtrip(0i64 - 99i64);
+    int64:rtneg99 = raw Zigzag.roundtrip(0i64 - 99i64);
     int64:neg99 = 0i64 - 99i64;
     if (rtneg99 == neg99) {
-        print("[PASS] T10 zz_roundtrip(-99)==-99\n");
+        drop(printf("[PASS] T10 zz_roundtrip(-99)==-99\n\0"));
     } else {
-        print("[FAIL] T10 zz_roundtrip(-99)==-99\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T10 zz_roundtrip(-99)==-99\n\0"));
     }
 
     // T11: abs(5) == 5
-    int64:abs5 = raw zz_abs(5i64);
+    int64:abs5 = raw Zigzag.abs(5i64);
     if (abs5 == 5i64) {
-        print("[PASS] T11 zz_abs(5)==5\n");
+        drop(printf("[PASS] T11 zz_abs(5)==5\n\0"));
     } else {
-        print("[FAIL] T11 zz_abs(5)==5\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T11 zz_abs(5)==5\n\0"));
     }
 
     // T12: abs(-7) == 7
-    int64:absn7 = raw zz_abs(0i64 - 7i64);
+    int64:absn7 = raw Zigzag.abs(0i64 - 7i64);
     if (absn7 == 7i64) {
-        print("[PASS] T12 zz_abs(-7)==7\n");
+        drop(printf("[PASS] T12 zz_abs(-7)==7\n\0"));
     } else {
-        print("[FAIL] T12 zz_abs(-7)==7\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T12 zz_abs(-7)==7\n\0"));
     }
 
     // T13: signum(-3) == -1
-    int64:sign_n3 = raw zz_signum(0i64 - 3i64);
+    int64:sign_n3 = raw Zigzag.signum(0i64 - 3i64);
     int64:neg1b = 0i64 - 1i64;
     if (sign_n3 == neg1b) {
-        print("[PASS] T13 zz_signum(-3)==-1\n");
+        drop(printf("[PASS] T13 zz_signum(-3)==-1\n\0"));
     } else {
-        print("[FAIL] T13 zz_signum(-3)==-1\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T13 zz_signum(-3)==-1\n\0"));
     }
 
     // T14: delta_encode(10, 13) == encode(3) == 6
-    uint64:de = raw zz_delta_encode(10i64, 13i64);
+    uint64:de = raw Zigzag.delta_encode(10i64, 13i64);
     if (de == 6u64) {
-        print("[PASS] T14 zz_delta_encode(10,13)==6\n");
+        drop(printf("[PASS] T14 zz_delta_encode(10,13)==6\n\0"));
     } else {
-        print("[FAIL] T14 zz_delta_encode(10,13)==6\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T14 zz_delta_encode(10,13)==6\n\0"));
     }
 
     // T15: clamp(50, 0, 100) == 50; clamp(-5, 0, 100) == 0
-    int64:c1 = raw zz_clamp(50i64, 0i64, 100i64);
-    int64:c2 = raw zz_clamp(0i64 - 5i64, 0i64, 100i64);
+    int64:c1 = raw Zigzag.clamp(50i64, 0i64, 100i64);
+    int64:c2 = raw Zigzag.clamp(0i64 - 5i64, 0i64, 100i64);
     if (c1 == 50i64) {
         if (c2 == 0i64) {
-            print("[PASS] T15 zz_clamp\n");
+            drop(printf("[PASS] T15 zz_clamp\n\0"));
         } else {
-            print("[FAIL] T15 zz_clamp (c2 wrong)\n");
+            fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T15 zz_clamp (c2 wrong)\n\0"));
         }
     } else {
-        print("[FAIL] T15 zz_clamp (c1 wrong)\n");
+        fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T15 zz_clamp (c1 wrong)\n\0"));
     }
 
     
-    drop(println("---"));
+    drop(printf("---\n\0"));
     
-        drop(println("PASS: all tests passed"));
-    exit 0;
+        drop(printf("PASS: all tests passed\n\0"));
+    if (fail_cnt > 0i32) { drop(printf("FAIL\n\0")); } exit fail_cnt;
 };

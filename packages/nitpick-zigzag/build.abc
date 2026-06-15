@@ -1,0 +1,12 @@
+[project]
+name = "nitpick-zigzag"
+version = "0.1.0"
+
+[target.nitpick-zigzag]
+type = "library"
+sources = ["src/nitpick_zigzag.npk"]
+
+[target.test-nitpick-zigzag]
+type = "binary"
+sources = ["tests/test_nitpick_zigzag.npk"]
+flags = ["-I", "src"]
