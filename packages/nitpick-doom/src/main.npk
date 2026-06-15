@@ -8,7 +8,7 @@ extern "libc" {
     func:doom_get_wall_shade = int32(int32:col);
 }
 
-func:failsafe = int32(tbb32:err) {
+func:failsafe = int32(tbb32:_err) {
     exit 1i32;
 };
 
