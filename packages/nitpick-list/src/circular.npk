@@ -1,0 +1,181 @@
+// circular.npk — Circular singly-linked list (fast int64 variant)
+//
+// CList: tail.next always points back to head. Ideal for round-robin
+// scheduling, cyclic buffers, and ring-based iterators.
+//
+// Node layout (16 bytes):
+//   [0..7]   val  : int64
+//   [8..15]  next : int64   — always non-zero when list is non-empty
+//
+// Header layout (24 bytes):
+//   [0..7]   tail   : int64  — entry point; head = tail.next (0 when empty)
+//   [8..15]  size   : int64
+//   [16..23] cursor : int64  — current node for rotate/peek_current
+//
+// API (via pub Type:CList):
+//   create()          → int64
+//   destroy(cl)       → int32
+//   push(cl, val)     → int32  O(1) — inserts after tail (new tail)
+//   pop(cl)           → int64  O(1) — removes head (tail.next)
+//   peek(cl)          → int64  O(1) — head value (tail.next)
+//   peek_tail(cl)     → int64  O(1) — tail value
+//   rotate(cl)        → int32  O(1) — advance tail → tail becomes old tail.next
+//   contains(cl, val) → int32  O(n)
+//   len(cl)           → int64
+//   is_empty(cl)      → int32
+//   clear(cl)         → int32
+
+extern "libc" {
+    func:nitpick_libc_mem_malloc    = int64(int64:bytes);
+    func:nitpick_libc_mem_free      = int32(int64:ptr);
+    func:nitpick_libc_mem_zero      = int32(int64:ptr, int64:bytes);
+    func:nitpick_libc_mem_read_i64  = int64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_i64 = void(int64:ptr, int64:offset, int64:val);
+}
+
+// ── Node helpers ─────────────────────────────────────────────────────────────
+
+func:cl_node_val  = int64(int64:n) { pass nitpick_libc_mem_read_i64(n, 0i64); };
+func:cl_node_next = int64(int64:n) { pass nitpick_libc_mem_read_i64(n, 8i64); };
+
+func:cl_node_set_val  = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n, 0i64, v); };
+func:cl_node_set_next = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n, 8i64, v); };
+
+func:cl_alloc_node = int64(int64:val) {
+    int64:n = nitpick_libc_mem_malloc(16i64);
+    int32:z = nitpick_libc_mem_zero(n, 16i64);
+    cl_node_set_val(n, val);
+    pass n;
+};
+
+// ── Header helpers ───────────────────────────────────────────────────────────
+
+func:cl_tail   = int64(int64:cl) { pass nitpick_libc_mem_read_i64(cl,  0i64); };
+func:cl_size   = int64(int64:cl) { pass nitpick_libc_mem_read_i64(cl,  8i64); };
+func:cl_cursor = int64(int64:cl) { pass nitpick_libc_mem_read_i64(cl, 16i64); };
+
+func:cl_set_tail   = void(int64:cl, int64:v) { nitpick_libc_mem_write_i64(cl,  0i64, v); };
+func:cl_set_size   = void(int64:cl, int64:v) { nitpick_libc_mem_write_i64(cl,  8i64, v); };
+func:cl_set_cursor = void(int64:cl, int64:v) { nitpick_libc_mem_write_i64(cl, 16i64, v); };
+
+// head = tail.next (null when list is empty)
+func:cl_head = int64(int64:cl) {
+    int64:tail = raw cl_tail(cl);
+    if (tail == 0i64) { pass 0i64; }
+    pass raw cl_node_next(tail);
+};
+
+// ── Core functions ───────────────────────────────────────────────────────────
+
+func:clist_create = int64() {
+    int64:cl = nitpick_libc_mem_malloc(24i64);
+    int32:z  = nitpick_libc_mem_zero(cl, 24i64);
+    pass cl;
+};
+
+// Push new node as new tail (after current tail, before head).
+func:clist_push = int32(int64:cl, int64:val) {
+    int64:n    = raw cl_alloc_node(val);
+    int64:tail = raw cl_tail(cl);
+    if (tail == 0i64) {
+        // first element — points to itself
+        cl_node_set_next(n, n);
+    } else {
+        int64:head = raw cl_node_next(tail);
+        cl_node_set_next(n, head);
+        cl_node_set_next(tail, n);
+    }
+    cl_set_tail(cl, n);
+    cl_set_size(cl, raw cl_size(cl) + 1i64);
+    pass 0i32;
+};
+
+// Pop the head (tail.next).
+func:clist_pop = int64(int64:cl) {
+    int64:tail = raw cl_tail(cl);
+    if (tail == 0i64) { pass -1i64; }
+    int64:head = raw cl_node_next(tail);
+    int64:val  = raw cl_node_val(head);
+    int64:sz   = raw cl_size(cl);
+    if (sz == 1i64) {
+        // only element
+        cl_set_tail(cl, 0i64);
+    } else {
+        int64:new_head = raw cl_node_next(head);
+        cl_node_set_next(tail, new_head);
+    }
+    cl_set_size(cl, sz - 1i64);
+    int32:f = nitpick_libc_mem_free(head);
+    pass val;
+};
+
+func:clist_peek = int64(int64:cl) {
+    int64:head = raw cl_head(cl);
+    if (head == 0i64) { pass -1i64; }
+    pass raw cl_node_val(head);
+};
+
+func:clist_peek_tail = int64(int64:cl) {
+    int64:tail = raw cl_tail(cl);
+    if (tail == 0i64) { pass -1i64; }
+    pass raw cl_node_val(tail);
+};
+
+// Rotate: advance the tail pointer one step clockwise.
+// After rotate, old head becomes new tail, old head.next becomes new head.
+func:clist_rotate = int32(int64:cl) {
+    int64:tail = raw cl_tail(cl);
+    if (tail == 0i64) { pass -1i32; }
+    int64:new_tail = raw cl_node_next(tail);
+    cl_set_tail(cl, new_tail);
+    pass 0i32;
+};
+
+func:clist_contains = int32(int64:cl, int64:val) {
+    int64:sz  = raw cl_size(cl);
+    if (sz == 0i64) { pass 0i32; }
+    int64:cur = raw cl_head(cl);
+    loop(0i64, sz, 1i64) {
+        if (raw cl_node_val(cur) == val) { pass 1i32; }
+        cur = raw cl_node_next(cur);
+    }
+    pass 0i32;
+};
+
+func:clist_clear = int32(int64:cl) {
+    int64:sz   = raw cl_size(cl);
+    if (sz == 0i64) { pass 0i32; }
+    int64:cur  = raw cl_head(cl);
+    int64:tail = raw cl_tail(cl);
+    loop(0i64, sz, 1i64) {
+        int64:nxt = raw cl_node_next(cur);
+        int32:f   = nitpick_libc_mem_free(cur);
+        if (cur == tail) { break; }
+        cur = nxt;
+    }
+    cl_set_tail(cl, 0i64);
+    cl_set_size(cl, 0i64);
+    cl_set_cursor(cl, 0i64);
+    pass 0i32;
+};
+
+func:clist_destroy = int32(int64:cl) {
+    int32:c = raw clist_clear(cl);
+    pass nitpick_libc_mem_free(cl);
+};
+
+// ── Type wrapper ─────────────────────────────────────────────────────────────
+
+pub Type:CList = {
+    func:create     = int64()                    { pass raw clist_create();             };
+    func:destroy    = int32(int64:cl)            { pass raw clist_destroy(cl);          };
+    func:push       = int32(int64:cl, int64:val) { pass raw clist_push(cl, val);        };
+    func:pop        = int64(int64:cl)            { pass raw clist_pop(cl);              };
+    func:peek       = int64(int64:cl)            { pass raw clist_peek(cl);             };
+    func:peek_tail  = int64(int64:cl)            { pass raw clist_peek_tail(cl);        };
+    func:rotate     = int32(int64:cl)            { pass raw clist_rotate(cl);           };
+    func:contains   = int32(int64:cl, int64:val) { pass raw clist_contains(cl, val);    };
+    func:len        = int64(int64:cl)            { pass raw cl_size(cl);                };
+    func:is_empty   = int32(int64:cl)            { int64:s = raw cl_size(cl); if (s == 0i64) { pass 1i32; } pass 0i32; };
+    func:clear      = int32(int64:cl)            { pass raw clist_clear(cl);            };
+};

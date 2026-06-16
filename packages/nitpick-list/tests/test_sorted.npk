@@ -1,0 +1,72 @@
+// test_sorted.npk — Tests for sorted list (fast int64 variant)
+extern "libc" { func:printf = int32(string:fmt); }
+use "../src/sorted.npk".*;
+
+int64:fail_cnt = 0i64;
+func:failsafe = int32(tbb32:_e) { drop _e; exit 1i32; };
+
+func:assert_eq = int64(int64:a, int64:e, string:n) {
+    if (a != e) { fail_cnt += 1i64; drop printf("[FAIL] \0"); drop printf(n); drop printf("\n\0"); }
+    else        { drop printf("[PASS] \0"); drop printf(n); drop printf("\n\0"); }
+    pass 0i64;
+};
+func:assert_i32 = int64(int32:a, int32:e, string:n) { pass raw assert_eq(a => int64, e => int64, n); };
+
+func:main = int32() {
+    int64:sl = raw SortedList.create();
+
+    drop assert_eq (raw SortedList.len(sl), 0i64, "T01 initial len=0\0");
+    drop assert_i32(raw SortedList.is_empty(sl), 1i32, "T02 is_empty\0");
+    drop assert_eq (raw SortedList.min(sl), -1i64, "T03 min empty=-1\0");
+    drop assert_eq (raw SortedList.max(sl), -1i64, "T04 max empty=-1\0");
+
+    // insert out-of-order → should be sorted
+    drop SortedList.insert(sl, 50i64);
+    drop SortedList.insert(sl, 10i64);
+    drop SortedList.insert(sl, 30i64);
+    drop SortedList.insert(sl, 20i64);
+    drop SortedList.insert(sl, 40i64);
+
+    drop assert_eq (raw SortedList.len(sl), 5i64, "T05 len=5\0");
+    drop assert_eq (raw SortedList.min(sl), 10i64, "T06 min=10\0");
+    drop assert_eq (raw SortedList.max(sl), 50i64, "T07 max=50\0");
+
+    // contains
+    drop assert_i32(raw SortedList.contains(sl, 30i64),  1i32, "T08 contains 30\0");
+    drop assert_i32(raw SortedList.contains(sl, 999i64), 0i32, "T09 not contains 999\0");
+
+    // remove middle element
+    drop assert_i32(raw SortedList.remove_val(sl, 30i64), 0i32, "T10 remove 30 ok\0");
+    drop assert_i32(raw SortedList.contains(sl, 30i64), 0i32, "T11 30 gone\0");
+    drop assert_eq (raw SortedList.len(sl), 4i64, "T12 len=4\0");
+
+    // min/max still correct
+    drop assert_eq(raw SortedList.min(sl), 10i64, "T13 min still 10\0");
+    drop assert_eq(raw SortedList.max(sl), 50i64, "T14 max still 50\0");
+
+    // remove head
+    drop assert_i32(raw SortedList.remove_val(sl, 10i64), 0i32, "T15 remove head 10\0");
+    drop assert_eq (raw SortedList.min(sl), 20i64, "T16 new min=20\0");
+
+    // remove tail
+    drop assert_i32(raw SortedList.remove_val(sl, 50i64), 0i32, "T17 remove tail 50\0");
+    drop assert_eq (raw SortedList.max(sl), 40i64, "T18 new max=40\0");
+
+    // duplicates
+    drop SortedList.insert(sl, 20i64);
+    drop assert_eq(raw SortedList.len(sl), 3i64, "T19 len=3 with dup 20\0");
+    drop assert_i32(raw SortedList.contains(sl, 20i64), 1i32, "T20 contains 20\0");
+    drop assert_i32(raw SortedList.remove_val(sl, 20i64), 0i32, "T21 remove one 20\0");
+    drop assert_i32(raw SortedList.contains(sl, 20i64), 1i32, "T22 still one 20\0");
+
+    // clear
+    drop SortedList.clear(sl);
+    drop assert_eq (raw SortedList.len(sl), 0i64, "T23 clear len=0\0");
+    drop assert_i32(raw SortedList.is_empty(sl), 1i32, "T24 is_empty after clear\0");
+
+    drop SortedList.destroy(sl);
+    drop printf("────────────────────\n\0");
+    if (fail_cnt > 0i64) { drop printf("FAILURES detected\n\0"); exit 1i32; }
+    drop printf("All sorted tests passed\n\0");
+    exit 0i32;
+};

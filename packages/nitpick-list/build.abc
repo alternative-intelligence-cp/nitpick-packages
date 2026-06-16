@@ -1,0 +1,69 @@
+[project]
+name = "nitpick-list"
+version = "0.1.0"
+
+[target.nitpick-list]
+type = "library"
+sources = ["src/nitpick_list.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem"]
+
+[target.test-singly]
+type = "binary"
+sources = ["tests/test_singly.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-doubly]
+type = "binary"
+sources = ["tests/test_doubly.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-sorted]
+type = "binary"
+sources = ["tests/test_sorted.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-circular]
+type = "binary"
+sources = ["tests/test_circular.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-skiplist]
+type = "binary"
+sources = ["tests/test_skiplist.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-singly-v]
+type = "binary"
+sources = ["tests/test_singly_v.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-doubly-v]
+type = "binary"
+sources = ["tests/test_doubly_v.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-sorted-v]
+type = "binary"
+sources = ["tests/test_sorted_v.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-circular-v]
+type = "binary"
+sources = ["tests/test_circular_v.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+
+[target.test-skiplist-v]
+type = "binary"
+sources = ["tests/test_skiplist_v.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]

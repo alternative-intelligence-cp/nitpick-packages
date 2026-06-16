@@ -1,0 +1,12 @@
+[package]
+name = "nitpick-list"
+version = "0.1.0"
+authors = ["Nitpick Language Project"]
+license = "MIT"
+description = "Comprehensive list data structures: singly, doubly, sorted, circular, and skip list — in fast (int64) and universal (tagged) variants"
+keywords = ["list", "linked-list", "skip-list", "circular", "sorted", "data-structure"]
+categories = ["data-structures"]
+
+[build]
+type = "library"
+entry = "src/nitpick_list.npk"

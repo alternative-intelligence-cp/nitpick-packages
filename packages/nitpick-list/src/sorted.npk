@@ -1,0 +1,170 @@
+// sorted.npk — Sorted linked list (fast int64 variant, ascending order)
+//
+// SortedList: doubly-linked, maintained in ascending order at insert time.
+// Duplicates are allowed.
+//
+// Node layout (24 bytes): same as doubly.npk
+//   [0..7] val  [8..15] next  [16..23] prev
+//
+// Header layout (24 bytes):
+//   [0..7] head  [8..15] tail  [16..23] size
+//
+// API (via pub Type:SortedList):
+//   create()            → int64
+//   destroy(sl)         → int32
+//   insert(sl, val)     → int32  O(n) — inserts maintaining ascending order
+//   remove_val(sl, val) → int32  O(n) — removes first occurrence
+//   contains(sl, val)   → int32  O(n)
+//   min(sl)             → int64  O(1) — head value
+//   max(sl)             → int64  O(1) — tail value
+//   len(sl)             → int64
+//   is_empty(sl)        → int32
+//   clear(sl)           → int32
+
+extern "libc" {
+    func:nitpick_libc_mem_malloc    = int64(int64:bytes);
+    func:nitpick_libc_mem_free      = int32(int64:ptr);
+    func:nitpick_libc_mem_zero      = int32(int64:ptr, int64:bytes);
+    func:nitpick_libc_mem_read_i64  = int64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_i64 = void(int64:ptr, int64:offset, int64:val);
+}
+
+// ── Node helpers ─────────────────────────────────────────────────────────────
+
+func:so_node_val  = int64(int64:n) { pass nitpick_libc_mem_read_i64(n,  0i64); };
+func:so_node_next = int64(int64:n) { pass nitpick_libc_mem_read_i64(n,  8i64); };
+func:so_node_prev = int64(int64:n) { pass nitpick_libc_mem_read_i64(n, 16i64); };
+
+func:so_node_set_val  = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n,  0i64, v); };
+func:so_node_set_next = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n,  8i64, v); };
+func:so_node_set_prev = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n, 16i64, v); };
+
+func:so_alloc_node = int64(int64:val) {
+    int64:n = nitpick_libc_mem_malloc(24i64);
+    int32:z = nitpick_libc_mem_zero(n, 24i64);
+    so_node_set_val(n, val);
+    pass n;
+};
+
+// ── Header helpers ───────────────────────────────────────────────────────────
+
+func:so_head = int64(int64:s) { pass nitpick_libc_mem_read_i64(s,  0i64); };
+func:so_tail = int64(int64:s) { pass nitpick_libc_mem_read_i64(s,  8i64); };
+func:so_size = int64(int64:s) { pass nitpick_libc_mem_read_i64(s, 16i64); };
+
+func:so_set_head = void(int64:s, int64:v) { nitpick_libc_mem_write_i64(s,  0i64, v); };
+func:so_set_tail = void(int64:s, int64:v) { nitpick_libc_mem_write_i64(s,  8i64, v); };
+func:so_set_size = void(int64:s, int64:v) { nitpick_libc_mem_write_i64(s, 16i64, v); };
+
+// ── Core functions ───────────────────────────────────────────────────────────
+
+func:sorted_create = int64() {
+    int64:s = nitpick_libc_mem_malloc(24i64);
+    int32:z = nitpick_libc_mem_zero(s, 24i64);
+    pass s;
+};
+
+// Insert val maintaining ascending order.
+// Walk from head until we find cur >= val, insert before cur.
+func:sorted_insert = int32(int64:s, int64:val) {
+    int64:n    = raw so_alloc_node(val);
+    int64:cur  = raw so_head(s);
+    int64:prev = 0i64;
+    int64:sz   = raw so_size(s);
+
+    // find insertion point
+    loop(0i64, sz, 1i64) {
+        if (cur == 0i64) { break; }   // reached end — insert at tail
+        if (raw so_node_val(cur) >= val) { break; }
+        prev = cur;
+        cur  = raw so_node_next(cur);
+    }
+
+    // wire n between prev and cur
+    so_node_set_next(n, cur);
+    so_node_set_prev(n, prev);
+    if (prev != 0i64) { so_node_set_next(prev, n); } else { so_set_head(s, n); }
+    if (cur  != 0i64) { so_node_set_prev(cur,  n); } else { so_set_tail(s, n); }
+    so_set_size(s, sz + 1i64);
+    pass 0i32;
+};
+
+func:sorted_remove_val = int32(int64:s, int64:val) {
+    int64:cur = raw so_head(s);
+    int64:sz  = raw so_size(s);
+    loop(0i64, sz, 1i64) {
+        if (cur == 0i64) { pass -1i32; }
+        int64:v = raw so_node_val(cur);
+        // since list is sorted, if cur > val it can't be further ahead
+        if (v > val) { pass -1i32; }
+        if (v == val) {
+            int64:prv = raw so_node_prev(cur);
+            int64:nxt = raw so_node_next(cur);
+            if (prv != 0i64) { so_node_set_next(prv, nxt); } else { so_set_head(s, nxt); }
+            if (nxt != 0i64) { so_node_set_prev(nxt, prv); } else { so_set_tail(s, prv); }
+            so_set_size(s, sz - 1i64);
+            int32:f = nitpick_libc_mem_free(cur);
+            pass 0i32;
+        }
+        cur = raw so_node_next(cur);
+    }
+    pass -1i32;
+};
+
+func:sorted_contains = int32(int64:s, int64:val) {
+    int64:cur = raw so_head(s);
+    loop(0i64, raw so_size(s), 1i64) {
+        if (cur == 0i64) { pass 0i32; }
+        int64:v = raw so_node_val(cur);
+        if (v == val) { pass 1i32; }
+        if (v > val)  { pass 0i32; }
+        cur = raw so_node_next(cur);
+    }
+    pass 0i32;
+};
+
+func:sorted_min = int64(int64:s) {
+    int64:head = raw so_head(s);
+    if (head == 0i64) { pass -1i64; }
+    pass raw so_node_val(head);
+};
+
+func:sorted_max = int64(int64:s) {
+    int64:tail = raw so_tail(s);
+    if (tail == 0i64) { pass -1i64; }
+    pass raw so_node_val(tail);
+};
+
+func:sorted_clear = int32(int64:s) {
+    int64:cur = raw so_head(s);
+    loop(0i64, raw so_size(s), 1i64) {
+        if (cur == 0i64) { break; }
+        int64:nxt = raw so_node_next(cur);
+        int32:f   = nitpick_libc_mem_free(cur);
+        cur = nxt;
+    }
+    so_set_head(s, 0i64);
+    so_set_tail(s, 0i64);
+    so_set_size(s, 0i64);
+    pass 0i32;
+};
+
+func:sorted_destroy = int32(int64:s) {
+    int32:c = raw sorted_clear(s);
+    pass nitpick_libc_mem_free(s);
+};
+
+// ── Type wrapper ─────────────────────────────────────────────────────────────
+
+pub Type:SortedList = {
+    func:create      = int64()                    { pass raw sorted_create();             };
+    func:destroy     = int32(int64:s)             { pass raw sorted_destroy(s);           };
+    func:insert      = int32(int64:s, int64:val)  { pass raw sorted_insert(s, val);       };
+    func:remove_val  = int32(int64:s, int64:val)  { pass raw sorted_remove_val(s, val);   };
+    func:contains    = int32(int64:s, int64:val)  { pass raw sorted_contains(s, val);     };
+    func:min         = int64(int64:s)             { pass raw sorted_min(s);               };
+    func:max         = int64(int64:s)             { pass raw sorted_max(s);               };
+    func:len         = int64(int64:s)             { pass raw so_size(s);                  };
+    func:is_empty    = int32(int64:s)             { int64:sz = raw so_size(s); if (sz == 0i64) { pass 1i32; } pass 0i32; };
+    func:clear       = int32(int64:s)             { pass raw sorted_clear(s);             };
+};

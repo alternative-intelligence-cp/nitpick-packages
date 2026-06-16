@@ -1,0 +1,78 @@
+// test_circular.npk — Tests for circular list (fast int64 variant)
+extern "libc" { func:printf = int32(string:fmt); }
+use "../src/circular.npk".*;
+
+int64:fail_cnt = 0i64;
+func:failsafe = int32(tbb32:_e) { drop _e; exit 1i32; };
+
+func:assert_eq = int64(int64:a, int64:e, string:n) {
+    if (a != e) { fail_cnt += 1i64; drop printf("[FAIL] \0"); drop printf(n); drop printf("\n\0"); }
+    else        { drop printf("[PASS] \0"); drop printf(n); drop printf("\n\0"); }
+    pass 0i64;
+};
+func:assert_i32 = int64(int32:a, int32:e, string:n) { pass raw assert_eq(a => int64, e => int64, n); };
+
+func:main = int32() {
+    int64:cl = raw CList.create();
+
+    drop assert_eq (raw CList.len(cl), 0i64, "T01 initial len=0\0");
+    drop assert_i32(raw CList.is_empty(cl), 1i32, "T02 is_empty\0");
+    drop assert_eq (raw CList.pop(cl), -1i64, "T03 pop empty=-1\0");
+    drop assert_eq (raw CList.peek(cl), -1i64, "T04 peek empty=-1\0");
+
+    // push three elements
+    drop CList.push(cl, 10i64);
+    drop CList.push(cl, 20i64);
+    drop CList.push(cl, 30i64);
+    drop assert_eq (raw CList.len(cl), 3i64, "T05 len=3\0");
+    // after three pushes: head=10, tail=30
+    drop assert_eq (raw CList.peek(cl),      10i64, "T06 peek head=10\0");
+    drop assert_eq (raw CList.peek_tail(cl), 30i64, "T07 peek_tail=30\0");
+
+    // contains
+    drop assert_i32(raw CList.contains(cl, 20i64),  1i32, "T08 contains 20\0");
+    drop assert_i32(raw CList.contains(cl, 999i64), 0i32, "T09 not contains 999\0");
+
+    // rotate: head moves from 10→20
+    drop CList.rotate(cl);
+    drop assert_eq(raw CList.peek(cl), 20i64, "T10 after rotate head=20\0");
+    drop assert_eq(raw CList.peek_tail(cl), 10i64, "T11 after rotate tail=10\0");
+
+    // rotate again: head=30
+    drop CList.rotate(cl);
+    drop assert_eq(raw CList.peek(cl), 30i64, "T12 second rotate head=30\0");
+
+    // pop removes head (30), next head becomes 20? No:
+    // after 2 rotates from [10,20,30]: tail=20, head=30
+    drop assert_eq(raw CList.pop(cl), 30i64, "T13 pop=30\0");
+    drop assert_eq(raw CList.len(cl), 2i64, "T14 len=2\0");
+
+    // pop again: head is now 10 (tail=20, head=tail.next=10)
+    drop assert_eq(raw CList.pop(cl), 10i64, "T15 pop=10\0");
+    drop assert_eq(raw CList.len(cl), 1i64, "T16 len=1\0");
+
+    // single element: head == tail == 20, self-loop
+    drop assert_eq(raw CList.peek(cl),      20i64, "T17 single peek=20\0");
+    drop assert_eq(raw CList.peek_tail(cl), 20i64, "T18 single peek_tail=20\0");
+
+    // pop last element
+    drop assert_eq(raw CList.pop(cl), 20i64, "T19 pop last=20\0");
+    drop assert_i32(raw CList.is_empty(cl), 1i32, "T20 is_empty after all pops\0");
+
+    // push after empty
+    drop CList.push(cl, 42i64);
+    drop assert_eq(raw CList.len(cl), 1i64, "T21 push after empty len=1\0");
+
+    // clear
+    drop CList.push(cl, 43i64);
+    drop CList.push(cl, 44i64);
+    drop CList.clear(cl);
+    drop assert_eq (raw CList.len(cl), 0i64, "T22 clear len=0\0");
+    drop assert_i32(raw CList.is_empty(cl), 1i32, "T23 is_empty after clear\0");
+
+    drop CList.destroy(cl);
+    drop printf("────────────────────\n\0");
+    if (fail_cnt > 0i64) { drop printf("FAILURES detected\n\0"); exit 1i32; }
+    drop printf("All circular tests passed\n\0");
+    exit 0i32;
+};

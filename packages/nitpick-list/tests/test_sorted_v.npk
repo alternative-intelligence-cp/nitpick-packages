@@ -1,0 +1,71 @@
+// test_sorted_v.npk — Tests for SortedListV (universal tagged sorted list)
+extern "libc" { func:printf = int32(string:fmt); }
+use "../src/singly_v.npk".*;
+use "../src/sorted_v.npk".*;
+
+int64:LIST_TAG_INT   = 0i64;
+int64:LIST_TAG_F64   = 1i64;
+int64:LIST_TAG_PTR   = 2i64;
+int64:LIST_TAG_BYTES = 3i64;
+
+int64:fail_cnt = 0i64;
+func:failsafe = int32(tbb32:_e) { drop _e; exit 1i32; };
+
+func:assert_eq = int64(int64:a, int64:e, string:n) {
+    if (a != e) { fail_cnt += 1i64; drop printf("[FAIL] \0"); drop printf(n); drop printf("\n\0"); }
+    else        { drop printf("[PASS] \0"); drop printf(n); drop printf("\n\0"); }
+    pass 0i64;
+};
+func:assert_i32 = int64(int32:a, int32:e, string:n) { pass raw assert_eq(a => int64, e => int64, n); };
+
+func:main = int32() {
+    int64:sl = raw SortedListV.create();
+
+    drop assert_eq (raw SortedListV.len(sl), 0i64, "T01 initial len=0\0");
+    drop assert_i32(raw SortedListV.is_empty(sl), 1i32, "T02 is_empty\0");
+    drop assert_eq (raw SortedListV.min_val(sl), -1i64, "T03 min_val empty\0");
+    drop assert_eq (raw SortedListV.max_val(sl), -1i64, "T04 max_val empty\0");
+
+    // Insert mixed types — sorted by val
+    drop SortedListV.insert(sl, LIST_TAG_PTR, 50i64);
+    drop SortedListV.insert(sl, LIST_TAG_INT, 10i64);
+    drop SortedListV.insert(sl, LIST_TAG_F64, 30i64);
+    drop SortedListV.insert(sl, LIST_TAG_INT, 20i64);
+    drop SortedListV.insert(sl, LIST_TAG_PTR, 40i64);
+
+    drop assert_eq (raw SortedListV.len(sl), 5i64, "T05 len=5\0");
+    drop assert_eq (raw SortedListV.min_val(sl), 10i64, "T06 min_val=10\0");
+    drop assert_eq (raw SortedListV.min_tag(sl), LIST_TAG_INT, "T07 min_tag=INT\0");
+    drop assert_eq (raw SortedListV.max_val(sl), 50i64, "T08 max_val=50\0");
+    drop assert_eq (raw SortedListV.max_tag(sl), LIST_TAG_PTR, "T09 max_tag=PTR\0");
+
+    // contains_val — exact tag+val
+    drop assert_i32(raw SortedListV.contains_val(sl, LIST_TAG_F64, 30i64), 1i32, "T10 contains f64 30\0");
+    drop assert_i32(raw SortedListV.contains_val(sl, LIST_TAG_INT, 30i64), 0i32, "T11 wrong tag 30\0");
+    drop assert_i32(raw SortedListV.contains_val(sl, LIST_TAG_INT, 99i64), 0i32, "T12 not found\0");
+
+    // remove middle
+    drop assert_i32(raw SortedListV.remove_val(sl, LIST_TAG_F64, 30i64), 0i32, "T13 remove f64 30\0");
+    drop assert_i32(raw SortedListV.contains_val(sl, LIST_TAG_F64, 30i64), 0i32, "T14 30 gone\0");
+    drop assert_eq (raw SortedListV.len(sl), 4i64, "T15 len=4\0");
+
+    // remove head/tail
+    drop assert_i32(raw SortedListV.remove_val(sl, LIST_TAG_INT, 10i64), 0i32, "T16 remove head\0");
+    drop assert_eq (raw SortedListV.min_val(sl), 20i64, "T17 new min=20\0");
+    drop assert_i32(raw SortedListV.remove_val(sl, LIST_TAG_PTR, 50i64), 0i32, "T18 remove tail\0");
+    drop assert_eq (raw SortedListV.max_val(sl), 40i64, "T19 new max=40\0");
+
+    // remove non-existent
+    drop assert_i32(raw SortedListV.remove_val(sl, LIST_TAG_INT, 999i64), -1i32, "T20 remove missing=-1\0");
+
+    // clear
+    drop SortedListV.clear(sl);
+    drop assert_eq (raw SortedListV.len(sl), 0i64, "T21 clear len=0\0");
+    drop assert_i32(raw SortedListV.is_empty(sl), 1i32, "T22 is_empty after clear\0");
+
+    drop SortedListV.destroy(sl);
+    drop printf("────────────────────\n\0");
+    if (fail_cnt > 0i64) { drop printf("FAILURES detected\n\0"); exit 1i32; }
+    drop printf("All sorted_v tests passed\n\0");
+    exit 0i32;
+};

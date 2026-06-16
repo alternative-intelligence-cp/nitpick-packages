@@ -1,0 +1,82 @@
+// test_singly_v.npk — Tests for SListV (universal tagged singly-linked list)
+extern "libc" { func:printf = int32(string:fmt); }
+use "../src/singly_v.npk".*;
+
+int64:LIST_TAG_INT   = 0i64;
+int64:LIST_TAG_F64   = 1i64;
+int64:LIST_TAG_PTR   = 2i64;
+int64:LIST_TAG_BYTES = 3i64;
+
+int64:fail_cnt = 0i64;
+func:failsafe = int32(tbb32:_e) { drop _e; exit 1i32; };
+
+func:assert_eq = int64(int64:a, int64:e, string:n) {
+    if (a != e) { fail_cnt += 1i64; drop printf("[FAIL] \0"); drop printf(n); drop printf("\n\0"); }
+    else        { drop printf("[PASS] \0"); drop printf(n); drop printf("\n\0"); }
+    pass 0i64;
+};
+func:assert_i32 = int64(int32:a, int32:e, string:n) { pass raw assert_eq(a => int64, e => int64, n); };
+
+func:main = int32() {
+    int64:sl = raw SListV.create();
+
+    drop assert_eq (raw SListV.len(sl), 0i64, "T01 initial len=0\0");
+    drop assert_i32(raw SListV.is_empty(sl), 1i32, "T02 is_empty\0");
+
+    // push_front with int tag
+    drop SListV.push_front(sl, LIST_TAG_INT, 100i64);
+    drop assert_eq(raw SListV.peek_front_tag(sl), LIST_TAG_INT, "T03 peek_front_tag=INT\0");
+    drop assert_eq(raw SListV.peek_front_val(sl), 100i64, "T04 peek_front_val=100\0");
+
+    // push_front with ptr tag
+    drop SListV.push_front(sl, LIST_TAG_PTR, 0xDEADBEEFi64);
+    drop assert_eq(raw SListV.peek_front_tag(sl), LIST_TAG_PTR, "T05 tag=PTR\0");
+    drop assert_eq(raw SListV.peek_front_val(sl), 0xDEADBEEFi64, "T06 val=0xDEADBEEF\0");
+
+    // push_back with f64 tag
+    drop SListV.push_back(sl, LIST_TAG_F64, 42i64);
+    drop assert_eq(raw SListV.peek_back_tag(sl), LIST_TAG_F64, "T07 peek_back_tag=F64\0");
+    drop assert_eq(raw SListV.peek_back_val(sl), 42i64, "T08 peek_back_val=42\0");
+
+    drop assert_eq(raw SListV.len(sl), 3i64, "T09 len=3\0");
+
+    // contains
+    drop assert_i32(raw SListV.contains_val(sl, LIST_TAG_INT, 100i64), 1i32, "T10 contains int 100\0");
+    drop assert_i32(raw SListV.contains_val(sl, LIST_TAG_F64, 100i64), 0i32, "T11 wrong tag not found\0");
+    drop assert_i32(raw SListV.contains_val(sl, LIST_TAG_INT, 999i64), 0i32, "T12 not found\0");
+
+    // pop_front via output pointer slots (stack alloc'd via small malloc)
+    int64:ot_buf = nitpick_libc_mem_malloc(8i64);
+    int64:ov_buf = nitpick_libc_mem_malloc(8i64);
+    int32:pop_ok = raw SListV.pop_front(sl, ot_buf, ov_buf);
+    drop assert_i32(pop_ok, 0i32, "T13 pop_front ok=0\0");
+    drop assert_eq(nitpick_libc_mem_read_i64(ot_buf, 0i64), LIST_TAG_PTR, "T14 popped tag=PTR\0");
+    drop assert_eq(nitpick_libc_mem_read_i64(ov_buf, 0i64), 0xDEADBEEFi64, "T15 popped val=0xDEADBEEF\0");
+    drop assert_eq(raw SListV.len(sl), 2i64, "T16 len=2 after pop\0");
+    int32:mf1 = nitpick_libc_mem_free(ot_buf);
+    int32:mf2 = nitpick_libc_mem_free(ov_buf);
+
+    // remove_first
+    drop assert_i32(raw SListV.remove_first(sl, LIST_TAG_INT, 100i64), 0i32, "T17 remove int 100 ok\0");
+    drop assert_i32(raw SListV.contains_val(sl, LIST_TAG_INT, 100i64), 0i32, "T18 100 gone\0");
+    drop assert_eq (raw SListV.len(sl), 1i64, "T19 len=1\0");
+
+    // reverse on single element (no-op, should still work)
+    drop SListV.push_front(sl, LIST_TAG_INT, 1i64);
+    drop SListV.push_back(sl, LIST_TAG_INT, 3i64);
+    // now: [1, f64:42, 3]
+    drop SListV.reverse(sl);
+    drop assert_eq(raw SListV.peek_front_val(sl), 3i64, "T20 reverse front=3\0");
+    drop assert_eq(raw SListV.peek_back_val(sl),  1i64, "T21 reverse back=1\0");
+
+    // clear
+    drop SListV.clear(sl);
+    drop assert_eq (raw SListV.len(sl), 0i64, "T22 clear len=0\0");
+    drop assert_i32(raw SListV.is_empty(sl), 1i32, "T23 is_empty after clear\0");
+
+    drop SListV.destroy(sl);
+    drop printf("────────────────────\n\0");
+    if (fail_cnt > 0i64) { drop printf("FAILURES detected\n\0"); exit 1i32; }
+    drop printf("All singly_v tests passed\n\0");
+    exit 0i32;
+};

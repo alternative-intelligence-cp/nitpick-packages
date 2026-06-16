@@ -1,0 +1,254 @@
+// doubly_v.npk — Doubly-linked list (universal tagged variant)
+//
+// DListV: same as DList but each node stores a (tag, val) pair so
+// any 64-bit value type can be stored without runtime casting.
+//
+// Node layout (32 bytes):
+//   [0..7]   tag  : int64
+//   [8..15]  val  : int64
+//   [16..23] next : int64   — pointer to next node (0 = null)
+//   [24..31] prev : int64   — pointer to prev node (0 = null)
+//
+// Header layout (24 bytes):
+//   [0..7]   head : int64
+//   [8..15]  tail : int64
+//   [16..23] size : int64
+//
+// Tag constants (LIST_TAG_*) are declared in singly_v.npk — use'd first.
+//
+// API (via pub Type:DListV):
+//   create()                           → int64
+//   destroy(dl)                        → int32
+//   push_front(dl, tag, val)           → int32  O(1)
+//   push_back(dl, tag, val)            → int32  O(1)
+//   pop_front(dl, out_tag, out_val)    → int32  O(1)
+//   pop_back(dl, out_tag, out_val)     → int32  O(1)
+//   peek_front_tag(dl)                 → int64
+//   peek_front_val(dl)                 → int64
+//   peek_back_tag(dl)                  → int64
+//   peek_back_val(dl)                  → int64
+//   contains_val(dl, tag, val)         → int32  O(n)
+//   remove_first(dl, tag, val)         → int32  O(n)
+//   len(dl)                            → int64
+//   is_empty(dl)                       → int32
+//   clear(dl)                          → int32
+//   reverse(dl)                        → int32  O(n)
+
+extern "libc" {
+    func:nitpick_libc_mem_malloc    = int64(int64:bytes);
+    func:nitpick_libc_mem_free      = int32(int64:ptr);
+    func:nitpick_libc_mem_zero      = int32(int64:ptr, int64:bytes);
+    func:nitpick_libc_mem_read_i64  = int64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_i64 = void(int64:ptr, int64:offset, int64:val);
+}
+
+// ── Node helpers ─────────────────────────────────────────────────────────────
+
+func:dlv_node_tag  = int64(int64:n) { pass nitpick_libc_mem_read_i64(n,  0i64); };
+func:dlv_node_val  = int64(int64:n) { pass nitpick_libc_mem_read_i64(n,  8i64); };
+func:dlv_node_next = int64(int64:n) { pass nitpick_libc_mem_read_i64(n, 16i64); };
+func:dlv_node_prev = int64(int64:n) { pass nitpick_libc_mem_read_i64(n, 24i64); };
+
+func:dlv_node_set_tag  = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n,  0i64, v); };
+func:dlv_node_set_val  = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n,  8i64, v); };
+func:dlv_node_set_next = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n, 16i64, v); };
+func:dlv_node_set_prev = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n, 24i64, v); };
+
+func:dlv_alloc_node = int64(int64:tag, int64:val) {
+    int64:n = nitpick_libc_mem_malloc(32i64);
+    int32:z = nitpick_libc_mem_zero(n, 32i64);
+    dlv_node_set_tag(n, tag);
+    dlv_node_set_val(n, val);
+    pass n;
+};
+
+// ── Header helpers ───────────────────────────────────────────────────────────
+
+func:dlv_head = int64(int64:dl) { pass nitpick_libc_mem_read_i64(dl,  0i64); };
+func:dlv_tail = int64(int64:dl) { pass nitpick_libc_mem_read_i64(dl,  8i64); };
+func:dlv_size = int64(int64:dl) { pass nitpick_libc_mem_read_i64(dl, 16i64); };
+
+func:dlv_set_head = void(int64:dl, int64:v) { nitpick_libc_mem_write_i64(dl,  0i64, v); };
+func:dlv_set_tail = void(int64:dl, int64:v) { nitpick_libc_mem_write_i64(dl,  8i64, v); };
+func:dlv_set_size = void(int64:dl, int64:v) { nitpick_libc_mem_write_i64(dl, 16i64, v); };
+
+// ── Core functions ───────────────────────────────────────────────────────────
+
+func:dlistv_create = int64() {
+    int64:dl = nitpick_libc_mem_malloc(24i64);
+    int32:z  = nitpick_libc_mem_zero(dl, 24i64);
+    pass dl;
+};
+
+func:dlistv_push_front = int32(int64:dl, int64:tag, int64:val) {
+    int64:n    = raw dlv_alloc_node(tag, val);
+    int64:head = raw dlv_head(dl);
+    dlv_node_set_next(n, head);
+    dlv_node_set_prev(n, 0i64);
+    if (head != 0i64) { dlv_node_set_prev(head, n); }
+    dlv_set_head(dl, n);
+    if (raw dlv_tail(dl) == 0i64) { dlv_set_tail(dl, n); }
+    dlv_set_size(dl, raw dlv_size(dl) + 1i64);
+    pass 0i32;
+};
+
+func:dlistv_push_back = int32(int64:dl, int64:tag, int64:val) {
+    int64:n    = raw dlv_alloc_node(tag, val);
+    int64:tail = raw dlv_tail(dl);
+    dlv_node_set_prev(n, tail);
+    dlv_node_set_next(n, 0i64);
+    if (tail != 0i64) { dlv_node_set_next(tail, n); }
+    dlv_set_tail(dl, n);
+    if (raw dlv_head(dl) == 0i64) { dlv_set_head(dl, n); }
+    dlv_set_size(dl, raw dlv_size(dl) + 1i64);
+    pass 0i32;
+};
+
+// Pop front — writes tag and val into caller-supplied pointer slots.
+// Returns 0 on success, -1 if empty.
+func:dlistv_pop_front = int32(int64:dl, int64:out_tag, int64:out_val) {
+    int64:head = raw dlv_head(dl);
+    if (head == 0i64) { pass -1i32; }
+    nitpick_libc_mem_write_i64(out_tag, 0i64, raw dlv_node_tag(head));
+    nitpick_libc_mem_write_i64(out_val, 0i64, raw dlv_node_val(head));
+    int64:next = raw dlv_node_next(head);
+    dlv_set_head(dl, next);
+    if (next != 0i64) {
+        dlv_node_set_prev(next, 0i64);
+    } else {
+        dlv_set_tail(dl, 0i64);
+    }
+    dlv_set_size(dl, raw dlv_size(dl) - 1i64);
+    int32:f = nitpick_libc_mem_free(head);
+    pass 0i32;
+};
+
+// Pop back — writes tag and val into caller-supplied pointer slots.
+// Returns 0 on success, -1 if empty.
+func:dlistv_pop_back = int32(int64:dl, int64:out_tag, int64:out_val) {
+    int64:tail = raw dlv_tail(dl);
+    if (tail == 0i64) { pass -1i32; }
+    nitpick_libc_mem_write_i64(out_tag, 0i64, raw dlv_node_tag(tail));
+    nitpick_libc_mem_write_i64(out_val, 0i64, raw dlv_node_val(tail));
+    int64:prev = raw dlv_node_prev(tail);
+    dlv_set_tail(dl, prev);
+    if (prev != 0i64) {
+        dlv_node_set_next(prev, 0i64);
+    } else {
+        dlv_set_head(dl, 0i64);
+    }
+    dlv_set_size(dl, raw dlv_size(dl) - 1i64);
+    int32:f = nitpick_libc_mem_free(tail);
+    pass 0i32;
+};
+
+func:dlistv_peek_front_tag = int64(int64:dl) {
+    int64:head = raw dlv_head(dl);
+    if (head == 0i64) { pass -1i64; }
+    pass raw dlv_node_tag(head);
+};
+
+func:dlistv_peek_front_val = int64(int64:dl) {
+    int64:head = raw dlv_head(dl);
+    if (head == 0i64) { pass -1i64; }
+    pass raw dlv_node_val(head);
+};
+
+func:dlistv_peek_back_tag = int64(int64:dl) {
+    int64:tail = raw dlv_tail(dl);
+    if (tail == 0i64) { pass -1i64; }
+    pass raw dlv_node_tag(tail);
+};
+
+func:dlistv_peek_back_val = int64(int64:dl) {
+    int64:tail = raw dlv_tail(dl);
+    if (tail == 0i64) { pass -1i64; }
+    pass raw dlv_node_val(tail);
+};
+
+func:dlistv_contains_val = int32(int64:dl, int64:tag, int64:val) {
+    int64:cur = raw dlv_head(dl);
+    loop(0i64, raw dlv_size(dl), 1i64) {
+        if (cur == 0i64) { pass 0i32; }
+        if ((raw dlv_node_tag(cur) == tag) && (raw dlv_node_val(cur) == val)) { pass 1i32; }
+        cur = raw dlv_node_next(cur);
+    }
+    pass 0i32;
+};
+
+func:dlistv_remove_first = int32(int64:dl, int64:tag, int64:val) {
+    int64:cur = raw dlv_head(dl);
+    int64:sz  = raw dlv_size(dl);
+    loop(0i64, sz, 1i64) {
+        if (cur == 0i64) { pass -1i32; }
+        if ((raw dlv_node_tag(cur) == tag) && (raw dlv_node_val(cur) == val)) {
+            int64:prv = raw dlv_node_prev(cur);
+            int64:nxt = raw dlv_node_next(cur);
+            if (prv != 0i64) { dlv_node_set_next(prv, nxt); } else { dlv_set_head(dl, nxt); }
+            if (nxt != 0i64) { dlv_node_set_prev(nxt, prv); } else { dlv_set_tail(dl, prv); }
+            dlv_set_size(dl, sz - 1i64);
+            int32:f = nitpick_libc_mem_free(cur);
+            pass 0i32;
+        }
+        cur = raw dlv_node_next(cur);
+    }
+    pass -1i32;
+};
+
+func:dlistv_clear = int32(int64:dl) {
+    int64:cur = raw dlv_head(dl);
+    loop(0i64, raw dlv_size(dl), 1i64) {
+        if (cur == 0i64) { pass 0i32; }
+        int64:nxt = raw dlv_node_next(cur);
+        int32:f   = nitpick_libc_mem_free(cur);
+        cur = nxt;
+    }
+    dlv_set_head(dl, 0i64);
+    dlv_set_tail(dl, 0i64);
+    dlv_set_size(dl, 0i64);
+    pass 0i32;
+};
+
+func:dlistv_destroy = int32(int64:dl) {
+    int32:c = raw dlistv_clear(dl);
+    pass nitpick_libc_mem_free(dl);
+};
+
+func:dlistv_reverse = int32(int64:dl) {
+    int64:cur = raw dlv_head(dl);
+    int64:sz  = raw dlv_size(dl);
+    loop(0i64, sz, 1i64) {
+        if (cur == 0i64) { pass 0i32; }
+        int64:prv = raw dlv_node_prev(cur);
+        int64:nxt = raw dlv_node_next(cur);
+        dlv_node_set_next(cur, prv);
+        dlv_node_set_prev(cur, nxt);
+        cur = nxt;
+    }
+    int64:old_head = raw dlv_head(dl);
+    int64:old_tail = raw dlv_tail(dl);
+    dlv_set_head(dl, old_tail);
+    dlv_set_tail(dl, old_head);
+    pass 0i32;
+};
+
+// ── Type wrapper ─────────────────────────────────────────────────────────────
+
+pub Type:DListV = {
+    func:create         = int64()                                   { pass raw dlistv_create();                     };
+    func:destroy        = int32(int64:dl)                           { pass raw dlistv_destroy(dl);                  };
+    func:push_front     = int32(int64:dl, int64:tag, int64:val)     { pass raw dlistv_push_front(dl, tag, val);     };
+    func:push_back      = int32(int64:dl, int64:tag, int64:val)     { pass raw dlistv_push_back(dl, tag, val);      };
+    func:pop_front      = int32(int64:dl, int64:ot, int64:ov)       { pass raw dlistv_pop_front(dl, ot, ov);        };
+    func:pop_back       = int32(int64:dl, int64:ot, int64:ov)       { pass raw dlistv_pop_back(dl, ot, ov);         };
+    func:peek_front_tag = int64(int64:dl)                           { pass raw dlistv_peek_front_tag(dl);           };
+    func:peek_front_val = int64(int64:dl)                           { pass raw dlistv_peek_front_val(dl);           };
+    func:peek_back_tag  = int64(int64:dl)                           { pass raw dlistv_peek_back_tag(dl);            };
+    func:peek_back_val  = int64(int64:dl)                           { pass raw dlistv_peek_back_val(dl);            };
+    func:contains_val   = int32(int64:dl, int64:tag, int64:val)     { pass raw dlistv_contains_val(dl, tag, val);   };
+    func:remove_first   = int32(int64:dl, int64:tag, int64:val)     { pass raw dlistv_remove_first(dl, tag, val);   };
+    func:len            = int64(int64:dl)                           { pass raw dlv_size(dl);                        };
+    func:is_empty       = int32(int64:dl)                           { int64:s = raw dlv_size(dl); if (s == 0i64) { pass 1i32; } pass 0i32; };
+    func:clear          = int32(int64:dl)                           { pass raw dlistv_clear(dl);                    };
+    func:reverse        = int32(int64:dl)                           { pass raw dlistv_reverse(dl);                  };
+};

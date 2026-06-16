@@ -1,0 +1,74 @@
+// test_skiplist.npk — Tests for skip list (fast int64 variant)
+extern "libc" { func:printf = int32(string:fmt); }
+use "../src/skiplist.npk".*;
+
+int64:fail_cnt = 0i64;
+func:failsafe = int32(tbb32:_e) { drop _e; exit 1i32; };
+
+func:assert_eq = int64(int64:a, int64:e, string:n) {
+    if (a != e) { fail_cnt += 1i64; drop printf("[FAIL] \0"); drop printf(n); drop printf("\n\0"); }
+    else        { drop printf("[PASS] \0"); drop printf(n); drop printf("\n\0"); }
+    pass 0i64;
+};
+func:assert_i32 = int64(int32:a, int32:e, string:n) { pass raw assert_eq(a => int64, e => int64, n); };
+
+func:main = int32() {
+    int64:sk = raw SkipList.create();
+
+    drop assert_eq (raw SkipList.len(sk), 0i64,  "T01 initial len=0\0");
+    drop assert_i32(raw SkipList.is_empty(sk), 1i32, "T02 is_empty\0");
+    drop assert_eq (raw SkipList.min(sk), -1i64, "T03 min empty\0");
+    drop assert_eq (raw SkipList.max(sk), -1i64, "T04 max empty\0");
+
+    // insert out-of-order
+    drop SkipList.insert(sk, 50i64);
+    drop SkipList.insert(sk, 10i64);
+    drop SkipList.insert(sk, 30i64);
+    drop SkipList.insert(sk, 20i64);
+    drop SkipList.insert(sk, 40i64);
+
+    drop assert_eq (raw SkipList.len(sk), 5i64,  "T05 len=5\0");
+    drop assert_eq (raw SkipList.min(sk), 10i64, "T06 min=10\0");
+    drop assert_eq (raw SkipList.max(sk), 50i64, "T07 max=50\0");
+
+    // contains
+    drop assert_i32(raw SkipList.contains(sk, 10i64),  1i32, "T08 contains 10\0");
+    drop assert_i32(raw SkipList.contains(sk, 30i64),  1i32, "T09 contains 30\0");
+    drop assert_i32(raw SkipList.contains(sk, 50i64),  1i32, "T10 contains 50\0");
+    drop assert_i32(raw SkipList.contains(sk, 999i64), 0i32, "T11 not contains 999\0");
+    drop assert_i32(raw SkipList.contains(sk, 0i64),   0i32, "T12 not contains 0\0");
+
+    // remove middle
+    drop assert_i32(raw SkipList.remove(sk, 30i64), 0i32,  "T13 remove 30 ok\0");
+    drop assert_i32(raw SkipList.contains(sk, 30i64), 0i32, "T14 30 gone\0");
+    drop assert_eq (raw SkipList.len(sk), 4i64, "T15 len=4\0");
+
+    // remove head
+    drop assert_i32(raw SkipList.remove(sk, 10i64), 0i32, "T16 remove 10 ok\0");
+    drop assert_eq (raw SkipList.min(sk), 20i64, "T17 new min=20\0");
+    drop assert_eq (raw SkipList.len(sk), 3i64, "T18 len=3\0");
+
+    // remove tail
+    drop assert_i32(raw SkipList.remove(sk, 50i64), 0i32, "T19 remove 50 ok\0");
+    drop assert_eq (raw SkipList.max(sk), 40i64, "T20 new max=40\0");
+
+    // remove non-existent
+    drop assert_i32(raw SkipList.remove(sk, 999i64), -1i32, "T21 remove missing=-1\0");
+
+    // clear
+    drop SkipList.clear(sk);
+    drop assert_eq (raw SkipList.len(sk), 0i64, "T22 clear len=0\0");
+    drop assert_i32(raw SkipList.is_empty(sk), 1i32, "T23 is_empty after clear\0");
+
+    // re-insert after clear
+    drop SkipList.insert(sk, 7i64);
+    drop SkipList.insert(sk, 3i64);
+    drop assert_eq(raw SkipList.min(sk), 3i64, "T24 post-clear min=3\0");
+    drop assert_eq(raw SkipList.max(sk), 7i64, "T25 post-clear max=7\0");
+
+    drop SkipList.destroy(sk);
+    drop printf("────────────────────\n\0");
+    if (fail_cnt > 0i64) { drop printf("FAILURES detected\n\0"); exit 1i32; }
+    drop printf("All skiplist tests passed\n\0");
+    exit 0i32;
+};

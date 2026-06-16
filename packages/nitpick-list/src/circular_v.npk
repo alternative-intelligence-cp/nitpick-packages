@@ -1,0 +1,206 @@
+// circular_v.npk — Circular singly-linked list (universal tagged variant)
+//
+// CListV: same as CList but each node stores a (tag, val) pair.
+// tail.next always points back to head. Ideal for round-robin
+// scheduling with tagged values.
+//
+// Node layout (24 bytes):
+//   [0..7]   tag  : int64
+//   [8..15]  val  : int64
+//   [16..23] next : int64   — always non-zero when list is non-empty
+//
+// Header layout (24 bytes):
+//   [0..7]   tail   : int64  — entry point; head = tail.next (0 when empty)
+//   [8..15]  size   : int64
+//   [16..23] cursor : int64  — current node for rotate/peek_current
+//
+// Tag constants (LIST_TAG_*) are declared in singly_v.npk — use'd first.
+//
+// API (via pub Type:CListV):
+//   create()                        → int64
+//   destroy(cl)                     → int32
+//   push(cl, tag, val)              → int32  O(1) — inserts after tail (new tail)
+//   pop(cl, out_tag, out_val)       → int32  O(1) — removes head (tail.next)
+//   peek_tag(cl)                    → int64  O(1) — head tag (tail.next)
+//   peek_val(cl)                    → int64  O(1) — head val (tail.next)
+//   peek_tail_tag(cl)               → int64  O(1)
+//   peek_tail_val(cl)               → int64  O(1)
+//   rotate(cl)                      → int32  O(1) — advance tail → tail becomes old tail.next
+//   contains_val(cl, tag, val)      → int32  O(n)
+//   len(cl)                         → int64
+//   is_empty(cl)                    → int32
+//   clear(cl)                       → int32
+
+extern "libc" {
+    func:nitpick_libc_mem_malloc    = int64(int64:bytes);
+    func:nitpick_libc_mem_free      = int32(int64:ptr);
+    func:nitpick_libc_mem_zero      = int32(int64:ptr, int64:bytes);
+    func:nitpick_libc_mem_read_i64  = int64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_i64 = void(int64:ptr, int64:offset, int64:val);
+}
+
+// ── Node helpers ─────────────────────────────────────────────────────────────
+
+func:clv_node_tag  = int64(int64:n) { pass nitpick_libc_mem_read_i64(n,  0i64); };
+func:clv_node_val  = int64(int64:n) { pass nitpick_libc_mem_read_i64(n,  8i64); };
+func:clv_node_next = int64(int64:n) { pass nitpick_libc_mem_read_i64(n, 16i64); };
+
+func:clv_node_set_tag  = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n,  0i64, v); };
+func:clv_node_set_val  = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n,  8i64, v); };
+func:clv_node_set_next = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n, 16i64, v); };
+
+func:clv_alloc_node = int64(int64:tag, int64:val) {
+    int64:n = nitpick_libc_mem_malloc(24i64);
+    int32:z = nitpick_libc_mem_zero(n, 24i64);
+    clv_node_set_tag(n, tag);
+    clv_node_set_val(n, val);
+    pass n;
+};
+
+// ── Header helpers ───────────────────────────────────────────────────────────
+
+func:clv_tail   = int64(int64:cl) { pass nitpick_libc_mem_read_i64(cl,  0i64); };
+func:clv_size   = int64(int64:cl) { pass nitpick_libc_mem_read_i64(cl,  8i64); };
+func:clv_cursor = int64(int64:cl) { pass nitpick_libc_mem_read_i64(cl, 16i64); };
+
+func:clv_set_tail   = void(int64:cl, int64:v) { nitpick_libc_mem_write_i64(cl,  0i64, v); };
+func:clv_set_size   = void(int64:cl, int64:v) { nitpick_libc_mem_write_i64(cl,  8i64, v); };
+func:clv_set_cursor = void(int64:cl, int64:v) { nitpick_libc_mem_write_i64(cl, 16i64, v); };
+
+// head = tail.next (null when list is empty)
+func:clv_head = int64(int64:cl) {
+    int64:tail = raw clv_tail(cl);
+    if (tail == 0i64) { pass 0i64; }
+    pass raw clv_node_next(tail);
+};
+
+// ── Core functions ───────────────────────────────────────────────────────────
+
+func:clistv_create = int64() {
+    int64:cl = nitpick_libc_mem_malloc(24i64);
+    int32:z  = nitpick_libc_mem_zero(cl, 24i64);
+    pass cl;
+};
+
+// Push new node as new tail (after current tail, before head).
+func:clistv_push = int32(int64:cl, int64:tag, int64:val) {
+    int64:n    = raw clv_alloc_node(tag, val);
+    int64:tail = raw clv_tail(cl);
+    if (tail == 0i64) {
+        // first element — points to itself
+        clv_node_set_next(n, n);
+    } else {
+        int64:head = raw clv_node_next(tail);
+        clv_node_set_next(n, head);
+        clv_node_set_next(tail, n);
+    }
+    clv_set_tail(cl, n);
+    clv_set_size(cl, raw clv_size(cl) + 1i64);
+    pass 0i32;
+};
+
+// Pop the head (tail.next). Writes tag and val into caller-supplied pointer slots.
+// Returns 0 on success, -1 if empty.
+func:clistv_pop = int32(int64:cl, int64:out_tag, int64:out_val) {
+    int64:tail = raw clv_tail(cl);
+    if (tail == 0i64) { pass -1i32; }
+    int64:head = raw clv_node_next(tail);
+    nitpick_libc_mem_write_i64(out_tag, 0i64, raw clv_node_tag(head));
+    nitpick_libc_mem_write_i64(out_val, 0i64, raw clv_node_val(head));
+    int64:sz = raw clv_size(cl);
+    if (sz == 1i64) {
+        // only element
+        clv_set_tail(cl, 0i64);
+    } else {
+        int64:new_head = raw clv_node_next(head);
+        clv_node_set_next(tail, new_head);
+    }
+    clv_set_size(cl, sz - 1i64);
+    int32:f = nitpick_libc_mem_free(head);
+    pass 0i32;
+};
+
+func:clistv_peek_tag = int64(int64:cl) {
+    int64:head = raw clv_head(cl);
+    if (head == 0i64) { pass -1i64; }
+    pass raw clv_node_tag(head);
+};
+
+func:clistv_peek_val = int64(int64:cl) {
+    int64:head = raw clv_head(cl);
+    if (head == 0i64) { pass -1i64; }
+    pass raw clv_node_val(head);
+};
+
+func:clistv_peek_tail_tag = int64(int64:cl) {
+    int64:tail = raw clv_tail(cl);
+    if (tail == 0i64) { pass -1i64; }
+    pass raw clv_node_tag(tail);
+};
+
+func:clistv_peek_tail_val = int64(int64:cl) {
+    int64:tail = raw clv_tail(cl);
+    if (tail == 0i64) { pass -1i64; }
+    pass raw clv_node_val(tail);
+};
+
+// Rotate: advance the tail pointer one step clockwise.
+// After rotate, old head becomes new tail, old head.next becomes new head.
+func:clistv_rotate = int32(int64:cl) {
+    int64:tail = raw clv_tail(cl);
+    if (tail == 0i64) { pass -1i32; }
+    int64:new_tail = raw clv_node_next(tail);
+    clv_set_tail(cl, new_tail);
+    pass 0i32;
+};
+
+func:clistv_contains_val = int32(int64:cl, int64:tag, int64:val) {
+    int64:sz = raw clv_size(cl);
+    if (sz == 0i64) { pass 0i32; }
+    int64:cur = raw clv_head(cl);
+    loop(0i64, sz, 1i64) {
+        if ((raw clv_node_tag(cur) == tag) && (raw clv_node_val(cur) == val)) { pass 1i32; }
+        cur = raw clv_node_next(cur);
+    }
+    pass 0i32;
+};
+
+func:clistv_clear = int32(int64:cl) {
+    int64:sz = raw clv_size(cl);
+    if (sz == 0i64) { pass 0i32; }
+    int64:cur  = raw clv_head(cl);
+    int64:tail = raw clv_tail(cl);
+    loop(0i64, sz, 1i64) {
+        int64:nxt = raw clv_node_next(cur);
+        int32:f   = nitpick_libc_mem_free(cur);
+        if (cur == tail) { break; }
+        cur = nxt;
+    }
+    clv_set_tail(cl, 0i64);
+    clv_set_size(cl, 0i64);
+    clv_set_cursor(cl, 0i64);
+    pass 0i32;
+};
+
+func:clistv_destroy = int32(int64:cl) {
+    int32:c = raw clistv_clear(cl);
+    pass nitpick_libc_mem_free(cl);
+};
+
+// ── Type wrapper ─────────────────────────────────────────────────────────────
+
+pub Type:CListV = {
+    func:create        = int64()                                { pass raw clistv_create();                    };
+    func:destroy       = int32(int64:cl)                        { pass raw clistv_destroy(cl);                 };
+    func:push          = int32(int64:cl, int64:tag, int64:val)  { pass raw clistv_push(cl, tag, val);          };
+    func:pop           = int32(int64:cl, int64:ot, int64:ov)    { pass raw clistv_pop(cl, ot, ov);             };
+    func:peek_tag      = int64(int64:cl)                        { pass raw clistv_peek_tag(cl);                };
+    func:peek_val      = int64(int64:cl)                        { pass raw clistv_peek_val(cl);                };
+    func:peek_tail_tag = int64(int64:cl)                        { pass raw clistv_peek_tail_tag(cl);           };
+    func:peek_tail_val = int64(int64:cl)                        { pass raw clistv_peek_tail_val(cl);           };
+    func:rotate        = int32(int64:cl)                        { pass raw clistv_rotate(cl);                  };
+    func:contains_val  = int32(int64:cl, int64:tag, int64:val)  { pass raw clistv_contains_val(cl, tag, val);  };
+    func:len           = int64(int64:cl)                        { pass raw clv_size(cl);                       };
+    func:is_empty      = int32(int64:cl)                        { int64:s = raw clv_size(cl); if (s == 0i64) { pass 1i32; } pass 0i32; };
+    func:clear         = int32(int64:cl)                        { pass raw clistv_clear(cl);                   };
+};

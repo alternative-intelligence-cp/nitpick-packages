@@ -1,0 +1,225 @@
+// doubly.npk — Doubly-linked list (fast int64 variant)
+//
+// DList: doubly-linked with O(1) push/pop at both ends.
+//
+// Node layout (24 bytes):
+//   [0..7]   val  : int64   — element value
+//   [8..15]  next : int64   — pointer to next node (0 = null)
+//   [16..23] prev : int64   — pointer to prev node (0 = null)
+//
+// Header layout (24 bytes):
+//   [0..7]   head : int64
+//   [8..15]  tail : int64
+//   [16..23] size : int64
+//
+// API (via pub Type:DList):
+//   create()                      → int64
+//   destroy(dl)                   → int32
+//   push_front(dl, val)           → int32  O(1)
+//   push_back(dl, val)            → int32  O(1)
+//   pop_front(dl)                 → int64  O(1), -1 if empty
+//   pop_back(dl)                  → int64  O(1), -1 if empty
+//   peek_front(dl)                → int64  O(1)
+//   peek_back(dl)                 → int64  O(1)
+//   contains(dl, val)             → int32  O(n)
+//   remove_first(dl, val)         → int32  O(n)
+//   len(dl)                       → int64
+//   is_empty(dl)                  → int32
+//   clear(dl)                     → int32
+//   reverse(dl)                   → int32  O(n) — swaps next/prev throughout
+
+extern "libc" {
+    func:nitpick_libc_mem_malloc    = int64(int64:bytes);
+    func:nitpick_libc_mem_free      = int32(int64:ptr);
+    func:nitpick_libc_mem_zero      = int32(int64:ptr, int64:bytes);
+    func:nitpick_libc_mem_read_i64  = int64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_i64 = void(int64:ptr, int64:offset, int64:val);
+}
+
+// ── Node helpers ─────────────────────────────────────────────────────────────
+
+func:dl_node_val  = int64(int64:n) { pass nitpick_libc_mem_read_i64(n,  0i64); };
+func:dl_node_next = int64(int64:n) { pass nitpick_libc_mem_read_i64(n,  8i64); };
+func:dl_node_prev = int64(int64:n) { pass nitpick_libc_mem_read_i64(n, 16i64); };
+
+func:dl_node_set_val  = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n,  0i64, v); };
+func:dl_node_set_next = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n,  8i64, v); };
+func:dl_node_set_prev = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n, 16i64, v); };
+
+func:dl_alloc_node = int64(int64:val) {
+    int64:n = nitpick_libc_mem_malloc(24i64);
+    int32:z = nitpick_libc_mem_zero(n, 24i64);
+    dl_node_set_val(n, val);
+    pass n;
+};
+
+// ── Header helpers ───────────────────────────────────────────────────────────
+
+func:dl_head = int64(int64:dl) { pass nitpick_libc_mem_read_i64(dl,  0i64); };
+func:dl_tail = int64(int64:dl) { pass nitpick_libc_mem_read_i64(dl,  8i64); };
+func:dl_size = int64(int64:dl) { pass nitpick_libc_mem_read_i64(dl, 16i64); };
+
+func:dl_set_head = void(int64:dl, int64:v) { nitpick_libc_mem_write_i64(dl,  0i64, v); };
+func:dl_set_tail = void(int64:dl, int64:v) { nitpick_libc_mem_write_i64(dl,  8i64, v); };
+func:dl_set_size = void(int64:dl, int64:v) { nitpick_libc_mem_write_i64(dl, 16i64, v); };
+
+// ── Core functions ───────────────────────────────────────────────────────────
+
+func:dlist_create = int64() {
+    int64:dl = nitpick_libc_mem_malloc(24i64);
+    int32:z  = nitpick_libc_mem_zero(dl, 24i64);
+    pass dl;
+};
+
+func:dlist_push_front = int32(int64:dl, int64:val) {
+    int64:n    = raw dl_alloc_node(val);
+    int64:head = raw dl_head(dl);
+    dl_node_set_next(n, head);
+    dl_node_set_prev(n, 0i64);
+    if (head != 0i64) { dl_node_set_prev(head, n); }
+    dl_set_head(dl, n);
+    if (raw dl_tail(dl) == 0i64) { dl_set_tail(dl, n); }
+    dl_set_size(dl, raw dl_size(dl) + 1i64);
+    pass 0i32;
+};
+
+func:dlist_push_back = int32(int64:dl, int64:val) {
+    int64:n    = raw dl_alloc_node(val);
+    int64:tail = raw dl_tail(dl);
+    dl_node_set_prev(n, tail);
+    dl_node_set_next(n, 0i64);
+    if (tail != 0i64) { dl_node_set_next(tail, n); }
+    dl_set_tail(dl, n);
+    if (raw dl_head(dl) == 0i64) { dl_set_head(dl, n); }
+    dl_set_size(dl, raw dl_size(dl) + 1i64);
+    pass 0i32;
+};
+
+func:dlist_pop_front = int64(int64:dl) {
+    int64:head = raw dl_head(dl);
+    if (head == 0i64) { pass -1i64; }
+    int64:val  = raw dl_node_val(head);
+    int64:next = raw dl_node_next(head);
+    dl_set_head(dl, next);
+    if (next != 0i64) {
+        dl_node_set_prev(next, 0i64);
+    } else {
+        dl_set_tail(dl, 0i64);
+    }
+    dl_set_size(dl, raw dl_size(dl) - 1i64);
+    int32:f = nitpick_libc_mem_free(head);
+    pass val;
+};
+
+func:dlist_pop_back = int64(int64:dl) {
+    int64:tail = raw dl_tail(dl);
+    if (tail == 0i64) { pass -1i64; }
+    int64:val  = raw dl_node_val(tail);
+    int64:prev = raw dl_node_prev(tail);
+    dl_set_tail(dl, prev);
+    if (prev != 0i64) {
+        dl_node_set_next(prev, 0i64);
+    } else {
+        dl_set_head(dl, 0i64);
+    }
+    dl_set_size(dl, raw dl_size(dl) - 1i64);
+    int32:f = nitpick_libc_mem_free(tail);
+    pass val;
+};
+
+func:dlist_peek_front = int64(int64:dl) {
+    int64:head = raw dl_head(dl);
+    if (head == 0i64) { pass -1i64; }
+    pass raw dl_node_val(head);
+};
+
+func:dlist_peek_back = int64(int64:dl) {
+    int64:tail = raw dl_tail(dl);
+    if (tail == 0i64) { pass -1i64; }
+    pass raw dl_node_val(tail);
+};
+
+func:dlist_contains = int32(int64:dl, int64:val) {
+    int64:cur = raw dl_head(dl);
+    loop(0i64, raw dl_size(dl), 1i64) {
+        if (cur == 0i64) { pass 0i32; }
+        if (raw dl_node_val(cur) == val) { pass 1i32; }
+        cur = raw dl_node_next(cur);
+    }
+    pass 0i32;
+};
+
+func:dlist_remove_first = int32(int64:dl, int64:val) {
+    int64:cur = raw dl_head(dl);
+    int64:sz  = raw dl_size(dl);
+    loop(0i64, sz, 1i64) {
+        if (cur == 0i64) { pass -1i32; }
+        if (raw dl_node_val(cur) == val) {
+            int64:prv  = raw dl_node_prev(cur);
+            int64:nxt  = raw dl_node_next(cur);
+            if (prv != 0i64) { dl_node_set_next(prv, nxt); } else { dl_set_head(dl, nxt); }
+            if (nxt != 0i64) { dl_node_set_prev(nxt, prv); } else { dl_set_tail(dl, prv); }
+            dl_set_size(dl, sz - 1i64);
+            int32:f = nitpick_libc_mem_free(cur);
+            pass 0i32;
+        }
+        cur = raw dl_node_next(cur);
+    }
+    pass -1i32;
+};
+
+func:dlist_clear = int32(int64:dl) {
+    int64:cur = raw dl_head(dl);
+    loop(0i64, raw dl_size(dl), 1i64) {
+        if (cur == 0i64) { pass 0i32; }
+        int64:nxt = raw dl_node_next(cur);
+        int32:f   = nitpick_libc_mem_free(cur);
+        cur = nxt;
+    }
+    dl_set_head(dl, 0i64);
+    dl_set_tail(dl, 0i64);
+    dl_set_size(dl, 0i64);
+    pass 0i32;
+};
+
+func:dlist_destroy = int32(int64:dl) {
+    int32:c = raw dlist_clear(dl);
+    pass nitpick_libc_mem_free(dl);
+};
+
+func:dlist_reverse = int32(int64:dl) {
+    int64:cur = raw dl_head(dl);
+    int64:sz  = raw dl_size(dl);
+    loop(0i64, sz, 1i64) {
+        if (cur == 0i64) { pass 0i32; }
+        int64:prv = raw dl_node_prev(cur);
+        int64:nxt = raw dl_node_next(cur);
+        dl_node_set_next(cur, prv);
+        dl_node_set_prev(cur, nxt);
+        cur = nxt;
+    }
+    int64:old_head = raw dl_head(dl);
+    int64:old_tail = raw dl_tail(dl);
+    dl_set_head(dl, old_tail);
+    dl_set_tail(dl, old_head);
+    pass 0i32;
+};
+
+// ── Type wrapper ─────────────────────────────────────────────────────────────
+
+pub Type:DList = {
+    func:create       = int64()                    { pass raw dlist_create();              };
+    func:destroy      = int32(int64:dl)            { pass raw dlist_destroy(dl);           };
+    func:push_front   = int32(int64:dl, int64:val) { pass raw dlist_push_front(dl, val);   };
+    func:push_back    = int32(int64:dl, int64:val) { pass raw dlist_push_back(dl, val);    };
+    func:pop_front    = int64(int64:dl)            { pass raw dlist_pop_front(dl);         };
+    func:pop_back     = int64(int64:dl)            { pass raw dlist_pop_back(dl);          };
+    func:peek_front   = int64(int64:dl)            { pass raw dlist_peek_front(dl);        };
+    func:peek_back    = int64(int64:dl)            { pass raw dlist_peek_back(dl);         };
+    func:contains     = int32(int64:dl, int64:val) { pass raw dlist_contains(dl, val);     };
+    func:remove_first = int32(int64:dl, int64:val) { pass raw dlist_remove_first(dl, val); };
+    func:len          = int64(int64:dl)            { pass raw dl_size(dl);                 };
+    func:is_empty     = int32(int64:dl)            { int64:s = raw dl_size(dl); if (s == 0i64) { pass 1i32; } pass 0i32; };
+    func:clear        = int32(int64:dl)            { pass raw dlist_clear(dl);             };
+    func:reverse      = int32(int64:dl)            { pass raw dlist_reverse(dl);           };
+};

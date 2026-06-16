@@ -1,0 +1,357 @@
+// skiplist_v.npk — Skip list (universal tagged variant, ascending val order)
+//
+// SkipListV: probabilistic data structure providing O(log n) expected
+// insert, search, and delete. Elements sorted by val (int64 comparison
+// regardless of tag). Allows duplicate vals with different tags.
+//
+// Max levels: 8 (SK_MAX_LEVEL_V). Each node stores up to 8 forward pointers.
+// Level randomization uses sys(GETRANDOM) for high-quality entropy.
+//
+// Node layout (80 bytes):
+//   [0..7]    tag           : int64
+//   [8..15]   val           : int64
+//   [16..23]  level         : int64   — node's actual level (1..SK_MAX_LEVEL_V)
+//   [24..87]  forward[0..7] : int64×8 — forward pointers per level (0=null)
+//
+// Header layout (24 bytes):
+//   [0..7]    head  : int64   — sentinel node (tag=LIST_TAG_INT, val=SKV_MIN_VAL)
+//   [8..15]   size  : int64
+//   [16..23]  level : int64   — current max level in use
+//
+// Tag constants (LIST_TAG_*) are declared in singly_v.npk — use'd first.
+//
+// API (via pub Type:SkipListV):
+//   create()                    → int64
+//   destroy(sk)                 → int32
+//   insert(sk, tag, val)        → int32  O(log n) expected
+//   contains_val(sk, tag, val)  → int32  O(log n) — exact tag+val match
+//   remove_val(sk, tag, val)    → int32  O(log n)
+//   min_tag(sk)                 → int64  O(1)
+//   min_val(sk)                 → int64  O(1)
+//   max_tag(sk)                 → int64  O(log n)
+//   max_val(sk)                 → int64  O(log n)
+//   len(sk)                     → int64
+//   is_empty(sk)                → int32
+//   clear(sk)                   → int32
+
+extern "libc" {
+    func:nitpick_libc_mem_malloc    = int64(int64:bytes);
+    func:nitpick_libc_mem_free      = int32(int64:ptr);
+    func:nitpick_libc_mem_zero      = int32(int64:ptr, int64:bytes);
+    func:nitpick_libc_mem_read_i64  = int64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_i64 = void(int64:ptr, int64:offset, int64:val);
+}
+
+int64:SK_MAX_LEVEL_V = 8i64;
+int64:SKV_MIN_VAL    = -9223372036854775808i64;
+
+// ── Node helpers ─────────────────────────────────────────────────────────────
+// Node: [tag:8][val:8][level:8][fwd0..fwd7: 8*8] = 80 bytes
+
+func:skv_node_tag   = int64(int64:n) { pass nitpick_libc_mem_read_i64(n,  0i64); };
+func:skv_node_val   = int64(int64:n) { pass nitpick_libc_mem_read_i64(n,  8i64); };
+func:skv_node_level = int64(int64:n) { pass nitpick_libc_mem_read_i64(n, 16i64); };
+func:skv_node_fwd   = int64(int64:n, int64:lvl) {
+    pass nitpick_libc_mem_read_i64(n, 24i64 + lvl * 8i64);
+};
+
+func:skv_node_set_tag   = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n,  0i64, v); };
+func:skv_node_set_val   = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n,  8i64, v); };
+func:skv_node_set_level = void(int64:n, int64:v) { nitpick_libc_mem_write_i64(n, 16i64, v); };
+func:skv_node_set_fwd   = void(int64:n, int64:lvl, int64:ptr) {
+    nitpick_libc_mem_write_i64(n, 24i64 + lvl * 8i64, ptr);
+};
+
+func:skv_alloc_node = int64(int64:tag, int64:val, int64:lvl) {
+    int64:n = nitpick_libc_mem_malloc(80i64);
+    int32:z = nitpick_libc_mem_zero(n, 80i64);
+    skv_node_set_tag(n, tag);
+    skv_node_set_val(n, val);
+    skv_node_set_level(n, lvl);
+    pass n;
+};
+
+// ── Header helpers ───────────────────────────────────────────────────────────
+
+func:skv_hdr_head  = int64(int64:sk) { pass nitpick_libc_mem_read_i64(sk,  0i64); };
+func:skv_hdr_size  = int64(int64:sk) { pass nitpick_libc_mem_read_i64(sk,  8i64); };
+func:skv_hdr_level = int64(int64:sk) { pass nitpick_libc_mem_read_i64(sk, 16i64); };
+
+func:skv_set_head  = void(int64:sk, int64:v) { nitpick_libc_mem_write_i64(sk,  0i64, v); };
+func:skv_set_size  = void(int64:sk, int64:v) { nitpick_libc_mem_write_i64(sk,  8i64, v); };
+func:skv_set_level = void(int64:sk, int64:v) { nitpick_libc_mem_write_i64(sk, 16i64, v); };
+
+// ── Random level generation ──────────────────────────────────────────────────
+// Uses sys(GETRANDOM) to get 8 bytes of entropy, then extract level via
+// bit-counting (geometric distribution with p=0.5 per level).
+
+func:skv_random_level = int64() {
+    Result<int64>:r = sys(GETRANDOM, 0i64, 8i64, 0i64);
+    int64:bits = r ? 1i64;
+    int64:lvl  = 1i64;
+    loop(0i64, SK_MAX_LEVEL_V - 1i64, 1i64) {
+        if ((bits & 1i64) == 0i64) { pass lvl; }
+        lvl  += 1i64;
+        bits  = bits / 2i64;
+    }
+    pass lvl;
+};
+
+// ── Inner scan helpers ───────────────────────────────────────────────────────
+// Advance cursor forward at the given level while next node's val < target.
+// Returns the stopping node. Using helper functions ensures pass exits only
+// the helper, preserving outer function control flow.
+
+func:skv_scan_fwd = int64(int64:cur, int64:lvl, int64:target, int64:max_steps) {
+    loop(0i64, max_steps, 1i64) {
+        int64:fwd = raw skv_node_fwd(cur, lvl);
+        if (fwd == 0i64) { pass cur; }
+        if (raw skv_node_val(fwd) >= target) { pass cur; }
+        cur = fwd;
+    }
+    pass cur;
+};
+
+// Find the last node at a given level (for max traversal).
+func:skv_scan_end = int64(int64:cur, int64:lvl, int64:max_steps) {
+    loop(0i64, max_steps, 1i64) {
+        int64:fwd = raw skv_node_fwd(cur, lvl);
+        if (fwd == 0i64) { pass cur; }
+        cur = fwd;
+    }
+    pass cur;
+};
+
+// ── Core functions ───────────────────────────────────────────────────────────
+
+func:skiplistv_create = int64() {
+    int64:sk   = nitpick_libc_mem_malloc(24i64);
+    int32:z    = nitpick_libc_mem_zero(sk, 24i64);
+    // sentinel head node with tag=LIST_TAG_INT (0), val=SKV_MIN_VAL
+    int64:head = raw skv_alloc_node(0i64, SKV_MIN_VAL, SK_MAX_LEVEL_V);
+    skv_set_head(sk, head);
+    skv_set_size(sk, 0i64);
+    skv_set_level(sk, 1i64);
+    pass sk;
+};
+
+func:skiplistv_insert = int32(int64:sk, int64:tag, int64:val) {
+    // update[i] = rightmost node at level i whose forward pointer we need to fix
+    // Scratch malloc'd array of 8 int64s (64 bytes)
+    int64:upd = nitpick_libc_mem_malloc(64i64);
+    int32:zu  = nitpick_libc_mem_zero(upd, 64i64);
+
+    int64:sz  = raw skv_hdr_size(sk);
+    int64:cur = raw skv_hdr_head(sk);
+    int64:lvl = raw skv_hdr_level(sk);
+
+    // Walk down from current max level, recording update positions
+    int64:i = lvl - 1i64;
+    loop(0i64, lvl, 1i64) {
+        cur = raw skv_scan_fwd(cur, i, val, sz + 2i64);
+        nitpick_libc_mem_write_i64(upd, i * 8i64, cur);
+        if (i == 0i64) {
+            // Done with scan — proceed to insert
+            int64:new_lvl = raw skv_random_level();
+            int64:cur_lvl = raw skv_hdr_level(sk);
+            if (new_lvl > cur_lvl) {
+                // fill new levels in update[] with head
+                int64:j = cur_lvl;
+                loop(0i64, new_lvl - cur_lvl, 1i64) {
+                    nitpick_libc_mem_write_i64(upd, j * 8i64, raw skv_hdr_head(sk));
+                    j += 1i64;
+                }
+                skv_set_level(sk, new_lvl);
+            }
+            int64:n = raw skv_alloc_node(tag, val, new_lvl);
+            int64:k = 0i64;
+            loop(0i64, new_lvl, 1i64) {
+                int64:prev_node = nitpick_libc_mem_read_i64(upd, k * 8i64);
+                int64:old_fwd   = raw skv_node_fwd(prev_node, k);
+                skv_node_set_fwd(n, k, old_fwd);
+                skv_node_set_fwd(prev_node, k, n);
+                k += 1i64;
+            }
+            skv_set_size(sk, raw skv_hdr_size(sk) + 1i64);
+            int32:fu = nitpick_libc_mem_free(upd);
+            pass 0i32;
+        }
+        i -= 1i64;
+    }
+
+    // Safety return (unreachable in practice)
+    int32:fu2 = nitpick_libc_mem_free(upd);
+    pass 0i32;
+};
+
+// Exact tag+val match search.
+func:skiplistv_contains_val = int32(int64:sk, int64:tag, int64:val) {
+    int64:sz  = raw skv_hdr_size(sk);
+    int64:cur = raw skv_hdr_head(sk);
+    int64:lvl = raw skv_hdr_level(sk);
+    int64:i   = lvl - 1i64;
+    loop(0i64, lvl, 1i64) {
+        cur = raw skv_scan_fwd(cur, i, val, sz + 2i64);
+        if (i == 0i64) {
+            // Scan forward at level 0 for exact (tag, val) match
+            int64:probe = raw skv_node_fwd(cur, 0i64);
+            loop(0i64, sz + 2i64, 1i64) {
+                if (probe == 0i64) { pass 0i32; }
+                if (raw skv_node_val(probe) != val) { pass 0i32; }
+                if (raw skv_node_tag(probe) == tag) { pass 1i32; }
+                probe = raw skv_node_fwd(probe, 0i64);
+            }
+            pass 0i32;
+        }
+        i -= 1i64;
+    }
+    pass 0i32;
+};
+
+// Remove first exact (tag, val) match.
+func:skiplistv_remove_val = int32(int64:sk, int64:tag, int64:val) {
+    int64:upd = nitpick_libc_mem_malloc(64i64);
+    int32:zu  = nitpick_libc_mem_zero(upd, 64i64);
+    int64:sz  = raw skv_hdr_size(sk);
+    int64:cur = raw skv_hdr_head(sk);
+    int64:lvl = raw skv_hdr_level(sk);
+
+    int64:i = lvl - 1i64;
+    loop(0i64, lvl, 1i64) {
+        cur = raw skv_scan_fwd(cur, i, val, sz + 2i64);
+        nitpick_libc_mem_write_i64(upd, i * 8i64, cur);
+        if (i == 0i64) {
+            // Find target: scan level 0 for exact (tag, val) match
+            // upd[0] is the node just before where val starts
+            int64:prev0  = cur;
+            int64:target = raw skv_node_fwd(prev0, 0i64);
+            loop(0i64, sz + 2i64, 1i64) {
+                if (target == 0i64) {
+                    int32:fu = nitpick_libc_mem_free(upd);
+                    pass -1i32;
+                }
+                if (raw skv_node_val(target) != val) {
+                    int32:fu = nitpick_libc_mem_free(upd);
+                    pass -1i32;
+                }
+                if (raw skv_node_tag(target) == tag) { break; }
+                // same val, wrong tag — advance prev0
+                prev0  = target;
+                target = raw skv_node_fwd(target, 0i64);
+            }
+            if (target == 0i64) {
+                int32:fu = nitpick_libc_mem_free(upd);
+                pass -1i32;
+            }
+            if ((raw skv_node_val(target) != val) || (raw skv_node_tag(target) != tag)) {
+                int32:fu = nitpick_libc_mem_free(upd);
+                pass -1i32;
+            }
+            // Splice target out of all levels where upd[k]->fwd[k] == target
+            int64:tgt_lvl = raw skv_node_level(target);
+            int64:k = 0i64;
+            loop(0i64, tgt_lvl, 1i64) {
+                int64:prev_node = nitpick_libc_mem_read_i64(upd, k * 8i64);
+                if (raw skv_node_fwd(prev_node, k) != target) { break; }
+                skv_node_set_fwd(prev_node, k, raw skv_node_fwd(target, k));
+                k += 1i64;
+            }
+            int32:fn = nitpick_libc_mem_free(target);
+            skv_set_size(sk, raw skv_hdr_size(sk) - 1i64);
+            int32:fu = nitpick_libc_mem_free(upd);
+            pass 0i32;
+        }
+        i -= 1i64;
+    }
+
+    int32:fu2 = nitpick_libc_mem_free(upd);
+    pass -1i32;
+};
+
+func:skiplistv_min_tag = int64(int64:sk) {
+    int64:first = raw skv_node_fwd(raw skv_hdr_head(sk), 0i64);
+    if (first == 0i64) { pass -1i64; }
+    pass raw skv_node_tag(first);
+};
+
+func:skiplistv_min_val = int64(int64:sk) {
+    int64:first = raw skv_node_fwd(raw skv_hdr_head(sk), 0i64);
+    if (first == 0i64) { pass -1i64; }
+    pass raw skv_node_val(first);
+};
+
+func:skiplistv_max_tag = int64(int64:sk) {
+    int64:sz = raw skv_hdr_size(sk);
+    if (sz == 0i64) { pass -1i64; }
+    int64:cur = raw skv_hdr_head(sk);
+    int64:lvl = raw skv_hdr_level(sk);
+    int64:i   = lvl - 1i64;
+    loop(0i64, lvl, 1i64) {
+        cur = raw skv_scan_end(cur, i, sz + 2i64);
+        if (i == 0i64) {
+            pass raw skv_node_tag(cur);
+        }
+        i -= 1i64;
+    }
+    pass raw skv_node_tag(cur);
+};
+
+func:skiplistv_max_val = int64(int64:sk) {
+    int64:sz = raw skv_hdr_size(sk);
+    if (sz == 0i64) { pass -1i64; }
+    int64:cur = raw skv_hdr_head(sk);
+    int64:lvl = raw skv_hdr_level(sk);
+    int64:i   = lvl - 1i64;
+    loop(0i64, lvl, 1i64) {
+        cur = raw skv_scan_end(cur, i, sz + 2i64);
+        if (i == 0i64) {
+            pass raw skv_node_val(cur);
+        }
+        i -= 1i64;
+    }
+    pass raw skv_node_val(cur);
+};
+
+func:skiplistv_clear = int32(int64:sk) {
+    // Walk level 0 (full linked list) and free all non-sentinel nodes
+    int64:cur = raw skv_node_fwd(raw skv_hdr_head(sk), 0i64);
+    loop(0i64, raw skv_hdr_size(sk), 1i64) {
+        if (cur == 0i64) { break; }
+        int64:nxt = raw skv_node_fwd(cur, 0i64);
+        int32:f   = nitpick_libc_mem_free(cur);
+        cur = nxt;
+    }
+    // Reset sentinel's forward pointers
+    int64:head = raw skv_hdr_head(sk);
+    int64:j = 0i64;
+    loop(0i64, SK_MAX_LEVEL_V, 1i64) {
+        skv_node_set_fwd(head, j, 0i64);
+        j += 1i64;
+    }
+    skv_set_size(sk, 0i64);
+    skv_set_level(sk, 1i64);
+    pass 0i32;
+};
+
+func:skiplistv_destroy = int32(int64:sk) {
+    int32:c  = raw skiplistv_clear(sk);
+    int32:fh = nitpick_libc_mem_free(raw skv_hdr_head(sk));
+    pass nitpick_libc_mem_free(sk);
+};
+
+// ── Type wrapper ─────────────────────────────────────────────────────────────
+
+pub Type:SkipListV = {
+    func:create        = int64()                               { pass raw skiplistv_create();                   };
+    func:destroy       = int32(int64:sk)                       { pass raw skiplistv_destroy(sk);                };
+    func:insert        = int32(int64:sk, int64:tag, int64:val) { pass raw skiplistv_insert(sk, tag, val);       };
+    func:contains_val  = int32(int64:sk, int64:tag, int64:val) { pass raw skiplistv_contains_val(sk, tag, val); };
+    func:remove_val    = int32(int64:sk, int64:tag, int64:val) { pass raw skiplistv_remove_val(sk, tag, val);   };
+    func:min_tag       = int64(int64:sk)                       { pass raw skiplistv_min_tag(sk);                };
+    func:min_val       = int64(int64:sk)                       { pass raw skiplistv_min_val(sk);                };
+    func:max_tag       = int64(int64:sk)                       { pass raw skiplistv_max_tag(sk);                };
+    func:max_val       = int64(int64:sk)                       { pass raw skiplistv_max_val(sk);                };
+    func:len           = int64(int64:sk)                       { pass raw skv_hdr_size(sk);                     };
+    func:is_empty      = int32(int64:sk)                       { int64:s = raw skv_hdr_size(sk); if (s == 0i64) { pass 1i32; } pass 0i32; };
+    func:clear         = int32(int64:sk)                       { pass raw skiplistv_clear(sk);                  };
+};

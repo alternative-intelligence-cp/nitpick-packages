@@ -1,0 +1,33 @@
+// nitpick_list.npk — Master include for all list data structures
+//
+// Usage: use "nitpick_list.npk".*;
+//
+// Exports (fast int64 variants):
+//   SList       — singly-linked list
+//   DList       — doubly-linked list
+//   SortedList  — sorted singly-linked list (ascending)
+//   CList       — circular singly-linked list
+//   SkipList    — probabilistic sorted skip list
+//
+// Exports (universal tagged variants):
+//   SListV      — singly-linked, tagged payload
+//   DListV      — doubly-linked, tagged payload
+//   SortedListV — sorted doubly-linked, tagged payload + comparator
+//   CListV      — circular, tagged payload
+//   SkipListV   — skip list, tagged payload
+//
+// Fast variants store int64 values only — zero overhead, maximum speed.
+// Universal variants store a (tag, val) pair where tag identifies the
+// type (LIST_TAG_INT=0, LIST_TAG_F64=1, LIST_TAG_PTR=2, LIST_TAG_BYTES=3)
+// and val is the raw 64-bit payload reinterpreted by tag.
+
+use "singly.npk".*;
+use "doubly.npk".*;
+use "sorted.npk".*;
+use "circular.npk".*;
+use "skiplist.npk".*;
+use "singly_v.npk".*;
+use "doubly_v.npk".*;
+use "sorted_v.npk".*;
+use "circular_v.npk".*;
+use "skiplist_v.npk".*;
