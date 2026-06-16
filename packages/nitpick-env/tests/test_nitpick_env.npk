@@ -1,49 +1,136 @@
-// test_nitpick_env.npk — Environment variable tests (7 tests)
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+// test_nitpick_env.npk — 15-test suite for nitpick-env
 use "../src/nitpick_env.npk".*;
 
-func:failsafe = int32(tbb32:_err) { exit 1; };
+int64:fail_cnt = 0i64;
 
+func:failsafe = int32(tbb32:_err) { exit 1i32; };
 
+func:assert = NIL(int32:condition, string:msg) {
+    if (condition == 0i32) {
+        fail_cnt += 1i64;
+        println("[FAIL] ");
+        println(msg);
+    } else {
+        println("[PASS] ");
+        println(msg);
+    }
+    pass NIL;
+};
 
 func:main = int32() {
-    int32:_pass_count = 0i32;
-    // T01: set env var
-    int32:s1 = nitpick_env_set("ARIA_TEST_VAR", "hello_aria");
-    if (s1 == 1i32) { drop(println("[PASS] T01 set")); }
-    if (s1 != 1i32) { drop(println("[FAIL] T01 set")); }
 
-    // T02: has env var
-    int32:h1 = nitpick_env_has("ARIA_TEST_VAR");
-    if (h1 == 1i32) { drop(println("[PASS] T02 has")); }
-    if (h1 != 1i32) { drop(println("[FAIL] T02 has")); }
+    // ── Set / Has / Get ─────────────────────────────────────────────────────
 
-    // T03: get env var
-    string:v1 = env_get("ARIA_TEST_VAR");
-    drop(println("[PASS] T03 get"));
+    // T01: set env var returns 1 (success)
+    int32:s1 = raw set("NPK_TEST_VAR", "hello_npk");
+    int32:t1 = 0i32;
+    if (s1 == 1i32) { t1 = 1i32; }
+    drop assert(t1, "T01 set returns 1");
 
-    // T04: unset env var
-    int32:u1 = nitpick_env_unset("ARIA_TEST_VAR");
-    int32:h2 = nitpick_env_has("ARIA_TEST_VAR");
-    if (h2 == 0i32) { drop(println("[PASS] T04 unset")); }
-    if (h2 != 0i32) { drop(println("[FAIL] T04 unset")); }
+    // T02: has returns 1 for set var
+    int32:h1 = raw has("NPK_TEST_VAR");
+    int32:t2 = 0i32;
+    if (h1 == 1i32) { t2 = 1i32; }
+    drop assert(t2, "T02 has=1 for set var");
 
-    // T05: get_or with default
-    string:d1 = nitpick_env_get_or("NONEXISTENT_VAR_XYZ", "fallback");
-    drop(println("[PASS] T05 get_or"));
+    // T03: get retrieves the value
+    string:v1 = raw get("NPK_TEST_VAR");
+    int32:t3 = 0i32;
+    if (string_contains(v1, "hello_npk")) { t3 = 1i32; }
+    drop assert(t3, "T03 get returns correct value");
 
-    // T06: count > 0
-    int32:cnt = nitpick_env_count();
-    if (cnt > 0i32) { drop(println("[PASS] T06 count")); }
-    if (cnt <= 0i32) { drop(println("[FAIL] T06 count")); }
+    // T04: unset then has returns 0
+    int32:u1 = raw unset("NPK_TEST_VAR");
+    int32:h2 = raw has("NPK_TEST_VAR");
+    int32:t4 = 0i32;
+    if (h2 == 0i32) { t4 = 1i32; }
+    drop assert(t4, "T04 unset clears var");
 
-    // T07: home not empty
-    string:hm = nitpick_env_home();
-    drop(println("[PASS] T07 home"));
+    // T05: get of unset var returns empty
+    string:v5 = raw get("NPK_TEST_VAR");
+    int32:t5 = 0i32;
+    if (string_length(v5) == 0i64) { t5 = 1i32; }
+    drop assert(t5, "T05 get unset=empty");
 
-    
-    drop(println("---"));
-    
-        drop(println("PASS: all tests passed"));
-    exit 0;
+    // T06: has returns 0 for nonexistent
+    int32:h6 = raw has("NONEXISTENT_VAR_12345_XYZ");
+    int32:t6 = 0i32;
+    if (h6 == 0i32) { t6 = 1i32; }
+    drop assert(t6, "T06 has nonexistent=0");
+
+    // ── Get Or ──────────────────────────────────────────────────────────────
+
+    // T07: get_or with default on missing var
+    string:d7 = raw get_or("NONEXISTENT_VAR_12345_XYZ", "fallback");
+    int32:t7 = 0i32;
+    if (string_contains(d7, "fallback")) { t7 = 1i32; }
+    drop assert(t7, "T07 get_or default=fallback");
+
+    // T08: get_or returns actual value when var exists
+    drop raw set("NPK_TEST_GETOR", "actual_val");
+    string:d8 = raw get_or("NPK_TEST_GETOR", "not_this");
+    int32:t8 = 0i32;
+    if (string_contains(d8, "actual_val")) { t8 = 1i32; }
+    drop assert(t8, "T08 get_or returns actual value");
+    drop raw unset("NPK_TEST_GETOR");
+
+    // ── Count ───────────────────────────────────────────────────────────────
+
+    // T09: count > 0 (there are always env vars)
+    int32:cnt = raw count();
+    int32:t9 = 0i32;
+    if (cnt > 0i32) { t9 = 1i32; }
+    drop assert(t9, "T09 count > 0");
+
+    // T10: count increases after set
+    int32:cnt_before = raw count();
+    drop raw set("NPK_TEST_COUNT_VAR", "x");
+    int32:cnt_after = raw count();
+    int32:t10 = 0i32;
+    if (cnt_after > cnt_before) { t10 = 1i32; }
+    drop assert(t10, "T10 count increases after set");
+    drop raw unset("NPK_TEST_COUNT_VAR");
+
+    // ── Convenience Getters ─────────────────────────────────────────────────
+
+    // T11: home() returns non-empty (HOME is always set)
+    string:hm = raw home();
+    int32:t11 = 0i32;
+    if (string_length(hm) > 0i64) { t11 = 1i32; }
+    drop assert(t11, "T11 home non-empty");
+
+    // T12: home() contains / (absolute path)
+    int32:t12 = 0i32;
+    if (string_contains(hm, "/")) { t12 = 1i32; }
+    drop assert(t12, "T12 home contains /");
+
+    // T13: path() returns non-empty (PATH is always set)
+    string:pt = raw path();
+    int32:t13 = 0i32;
+    if (string_length(pt) > 0i64) { t13 = 1i32; }
+    drop assert(t13, "T13 path non-empty");
+
+    // T14: user() returns non-empty (USER or LOGNAME is set)
+    string:us = raw user();
+    int32:t14 = 0i32;
+    if (string_length(us) > 0i64) { t14 = 1i32; }
+    drop assert(t14, "T14 user non-empty");
+
+    // T15: shell() returns non-empty (SHELL is normally set)
+    string:sh = raw shell();
+    int32:t15 = 0i32;
+    if (string_length(sh) > 0i64) { t15 = 1i32; }
+    drop assert(t15, "T15 shell non-empty");
+
+    // ── Summary ─────────────────────────────────────────────────────────────
+
+    println("DONE");
+    println("---");
+
+    if (fail_cnt > 0i64) {
+        println("SOME TESTS FAILED");
+        exit 1i32;
+    }
+    println("PASS: all 15 tests passed");
+    exit 0i32;
 };
