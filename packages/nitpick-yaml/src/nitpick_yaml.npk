@@ -18,6 +18,8 @@ extern "nitpick_yaml_shim" {
     func:nitpick_yaml_set_bool   = int32(string:key, int32:val);
     func:nitpick_yaml_count      = int32();
     func:nitpick_yaml_clear      = NIL();
+    func:nitpick_yaml_serialize  = string();
+    func:nitpick_yaml_write_file = int32(string:path);
 }
 
 pub Type:YAML = {
@@ -35,4 +37,6 @@ pub Type:YAML = {
     func:set_bool   = int32(string:key, int32:val)  { pass(nitpick_yaml_set_bool(key, val)); };
     func:count      = int32()                 { pass(nitpick_yaml_count()); };
     func:clear      = NIL()                   { nitpick_yaml_clear(); pass(NIL); };
+    func:serialize  = string()                { pass(nitpick_yaml_serialize()); };
+    func:write_file = int32(string:path)      { pass(nitpick_yaml_write_file(path)); };
 };

@@ -1,5 +1,8 @@
-// test_nitpick_yaml.npk — YAML parser tests (8 tests)
-extern "libc" { func:printf = int32(string:fmt); }
+// test_nitpick_yaml.npk — YAML parser tests (13 tests)
+extern "libc" {
+    func:printf  = int32(string:fmt);
+    func:strstr  = int64(string:haystack, string:needle);
+}
 int32:fail_cnt = 0i32;
 use "nitpick_yaml.npk".*;
 
@@ -51,9 +54,40 @@ func:main = int32() {
     if (c2 == 0i32) { drop(printf("[PASS] T08 clear\n\0")); }
     if (c2 != 0i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T08 clear\n\0")); }
 
-    
+    // T09: serialize — build a small doc and check output
+    drop YAML.set_string("app.name", "NitpickTest");
+    drop YAML.set_int("app.port", 9090i64);
+    drop YAML.set_bool("app.debug", 1i32);
+    string:s = raw YAML.serialize();
+    // must contain the section header and the keys
+    int64:has_app  = strstr(s, "app:\0");
+    int64:has_name = strstr(s, "name: NitpickTest\0");
+    int64:has_port = strstr(s, "port: 9090\0");
+    int64:has_dbg  = strstr(s, "debug: true\0");
+    if (has_app != 0i64)  { drop(printf("[PASS] T09 serialize has section header\n\0")); }
+    if (has_app == 0i64)  { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T09 serialize has section header\n\0")); }
+    if (has_name != 0i64) { drop(printf("[PASS] T10 serialize has string value\n\0")); }
+    if (has_name == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T10 serialize has string value\n\0")); }
+    if (has_port != 0i64) { drop(printf("[PASS] T11 serialize has int value\n\0")); }
+    if (has_port == 0i64) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T11 serialize has int value\n\0")); }
+    if (has_dbg != 0i64)  { drop(printf("[PASS] T12 serialize has bool value\n\0")); }
+    if (has_dbg == 0i64)  { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T12 serialize has bool value\n\0")); }
+
+    // T13: write_file -> parse_file round-trip
+    int32:wok = raw YAML.write_file("/tmp/npk_yaml_test.yaml\0");
+    raw YAML.clear();
+    int32:rok = raw YAML.parse_file("/tmp/npk_yaml_test.yaml\0");
+    int64:rport = raw YAML.get_int("app.port");
+    if ((wok == 0i32) && (rok > 0i32) && (rport == 9090i64)) {
+        drop(printf("[PASS] T13 write_file/parse_file round-trip\n\0"));
+    } else {
+        fail_cnt = fail_cnt + 1i32;
+        drop(printf("[FAIL] T13 write_file/parse_file round-trip\n\0"));
+    }
+
     drop(printf("---\n\0"));
-    
-        drop(printf("PASS: all tests passed\n\0"));
-    if (fail_cnt > 0i32) { drop(printf("FAIL\n\0")); } exit fail_cnt;
+
+    if (fail_cnt == 0i32) { drop(printf("PASS: all tests passed\n\0")); }
+    if (fail_cnt > 0i32) { drop(printf("FAIL\n\0")); }
+    exit fail_cnt;
 };

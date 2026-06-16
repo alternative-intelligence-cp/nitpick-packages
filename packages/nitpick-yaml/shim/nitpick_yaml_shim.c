@@ -38,6 +38,7 @@ static yaml_entry_t g_entries[MAX_ENTRIES];
 static int           g_count = 0;
 static char          g_err[512] = "";
 static char          g_result[MAX_VAL_LEN] = "";
+static char          g_serial[65536] = "";  /* serialize output buffer */
 
 static int find_entry(const char *key) {
     for (int i = 0; i < g_count; i++)
@@ -263,3 +264,118 @@ int32_t nitpick_yaml_set_bool(const char *key, int32_t val) {
 
 int32_t nitpick_yaml_count(void) { return (int32_t)g_count; }
 void nitpick_yaml_clear(void) { g_count = 0; g_err[0] = '\0'; }
+
+/* ── serialize ──────────────────────────────────────────────────────────────
+ * Walk g_entries[] in order and reconstruct indented YAML.
+ * Tracks which dotted prefixes have already been emitted as section headers.
+ */
+static int needs_quoting(const char *s) {
+    if (*s == '\0') return 1;
+    /* quote if contains special YAML chars or starts with digit/special */
+    if (*s == '"' || *s == '\'' || *s == '&' || *s == '*' ||
+        *s == '?' || *s == '|' || *s == '-' || *s == '<' ||
+        *s == '>' || *s == '=' || *s == '!' || *s == '%' ||
+        *s == '@' || *s == '`' || *s == '#' || *s == ':') return 1;
+    while (*s) {
+        if (*s == '\n' || *s == '\r' || *s == '\t') return 1;
+        s++;
+    }
+    return 0;
+}
+
+const char *nitpick_yaml_serialize(void) {
+    char *out  = g_serial;
+    int   cap  = (int)sizeof(g_serial) - 1;
+    int   pos  = 0;
+
+    /* Track which prefix segments have been written as section headers.
+     * We keep a simple array of already-emitted prefixes. */
+    char emitted[MAX_ENTRIES][MAX_KEY_LEN];
+    int  emit_count = 0;
+
+    for (int i = 0; i < g_count; i++) {
+        if (!g_entries[i].active) continue;
+
+        const char *full = g_entries[i].key;
+
+        /* Split full key into segments: e.g. "server.host" -> ["server","host"] */
+        char segs[MAX_DEPTH][MAX_KEY_LEN];
+        int  seg_cnt = 0;
+        const char *kp = full;
+        while (*kp && seg_cnt < MAX_DEPTH) {
+            const char *dot = strchr(kp, '.');
+            size_t slen = dot ? (size_t)(dot - kp) : strlen(kp);
+            if (slen >= MAX_KEY_LEN) slen = MAX_KEY_LEN - 1;
+            memcpy(segs[seg_cnt], kp, slen);
+            segs[seg_cnt][slen] = '\0';
+            seg_cnt++;
+            kp = dot ? dot + 1 : kp + strlen(kp);
+        }
+
+        /* Emit missing parent section headers */
+        for (int d = 0; d < seg_cnt - 1; d++) {
+            /* Build prefix up to depth d */
+            char prefix[MAX_KEY_LEN] = "";
+            for (int x = 0; x <= d; x++) {
+                if (x > 0) strncat(prefix, ".", MAX_KEY_LEN - strlen(prefix) - 1);
+                strncat(prefix, segs[x], MAX_KEY_LEN - strlen(prefix) - 1);
+            }
+            /* Check if already emitted */
+            int already = 0;
+            for (int e = 0; e < emit_count; e++) {
+                if (strcmp(emitted[e], prefix) == 0) { already = 1; break; }
+            }
+            if (!already) {
+                /* Emit with 2*d spaces of indentation */
+                for (int sp = 0; sp < d * 2 && pos < cap; sp++) out[pos++] = ' ';
+                int wlen = snprintf(out + pos, cap - pos, "%s:\n", segs[d]);
+                if (wlen > 0) pos += wlen;
+                if (emit_count < MAX_ENTRIES)
+                    snprintf(emitted[emit_count++], MAX_KEY_LEN, "%s", prefix);
+            }
+        }
+
+        /* Emit the leaf key=value with 2*(depth-1) indentation */
+        int depth = seg_cnt - 1;
+        for (int sp = 0; sp < depth * 2 && pos < cap; sp++) out[pos++] = ' ';
+
+        int wlen = 0;
+        const char *leaf = segs[seg_cnt - 1];
+        yaml_entry_t *e = &g_entries[i];
+
+        if (e->type == YAML_STRING) {
+            if (needs_quoting(e->str_val)) {
+                wlen = snprintf(out + pos, cap - pos, "%s: \"%s\"\n", leaf, e->str_val);
+            } else {
+                wlen = snprintf(out + pos, cap - pos, "%s: %s\n", leaf, e->str_val);
+            }
+        } else if (e->type == YAML_INT) {
+            wlen = snprintf(out + pos, cap - pos, "%s: %ld\n", leaf, (long)e->int_val);
+        } else if (e->type == YAML_FLOAT) {
+            wlen = snprintf(out + pos, cap - pos, "%s: %g\n", leaf, e->float_val);
+        } else if (e->type == YAML_BOOL) {
+            wlen = snprintf(out + pos, cap - pos, "%s: %s\n", leaf, e->int_val ? "true" : "false");
+        }
+        if (wlen > 0) pos += wlen;
+    }
+
+    out[pos] = '\0';
+    return g_serial;
+}
+
+int32_t nitpick_yaml_write_file(const char *path) {
+    const char *text = nitpick_yaml_serialize();
+    FILE *f = fopen(path, "w");
+    if (!f) {
+        snprintf(g_err, sizeof(g_err), "yaml: cannot write '%s': %s", path, strerror(errno));
+        return -1;
+    }
+    size_t len = strlen(text);
+    size_t written = fwrite(text, 1, len, f);
+    fclose(f);
+    if (written != len) {
+        snprintf(g_err, sizeof(g_err), "yaml: write error on '%s'", path);
+        return -1;
+    }
+    return 0;
+}
