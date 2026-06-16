@@ -3034,6 +3034,36 @@ pub Type:SSH = {
     func:window_change = int64(int64:channel_id, int32:cols, int32:rows) { pass raw ssh_window_change(channel_id, cols, rows); };
     func:config_create = int64() { pass raw ssh_config_create(); };
     func:config_lookup = int64(int64:conf, string:host) { pass raw ssh_config_lookup(conf, host); };
+    func:config_add_entry = NIL(int64:conf, string:host_pattern, string:hostname, string:port, string:user, string:identity_file) { raw ssh_config_add_entry(conf, host_pattern, hostname, port, user, identity_file); pass(NIL); };
+
+    // Crypto: CSPRNG
+    func:random_fill = int64(int64:handle, int32:count) { pass ssh_crypto_random_fill(handle, count); };
+    func:random_uint32 = int64() { pass ssh_crypto_random_uint32(); };
+
+    // Crypto: AES-CTR
+    func:aes_ctr_create = int64(int64:key_buf, int64:iv_buf) { pass ssh_crypto_aes_ctr_create(key_buf, iv_buf); };
+    func:aes_ctr_process = int64(int64:state, int64:in_buf) { pass ssh_crypto_aes_ctr_process(state, in_buf); };
+    func:aes_ctr_free = NIL(int64:state) { ssh_crypto_aes_ctr_free(state); pass(NIL); };
+
+    // Crypto: SHA-256 / HMAC-SHA256 (raw bytes)
+    func:sha256_raw = int64(int64:in_buf) { pass ssh_crypto_sha256_raw(in_buf); };
+    func:hmac_sha256_raw = int64(int64:key_buf, int64:data_buf) { pass ssh_crypto_hmac_sha256_raw(key_buf, data_buf); };
+
+    // Crypto: Diffie-Hellman
+    func:dh_generate = int64(int32:group) { pass ssh_crypto_dh_generate(group); };
+    func:dh_public_key = int64(int64:dh_handle) { pass ssh_crypto_dh_public_key(dh_handle); };
+    func:dh_shared_secret = int64(int64:dh_handle, int64:peer_pub_buf) { pass ssh_crypto_dh_shared_secret(dh_handle, peer_pub_buf); };
+    func:dh_free = NIL(int64:dh_handle) { ssh_crypto_dh_free(dh_handle); pass(NIL); };
+
+    // Port Forwarding
+    func:forward_local = int64(int64:session, int32:channel_id, string:remote_host, int32:remote_port, string:local_addr, int32:local_port) { pass raw ssh_forward_local_open(session, channel_id, remote_host, remote_port, local_addr, local_port); };
+    func:forward_dynamic = int64(int64:session, int32:channel_id, string:dest_host, int32:dest_port) { pass raw ssh_forward_dynamic_open(session, channel_id, dest_host, dest_port); };
+
+    // Security Hardening
+    func:strict_host_check = int32(int64:kh_buf, string:host, string:key_type, int64:key_blob, int32:strict_mode) { pass raw ssh_strict_host_check(kh_buf, host, key_type, key_blob, strict_mode); };
+
+    // Interactive Shell
+    func:pty_request = int64(int64:channel_id, string:term, int32:cols, int32:rows) { pass raw ssh_pty_request(channel_id, term, cols, rows); };
 
     // Phase 0.8.2 — Signing + Private Key Parsing
     func:rsa_sign = int64(int64:privkey_handle, int64:data_buf) {
