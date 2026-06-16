@@ -1,18 +1,106 @@
-// test_nitpick_log.npk — Config & level tests (C-side assertions)
-extern "libc" {
-    func:nitpick_log_assert_true = int32(int32:val, string:msg); func:aria_libc_exit = NIL(int32:code); }
+// test_nitpick_log.npk — log level config and init tests
+extern "libc" { func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_log.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:err) { drop err; exit 1i32; };
 
+int64:fail_cnt = 0i64;
 
+func:chk_i32 = NIL(int32:actual, int32:expected, string:name) {
+    if (actual == expected) {
+        drop(println(string_concat("[PASS] ", name)));
+    } else {
+        fail_cnt += 1i64;
+        drop(println(string_concat("[FAIL] ", name)));
+    }
+    pass NIL;
+};
 
-
-
-
-
+func:chk_i64 = NIL(int64:actual, int64:expected, string:name) {
+    if (actual == expected) {
+        drop(println(string_concat("[PASS] ", name)));
+    } else {
+        fail_cnt += 1i64;
+        drop(println(string_concat("[FAIL] ", name)));
+    }
+    pass NIL;
+};
 
 func:main = int32() {
-    drop(println("PASS: all tests passed"));
-    exit 0;
+    // T01: init resets to INFO level (2)
+    drop(raw log_init());
+    int32:lvl01 = raw log_get_level();
+    drop chk_i32(lvl01, 2i32, "T01 init sets INFO level");
+
+    // T02: set level to TRACE (0) and read it back
+    drop(raw log_set_level(0i32));
+    int32:lvl02 = raw log_get_level();
+    drop chk_i32(lvl02, 0i32, "T02 set_level TRACE");
+
+    // T03: set level to DEBUG (1)
+    drop(raw log_set_level(1i32));
+    int32:lvl03 = raw log_get_level();
+    drop chk_i32(lvl03, 1i32, "T03 set_level DEBUG");
+
+    // T04: set level to WARN (3)
+    drop(raw log_set_level(3i32));
+    int32:lvl04 = raw log_get_level();
+    drop chk_i32(lvl04, 3i32, "T04 set_level WARN");
+
+    // T05: set level to ERROR (4)
+    drop(raw log_set_level(4i32));
+    int32:lvl05 = raw log_get_level();
+    drop chk_i32(lvl05, 4i32, "T05 set_level ERROR");
+
+    // T06: set level to FATAL (5)
+    drop(raw log_set_level(5i32));
+    int32:lvl06 = raw log_get_level();
+    drop chk_i32(lvl06, 5i32, "T06 set_level FATAL");
+
+    // T07: LOG_TRACE constant == 0
+    int32:lt = raw LOG_TRACE();
+    drop chk_i32(lt, 0i32, "T07 LOG_TRACE==0");
+
+    // T08: LOG_DEBUG constant == 1
+    int32:ld = raw LOG_DEBUG();
+    drop chk_i32(ld, 1i32, "T08 LOG_DEBUG==1");
+
+    // T09: LOG_INFO constant == 2
+    int32:li = raw LOG_INFO();
+    drop chk_i32(li, 2i32, "T09 LOG_INFO==2");
+
+    // T10: LOG_WARN constant == 3
+    int32:lw = raw LOG_WARN();
+    drop chk_i32(lw, 3i32, "T10 LOG_WARN==3");
+
+    // T11: LOG_ERROR constant == 4
+    int32:le = raw LOG_ERROR();
+    drop chk_i32(le, 4i32, "T11 LOG_ERROR==4");
+
+    // T12: LOG_FATAL constant == 5
+    int32:lf = raw LOG_FATAL();
+    drop chk_i32(lf, 5i32, "T12 LOG_FATAL==5");
+
+    // T13: log_count starts at 0 after init
+    drop(raw log_init());
+    int64:cnt13 = raw log_count();
+    drop chk_i64(cnt13, 0i64, "T13 log_count==0 after init");
+
+    // T14: routing to stdout doesn't crash
+    drop(raw log_to_stdout());
+    drop chk_i32(1i32, 1i32, "T14 log_to_stdout no crash");
+
+    // T15: routing to stderr doesn't crash
+    drop(raw log_to_stderr());
+    drop chk_i32(1i32, 1i32, "T15 log_to_stderr no crash");
+
+    drop(raw log_cleanup());
+
+    drop(println("---"));
+    if (fail_cnt > 0i64) {
+        drop(println("FAIL: some tests failed"));
+        exit 1i32;
+    }
+    drop(println("PASS: all 15 tests passed"));
+    exit 0i32;
 };

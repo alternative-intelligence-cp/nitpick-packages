@@ -1,18 +1,98 @@
-// test_nitpick_datetime_construct.npk — Construction & arithmetic (C-side assertions)
+// test_nitpick_datetime_construct.npk — Construction and arithmetic tests
 extern "libc" { func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_datetime.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:err) { drop err; exit 1i32; };
 
+int64:fail_cnt = 0i64;
 
+func:chk_i64 = NIL(int64:actual, int64:expected, string:name) {
+    if (actual == expected) {
+        drop(println(string_concat("[PASS] ", name)));
+    } else {
+        fail_cnt += 1i64;
+        drop(println(string_concat("[FAIL] ", name)));
+    }
+    pass NIL;
+};
 
+func:chk_i32 = NIL(int32:actual, int32:expected, string:name) {
+    if (actual == expected) {
+        drop(println(string_concat("[PASS] ", name)));
+    } else {
+        fail_cnt += 1i64;
+        drop(println(string_concat("[FAIL] ", name)));
+    }
+    pass NIL;
+};
 
-
-
-
-
+func:chk_gt = NIL(int64:actual, int64:floor_, string:name) {
+    if (actual > floor_) {
+        drop(println(string_concat("[PASS] ", name)));
+    } else {
+        fail_cnt += 1i64;
+        drop(println(string_concat("[FAIL] ", name)));
+    }
+    pass NIL;
+};
 
 func:main = int32() {
-    drop(println("PASS: all tests passed"));
-    exit 0;
+    // T01: dt_make_utc Y2K == 946684800
+    int64:y2k = raw dt_make_utc(2000i32, 1i32, 1i32, 0i32, 0i32, 0i32);
+    drop chk_i64(y2k, 946684800i64, "T01 make_utc Y2K==946684800");
+
+    // T02: dt_make_utc 2025-01-15 12:30:45 == 1736944245
+    int64:e1 = raw dt_make_utc(2025i32, 1i32, 15i32, 12i32, 30i32, 45i32);
+    drop chk_i64(e1, 1736944245i64, "T02 make_utc 2025-01-15==1736944245");
+
+    // T03: diff(a, b) = a - b, so diff(y2k, e1) is negative (y2k < e1)
+    int64:diff1 = raw dt_diff(y2k, e1);
+    int64:expected_diff = 946684800i64 - 1736944245i64; // y2k - e1 (negative)
+    drop chk_i64(diff1, expected_diff, "T03 diff(y2k,e1)==y2k-e1 (negative)");
+
+    // T04: add_seconds(Y2K, 3600) == Y2K + 1 hour
+    int64:y2k_plus1h = raw dt_add_seconds(y2k, 3600i64);
+    drop chk_i64(y2k_plus1h, 946688400i64, "T04 add_seconds +1h");
+
+    // T05: add_seconds with negative offset (subtract)
+    int64:e1_minus1h = raw dt_add_seconds(e1, 0i64 - 3600i64);
+    drop chk_i64(e1_minus1h, 1736940645i64, "T05 add_seconds -1h");
+
+    // T06: add_days(Y2K, 1) == Y2K + 86400s
+    int64:y2k_plus1d = raw dt_add_days(y2k, 1i32);
+    drop chk_i64(y2k_plus1d, 946771200i64, "T06 add_days +1 day");
+
+    // T07: add_days(Y2K, 366) == 2001-01-01 (2000 WAS a leap year: 366 days)
+    int64:y2k_plus366 = raw dt_add_days(y2k, 366i32);
+    int64:y2001 = raw dt_make_utc(2001i32, 1i32, 1i32, 0i32, 0i32, 0i32);
+    drop chk_i64(y2k_plus366, y2001, "T07 add_days +366==2001-01-01 (leap year)");
+
+    // T08: dt_now returns a plausible epoch (> 1700000000 = Nov 2023)
+    int64:now = raw dt_now();
+    drop chk_gt(now, 1700000000i64, "T08 dt_now > Nov2023 epoch");
+
+    // T09: dt_now_ms > dt_now * 1000 roughly (ms resolution)
+    int64:now_ms = raw dt_now_ms();
+    int64:now_s_approx = now * 1000i64;
+    drop chk_gt(now_ms, now_s_approx - 2000i64, "T09 dt_now_ms >= epoch_ms");
+
+    // T10: dt_monotonic_ms returns positive value
+    int64:mono = raw dt_monotonic_ms();
+    drop chk_gt(mono, 0i64, "T10 dt_monotonic_ms > 0");
+
+    // T11: round-trip — make_utc then extract components
+    int64:rt = raw dt_make_utc(2024i32, 6i32, 15i32, 8i32, 45i32, 30i32);
+    int32:rt_yr = raw dt_utc_year(rt);
+    drop chk_i32(rt_yr, 2024i32, "T11 round-trip year");
+
+    int32:rt_mo = raw dt_utc_month(rt);
+    drop chk_i32(rt_mo, 6i32, "T12 round-trip month");
+
+    drop(println("---"));
+    if (fail_cnt > 0i64) {
+        drop(println("FAIL: some tests failed"));
+        exit 1i32;
+    }
+    drop(println("PASS: all 12 tests passed"));
+    exit 0i32;
 };

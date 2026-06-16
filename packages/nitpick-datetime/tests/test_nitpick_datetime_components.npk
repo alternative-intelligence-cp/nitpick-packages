@@ -1,18 +1,72 @@
-// test_nitpick_datetime_components.npk — UTC component tests (C-side assertions)
+// test_nitpick_datetime_components.npk — UTC component extraction tests
 extern "libc" { func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_datetime.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:err) { drop err; exit 1i32; };
 
+int64:fail_cnt = 0i64;
 
-
-
-
-
-
-
+func:chk_i32 = NIL(int32:actual, int32:expected, string:name) {
+    if (actual == expected) {
+        drop(println(string_concat("[PASS] ", name)));
+    } else {
+        fail_cnt += 1i64;
+        drop(println(string_concat("[FAIL] ", name)));
+    }
+    pass NIL;
+};
 
 func:main = int32() {
-    drop(println("PASS: all tests passed"));
-    exit 0;
+    // Use a known fixed epoch: 2025-01-15 12:30:45 UTC
+    // Unix timestamp: 1736944245
+    int64:epoch = 1736944245i64;
+
+    // UTC components
+    int32:yr  = raw dt_utc_year(epoch);
+    drop chk_i32(yr, 2025i32, "T01 utc_year==2025");
+
+    int32:mo  = raw dt_utc_month(epoch);
+    drop chk_i32(mo, 1i32, "T02 utc_month==1 (January)");
+
+    int32:dy  = raw dt_utc_day(epoch);
+    drop chk_i32(dy, 15i32, "T03 utc_day==15");
+
+    int32:hr  = raw dt_utc_hour(epoch);
+    drop chk_i32(hr, 12i32, "T04 utc_hour==12");
+
+    int32:mn  = raw dt_utc_minute(epoch);
+    drop chk_i32(mn, 30i32, "T05 utc_minute==30");
+
+    int32:sc  = raw dt_utc_second(epoch);
+    drop chk_i32(sc, 45i32, "T06 utc_second==45");
+
+    // Another known epoch: 2000-01-01 00:00:00 UTC (Y2K)
+    // Unix timestamp: 946684800
+    int64:y2k = 946684800i64;
+
+    int32:yr2  = raw dt_utc_year(y2k);
+    drop chk_i32(yr2, 2000i32, "T07 Y2K utc_year==2000");
+
+    int32:mo2  = raw dt_utc_month(y2k);
+    drop chk_i32(mo2, 1i32, "T08 Y2K utc_month==1");
+
+    int32:dy2  = raw dt_utc_day(y2k);
+    drop chk_i32(dy2, 1i32, "T09 Y2K utc_day==1");
+
+    int32:hr2  = raw dt_utc_hour(y2k);
+    drop chk_i32(hr2, 0i32, "T10 Y2K utc_hour==0");
+
+    int32:mn2  = raw dt_utc_minute(y2k);
+    drop chk_i32(mn2, 0i32, "T11 Y2K utc_minute==0");
+
+    int32:sc2  = raw dt_utc_second(y2k);
+    drop chk_i32(sc2, 0i32, "T12 Y2K utc_second==0");
+
+    drop(println("---"));
+    if (fail_cnt > 0i64) {
+        drop(println("FAIL: some tests failed"));
+        exit 1i32;
+    }
+    drop(println("PASS: all 12 tests passed"));
+    exit 0i32;
 };

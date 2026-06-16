@@ -1,18 +1,98 @@
-// test_nitpick_datetime_format.npk — Format, diff, sleep tests (C-side assertions)
+// test_nitpick_datetime_format.npk — Formatting, ISO-8601, and parsing tests
 extern "libc" { func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_datetime.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:err) { drop err; exit 1i32; };
 
+int64:fail_cnt = 0i64;
 
+func:chk_str = NIL(string:actual, string:expected, string:name) {
+    if (string_equals(actual, expected)) {
+        drop(println(string_concat("[PASS] ", name)));
+    } else {
+        fail_cnt += 1i64;
+        drop(println(string_concat("[FAIL] ", name)));
+        drop(println(string_concat("  expected: ", expected)));
+        drop(println(string_concat("  got:      ", actual)));
+    }
+    pass NIL;
+};
 
+func:chk_i64 = NIL(int64:actual, int64:expected, string:name) {
+    if (actual == expected) {
+        drop(println(string_concat("[PASS] ", name)));
+    } else {
+        fail_cnt += 1i64;
+        drop(println(string_concat("[FAIL] ", name)));
+    }
+    pass NIL;
+};
 
-
-
-
-
+func:chk_starts = NIL(string:actual, string:prefix, string:name) {
+    // Check that actual starts with the prefix (manual prefix check using before)
+    string:before_part = string_substring(actual, 0i64, string_length(prefix));
+    if (string_equals(before_part, prefix)) {
+        drop(println(string_concat("[PASS] ", name)));
+    } else {
+        fail_cnt += 1i64;
+        drop(println(string_concat("[FAIL] ", name)));
+        drop(println(string_concat("  expected prefix: ", prefix)));
+        drop(println(string_concat("  got: ", actual)));
+    }
+    pass NIL;
+};
 
 func:main = int32() {
-    drop(println("PASS: all tests passed"));
-    exit 0;
+    // Use Y2K as anchor: 946684800 = 2000-01-01T00:00:00Z
+    int64:y2k = 946684800i64;
+
+    // T01: ISO-8601 format for Y2K
+    string:iso01 = raw dt_iso8601(y2k);
+    drop chk_str(iso01, "2000-01-01T00:00:00Z", "T01 iso8601 Y2K");
+
+    // T02: round-trip parse → epoch
+    int64:parsed02 = raw dt_parse_iso8601("2000-01-01T00:00:00Z");
+    drop chk_i64(parsed02, y2k, "T02 parse_iso8601 Y2K round-trip");
+
+    // T03: ISO-8601 for a specific date
+    int64:e03 = raw dt_make_utc(2025i32, 6i32, 16i32, 0i32, 0i32, 0i32);
+    string:iso03 = raw dt_iso8601(e03);
+    drop chk_str(iso03, "2025-06-16T00:00:00Z", "T03 iso8601 2025-06-16");
+
+    // T04: round-trip for 2025-06-16
+    int64:parsed04 = raw dt_parse_iso8601("2025-06-16T00:00:00Z");
+    drop chk_i64(parsed04, e03, "T04 parse_iso8601 2025-06-16 round-trip");
+
+    // T05: dt_format_utc with %Y format
+    string:fmt05 = raw dt_format_utc(y2k, "%Y");
+    drop chk_str(fmt05, "2000", "T05 format_utc %Y==2000");
+
+    // T06: dt_format_utc with %m format
+    string:fmt06 = raw dt_format_utc(y2k, "%m");
+    drop chk_str(fmt06, "01", "T06 format_utc %m==01");
+
+    // T07: dt_format_utc with %d format
+    string:fmt07 = raw dt_format_utc(y2k, "%d");
+    drop chk_str(fmt07, "01", "T07 format_utc %d==01");
+
+    // T08: dt_format_utc with compound format
+    string:fmt08 = raw dt_format_utc(y2k, "%Y-%m-%d");
+    drop chk_str(fmt08, "2000-01-01", "T08 format_utc YYYY-MM-DD");
+
+    // T09: dt_parse with strptime format
+    int64:parsed09 = raw dt_parse_utc("2000-01-01", "%Y-%m-%d");
+    drop chk_i64(parsed09, y2k, "T09 parse_utc Y2K date-only");
+
+    // T10: now iso8601 starts with "20" (we're in the 2000s)
+    int64:now = raw dt_now();
+    string:now_iso = raw dt_iso8601(now);
+    drop chk_starts(now_iso, "20", "T10 now iso8601 starts with 20xx");
+
+    drop(println("---"));
+    if (fail_cnt > 0i64) {
+        drop(println("FAIL: some tests failed"));
+        exit 1i32;
+    }
+    drop(println("PASS: all 10 tests passed"));
+    exit 0i32;
 };

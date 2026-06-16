@@ -1,19 +1,109 @@
-// test_nitpick_log_output.npk — Logging & count tests (C-side assertions)
-extern "libc" {
-    func:nitpick_log_assert_true = int32(int32:val, string:msg); func:aria_libc_exit = NIL(int32:code); }
+// test_nitpick_log_output.npk — log emission and count tests
+extern "libc" { func:aria_libc_exit = NIL(int32:code); }
 use "../src/nitpick_log.npk".*;
 
-func:failsafe = int32(tbb32:err) { exit 1; };
+func:failsafe = int32(tbb32:err) { drop err; exit 1i32; };
 
+int64:fail_cnt = 0i64;
 
+func:chk_i64 = NIL(int64:actual, int64:expected, string:name) {
+    if (actual == expected) {
+        drop(println(string_concat("[PASS] ", name)));
+    } else {
+        fail_cnt += 1i64;
+        drop(println(string_concat("[FAIL] ", name)));
+    }
+    pass NIL;
+};
 
-
-
-
-
-
+func:chk_gt = NIL(int64:actual, int64:floor, string:name) {
+    if (actual > floor) {
+        drop(println(string_concat("[PASS] ", name)));
+    } else {
+        fail_cnt += 1i64;
+        drop(println(string_concat("[FAIL] ", name)));
+    }
+    pass NIL;
+};
 
 func:main = int32() {
-    drop(println("PASS: all tests passed"));
-    exit 0;
+    // Start fresh
+    drop(raw log_init());
+    // Route to stderr so test output isn't polluted
+    drop(raw log_to_stderr());
+    // Set level to TRACE to capture everything
+    drop(raw log_set_level(0i32));
+
+    // T01: log_count is 0 before any messages
+    int64:c01 = raw log_count();
+    drop chk_i64(c01, 0i64, "T01 count==0 before messages");
+
+    // T02: log_info increments count
+    drop(raw log_info("test info message"));
+    int64:c02 = raw log_count();
+    drop chk_i64(c02, 1i64, "T02 count==1 after info");
+
+    // T03: log_warn increments count
+    drop(raw log_warn("test warn message"));
+    int64:c03 = raw log_count();
+    drop chk_i64(c03, 2i64, "T03 count==2 after warn");
+
+    // T04: log_error increments count
+    drop(raw log_error("test error message"));
+    int64:c04 = raw log_count();
+    drop chk_i64(c04, 3i64, "T04 count==3 after error");
+
+    // T05: log_debug increments count (TRACE level active)
+    drop(raw log_debug("test debug message"));
+    int64:c05 = raw log_count();
+    drop chk_i64(c05, 4i64, "T05 count==4 after debug");
+
+    // T06: log_trace increments count (TRACE level active)
+    drop(raw log_trace("test trace message"));
+    int64:c06 = raw log_count();
+    drop chk_i64(c06, 5i64, "T06 count==5 after trace");
+
+    // T07: log_fatal increments count
+    drop(raw log_fatal("test fatal message"));
+    int64:c07 = raw log_count();
+    drop chk_i64(c07, 6i64, "T07 count==6 after fatal");
+
+    // T08: level filtering — set to ERROR (4), then info is suppressed
+    drop(raw log_set_level(4i32));
+    drop(raw log_info("suppressed info"));
+    int64:c08 = raw log_count();
+    // count should still be 6, info was filtered
+    drop chk_i64(c08, 6i64, "T08 info suppressed at ERROR level");
+
+    // T09: error still logged at ERROR level
+    drop(raw log_error("not suppressed"));
+    int64:c09 = raw log_count();
+    drop chk_i64(c09, 7i64, "T09 error passes at ERROR level");
+
+    // T10: init resets count
+    drop(raw log_init());
+    int64:c10 = raw log_count();
+    drop chk_i64(c10, 0i64, "T10 count resets after init");
+
+    // T11: log_json emits without crashing (count goes up)
+    drop(raw log_to_stderr());
+    drop(raw log_set_level(0i32));
+    drop(raw log_json("INFO", "hello", ""));
+    int64:c11 = raw log_count();
+    drop chk_i64(c11, 1i64, "T11 log_json emits");
+
+    // T12: log_json with extra json field
+    drop(raw log_json("WARN", "msg", "\"key\":\"val\""));
+    int64:c12 = raw log_count();
+    drop chk_i64(c12, 2i64, "T12 log_json with extra field");
+
+    drop(raw log_cleanup());
+
+    drop(println("---"));
+    if (fail_cnt > 0i64) {
+        drop(println("FAIL: some tests failed"));
+        exit 1i32;
+    }
+    drop(println("PASS: all 12 tests passed"));
+    exit 0i32;
 };
