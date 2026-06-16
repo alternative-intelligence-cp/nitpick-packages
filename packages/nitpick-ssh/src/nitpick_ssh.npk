@@ -84,6 +84,13 @@ extern "nitpick_ssh_crypto_shim" {
     func:ssh_crypto_extract_sig_blob  = int64(int64:sig_buf);
     func:ssh_crypto_base64_decode     = int64(string:input);
 
+    // Phase 0.8.2 — Signing + Private Key Parsing
+    func:ssh_crypto_rsa_sign          = int64(int64:privkey_handle, int64:data_buf);
+    func:ssh_crypto_ed25519_sign      = int64(int64:privkey_handle, int64:data_buf);
+    func:ssh_crypto_parse_pem_privkey = int64(string:pem_text);
+    func:ssh_crypto_privkey_type      = string(int64:privkey_handle);
+    func:ssh_crypto_privkey_free      = void(int64:privkey_handle);
+
     // Known hosts management
     func:ssh_crypto_known_hosts_load  = int64(string:path);
     func:ssh_crypto_known_hosts_check = int64(int64:kh_buf, string:host, string:key_type, int64:key_blob);
@@ -3027,4 +3034,22 @@ pub Type:SSH = {
     func:window_change = int64(int64:channel_id, int32:cols, int32:rows) { pass raw ssh_window_change(channel_id, cols, rows); };
     func:config_create = int64() { pass raw ssh_config_create(); };
     func:config_lookup = int64(int64:conf, string:host) { pass raw ssh_config_lookup(conf, host); };
+
+    // Phase 0.8.2 — Signing + Private Key Parsing
+    func:rsa_sign = int64(int64:privkey_handle, int64:data_buf) {
+        pass ssh_crypto_rsa_sign(privkey_handle, data_buf);
+    };
+    func:ed25519_sign = int64(int64:privkey_handle, int64:data_buf) {
+        pass ssh_crypto_ed25519_sign(privkey_handle, data_buf);
+    };
+    func:parse_pem_privkey = int64(string:pem_text) {
+        pass ssh_crypto_parse_pem_privkey(pem_text);
+    };
+    func:privkey_type = string(int64:privkey_handle) {
+        pass ssh_crypto_privkey_type(privkey_handle);
+    };
+    func:privkey_free = NIL(int64:privkey_handle) {
+        ssh_crypto_privkey_free(privkey_handle);
+        pass(NIL);
+    };
 };
