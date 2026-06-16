@@ -1875,6 +1875,40 @@ func:ssh_connect = int64(string:host, int64:port) {
     pass session;
 };
 
+// Connect to SSH server using an existing socket fd as the transport.
+// Used for ProxyJump: the jump host relay passes a socketpair end here
+// as the transport for the target SSH session, bypassing TCP connect.
+// Returns session handle (>0) on success, 0 on failure.
+func:ssh_connect_fd = int64(int64:fd) {
+    // Create session
+    int64:session = raw ssh_session_create();
+    drop(raw ssh_seq_init(session));
+    drop(raw ssh_auth_init(session));
+    drop(raw ssh_channel_init(session));
+    ahset(session, "_encrypted", "0");
+    ahset(session, "_socket_fd", raw ssh_handle_to_str(fd));
+
+    // Send our version string
+    string:ver_line = raw ssh_build_version_line();
+    int64:_vs = nitpick_ssh_net_send_str(fd, ver_line);
+
+    // Receive server version (CRLF-terminated line)
+    string:server_ver = nitpick_ssh_net_recv_line(fd);
+    ahset(session, "_server_version", server_ver);
+
+    // Validate server version starts with "SSH-2.0-"
+    int32:ver_ok = 0i32;
+    if (string_contains(server_ver, "SSH-2.0-")) { ver_ok = 1i32; }
+    if (ver_ok == 0i32) {
+        drop(raw ssh_session_set_error(session, "Invalid server version (connect_fd)"));
+        pass 0i64;
+    }
+
+    drop(raw ssh_session_set_state(session, "version_exchanged"));
+    pass session;
+};
+
+
 // Graceful disconnect: send disconnect message and close socket.
 func:ssh_disconnect = NIL(int64:session) {
     string:_fd_s = ahget(session, "_socket_fd");
@@ -2952,6 +2986,7 @@ pub Type:SSH = {
     func:recv_packet = int64(int64:session) { pass raw ssh_recv_packet(session); };
     func:dispatch = int32(int64:session, int64:payload_buf) { pass raw ssh_dispatch(session, payload_buf); };
     func:connect = int64(string:host, int64:port) { pass raw ssh_connect(host, port); };
+    func:connect_fd = int64(int64:fd) { pass raw ssh_connect_fd(fd); };
     func:disconnect = NIL(int64:session) { pass raw ssh_disconnect(session); };
     func:server_version = string(int64:session) { pass raw ssh_server_version(session); };
     func:rsa_verify = int64(int64:pubkey_buf, int64:sig_buf, int64:hash_buf) { pass raw ssh_rsa_verify(pubkey_buf, sig_buf, hash_buf); };
