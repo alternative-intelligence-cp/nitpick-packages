@@ -1534,7 +1534,24 @@ func:ssh_channel_request_shell = int64(int64:session, int64:channel_id) {
     pass msg;
 };
 
+// Build SSH_MSG_CHANNEL_REQUEST "subsystem" (type 98).
+// Used to start SFTP or other SSH subsystems on an open channel.
+func:ssh_channel_request_subsystem = int64(int64:session, int64:channel_id, string:subsystem_name) {
+    string:k_remote = raw ssh_chan_key(channel_id, "remote_id");
+    string:_rid_s = ahget(session, k_remote);
+    int64:remote_id = raw ssh_str_to_handle(_rid_s);
+    // byte(98) + uint32(recipient) + string("subsystem") + boolean(TRUE) + string(name)
+    int64:msg = raw ssh_buf_create(128i64);
+    msg = raw ssh_encode_byte(msg, 98i32);
+    msg = raw ssh_encode_uint32(msg, remote_id);
+    msg = nitpick_ssh_encode_string(msg, "subsystem");
+    msg = nitpick_ssh_encode_bool(msg, 1i32);
+    msg = nitpick_ssh_encode_string(msg, subsystem_name);
+    pass msg;
+};
+
 // Build SSH_MSG_CHANNEL_REQUEST "pty-req" (type 98).
+
 func:ssh_channel_request_pty = int64(int64:session, int64:channel_id, string:term, int32:cols, int32:rows) {
     string:k_remote = raw ssh_chan_key(channel_id, "remote_id");
     string:_rid_s = ahget(session, k_remote);
@@ -2176,7 +2193,7 @@ func:ssh_sftp_packet_decode = int64(int64:raw_buf) {
 };
 
 // Get SFTP packet type from raw buffer (byte at offset 4).
-func:ssh_sftp_packet_type = int32(int64:raw_buf) {
+pub func:ssh_sftp_packet_type = int32(int64:raw_buf) {
     if (raw_buf == 0i64) { pass -1i32; }
     if (raw ssh_buf_len(raw_buf) < 5i64) { pass -1i32; }
     pass raw ssh_buf_read_byte(raw_buf, 4i64);
@@ -2339,8 +2356,114 @@ func:ssh_sftp_rename_msg = int64(int64:sftp, string:old_path, string:new_path) {
     pass raw ssh_sftp_packet_encode(18i32, payload);
 };
 
+// Build SSH_FXP_RMDIR message (type=15).
+func:ssh_sftp_rmdir_msg = int64(int64:sftp, string:path) {
+    int64:req_id = raw ssh_sftp_next_id(sftp);
+    int64:payload = raw ssh_buf_create(128i64);
+    payload = raw ssh_encode_uint32(payload, req_id);
+    payload = nitpick_ssh_encode_string(payload, path);
+    pass raw ssh_sftp_packet_encode(15i32, payload);
+};
+
+// ── SFTP parse-name state (SSH_FXP_NAME / readdir) ───────────────────────────
+// Populated by ssh_sftp_parse_name(). Up to SFTP_NAME_MAX entries.
+// Getter functions below are pub so callers can read results.
+
+pub fixed int64:SFTP_NAME_MAX = 256i64;
+
+int64:g_sftp_name_count = 0i64;
+int64[256]:g_sftp_name_is_dir = [0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64];
+int64[256]:g_sftp_name_fsize = [0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64];
+int64[256]:g_sftp_name_mtime = [0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64];
+int64[256]:g_sftp_name_perms = [0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64,0i64];
+string[256]:g_sftp_name_str = ["","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""];
+
+pub func:ssh_sftp_name_count  = int64()         { pass g_sftp_name_count; };
+pub func:ssh_sftp_name_get    = string(int64:i) { if (i < 0i64 || i >= g_sftp_name_count) { pass ""; } pass g_sftp_name_str[i]; };
+pub func:ssh_sftp_name_is_dir = int64(int64:i)  { if (i < 0i64 || i >= g_sftp_name_count) { pass 0i64; } pass g_sftp_name_is_dir[i]; };
+pub func:ssh_sftp_name_fsize  = int64(int64:i)  { if (i < 0i64 || i >= g_sftp_name_count) { pass 0i64; } pass g_sftp_name_fsize[i]; };
+pub func:ssh_sftp_name_mtime  = int64(int64:i)  { if (i < 0i64 || i >= g_sftp_name_count) { pass 0i64; } pass g_sftp_name_mtime[i]; };
+pub func:ssh_sftp_name_perms  = int64(int64:i)  { if (i < 0i64 || i >= g_sftp_name_count) { pass 0i64; } pass g_sftp_name_perms[i]; };
+
+// Parse SSH_FXP_NAME response (type=104, READDIR reply).
+// SSH_FXP_NAME wire format after packet header [type+request_id]:
+//   uint32 count
+//   for each entry:
+//     string filename  (uint32 len + bytes)
+//     string longname  (uint32 len + bytes) -- ignored
+//     ATTRS:
+//       uint32 flags
+//       if flags & 0x01: uint64 size (two uint32 reads: hi<<32 | lo)
+//       if flags & 0x02: uint32 uid, uint32 gid
+//       if flags & 0x04: uint32 permissions
+//       if flags & 0x08: uint32 atime, uint32 mtime
+// S_IFDIR mask: perms & 0xF000 == 0x4000
+pub func:ssh_sftp_parse_name = int64(int64:raw_buf) {
+    g_sftp_name_count = 0i64;
+    if (raw_buf == 0i64) { pass 0i64; }
+    int64:payload = raw ssh_sftp_packet_decode(raw_buf);
+    if (payload == 0i64) { pass 0i64; }
+    // [request_id u32 @ 0][count u32 @ 4][entries @ 8...]
+    int64:count = raw ssh_decode_uint32(payload, 4i64);
+    if (count <= 0i64) { drop(raw ssh_buf_free(payload)); pass 0i64; }
+    if (count > SFTP_NAME_MAX) { count = SFTP_NAME_MAX; }
+
+    int64:off = 8i64;
+    int64:i   = 0i64;
+    while (i < count) {
+        // filename string
+        int64:fn_len = raw ssh_decode_uint32(payload, off);
+        off = off + 4i64;
+        string:fname = raw ssh_buf_extract_str(payload, off, fn_len);
+        off = off + fn_len;
+        // longname string (skip)
+        int64:ln_len = raw ssh_decode_uint32(payload, off);
+        off = off + 4i64 + ln_len;
+        // ATTRS flags
+        int64:af = raw ssh_decode_uint32(payload, off);
+        off = off + 4i64;
+        // size: uint64 — no ssh_decode_uint64, read as two uint32 (hi|lo)
+        int64:fsize = 0i64;
+        if ((af & 1i64) == 1i64) {
+            int64:hi = raw ssh_decode_uint32(payload, off);
+            int64:lo = raw ssh_decode_uint32(payload, off + 4i64);
+            fsize = (hi * 4294967296i64) + lo;
+            off = off + 8i64;
+        }
+        // uid/gid (skip)
+        if ((af & 2i64) == 2i64) { off = off + 8i64; }
+        // permissions
+        int64:fperms = 0i64;
+        if ((af & 4i64) == 4i64) {
+            fperms = raw ssh_decode_uint32(payload, off);
+            off = off + 4i64;
+        }
+        // atime + mtime
+        int64:fmtime = 0i64;
+        if ((af & 8i64) == 8i64) {
+            off = off + 4i64;
+            fmtime = raw ssh_decode_uint32(payload, off);
+            off = off + 4i64;
+        }
+        // S_IFDIR = 0o040000 = 16384; mask = 0xF000 = 61440
+        int64:is_dir = 0i64;
+        if ((fperms & 61440i64) == 16384i64) { is_dir = 1i64; }
+
+        g_sftp_name_str[i]    = fname;
+        g_sftp_name_fsize[i]  = fsize;
+        g_sftp_name_perms[i]  = fperms;
+        g_sftp_name_mtime[i]  = fmtime;
+        g_sftp_name_is_dir[i] = is_dir;
+        i = i + 1i64;
+    }
+    g_sftp_name_count = count;
+    drop(raw ssh_buf_free(payload));
+    pass count;
+};
+
+
 // Parse SSH_FXP_STATUS response. Returns status code.
-func:ssh_sftp_parse_status = int32(int64:raw_buf) {
+pub func:ssh_sftp_parse_status = int32(int64:raw_buf) {
     if (raw_buf == 0i64) { pass -1i32; }
     int64:payload = raw ssh_sftp_packet_decode(raw_buf);
     if (payload == 0i64) { pass -1i32; }
@@ -2751,6 +2874,7 @@ Type:SSH = {
     func:chan_req_exec        = int64(int64:s, int64:c, string:cmd)       { pass raw ssh_channel_request_exec(s, c, cmd); };
     func:chan_req_shell       = int64(int64:s, int64:c)                   { pass raw ssh_channel_request_shell(s, c); };
     func:chan_req_pty         = int64(int64:s, int64:c, string:t, int32:w, int32:h) { pass raw ssh_channel_request_pty(s, c, t, w, h); };
+    func:chan_req_subsystem    = int64(int64:s, int64:c, string:n) { pass raw ssh_channel_request_subsystem(s, c, n); };
     func:chan_req_response    = int32(int64:s, int64:p)                   { pass raw ssh_channel_request_response(s, p); };
     func:chan_recv_request    = int32(int64:s, int64:p)                   { pass raw ssh_channel_recv_request(s, p); };
     func:chan_state           = string(int64:s, int64:c)                  { pass raw ssh_channel_state(s, c); };
@@ -2804,6 +2928,14 @@ Type:SSH = {
     func:sftp_parse_status   = int32(int64:r)                                  { pass raw ssh_sftp_parse_status(r); };
     func:sftp_parse_handle   = int64(int64:r)                                  { pass raw ssh_sftp_parse_handle(r); };
     func:sftp_parse_data     = int64(int64:r)                                  { pass raw ssh_sftp_parse_data(r); };
+    func:sftp_rmdir_msg      = int64(int64:sf, string:p)                      { pass raw ssh_sftp_rmdir_msg(sf, p); };
+    func:sftp_parse_name     = int64(int64:r)                                  { pass raw ssh_sftp_parse_name(r); };
+    func:sftp_name_count     = int64()                                         { pass raw ssh_sftp_name_count(); };
+    func:sftp_name_get       = string(int64:i)                                 { pass raw ssh_sftp_name_get(i); };
+    func:sftp_name_is_dir    = int64(int64:i)                                  { pass raw ssh_sftp_name_is_dir(i); };
+    func:sftp_name_fsize     = int64(int64:i)                                  { pass raw ssh_sftp_name_fsize(i); };
+    func:sftp_name_mtime     = int64(int64:i)                                  { pass raw ssh_sftp_name_mtime(i); };
+    func:sftp_name_perms     = int64(int64:i)                                  { pass raw ssh_sftp_name_perms(i); };
     func:scp_upload_cmd      = string(string:p)                                { pass raw ssh_scp_upload_cmd(p); };
     func:scp_download_cmd    = string(string:p)                                { pass raw ssh_scp_download_cmd(p); };
     func:scp_file_header     = string(string:m, int64:s, string:f)             { pass raw ssh_scp_file_header(m, s, f); };
@@ -2966,6 +3098,7 @@ pub Type:SSH = {
     func:channel_request_exec = int64(int64:session, int64:channel_id, string:command) { pass raw ssh_channel_request_exec(session, channel_id, command); };
     func:channel_request_shell = int64(int64:session, int64:channel_id) { pass raw ssh_channel_request_shell(session, channel_id); };
     func:channel_request_pty = int64(int64:session, int64:channel_id, string:term, int32:cols, int32:rows) { pass raw ssh_channel_request_pty(session, channel_id, term, cols, rows); };
+    func:channel_request_subsystem = int64(int64:session, int64:channel_id, string:name) { pass raw ssh_channel_request_subsystem(session, channel_id, name); };
     func:channel_request_response = int32(int64:session, int64:payload_buf) { pass raw ssh_channel_request_response(session, payload_buf); };
     func:channel_recv_request = int32(int64:session, int64:payload_buf) { pass raw ssh_channel_recv_request(session, payload_buf); };
     func:channel_state = string(int64:session, int64:channel_id) { pass raw ssh_channel_state(session, channel_id); };
@@ -3052,6 +3185,14 @@ pub Type:SSH = {
     func:sftp_parse_status = int32(int64:raw_buf) { pass raw ssh_sftp_parse_status(raw_buf); };
     func:sftp_parse_handle = int64(int64:raw_buf) { pass raw ssh_sftp_parse_handle(raw_buf); };
     func:sftp_parse_data = int64(int64:raw_buf) { pass raw ssh_sftp_parse_data(raw_buf); };
+    func:sftp_rmdir_msg = int64(int64:sftp, string:path) { pass raw ssh_sftp_rmdir_msg(sftp, path); };
+    func:sftp_parse_name = int64(int64:raw_buf) { pass raw ssh_sftp_parse_name(raw_buf); };
+    func:sftp_name_count = int64() { pass raw ssh_sftp_name_count(); };
+    func:sftp_name_get = string(int64:i) { pass raw ssh_sftp_name_get(i); };
+    func:sftp_name_is_dir = int64(int64:i) { pass raw ssh_sftp_name_is_dir(i); };
+    func:sftp_name_fsize = int64(int64:i) { pass raw ssh_sftp_name_fsize(i); };
+    func:sftp_name_mtime = int64(int64:i) { pass raw ssh_sftp_name_mtime(i); };
+    func:sftp_name_perms = int64(int64:i) { pass raw ssh_sftp_name_perms(i); };
     func:scp_upload_cmd = string(string:remote_path) { pass raw ssh_scp_upload_cmd(remote_path); };
     func:scp_download_cmd = string(string:remote_path) { pass raw ssh_scp_download_cmd(remote_path); };
     func:scp_file_header = string(string:mode, int64:size, string:filename) { pass raw ssh_scp_file_header(mode, size, filename); };
