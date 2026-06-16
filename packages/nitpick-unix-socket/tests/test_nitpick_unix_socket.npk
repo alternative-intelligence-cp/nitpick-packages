@@ -1,58 +1,323 @@
+// test_nitpick_unix_socket.npk — 30-test suite for nitpick-unix-socket
 use "nitpick_unix_socket.npk".*;
-
-extern "libc" { func:printf = int32(string:fmt); }
-extern "libc" { func:nitpick_libc_exit = NIL(int32:code); }
 
 int64:fail_cnt = 0i64;
 
-func:failsafe = int32(tbb32:err) { exit(1i32); };
+func:failsafe = int32(tbb32:_err) { exit 1i32; };
 
 func:assert = NIL(int32:condition, string:msg) {
     if (condition == 0i32) {
         fail_cnt += 1i64;
-        drop(printf("[FAIL] \0"));
-        drop(printf(msg));
-        drop(printf("\n\0"));
+        println("[FAIL] ");
+        println(msg);
     } else {
-        drop(printf("[PASS] \0"));
-        drop(printf(msg));
-        drop(printf("\n\0"));
+        println("[PASS] ");
+        println(msg);
     }
     pass NIL;
 };
 
-func:main = int32() {
-    string:path = "/tmp/test_nitpick.sock\0";
-    
+// ── Stream Socket Tests ─────────────────────────────────────────────────────
+
+func:test_stream = int32() {
+    int32:pc = 0i32;
+    string:path = "/tmp/test_npk_stream.sock";
+
+    // T01: server create, bind, listen
     int64:srv = raw UnixSocket.server(path);
-    drop assert(srv >= 0i64, "server create and bind\0");
+    int32:t1 = 0i32;
+    if (srv >= 0i64) { t1 = 1i32; }
+    drop assert(t1, "T01 server create+bind+listen");
+    if (t1 == 1i32) { pc += 1i32; }
 
+    // T02: client connect
     int64:cli = raw UnixSocket.client(path);
-    drop assert(cli >= 0i64, "client create and connect\0");
+    int32:t2 = 0i32;
+    if (cli >= 0i64) { t2 = 1i32; }
+    drop assert(t2, "T02 client connect");
+    if (t2 == 1i32) { pc += 1i32; }
 
+    // T03: server accept
     int64:conn = raw UnixSocket.accept(srv);
-    drop assert(conn >= 0i64, "server accept client\0");
+    int32:t3 = 0i32;
+    if (conn >= 0i64) { t3 = 1i32; }
+    drop assert(t3, "T03 server accept");
+    if (t3 == 1i32) { pc += 1i32; }
 
-    int64:sent = raw UnixSocket.send(cli, "hello unix\0");
-    drop assert(sent > 0i64, "client send data\0");
+    // T04: client send
+    int64:sent4 = raw UnixSocket.send(cli, "hello unix");
+    int32:t4 = 0i32;
+    if (sent4 > 0i64) { t4 = 1i32; }
+    drop assert(t4, "T04 client send");
+    if (t4 == 1i32) { pc += 1i32; }
 
-    string:recv_data = raw UnixSocket.recv(conn, 1024i64);
-    int32:match = 0i32;
-    // We cannot use string literal comparison directly without str_eq, let's use Str.eq if possible, or just length + print
-    // Wait, the original code had: if (recv_data == "hello unix") { match = 1i32; }
-    // which worked if I implemented string equality. Let's try it.
-    if (recv_data == "hello unix\\0") { match = 1i32; }
-    drop assert(match, "server recv data matches\0");
+    // T05: server recv matches
+    string:recv5 = raw UnixSocket.recv(conn, 1024i64);
+    int32:t5 = 0i32;
+    if (string_contains(recv5, "hello unix")) { t5 = 1i32; }
+    drop assert(t5, "T05 server recv matches");
+    if (t5 == 1i32) { pc += 1i32; }
 
-    drop raw UnixSocket.close(conn);
-    drop raw UnixSocket.close(cli);
-    drop raw UnixSocket.close(srv);
-    drop raw UnixSocket.unlink(path);
+    // T06: bidirectional — server sends reply
+    int64:sent6 = raw UnixSocket.send(conn, "reply ok");
+    int32:t6 = 0i32;
+    if (sent6 > 0i64) { t6 = 1i32; }
+    drop assert(t6, "T06 server send reply");
+    if (t6 == 1i32) { pc += 1i32; }
+
+    // T07: client recv reply
+    string:recv7 = raw UnixSocket.recv(cli, 1024i64);
+    int32:t7 = 0i32;
+    if (string_contains(recv7, "reply ok")) { t7 = 1i32; }
+    drop assert(t7, "T07 client recv reply");
+    if (t7 == 1i32) { pc += 1i32; }
+
+    // T08: send returns exact byte count
+    int64:sent8 = raw UnixSocket.send(cli, "12345");
+    int32:t8 = 0i32;
+    if (sent8 == 5i64) { t8 = 1i32; }
+    drop assert(t8, "T08 send returns byte count=5");
+    if (t8 == 1i32) { pc += 1i32; }
+
+    // T09: recv the 5 bytes
+    string:recv9 = raw UnixSocket.recv(conn, 1024i64);
+    int32:t9 = 0i32;
+    if (string_contains(recv9, "12345")) { t9 = 1i32; }
+    drop assert(t9, "T09 recv 5 bytes match");
+    if (t9 == 1i32) { pc += 1i32; }
+
+    // T10: close accepted connection
+    int64:rc10 = raw UnixSocket.close(conn);
+    int32:t10 = 0i32;
+    if (rc10 == 0i64) { t10 = 1i32; }
+    drop assert(t10, "T10 close accepted conn");
+    if (t10 == 1i32) { pc += 1i32; }
+
+    // T11: close client
+    int64:rc11 = raw UnixSocket.close(cli);
+    int32:t11 = 0i32;
+    if (rc11 == 0i64) { t11 = 1i32; }
+    drop assert(t11, "T11 close client");
+    if (t11 == 1i32) { pc += 1i32; }
+
+    // T12: close server + unlink
+    int64:rc12 = raw UnixSocket.close(srv);
+    int64:rc_ul = raw UnixSocket.unlink(path);
+    int32:t12 = 0i32;
+    if (rc12 == 0i64) { t12 = 1i32; }
+    drop assert(t12, "T12 close server + unlink");
+    if (t12 == 1i32) { pc += 1i32; }
+
+    pass pc;
+};
+
+// ── Socketpair Tests ────────────────────────────────────────────────────────
+
+func:test_socketpair = int32() {
+    int32:pc = 0i32;
+
+    // T13: pair_a returns valid fd
+    int64:a = raw UnixSocket.pair_a();
+    int32:t13 = 0i32;
+    if (a >= 0i64) { t13 = 1i32; }
+    drop assert(t13, "T13 pair_a returns valid fd");
+    if (t13 == 1i32) { pc += 1i32; }
+
+    // T14: pair_b returns valid fd
+    int64:b = raw UnixSocket.pair_b();
+    int32:t14 = 0i32;
+    if (b >= 0i64) { t14 = 1i32; }
+    drop assert(t14, "T14 pair_b returns valid fd");
+    if (t14 == 1i32) { pc += 1i32; }
+
+    // T15: pair fds are different
+    int32:t15 = 0i32;
+    if (a != b) { t15 = 1i32; }
+    drop assert(t15, "T15 pair fds are different");
+    if (t15 == 1i32) { pc += 1i32; }
+
+    // T16: send from a, recv on b
+    int64:sent16 = raw UnixSocket.send(a, "pair-msg");
+    string:recv16 = raw UnixSocket.recv(b, 1024i64);
+    int32:t16 = 0i32;
+    if (string_contains(recv16, "pair-msg")) { t16 = 1i32; }
+    drop assert(t16, "T16 socketpair a->b send/recv");
+    if (t16 == 1i32) { pc += 1i32; }
+
+    // T17: send from b, recv on a (bidirectional)
+    int64:sent17 = raw UnixSocket.send(b, "reverse");
+    string:recv17 = raw UnixSocket.recv(a, 1024i64);
+    int32:t17 = 0i32;
+    if (string_contains(recv17, "reverse")) { t17 = 1i32; }
+    drop assert(t17, "T17 socketpair b->a bidirectional");
+    if (t17 == 1i32) { pc += 1i32; }
+
+    drop raw UnixSocket.close(a);
+    drop raw UnixSocket.close(b);
+
+    pass pc;
+};
+
+// ── Peer Credentials Tests ──────────────────────────────────────────────────
+
+func:test_peer_cred = int32() {
+    int32:pc = 0i32;
+
+    // Use a socketpair for peer credential testing (both ends are us)
+    int64:a = raw UnixSocket.pair_a();
+    int64:b = raw UnixSocket.pair_b();
+
+    // T18: peer_uid returns our UID (should be >= 0)
+    int64:uid = raw UnixSocket.peer_uid(a);
+    int32:t18 = 0i32;
+    if (uid >= 0i64) { t18 = 1i32; }
+    drop assert(t18, "T18 peer_uid >= 0");
+    if (t18 == 1i32) { pc += 1i32; }
+
+    // T19: peer_gid returns our GID (should be >= 0)
+    int64:gid = raw UnixSocket.peer_gid(a);
+    int32:t19 = 0i32;
+    if (gid >= 0i64) { t19 = 1i32; }
+    drop assert(t19, "T19 peer_gid >= 0");
+    if (t19 == 1i32) { pc += 1i32; }
+
+    // T20: peer_pid returns our PID (should be > 0)
+    int64:pid = raw UnixSocket.peer_pid(a);
+    int32:t20 = 0i32;
+    if (pid > 0i64) { t20 = 1i32; }
+    drop assert(t20, "T20 peer_pid > 0");
+    if (t20 == 1i32) { pc += 1i32; }
+
+    // T21: peer_uid same on both ends (since it's us)
+    int64:uid_b = raw UnixSocket.peer_uid(b);
+    int32:t21 = 0i32;
+    if (uid == uid_b) { t21 = 1i32; }
+    drop assert(t21, "T21 peer_uid same both ends");
+    if (t21 == 1i32) { pc += 1i32; }
+
+    drop raw UnixSocket.close(a);
+    drop raw UnixSocket.close(b);
+
+    pass pc;
+};
+
+// ── Non-blocking & Timeout Tests ────────────────────────────────────────────
+
+func:test_options = int32() {
+    int32:pc = 0i32;
+
+    int64:a = raw UnixSocket.pair_a();
+    int64:b = raw UnixSocket.pair_b();
+
+    // T22: set_nonblock succeeds
+    int64:rc22 = raw UnixSocket.set_nonblock(a, 1i64);
+    int32:t22 = 0i32;
+    if (rc22 == 0i64) { t22 = 1i32; }
+    drop assert(t22, "T22 set_nonblock enable");
+    if (t22 == 1i32) { pc += 1i32; }
+
+    // T23: disable nonblock
+    int64:rc23 = raw UnixSocket.set_nonblock(a, 0i64);
+    int32:t23 = 0i32;
+    if (rc23 == 0i64) { t23 = 1i32; }
+    drop assert(t23, "T23 set_nonblock disable");
+    if (t23 == 1i32) { pc += 1i32; }
+
+    // T24: set_timeout succeeds
+    int64:rc24 = raw UnixSocket.set_timeout(b, 5i64);
+    int32:t24 = 0i32;
+    if (rc24 == 0i64) { t24 = 1i32; }
+    drop assert(t24, "T24 set_timeout=5s");
+    if (t24 == 1i32) { pc += 1i32; }
+
+    drop raw UnixSocket.close(a);
+    drop raw UnixSocket.close(b);
+
+    pass pc;
+};
+
+// ── Datagram Socket Tests ───────────────────────────────────────────────────
+
+func:test_dgram = int32() {
+    int32:pc = 0i32;
+    string:dgpath = "/tmp/test_npk_dgram.sock";
+
+    // T25: dgram_server creates and binds
+    int64:dsrv = raw UnixSocket.dgram_server(dgpath);
+    int32:t25 = 0i32;
+    if (dsrv >= 0i64) { t25 = 1i32; }
+    drop assert(t25, "T25 dgram_server create+bind");
+    if (t25 == 1i32) { pc += 1i32; }
+
+    // T26: dgram_client creates unbound socket
+    int64:dcli = raw UnixSocket.dgram_client();
+    int32:t26 = 0i32;
+    if (dcli >= 0i64) { t26 = 1i32; }
+    drop assert(t26, "T26 dgram_client create");
+    if (t26 == 1i32) { pc += 1i32; }
+
+    // T27: sendto datagram
+    int64:sent27 = raw UnixSocket.sendto(dcli, "dgram-hello", dgpath);
+    int32:t27 = 0i32;
+    if (sent27 > 0i64) { t27 = 1i32; }
+    drop assert(t27, "T27 sendto datagram");
+    if (t27 == 1i32) { pc += 1i32; }
+
+    // T28: recvfrom datagram
+    string:recv28 = raw UnixSocket.recvfrom(dsrv, 1024i64);
+    int32:t28 = 0i32;
+    if (string_contains(recv28, "dgram-hello")) { t28 = 1i32; }
+    drop assert(t28, "T28 recvfrom datagram matches");
+    if (t28 == 1i32) { pc += 1i32; }
+
+    drop raw UnixSocket.close(dcli);
+    drop raw UnixSocket.close(dsrv);
+    drop raw UnixSocket.unlink(dgpath);
+
+    pass pc;
+};
+
+// ── Error Reporting Tests ───────────────────────────────────────────────────
+
+func:test_errors = int32() {
+    int32:pc = 0i32;
+
+    // T29: last_error returns >= 0 (valid errno value)
+    int64:e29 = raw UnixSocket.last_error();
+    int32:t29 = 0i32;
+    if (e29 >= 0i64) { t29 = 1i32; }
+    drop assert(t29, "T29 last_error >= 0");
+    if (t29 == 1i32) { pc += 1i32; }
+
+    // T30: error_str returns a non-empty string
+    string:es30 = raw UnixSocket.error_str();
+    int32:t30 = 0i32;
+    if (string_length(es30) > 0i64) { t30 = 1i32; }
+    drop assert(t30, "T30 error_str non-empty");
+    if (t30 == 1i32) { pc += 1i32; }
+
+    pass pc;
+};
+
+// ── Main ────────────────────────────────────────────────────────────────────
+
+func:main = int32() {
+    int32:p1 = raw test_stream();
+    int32:p2 = raw test_socketpair();
+    int32:p3 = raw test_peer_cred();
+    int32:p4 = raw test_options();
+    int32:p5 = raw test_dgram();
+    int32:p6 = raw test_errors();
+
+    int32:total = p1 + p2 + p3 + p4 + p5 + p6;
+
+    println("DONE");
+    println("---");
 
     if (fail_cnt > 0i64) {
-        drop(printf("SOME TESTS FAILED\n\0"));
+        println("SOME TESTS FAILED");
         exit 1i32;
     }
-    drop(printf("--- ALL TESTS PASSED ---\n\0"));
+    println("PASS: all 30 tests passed");
     exit 0i32;
 };

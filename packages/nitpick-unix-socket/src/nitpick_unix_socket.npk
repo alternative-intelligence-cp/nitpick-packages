@@ -1,22 +1,53 @@
-// nitpick_unix_socket.npk
+// nitpick_unix_socket.npk — Unix domain socket library for Nitpick
+//
+// Provides stream (SOCK_STREAM) and datagram (SOCK_DGRAM) Unix sockets,
+// socketpair for IPC, peer credential inspection, non-blocking mode,
+// timeouts, and error reporting.
 
 extern "nitpick_unix_socket_shim" {
-    func:nitpick_unix_socket_create = int64();
-    func:nitpick_unix_socket_bind = int64(int64:fd, string:path);
-    func:nitpick_unix_socket_listen = int64(int64:fd, int64:backlog);
-    func:nitpick_unix_socket_connect = int64(int64:fd, string:path);
-    func:nitpick_unix_socket_accept = int64(int64:fd);
-    func:nitpick_unix_socket_send = int64(int64:fd, string:data, int64:len);
-    func:nitpick_unix_socket_recv = string(int64:fd, int64:max_len);
-    func:nitpick_unix_socket_close = int64(int64:fd);
-    func:nitpick_unix_socket_unlink = int64(string:path);
+    // ── Original API ────────────────────────────────────────────────────────
+    func:nitpick_unix_socket_create       = int64();
+    func:nitpick_unix_socket_bind         = int64(int64:fd, string:path);
+    func:nitpick_unix_socket_listen       = int64(int64:fd, int64:backlog);
+    func:nitpick_unix_socket_connect      = int64(int64:fd, string:path);
+    func:nitpick_unix_socket_accept       = int64(int64:fd);
+    func:nitpick_unix_socket_send         = int64(int64:fd, string:data, int64:len);
+    func:nitpick_unix_socket_recv         = string(int64:fd, int64:max_len);
+    func:nitpick_unix_socket_close        = int64(int64:fd);
+    func:nitpick_unix_socket_unlink       = int64(string:path);
+
+    // ── Socketpair ──────────────────────────────────────────────────────────
+    func:nitpick_unix_socket_pair_a       = int64();
+    func:nitpick_unix_socket_pair_b       = int64();
+
+    // ── Socket options ──────────────────────────────────────────────────────
+    func:nitpick_unix_socket_set_nonblock = int64(int64:fd, int64:enable);
+    func:nitpick_unix_socket_set_timeout  = int64(int64:fd, int64:seconds);
+
+    // ── Peer credentials (SO_PEERCRED) ──────────────────────────────────────
+    func:nitpick_unix_socket_peer_uid     = int64(int64:fd);
+    func:nitpick_unix_socket_peer_gid     = int64(int64:fd);
+    func:nitpick_unix_socket_peer_pid     = int64(int64:fd);
+
+    // ── Datagram sockets ────────────────────────────────────────────────────
+    func:nitpick_unix_socket_create_dgram = int64();
+    func:nitpick_unix_socket_sendto       = int64(int64:fd, string:data, int64:len, string:dest_path);
+    func:nitpick_unix_socket_recvfrom     = string(int64:fd, int64:max_len);
+
+    // ── Error reporting ─────────────────────────────────────────────────────
+    func:nitpick_unix_socket_last_error   = int64();
+    func:nitpick_unix_socket_error_str    = string();
 }
 
 pub Type:UnixSocket = {
-    // Create a Unix socket server. Returns fd, or fails on error.
+    // ════════════════════════════════════════════════════════════════════════
+    //  Stream Sockets (SOCK_STREAM)
+    // ════════════════════════════════════════════════════════════════════════
+
+    // Create a Unix stream socket server. Returns fd, or fails on error.
     func:server = int64(string:path) {
-        drop(nitpick_unix_socket_unlink(path)); // Remove existing socket file if any
-        
+        drop(nitpick_unix_socket_unlink(path));
+
         int64:fd = nitpick_unix_socket_create();
         if (fd < 0i64) { fail 1; }
 
@@ -35,7 +66,7 @@ pub Type:UnixSocket = {
         pass fd;
     };
 
-    // Connect to a Unix socket server. Returns fd, or fails on error.
+    // Connect to a Unix stream socket server. Returns fd, or fails on error.
     func:client = int64(string:path) {
         int64:fd = nitpick_unix_socket_create();
         if (fd < 0i64) { fail 1; }
@@ -49,7 +80,7 @@ pub Type:UnixSocket = {
         pass fd;
     };
 
-    // Accept a connection (for servers)
+    // Accept a connection (for servers). Returns the accepted client fd.
     func:accept = int64(int64:server_fd) {
         if (server_fd < 0i64) { fail 5; }
         int64:client_fd = nitpick_unix_socket_accept(server_fd);
@@ -57,7 +88,7 @@ pub Type:UnixSocket = {
         pass client_fd;
     };
 
-    // Send string data
+    // Send string data. Returns bytes sent.
     func:send = int64(int64:fd, string:data) {
         if (fd < 0i64) { fail 5; }
         int64:sent = nitpick_unix_socket_send(fd, data, string_length(data));
@@ -65,15 +96,13 @@ pub Type:UnixSocket = {
         pass sent;
     };
 
-    // Receive string data
+    // Receive string data (up to max bytes). Returns received string.
     func:recv = string(int64:fd, int64:max) {
         if (fd < 0i64) { fail 5; }
-        // Note: the shim returns "" on EOF or error. For true binary safe error differentiation,
-        // we might want a get_error() in the shim in the future.
         pass nitpick_unix_socket_recv(fd, max);
     };
 
-    // Close the socket
+    // Close the socket. Returns 0 on success.
     func:close = int64(int64:fd) {
         if (fd >= 0i64) {
             drop(nitpick_unix_socket_close(fd));
@@ -81,9 +110,122 @@ pub Type:UnixSocket = {
         pass 0i64;
     };
 
-    // Unlink the path (used by servers after close)
+    // Remove the socket file from the filesystem.
     func:unlink = int64(string:path) {
         drop(nitpick_unix_socket_unlink(path));
         pass 0i64;
+    };
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  Socketpair (IPC)
+    // ════════════════════════════════════════════════════════════════════════
+
+    // Create a connected socket pair. Call pair_a() then pair_b() to get
+    // the two ends. Both are full-duplex stream sockets.
+    func:pair_a = int64() {
+        int64:a = nitpick_unix_socket_pair_a();
+        if (a < 0i64) { fail 8; }
+        pass a;
+    };
+
+    func:pair_b = int64() {
+        pass nitpick_unix_socket_pair_b();
+    };
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  Socket Options
+    // ════════════════════════════════════════════════════════════════════════
+
+    // Set non-blocking mode. enable=1 to enable, enable=0 to disable.
+    func:set_nonblock = int64(int64:fd, int64:enable) {
+        if (fd < 0i64) { fail 5; }
+        int64:rc = nitpick_unix_socket_set_nonblock(fd, enable);
+        if (rc < 0i64) { fail 9; }
+        pass 0i64;
+    };
+
+    // Set send/recv timeout in seconds (0 = no timeout).
+    func:set_timeout = int64(int64:fd, int64:seconds) {
+        if (fd < 0i64) { fail 5; }
+        int64:rc = nitpick_unix_socket_set_timeout(fd, seconds);
+        if (rc < 0i64) { fail 10; }
+        pass 0i64;
+    };
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  Peer Credentials (SO_PEERCRED)
+    // ════════════════════════════════════════════════════════════════════════
+
+    // Get the UID of the connected peer process.
+    func:peer_uid = int64(int64:fd) {
+        if (fd < 0i64) { fail 5; }
+        pass nitpick_unix_socket_peer_uid(fd);
+    };
+
+    // Get the GID of the connected peer process.
+    func:peer_gid = int64(int64:fd) {
+        if (fd < 0i64) { fail 5; }
+        pass nitpick_unix_socket_peer_gid(fd);
+    };
+
+    // Get the PID of the connected peer process.
+    func:peer_pid = int64(int64:fd) {
+        if (fd < 0i64) { fail 5; }
+        pass nitpick_unix_socket_peer_pid(fd);
+    };
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  Datagram Sockets (SOCK_DGRAM)
+    // ════════════════════════════════════════════════════════════════════════
+
+    // Create a datagram server bound to a path.
+    func:dgram_server = int64(string:path) {
+        drop(nitpick_unix_socket_unlink(path));
+
+        int64:fd = nitpick_unix_socket_create_dgram();
+        if (fd < 0i64) { fail 1; }
+
+        int64:bind_rc = nitpick_unix_socket_bind(fd, path);
+        if (bind_rc < 0i64) {
+            drop(nitpick_unix_socket_close(fd));
+            fail 2;
+        }
+
+        pass fd;
+    };
+
+    // Create an unbound datagram socket (for sending).
+    func:dgram_client = int64() {
+        int64:fd = nitpick_unix_socket_create_dgram();
+        if (fd < 0i64) { fail 1; }
+        pass fd;
+    };
+
+    // Send a datagram to a destination path.
+    func:sendto = int64(int64:fd, string:data, string:dest_path) {
+        if (fd < 0i64) { fail 5; }
+        int64:sent = nitpick_unix_socket_sendto(fd, data, string_length(data), dest_path);
+        if (sent < 0i64) { fail 7; }
+        pass sent;
+    };
+
+    // Receive a datagram.
+    func:recvfrom = string(int64:fd, int64:max) {
+        if (fd < 0i64) { fail 5; }
+        pass nitpick_unix_socket_recvfrom(fd, max);
+    };
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  Error Reporting
+    // ════════════════════════════════════════════════════════════════════════
+
+    // Get the errno from the last failed socket operation.
+    func:last_error = int64() {
+        pass nitpick_unix_socket_last_error();
+    };
+
+    // Get the error message string for the last failed operation.
+    func:error_str = string() {
+        pass nitpick_unix_socket_error_str();
     };
 };
