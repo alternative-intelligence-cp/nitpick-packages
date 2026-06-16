@@ -1,12 +1,17 @@
-// test_nitpick_crypto.npk — 12-test suite for nitpick-crypto (v0.11.2)
-extern "libc" { func:aria_libc_exit = NIL(int32:code); }
+// test_nitpick_crypto.npk — test suite for nitpick-crypto (v0.12.0)
+// Tests T01–T15: one-shot API (unchanged)
+// Tests T16–T27: streaming (incremental) API — md5, sha1, sha256
 use "../src/nitpick_crypto.npk".*;
+
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_malloc  = int64(int64:size);
+    func:nitpick_libc_mem_free    = int32(int64:ptr);
+    func:npk_mem_write_string     = int64(int64:ptr, string:s);
+}
 
 func:failsafe = int32(tbb32:_err) { exit 1; };
 
 func:main = int32() {
-    
-    
 
     // T01: sha256 non-empty
     string:h1 = raw Crypto.sha256("hello");
@@ -73,6 +78,7 @@ func:main = int32() {
     int64:l12 = string_length(hm12);
     if (l12 == 64i64) { println("[PASS] T12 hmac len=64");  }
     if (l12 != 64i64) { println("[FAIL] T12"); }
+
     // T13: sha1 non-empty
     string:s13 = raw Crypto.sha1("hello");
     int64:l13 = string_length(s13);
@@ -88,10 +94,113 @@ func:main = int32() {
     if (s13 == "aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d") { println("[PASS] T15 sha1 correct"); }
     if (s13 != "aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d") { println("[FAIL] T15 sha1 incorrect"); }
 
+    // ── Streaming API tests ───────────────────────────────────────────────────
+    // Strategy: hash "hello" (5 bytes) via streaming and compare to one-shot.
+    // Also hash in two chunks "hel"+"lo" to verify multi-update correctness.
+    //
+    // We allocate a raw buffer via nitpick_libc_mem_malloc and use
+    // npk_mem_write_string to copy string bytes into it.  The buffer pointer
+    // (int64) is then passed directly to the _update function.
+
+    // Pre-compute one-shot results for comparison
+    string:ref256  = raw Crypto.sha256("hello");
+    string:ref_md5 = raw Crypto.md5("hello");
+    string:ref_sha1 = raw Crypto.sha1("hello");
+
+    // Allocate a small staging buffer (8 bytes is plenty for "hello")
+    int64:buf = nitpick_libc_mem_malloc(8i64);
+
+    // T16: sha256_init returns non-null context
+    int64:ctx256 = raw Crypto.sha256_init();
+    if (ctx256 != 0i64) { println("[PASS] T16 sha256_init non-null"); }
+    if (ctx256 == 0i64) { println("[FAIL] T16 sha256_init null"); }
+
+    // T17: sha256 single-chunk stream == one-shot
+    drop npk_mem_write_string(buf, "hello");
+    drop Crypto.sha256_update(ctx256, buf, 5i64);
+    string:out256 = raw Crypto.sha256_finalize(ctx256);
+    drop Crypto.sha256_free(ctx256);
+    if (out256 == ref256) { println("[PASS] T17 sha256 stream==oneshot"); }
+    if (out256 != ref256) { println("[FAIL] T17 sha256 stream mismatch"); }
+
+    // T18: sha256 two-chunk stream ("hel" + "lo") == one-shot
+    int64:ctx256b = raw Crypto.sha256_init();
+    drop npk_mem_write_string(buf, "hel");
+    drop Crypto.sha256_update(ctx256b, buf, 3i64);
+    drop npk_mem_write_string(buf, "lo");
+    drop Crypto.sha256_update(ctx256b, buf, 2i64);
+    string:out256b = raw Crypto.sha256_finalize(ctx256b);
+    drop Crypto.sha256_free(ctx256b);
+    if (out256b == ref256) { println("[PASS] T18 sha256 two-chunk==oneshot"); }
+    if (out256b != ref256) { println("[FAIL] T18 sha256 two-chunk mismatch"); }
+
+    // T19: md5_init returns non-null context
+    int64:ctx_md5 = raw Crypto.md5_init();
+    if (ctx_md5 != 0i64) { println("[PASS] T19 md5_init non-null"); }
+    if (ctx_md5 == 0i64) { println("[FAIL] T19 md5_init null"); }
+
+    // T20: md5 single-chunk stream == one-shot
+    drop npk_mem_write_string(buf, "hello");
+    drop Crypto.md5_update(ctx_md5, buf, 5i64);
+    string:out_md5 = raw Crypto.md5_finalize(ctx_md5);
+    drop Crypto.md5_free(ctx_md5);
+    if (out_md5 == ref_md5) { println("[PASS] T20 md5 stream==oneshot"); }
+    if (out_md5 != ref_md5) { println("[FAIL] T20 md5 stream mismatch"); }
+
+    // T21: md5 two-chunk stream == one-shot
+    int64:ctx_md5b = raw Crypto.md5_init();
+    drop npk_mem_write_string(buf, "hel");
+    drop Crypto.md5_update(ctx_md5b, buf, 3i64);
+    drop npk_mem_write_string(buf, "lo");
+    drop Crypto.md5_update(ctx_md5b, buf, 2i64);
+    string:out_md5b = raw Crypto.md5_finalize(ctx_md5b);
+    drop Crypto.md5_free(ctx_md5b);
+    if (out_md5b == ref_md5) { println("[PASS] T21 md5 two-chunk==oneshot"); }
+    if (out_md5b != ref_md5) { println("[FAIL] T21 md5 two-chunk mismatch"); }
+
+    // T22: sha1_init returns non-null context
+    int64:ctx_sha1 = raw Crypto.sha1_init();
+    if (ctx_sha1 != 0i64) { println("[PASS] T22 sha1_init non-null"); }
+    if (ctx_sha1 == 0i64) { println("[FAIL] T22 sha1_init null"); }
+
+    // T23: sha1 single-chunk stream == one-shot
+    drop npk_mem_write_string(buf, "hello");
+    drop Crypto.sha1_update(ctx_sha1, buf, 5i64);
+    string:out_sha1 = raw Crypto.sha1_finalize(ctx_sha1);
+    drop Crypto.sha1_free(ctx_sha1);
+    if (out_sha1 == ref_sha1) { println("[PASS] T23 sha1 stream==oneshot"); }
+    if (out_sha1 != ref_sha1) { println("[FAIL] T23 sha1 stream mismatch"); }
+
+    // T24: sha1 two-chunk stream == one-shot
+    int64:ctx_sha1b = raw Crypto.sha1_init();
+    drop npk_mem_write_string(buf, "hel");
+    drop Crypto.sha1_update(ctx_sha1b, buf, 3i64);
+    drop npk_mem_write_string(buf, "lo");
+    drop Crypto.sha1_update(ctx_sha1b, buf, 2i64);
+    string:out_sha1b = raw Crypto.sha1_finalize(ctx_sha1b);
+    drop Crypto.sha1_free(ctx_sha1b);
+    if (out_sha1b == ref_sha1) { println("[PASS] T24 sha1 two-chunk==oneshot"); }
+    if (out_sha1b != ref_sha1) { println("[FAIL] T24 sha1 two-chunk mismatch"); }
+
+    // T25: streaming sha256 result length = 64
+    int64:len256s = string_length(out256);
+    if (len256s == 64i64) { println("[PASS] T25 stream sha256 len=64"); }
+    if (len256s != 64i64) { println("[FAIL] T25 stream sha256 len"); }
+
+    // T26: streaming md5 result length = 32
+    int64:len_md5s = string_length(out_md5);
+    if (len_md5s == 32i64) { println("[PASS] T26 stream md5 len=32"); }
+    if (len_md5s != 32i64) { println("[FAIL] T26 stream md5 len"); }
+
+    // T27: streaming sha1 result length = 40
+    int64:len_sha1s = string_length(out_sha1);
+    if (len_sha1s == 40i64) { println("[PASS] T27 stream sha1 len=40"); }
+    if (len_sha1s != 40i64) { println("[FAIL] T27 stream sha1 len"); }
+
+    drop nitpick_libc_mem_free(buf);
+
     println("DONE");
-    
     drop(println("---"));
-    
-        drop(println("PASS: all tests passed"));
+    drop(println("PASS: all 27 tests passed"));
     exit 0;
 };

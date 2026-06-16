@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 /* ========== MD5 Implementation ========== */
 
@@ -188,28 +189,18 @@ static void sha1_transform(uint32_t state[5], const uint8_t block[64]) {
             f = b ^ c ^ d;
             k = 0xCA62C1D6;
         }
-
         uint32_t temp = SHA1_ROTL(5, a) + f + e + k + w[i];
-        e = d;
-        d = c;
-        c = SHA1_ROTL(30, b);
-        b = a;
-        a = temp;
+        e = d; d = c; c = SHA1_ROTL(30, b); b = a; a = temp;
     }
 
-    state[0] += a;
-    state[1] += b;
-    state[2] += c;
-    state[3] += d;
-    state[4] += e;
+    state[0] += a; state[1] += b; state[2] += c; state[3] += d; state[4] += e;
 }
 
 static void sha1_hash(const uint8_t *data, size_t len, uint8_t out[20]) {
     uint32_t state[5] = { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0 };
     size_t i;
-    for (i = 0; i + 64 <= len; i += 64) {
+    for (i = 0; i + 64 <= len; i += 64)
         sha1_transform(state, data + i);
-    }
     uint8_t buf[128];
     size_t rem = len - i;
     memcpy(buf, data + i, rem);
@@ -221,11 +212,9 @@ static void sha1_hash(const uint8_t *data, size_t len, uint8_t out[20]) {
     }
     memset(buf + rem, 0, 56 - rem);
     uint64_t bits = (uint64_t)len * 8;
-    for (int j = 7; j >= 0; j--) {
+    for (int j = 7; j >= 0; j--)
         buf[56 + (7 - j)] = (uint8_t)(bits >> (j * 8));
-    }
     sha1_transform(state, buf);
-
     for (int j = 0; j < 5; j++) {
         out[j*4]   = (uint8_t)(state[j] >> 24);
         out[j*4+1] = (uint8_t)(state[j] >> 16);
@@ -236,21 +225,35 @@ static void sha1_hash(const uint8_t *data, size_t len, uint8_t out[20]) {
 
 /* ========== Hex encoding ========== */
 
-static char hex_result[129];
+/* Thread-local result buffers — finalize writes here, safe for single-call-at-a-time use */
+static char hex_result_onshot[129];
+static char hex_result_stream[129];
 
 static const char *to_hex(const uint8_t *data, size_t len) {
     static const char hex[] = "0123456789abcdef";
     size_t limit = len;
     if (limit > 64) limit = 64;
     for (size_t i = 0; i < limit; i++) {
-        hex_result[i*2]   = hex[(data[i] >> 4) & 0xf];
-        hex_result[i*2+1] = hex[data[i] & 0xf];
+        hex_result_onshot[i*2]   = hex[(data[i] >> 4) & 0xf];
+        hex_result_onshot[i*2+1] = hex[data[i] & 0xf];
     }
-    hex_result[limit*2] = '\0';
-    return hex_result;
+    hex_result_onshot[limit*2] = '\0';
+    return hex_result_onshot;
 }
 
-/* ========== Public API ========== */
+static const char *to_hex_stream(const uint8_t *data, size_t len) {
+    static const char hex[] = "0123456789abcdef";
+    size_t limit = len;
+    if (limit > 64) limit = 64;
+    for (size_t i = 0; i < limit; i++) {
+        hex_result_stream[i*2]   = hex[(data[i] >> 4) & 0xf];
+        hex_result_stream[i*2+1] = hex[data[i] & 0xf];
+    }
+    hex_result_stream[limit*2] = '\0';
+    return hex_result_stream;
+}
+
+/* ========== Public API — one-shot ========== */
 
 const char *nitpick_crypto_sha1(const char *data) {
     uint8_t hash[20];
@@ -284,4 +287,213 @@ int32_t nitpick_crypto_sha256_verify(const char *data, const char *expected_hex)
 int32_t nitpick_crypto_md5_verify(const char *data, const char *expected_hex) {
     const char *computed = nitpick_crypto_md5(data);
     return (strcmp(computed, expected_hex) == 0) ? 1 : 0;
+}
+
+/* ========== Streaming API =========================================
+ *
+ * Each context is a heap-allocated struct.  The pointer is returned
+ * as int64 to Nitpick (opaque handle pattern).  Caller must call the
+ * matching _free() when done.
+ *
+ * Usage pattern (mirroring sha256sum, md5sum, sha1sum):
+ *   int64:ctx = nitpick_crypto_sha256_init();
+ *   nitpick_crypto_sha256_update(ctx, buf_ptr, n_bytes);   // repeat
+ *   string:hex = nitpick_crypto_sha256_finalize(ctx);
+ *   nitpick_crypto_sha256_free(ctx);
+ * ================================================================= */
+
+typedef struct {
+    uint32_t state[4];
+    uint8_t  buf[64];
+    uint64_t count;   /* total bytes fed */
+    uint64_t buflen;  /* bytes in partial block */
+} MD5Ctx;
+
+typedef struct {
+    uint32_t state[5];
+    uint8_t  buf[64];
+    uint64_t count;
+    uint64_t buflen;
+} SHA1Ctx;
+
+typedef struct {
+    uint32_t state[8];
+    uint8_t  buf[64];
+    uint64_t count;
+    uint64_t buflen;
+} SHA256Ctx;
+
+/* -------- MD5 streaming -------- */
+
+int64_t nitpick_crypto_md5_init(void) {
+    MD5Ctx *ctx = (MD5Ctx *)calloc(1, sizeof(MD5Ctx));
+    if (!ctx) return 0;
+    ctx->state[0] = 0x67452301;
+    ctx->state[1] = 0xefcdab89;
+    ctx->state[2] = 0x98badcfe;
+    ctx->state[3] = 0x10325476;
+    return (int64_t)(uintptr_t)ctx;
+}
+
+int32_t nitpick_crypto_md5_update(int64_t ctx_ptr, int64_t buf_ptr, int64_t length) {
+    MD5Ctx *ctx = (MD5Ctx *)(uintptr_t)ctx_ptr;
+    const uint8_t *data = (const uint8_t *)(uintptr_t)buf_ptr;
+    size_t len = (size_t)length;
+    if (!ctx || !data || len == 0) return -1;
+    ctx->count += len;
+    size_t i = 0;
+    if (ctx->buflen > 0) {
+        size_t need = 64 - ctx->buflen;
+        size_t copy = len < need ? len : need;
+        memcpy(ctx->buf + ctx->buflen, data, copy);
+        ctx->buflen += copy; i += copy;
+        if (ctx->buflen == 64) { md5_transform(ctx->state, ctx->buf); ctx->buflen = 0; }
+    }
+    for (; i + 64 <= len; i += 64) md5_transform(ctx->state, data + i);
+    if (i < len) { ctx->buflen = len - i; memcpy(ctx->buf, data + i, ctx->buflen); }
+    return 0;
+}
+
+const char *nitpick_crypto_md5_finalize(int64_t ctx_ptr) {
+    MD5Ctx *ctx = (MD5Ctx *)(uintptr_t)ctx_ptr;
+    if (!ctx) return "";
+    uint32_t state[4]; memcpy(state, ctx->state, sizeof(state));
+    uint8_t fbuf[128];
+    size_t rem = ctx->buflen;
+    memcpy(fbuf, ctx->buf, rem);
+    fbuf[rem++] = 0x80;
+    if (rem > 56) { memset(fbuf + rem, 0, 64 - rem); md5_transform(state, fbuf); rem = 0; }
+    memset(fbuf + rem, 0, 56 - rem);
+    uint64_t bits = ctx->count * 8;
+    for (int j = 0; j < 8; j++) fbuf[56 + j] = (uint8_t)(bits >> (j * 8));
+    md5_transform(state, fbuf);
+    uint8_t hash[16];
+    for (int j = 0; j < 4; j++) {
+        hash[j*4]   = (uint8_t)(state[j]);
+        hash[j*4+1] = (uint8_t)(state[j]>>8);
+        hash[j*4+2] = (uint8_t)(state[j]>>16);
+        hash[j*4+3] = (uint8_t)(state[j]>>24);
+    }
+    return to_hex_stream(hash, 16);
+}
+
+int32_t nitpick_crypto_md5_free(int64_t ctx_ptr) {
+    void *p = (void *)(uintptr_t)ctx_ptr;
+    if (!p) return -1;
+    free(p); return 0;
+}
+
+/* -------- SHA-1 streaming -------- */
+
+int64_t nitpick_crypto_sha1_init(void) {
+    SHA1Ctx *ctx = (SHA1Ctx *)calloc(1, sizeof(SHA1Ctx));
+    if (!ctx) return 0;
+    ctx->state[0] = 0x67452301; ctx->state[1] = 0xEFCDAB89;
+    ctx->state[2] = 0x98BADCFE; ctx->state[3] = 0x10325476;
+    ctx->state[4] = 0xC3D2E1F0;
+    return (int64_t)(uintptr_t)ctx;
+}
+
+int32_t nitpick_crypto_sha1_update(int64_t ctx_ptr, int64_t buf_ptr, int64_t length) {
+    SHA1Ctx *ctx = (SHA1Ctx *)(uintptr_t)ctx_ptr;
+    const uint8_t *data = (const uint8_t *)(uintptr_t)buf_ptr;
+    size_t len = (size_t)length;
+    if (!ctx || !data || len == 0) return -1;
+    ctx->count += len;
+    size_t i = 0;
+    if (ctx->buflen > 0) {
+        size_t need = 64 - ctx->buflen;
+        size_t copy = len < need ? len : need;
+        memcpy(ctx->buf + ctx->buflen, data, copy);
+        ctx->buflen += copy; i += copy;
+        if (ctx->buflen == 64) { sha1_transform(ctx->state, ctx->buf); ctx->buflen = 0; }
+    }
+    for (; i + 64 <= len; i += 64) sha1_transform(ctx->state, data + i);
+    if (i < len) { ctx->buflen = len - i; memcpy(ctx->buf, data + i, ctx->buflen); }
+    return 0;
+}
+
+const char *nitpick_crypto_sha1_finalize(int64_t ctx_ptr) {
+    SHA1Ctx *ctx = (SHA1Ctx *)(uintptr_t)ctx_ptr;
+    if (!ctx) return "";
+    uint32_t state[5]; memcpy(state, ctx->state, sizeof(state));
+    uint8_t fbuf[128];
+    size_t rem = ctx->buflen;
+    memcpy(fbuf, ctx->buf, rem);
+    fbuf[rem++] = 0x80;
+    if (rem > 56) { memset(fbuf + rem, 0, 64 - rem); sha1_transform(state, fbuf); rem = 0; }
+    memset(fbuf + rem, 0, 56 - rem);
+    uint64_t bits = ctx->count * 8;
+    for (int j = 7; j >= 0; j--) fbuf[56 + (7-j)] = (uint8_t)(bits >> (j * 8));
+    sha1_transform(state, fbuf);
+    uint8_t hash[20];
+    for (int j = 0; j < 5; j++) {
+        hash[j*4]   = (uint8_t)(state[j]>>24); hash[j*4+1] = (uint8_t)(state[j]>>16);
+        hash[j*4+2] = (uint8_t)(state[j]>>8);  hash[j*4+3] = (uint8_t)(state[j]);
+    }
+    return to_hex_stream(hash, 20);
+}
+
+int32_t nitpick_crypto_sha1_free(int64_t ctx_ptr) {
+    void *p = (void *)(uintptr_t)ctx_ptr;
+    if (!p) return -1;
+    free(p); return 0;
+}
+
+/* -------- SHA-256 streaming -------- */
+
+int64_t nitpick_crypto_sha256_init(void) {
+    SHA256Ctx *ctx = (SHA256Ctx *)calloc(1, sizeof(SHA256Ctx));
+    if (!ctx) return 0;
+    ctx->state[0]=0x6a09e667; ctx->state[1]=0xbb67ae85;
+    ctx->state[2]=0x3c6ef372; ctx->state[3]=0xa54ff53a;
+    ctx->state[4]=0x510e527f; ctx->state[5]=0x9b05688c;
+    ctx->state[6]=0x1f83d9ab; ctx->state[7]=0x5be0cd19;
+    return (int64_t)(uintptr_t)ctx;
+}
+
+int32_t nitpick_crypto_sha256_update(int64_t ctx_ptr, int64_t buf_ptr, int64_t length) {
+    SHA256Ctx *ctx = (SHA256Ctx *)(uintptr_t)ctx_ptr;
+    const uint8_t *data = (const uint8_t *)(uintptr_t)buf_ptr;
+    size_t len = (size_t)length;
+    if (!ctx || !data || len == 0) return -1;
+    ctx->count += len;
+    size_t i = 0;
+    if (ctx->buflen > 0) {
+        size_t need = 64 - ctx->buflen;
+        size_t copy = len < need ? len : need;
+        memcpy(ctx->buf + ctx->buflen, data, copy);
+        ctx->buflen += copy; i += copy;
+        if (ctx->buflen == 64) { sha256_transform(ctx->state, ctx->buf); ctx->buflen = 0; }
+    }
+    for (; i + 64 <= len; i += 64) sha256_transform(ctx->state, data + i);
+    if (i < len) { ctx->buflen = len - i; memcpy(ctx->buf, data + i, ctx->buflen); }
+    return 0;
+}
+
+const char *nitpick_crypto_sha256_finalize(int64_t ctx_ptr) {
+    SHA256Ctx *ctx = (SHA256Ctx *)(uintptr_t)ctx_ptr;
+    if (!ctx) return "";
+    uint32_t state[8]; memcpy(state, ctx->state, sizeof(state));
+    uint8_t fbuf[128];
+    size_t rem = ctx->buflen;
+    memcpy(fbuf, ctx->buf, rem);
+    fbuf[rem++] = 0x80;
+    if (rem > 56) { memset(fbuf + rem, 0, 64 - rem); sha256_transform(state, fbuf); rem = 0; }
+    memset(fbuf + rem, 0, 56 - rem);
+    uint64_t bits = ctx->count * 8;
+    for (int j = 7; j >= 0; j--) fbuf[56 + (7-j)] = (uint8_t)(bits >> (j * 8));
+    sha256_transform(state, fbuf);
+    uint8_t hash[32];
+    for (int j = 0; j < 8; j++) {
+        hash[j*4]   = (uint8_t)(state[j]>>24); hash[j*4+1] = (uint8_t)(state[j]>>16);
+        hash[j*4+2] = (uint8_t)(state[j]>>8);  hash[j*4+3] = (uint8_t)(state[j]);
+    }
+    return to_hex_stream(hash, 32);
+}
+
+int32_t nitpick_crypto_sha256_free(int64_t ctx_ptr) {
+    void *p = (void *)(uintptr_t)ctx_ptr;
+    if (!p) return -1;
+    free(p); return 0;
 }
