@@ -1,0 +1,10 @@
+struct:my_struct = {
+    int32:x;
+};
+
+func:main = int32() {
+    any->:ptr = alloc(8i64) => any->;
+    (ptr => my_struct->)[0i64].x = 5i32;
+    return 0i32;
+};
+func:failsafe = int32(tbb32:err) { exit(1i32); };

@@ -1,0 +1,59 @@
+// BPE Tokenizer and Vocabulary Support
+use "gguf.npk".*;
+use "memory.npk".*;
+use "structs.npk".*;
+pub func:llama_vocab_init = llama_vocab(int32:n_vocab) {
+    llama_vocab:vocab;
+    vocab.n_vocab = n_vocab;
+    
+    // Allocate space for items using basic alloc
+    vocab.item_ids = alloc((n_vocab => int64) * 4i64) => int32->;
+    vocab.item_texts = alloc((n_vocab => int64) * 16i64) => string_ptr->;
+    vocab.item_scores = alloc((n_vocab => int64) * 4i64) => flt32->;
+    
+    vocab.bos_token_id = 1i32;
+    vocab.eos_token_id = 2i32;
+    vocab.pad_token_id = 0i32;
+    
+    pass(vocab);
+};
+
+pub func:llama_vocab_free = int32(llama_vocab:vocab) {
+    dalloc(vocab.item_ids => byte->);
+    dalloc(vocab.item_texts => byte->);
+    dalloc(vocab.item_scores => byte->);
+    pass(0i32);
+};
+
+pub func:llama_vocab_get_item_id = int32(llama_vocab->:vocab, int32:id) {
+    int32:val = vocab->item_ids[id => int64];
+    pass(val);
+};
+
+pub func:llama_vocab_get_n_vocab = int32(llama_vocab->:vocab) {
+    pass(vocab->n_vocab);
+};
+
+// Decodes a single token ID to its string representation
+pub func:llama_token_to_str = int8->(llama_vocab->:vocab, int32:token) {
+    if (token < 0i32) { pass(vocab->item_texts[0i64].str); }
+    if (token >= vocab->n_vocab) { pass(vocab->item_texts[0i64].str); }
+    
+    pass(vocab->item_texts[token => int64].str);
+};
+
+// Encodes a string into tokens
+pub func:llama_tokenize = int32(llama_vocab->:vocab, int8->:text, int32->:tokens, int32:n_max_tokens) {
+    if (n_max_tokens < 1i32) {
+        pass(0i32);
+    }
+    tokens[0i64] = vocab->bos_token_id;
+    int32:count = 1i32;
+    
+    // BPE tokenization logic would go here:
+    // 1. Split text into characters
+    // 2. Find merges with highest score
+    // 3. Repeat until no more merges
+    
+    pass(count);
+};

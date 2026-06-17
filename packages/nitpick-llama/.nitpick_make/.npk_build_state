@@ -1,0 +1,109 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "test-simd": {
+      "artifact_path": ".nitpick_make/build/test-simd",
+      "source_hash": "fnv1a:6614887666668104224",
+      "command_hash": 1454529753363812932,
+      "source_timestamp": 18446744069053620454,
+      "build_timestamp": 1781739662,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-nitpick-llama": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-llama",
+      "source_hash": "fnv1a:15172426834283855501",
+      "command_hash": 1454529753363812932,
+      "source_timestamp": 18446744069053627018,
+      "build_timestamp": 1781739662,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-gguf-parse": {
+      "artifact_path": ".nitpick_make/build/test-gguf-parse",
+      "source_hash": "fnv1a:12468783582410399295",
+      "command_hash": 1454529753363812932,
+      "source_timestamp": 18446744069053627260,
+      "build_timestamp": 1781739662,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "chat-cli": {
+      "artifact_path": ".nitpick_make/build/chat-cli",
+      "source_hash": "fnv1a:5254454011114116022",
+      "command_hash": 1454529753363812932,
+      "source_timestamp": 18446744069053627591,
+      "build_timestamp": 1781740051,
+      "build_duration_ms": 108,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-slice": {
+      "artifact_path": ".nitpick_make/build/test-slice",
+      "source_hash": "fnv1a:11510031255269581949",
+      "command_hash": 4897778570242620798,
+      "source_timestamp": 18446744069053621336,
+      "build_timestamp": 1781739662,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-my-harness": {
+      "artifact_path": ".nitpick_make/build/test-my-harness",
+      "source_hash": "fnv1a:3835405084864719205",
+      "command_hash": 4897778570242620798,
+      "source_timestamp": 18446744069053621395,
+      "build_timestamp": 1781739662,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-mod": {
+      "artifact_path": ".nitpick_make/build/test-mod",
+      "source_hash": "fnv1a:5475085629546890383",
+      "command_hash": 4897778570242620798,
+      "source_timestamp": 18446744069053621345,
+      "build_timestamp": 1781739662,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-simd-slice": {
+      "artifact_path": ".nitpick_make/build/test-simd-slice",
+      "source_hash": "fnv1a:17548259468863614332",
+      "command_hash": 4897778570242620798,
+      "source_timestamp": 18446744069053621366,
+      "build_timestamp": 1781739662,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "nitpick-llama": {
+      "artifact_path": ".nitpick_make/build/libnitpick-llama.a",
+      "source_hash": "fnv1a:15119088492651363085",
+      "command_hash": 4897778570242620798,
+      "source_timestamp": 18446744069053620033,
+      "build_timestamp": 1781740051,
+      "build_duration_ms": 101,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-http": {
+      "artifact_path": ".nitpick_make/build/test-http",
+      "source_hash": "fnv1a:9720282679431058509",
+      "command_hash": 1454529753363812932,
+      "source_timestamp": 18446744069053627558,
+      "build_timestamp": 1781739942,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

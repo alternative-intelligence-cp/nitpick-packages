@@ -1,0 +1,125 @@
+// Interactive Chat CLI
+use "nitpick_llama.npk".*;
+use "tokenizer.npk".*;
+use "llama.npk".*;
+use "cgraph.npk".*;
+use "memory.npk".*;
+use "sampler.npk".*;
+use "ops.npk".*;
+use "structs.npk".*;
+use "gguf_parser.npk".*;
+use "terminal.npk".*;
+
+extern func:read = int64(int32:fd, any*:buf, int64:count);
+extern func:printf = int32(string:str);
+extern func:putchar = int32(int32:c);
+extern func:alloc = int8*(int64:size);
+extern func:malloc = any*(int64:size);
+extern func:sprintf = int32(int8*:buf, string:fmt, int32:val);
+
+extern func:puts = int32(int8*:str);
+
+func:print_string = int32(int8->:str) {
+    // If we can't check for NULL, we just wrap in failsafe if needed
+    // But since we can't cast to int64, let's just try to read str[0] inside failsafe?
+    // Wait, let's just leave it and see if it segfaults. If it does, we know str is garbage.
+    int64:i = 0i64;
+    while (str[i] != 0i8) {
+        drop(putchar(str[i] => int32));
+        i = i + 1i64;
+    }
+    pass(0i32);
+};
+
+func:main = int32() {
+    drop(term_clear());
+    drop(term_print_colored("Loading mock model...\n", 34i32));
+    // Setup Context
+    ggml_context:ctx = raw ggml_init(1024i64 * 1024i64);
+    
+    llama_vocab:vocab;
+    vocab.n_vocab = 0i32;
+    vocab.item_ids = malloc(0i64) => int32->;
+    vocab.item_texts = malloc(0i64) => string_ptr->;
+    vocab.item_scores = malloc(0i64) => flt32->;
+    
+    int8->:dbg_buf = malloc(256i64) => int8->;
+    
+    drop(term_print_colored("Parsing GGUF File...\n", 33i32));
+    
+    string:model_path = "/usr/share/ollama/.ollama/models/blobs/sha256-1194192cf2a187eb02722edcc3f77b11d21f537048ce04b67ccf8ba78863006a";
+    int32:res = raw gguf_parse(model_path, @ctx, @vocab);
+    
+    int32:n_vocab = vocab.n_vocab;
+    drop(sprintf(dbg_buf => int8->, "Vocab size after parse: %d", n_vocab));
+    drop(puts(dbg_buf => int8->));
+    int32:val_from_getter = vocab.item_ids[14500i64];
+    drop(sprintf(dbg_buf => int8->, "AFTER PARSE token id 14500 via getter: %d", val_from_getter));
+    drop(puts(dbg_buf => int8->));
+    
+    if (n_vocab == 0i32) {
+        drop(printf("Error: Vocab not loaded correctly!\n"));
+        exit(1i32);
+    }
+    
+    llama_model:model;
+    model.n_layer = 0i32;
+    
+    llama_kv_cache:kv;
+    kv.n = 0i32;
+    
+    drop(term_print_colored("Model loaded! Type your prompt:\n", 32i32));
+    drop(term_color_bold());
+    drop(term_color_green());
+    drop(printf("> "));
+    drop(term_color_reset());
+    
+    // Read input
+    int8->:input_buf = malloc(1024i64) => int8->;
+    int64:bytes_read = read(0i32, input_buf => any->, 1024i64);
+    
+    // Tokenize
+    int32->:tokens = malloc(1024i64 * 4i64) => int32->;
+    int32:n_tokens = raw llama_tokenize(@vocab, input_buf, tokens, 1024i32);
+    
+    drop(term_color_cyan());
+    drop(printf("\n"));
+    drop(term_print_colored("Generating response...\n", 35i32));
+    
+    // Autoregressive loop mock
+    int32:i = 0i32;
+    ggml_cgraph:graph;
+    graph.n_nodes = 0i32;
+    
+    while (i < 15i32) {
+        drop(printf("Building cgraph...\n"));
+        drop(llama_build_cgraph(@model, @kv, @graph));
+        drop(printf("Computing forward...\n"));
+        drop(ggml_graph_compute_forward(@graph));
+        
+        // Output real decoded tokens from the vocabulary!
+        int32:mock_token_id = 14500i32 + i; // Offset to get some real tokens
+        drop(term_print_colored("Decoding token...\n", 36i32));
+        
+        int32:val_tok = vocab.item_ids[mock_token_id => int64];
+        drop(sprintf(dbg_buf => int8->, "Token id via getter: %d", val_tok));
+        drop(puts(dbg_buf => int8->));
+        
+        int8->:tok_str = vocab.item_texts[mock_token_id => int64].str;
+        
+        drop(term_color_cyan());
+        drop(puts(tok_str => int8->));
+        drop(term_color_reset());
+        drop(printf(" (done)\n"));
+        
+        i++;
+    }
+    
+    drop(term_print_colored("\n\nDone.\n", 32i32));
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:_err) {
+    exit(1i32);
+};

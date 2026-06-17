@@ -1,0 +1,39 @@
+use "../src/nitpick_llama.npk".*;
+use "../src/memory.npk".*;
+use "../src/structs.npk".*;
+use "../src/gguf_parser.npk".*;
+
+extern func:printf = int32(string:str);
+extern func:puts = int32(int8*:str);
+extern func:sprintf = int32(int8*:buf, string:fmt, int32:val);
+extern func:malloc = any*(int64:size);
+
+func:main = int32() {
+    drop(printf("Testing GGUF parse on real model...\n"));
+    
+    string:filepath = "/usr/share/ollama/.ollama/models/blobs/sha256-1194192cf2a187eb02722edcc3f77b11d21f537048ce04b67ccf8ba78863006a";
+    
+    ggml_context:ctx = raw ggml_init(1024i64 * 1024i64);
+    llama_vocab:vocab;
+    vocab.n_vocab = 0i32;
+    vocab.item_ids = malloc(0i64) => int32->;
+    vocab.item_texts = malloc(0i64) => string_ptr->;
+    vocab.item_scores = malloc(0i64) => flt32->;
+    
+    int32:res = raw gguf_parse(filepath, @ctx, @vocab);
+    
+    int8->:buf = malloc(256i64) => int8->;
+    drop(sprintf(buf, "Vocab size after parse: %d\n", vocab.n_vocab));
+    drop(puts(buf));
+    
+    int8->:t_str = vocab.item_texts[14500i64].str;
+    drop(printf("Direct token 14500: "));
+    drop(puts(t_str));
+    drop(printf("\n"));
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:_err) {
+    exit(1i32);
+};

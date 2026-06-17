@@ -1,0 +1,7 @@
+func:main = int32() {
+    flt32->:x = alloc(32i64) => flt32->;
+    flt32->:y = @(x[4i64]);
+    simd<flt32, 8>:vx = simd_load(y, 8);
+    exit(0i32);
+};
+func:failsafe = int32(tbb32:err) { exit(1i32); };

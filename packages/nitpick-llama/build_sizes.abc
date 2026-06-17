@@ -1,0 +1,129 @@
+[project]
+name = "nitpick-llama-test"
+version = "0.1.0"
+
+[target.nitpick-llama]
+type = "library"
+sources = ["src/nitpick_llama.npk", "src/memory.npk", "src/ops.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-0]
+type = "binary"
+sources = ["tests/test_size_0.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-1]
+type = "binary"
+sources = ["tests/test_size_1.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-2]
+type = "binary"
+sources = ["tests/test_size_2.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-3]
+type = "binary"
+sources = ["tests/test_size_3.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-4]
+type = "binary"
+sources = ["tests/test_size_4.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-5]
+type = "binary"
+sources = ["tests/test_size_5.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-6]
+type = "binary"
+sources = ["tests/test_size_6.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-7]
+type = "binary"
+sources = ["tests/test_size_7.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-8]
+type = "binary"
+sources = ["tests/test_size_8.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-9]
+type = "binary"
+sources = ["tests/test_size_9.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-10]
+type = "binary"
+sources = ["tests/test_size_10.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-11]
+type = "binary"
+sources = ["tests/test_size_11.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-12]
+type = "binary"
+sources = ["tests/test_size_12.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-13]
+type = "binary"
+sources = ["tests/test_size_13.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-14]
+type = "binary"
+sources = ["tests/test_size_14.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-15]
+type = "binary"
+sources = ["tests/test_size_15.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-16]
+type = "binary"
+sources = ["tests/test_size_16.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-17]
+type = "binary"
+sources = ["tests/test_size_17.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-18]
+type = "binary"
+sources = ["tests/test_size_18.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-size-19]
+type = "binary"
+sources = ["tests/test_size_19.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]

@@ -1,0 +1,35 @@
+// Tensor operations for nitpick-llama leveraging SIMD
+use "tensor.npk".*;
+
+// F32 vector dot product
+// Uses Nitpick's simd<T,N> to parallelize without relying on auto-vectorization.
+// Targets AVX2 (simd<flt32, 8>)
+pub func:ggml_vec_dot_f32 = int32(int64:n, wild flt32->:s, wild flt32->:x, wild flt32->:y) {
+    int64:i = 0i64;
+    flt32:sum = 0.0f32;
+    
+    // Process in chunks of 8
+    while (i + 8i64 <= n) {
+        simd<flt32, 8>:vx = <-((x + (i * 4i64)) => simd<flt32, 8>->);
+        simd<flt32, 8>:vy = <-((y + (i * 4i64)) => simd<flt32, 8>->);
+        
+        simd<flt32, 8>:vmul = vx * vy;
+        
+        // Horizontal add of the vector lanes
+        // Note: Nitpick simd operations allow direct lane access or reduction operations
+        sum += vmul[0] + vmul[1] + vmul[2] + vmul[3] + vmul[4] + vmul[5] + vmul[6] + vmul[7];
+        
+        i += 8i64;
+    }
+    
+    // Tail loop for remainder
+    while (i < n) {
+        flt32:val_x = <-(x + (i * 4i64));
+        flt32:val_y = <-(y + (i * 4i64));
+        sum += val_x * val_y;
+        i += 1i64;
+    }
+    
+    <-s = sum;
+    return 0i32;
+};

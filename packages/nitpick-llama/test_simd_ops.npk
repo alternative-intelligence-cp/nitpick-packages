@@ -1,0 +1,8 @@
+use "src/memory.npk".*;
+
+func:main = int32() {
+    flt32->:x = alloc(32i64) => flt32->;
+    simd<flt32,8>->:sx = x => simd<flt32,8>->;
+    simd<flt32,8>:v1 = sx[0i64];
+    return 0i32;
+};

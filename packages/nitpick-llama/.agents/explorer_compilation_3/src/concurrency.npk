@@ -1,0 +1,55 @@
+// Concurrency utilities for parallelizing tensor operations
+use "cgraph.npk".*;
+
+// Work item to be executed by a thread
+pub struct:work_item = {
+    int32:task_id;
+    int32:start_idx;
+    int32:end_idx;
+    wild ggml_cgraph_node->:node;
+};
+
+// Lock-free work channel for distributing tasks to worker threads
+pub struct:thread_channel = {
+    atomic<int64>:head;
+    atomic<int64>:tail;
+    wild work_item->:buffer;
+    int64:capacity;
+};
+
+// Push item to the channel using acquire/release memory semantics (simplified)
+pub func:channel_push = bool(thread_channel->:ch, work_item:item) {
+    // In actual implementation, we would use atomic operations like:
+    // int64:current_tail = atomic_load(ch.tail, acquire);
+    int64:current_tail = <-(->ch.tail);
+    int64:current_head = <-(->ch.head);
+    
+    if (current_tail - current_head >= ch.capacity) {
+        return false; // Queue is full
+    }
+    
+    // Write the work item into the ring buffer
+    wild work_item->:slot = ch.buffer + (current_tail % ch.capacity);
+    <-slot = item;
+    
+    // Update the tail (publish)
+    <-(->ch.tail) = current_tail + 1i64; // (release ordering)
+    return true;
+};
+
+// Pop item from the channel
+pub func:channel_pop = Result<work_item>(thread_channel->:ch) {
+    int64:current_head = <-(->ch.head);
+    int64:current_tail = <-(->ch.tail);
+    
+    if (current_head >= current_tail) {
+        // Queue is empty
+        return Result<work_item>::err(1i32);
+    }
+    
+    wild work_item->:slot = ch.buffer + (current_head % ch.capacity);
+    work_item:item = <-slot;
+    
+    <-(->ch.head) = current_head + 1i64;
+    return Result<work_item>::ok(item);
+};

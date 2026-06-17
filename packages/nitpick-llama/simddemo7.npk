@@ -1,0 +1,8 @@
+use "src/tensor.npk".*;
+func:ggml_vec_dot_f32 = int32(int64:n, flt32->:s, flt32->:x, flt32->:y) {
+    int64:i = 0i64;
+    int64: offset = i * 4i64;
+    simd<flt32, 8>:vx = (((x => int64) + offset) => simd<flt32, 8>->)[0i64];
+    pass(0i32);
+};
+func:main = int32() { exit(0i32); };

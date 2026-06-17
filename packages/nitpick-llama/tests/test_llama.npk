@@ -1,0 +1,27 @@
+use "../src/nitpick_llama.npk".*;
+use "../src/ops.npk".*;
+use "../src/gguf_parser.npk".*;
+use "../src/memory.npk".*;
+use "../src/structs.npk".*;
+
+func:main = int32() {
+    // 1MB buffer for the context
+    ggml_context:ctx = raw ggml_init(1048576i64);
+    
+    // The path to the 18GB Ollama model
+    string:path = "models/llama3-8b.gguf";
+    llama_vocab:vocab;
+    vocab.n_vocab = 0i32;
+    vocab.item_ids = malloc(0i64) => int32->;
+    vocab.item_texts = malloc(0i64) => string_ptr->;
+    vocab.item_scores = malloc(0i64) => flt32->;
+    
+    int32:tensors = raw gguf_parse(path, @ctx, @vocab);
+    
+    drop(printf("GGUF loaded!\n"));
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:_err) {
+    exit(1i32);
+};

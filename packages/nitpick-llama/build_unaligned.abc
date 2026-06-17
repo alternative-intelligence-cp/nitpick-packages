@@ -1,0 +1,9 @@
+[project]
+name = "nitpick-llama-test-unaligned"
+version = "0.1.0"
+
+[target.test-unaligned]
+type = "binary"
+sources = ["tests/test_unaligned.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]

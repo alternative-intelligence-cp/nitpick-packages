@@ -1,0 +1,24 @@
+// Token Sampler Logic
+use "tensor.npk".*;
+
+// Simple greedy argmax sampling
+pub func:llama_sample_argmax = int32(ggml_tensor->:logits) {
+    // Assuming logits is a 1D tensor of f32 containing probabilities for the vocab
+    int64:n_vocab = logits.ne_0;
+    flt32->:data = logits.data => flt32->;
+    
+    int32:max_id = 0i32;
+    flt32:max_val = -999999.0f32;
+    
+    int64:i = 0i64;
+    while (i < n_vocab) {
+        flt32:val = data[i];
+        if (val > max_val) {
+            max_val = val;
+            max_id = i => int32;
+        }
+        i++;
+    }
+    
+    pass(max_id);
+};

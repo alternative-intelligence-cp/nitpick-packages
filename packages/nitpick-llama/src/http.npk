@@ -1,0 +1,101 @@
+// POSIX Sockets and HTTP Client
+
+use "memory.npk".*;
+
+extern func:socket = int32(int32:domain, int32:type, int32:protocol);
+extern func:connect = int32(int32:sockfd, any*:addr, int32:addrlen);
+extern func:send = int64(int32:sockfd, any*:buf, int64:len, int32:flags);
+extern func:recv = int64(int32:sockfd, any*:buf, int64:len, int32:flags);
+extern func:close = int32(int32:fd);
+
+// IP address manipulation
+extern func:inet_addr = int32(string:cp);
+
+extern func:printf = int32(string:str);
+extern func:puts = int32(int8*:str);
+
+// Constants
+// AF_INET = 2
+// SOCK_STREAM = 1
+
+pub func:http_get = int32(string:ip_addr, int32:port_hi, int32:port_lo) {
+    int32:sock = socket(2i32, 1i32, 0i32);
+    if (sock < 0i32) {
+        drop(printf("Failed to create socket\n"));
+        pass(-1i32);
+    }
+    
+    // Allocate 16 bytes for sockaddr_in
+    int8->:addr = alloc(16i64);
+    
+    // Set sin_family (AF_INET = 2). Little endian: byte 0 = 2, byte 1 = 0
+    addr[0i64] = 2i8;
+    addr[1i64] = 0i8;
+    
+    // Set sin_port (network byte order).
+    // htons(80) -> 0x0050. Byte 2 = 0x00, Byte 3 = 0x50
+    addr[2i64] = port_hi => int8;
+    addr[3i64] = port_lo => int8;
+    
+    // Set sin_addr
+    int32:ip_num = inet_addr(ip_addr);
+    
+    // Cast to int32-> to write the IP
+    // Since addr is 16 bytes, offset 4 is addr_int32[1i64]
+    int32->:addr_int32 = addr => int32->;
+    addr_int32[1i64] = ip_num;
+    
+    // Set padding to 0
+    int32:i = 8i32;
+    while (i < 16i32) {
+        addr[i => int64] = 0i8;
+        i = i + 1i32;
+    }
+    
+    drop(printf("Connecting...\n"));
+    int32:res = connect(sock, addr => any->, 16i32);
+    if (res < 0i32) {
+        drop(printf("Failed to connect\n"));
+        pass(-1i32);
+    }
+    
+    drop(printf("Connected!\n"));
+    
+    // Send HTTP GET
+    int8->:req = alloc(128i64);
+    // Hardcode GET request
+    req[0i64] = 71i8; // G
+    req[1i64] = 69i8; // E
+    req[2i64] = 84i8; // T
+    req[3i64] = 32i8; // ' '
+    req[4i64] = 47i8; // /
+    req[5i64] = 32i8; // ' '
+    req[6i64] = 72i8; // H
+    req[7i64] = 84i8; // T
+    req[8i64] = 84i8; // T
+    req[9i64] = 80i8; // P
+    req[10i64] = 47i8; // /
+    req[11i64] = 49i8; // 1
+    req[12i64] = 46i8; // .
+    req[13i64] = 48i8; // 0
+    req[14i64] = 13i8; // \r
+    req[15i64] = 10i8; // \n
+    req[16i64] = 13i8; // \r
+    req[17i64] = 10i8; // \n
+    
+    int64:sent = send(sock, req => any->, 18i64, 0i32);
+    
+    // Receive response
+    int8->:buf = alloc(1024i64);
+    int64:recvd = recv(sock, buf => any->, 1023i64, 0i32);
+    
+    if (recvd > 0i64) {
+        buf[recvd] = 0i8;
+        drop(printf("Response:\n"));
+        drop(puts(buf));
+    }
+    
+    drop(close(sock));
+    
+    pass(0i32);
+};

@@ -1,0 +1,26 @@
+// Tensor operations for nitpick-llama leveraging SIMD
+use "tensor.npk".*;
+
+pub func:ggml_vec_dot_f32 = int32(int64:n, flt32->:s, flt32->:x, flt32->:y) {
+    int64:i = 0i64;
+    flt32:sum = 0.0f32;
+    int64:n_simd = n - (n % 8i64);
+
+    while (i < n_simd) {
+        flt32->:x_ptr = x[i..n];
+        flt32->:y_ptr = y[i..n];
+        simd<flt32, 8>:vx = simd_load(x_ptr, 8);
+        simd<flt32, 8>:vy = simd_load(y_ptr, 8);
+        simd<flt32, 8>:vmul = vx * vy;
+        sum = sum + simd_sum(vmul);
+        i = i + 8i64;
+    }
+
+    while (i < n) {
+        sum = sum + (x[i] * y[i]);
+        i = i + 1i64;
+    }
+
+    s[0i64] = sum;
+    pass(0i32);
+};

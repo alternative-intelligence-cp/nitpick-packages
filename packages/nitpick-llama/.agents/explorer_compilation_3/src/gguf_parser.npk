@@ -1,0 +1,47 @@
+// GGUF Parser Implementation
+use "gguf.npk".*;
+use "memory.npk".*;
+
+// Simulated external FS bindings
+func:fs_open = Result<int64>(wild int8->:path, wild int8->:mode);
+func:fs_read_int32 = Result<int32>(int64:fd);
+func:fs_read_int64 = Result<int64>(int64:fd);
+
+pub func:gguf_parse = Result<gguf_file>(wild int8->:filepath, ggml_context->:ctx) {
+    // Open the file
+    Result<int64>:f_res = fs_open(filepath, "rb");
+    int64:f = f_res ?! failsafe("Failed to open GGUF file");
+    
+    gguf_file:gf;
+    
+    // Read Magic
+    Result<int32>:magic_r = fs_read_int32(f);
+    gf.header.magic = magic_r ?! failsafe("Failed to read GGUF magic");
+    if (gf.header.magic != 0x46554747i32) { // "GGUF" in little endian
+        failsafe("Invalid GGUF magic, file corrupted");
+    }
+
+    // Read Version
+    Result<int32>:version_r = fs_read_int32(f);
+    gf.header.version = version_r ?! failsafe("Failed to read GGUF version");
+
+    // Read Tensor Count
+    Result<int64>:t_count_r = fs_read_int64(f);
+    gf.header.tensor_count = t_count_r ?! failsafe("Failed to read tensor count");
+
+    // Read KV Count
+    Result<int64>:k_count_r = fs_read_int64(f);
+    gf.header.kv_count = k_count_r ?! failsafe("Failed to read KV count");
+
+    // Allocate memory for KVs and Tensors in the context buffer
+    // Assuming size of gguf_kv is ~24 bytes and tensor_info is ~64 bytes
+    int64:kv_size = gf.header.kv_count * 24i64;
+    int64:tensor_size = gf.header.tensor_count * 64i64;
+    
+    // gf.kvs = (wild gguf_kv->) ggml_alloc(ctx, kv_size, 8i64);
+    // gf.tensors = (wild gguf_tensor_info->) ggml_alloc(ctx, tensor_size, 8i64);
+
+    // Parsing loop would go here...
+
+    return gf;
+};

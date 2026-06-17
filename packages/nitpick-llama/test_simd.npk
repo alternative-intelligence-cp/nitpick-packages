@@ -1,0 +1,4 @@
+func:test_simd = int32() {
+    simd<flt32, 8>:v1;
+    pass(0i32);
+};

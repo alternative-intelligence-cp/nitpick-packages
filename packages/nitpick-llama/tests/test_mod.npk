@@ -1,0 +1,9 @@
+use "../src/tensor.npk".*;
+func:main = int32() {
+    int64:n = 10i64;
+    int64:r = n % 8i64;
+    if (r != 2i64) {
+        exit(1i32);
+    }
+    exit(0i32);
+};

@@ -1,0 +1,28 @@
+// Computational Graph definitions
+use "tensor.npk".*;
+use "ops.npk".*;
+use "structs.npk".*;
+
+// Function to compute the graph (single threaded for now, to be parallelized)
+pub func:ggml_graph_compute_forward = int32(ggml_cgraph->:graph) {
+    int32:i = 0i32;
+    ggml_cgraph_node:node;
+    int32:op_val = 0i32;
+    while (i < graph.n_nodes) {
+        node = graph.nodes[i => int64];
+        
+        op_val = node.op;
+        if (op_val == 3i32) {
+            drop(ggml_mul_mat_f32(node.dst.ne_1, node.dst.ne_0, node.dst.data => flt32->, node.src0.data => flt32->, node.src1.data => flt32->));
+        } else if (op_val == 4i32) {
+            drop(ggml_rms_norm(node.dst.ne_0, node.dst.data => flt32->, node.src0.data => flt32->, 1e-5f32));
+        } else if (op_val == 5i32) {
+            drop(ggml_rope(node.dst.ne_0, node.dst.ne_0, 0i32, node.dst.data => flt32->, node.src0.data => flt32->));
+        } else if (op_val == 6i32) {
+            drop(ggml_silu(node.dst.ne_0, node.dst.data => flt32->, node.src0.data => flt32->));
+        }
+        
+        i++;
+    }
+    pass(0i32);
+};

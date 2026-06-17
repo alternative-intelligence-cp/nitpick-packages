@@ -1,0 +1,152 @@
+// Tensor operations for nitpick-llama leveraging SIMD
+use "tensor.npk".*;
+use "structs.npk".*;
+use "pthreads.npk".*;
+use "memory.npk".*;
+
+pub func:ggml_vec_dot_f32 = int32(int64:n, flt32->:s, flt32->:x, flt32->:y) {
+    int64:i = 0i64;
+    flt32:sum = 0.0f32;
+    int64:n8 = n / 8i64 * 8i64;
+
+    while (i < n8) {
+        flt32->:x_ptr = x[i..n];
+        flt32->:y_ptr = y[i..n];
+        simd<flt32, 8>:vx = simd_load(x_ptr, 8);
+        simd<flt32, 8>:vy = simd_load(y_ptr, 8);
+        simd<flt32, 8>:vmul = vx * vy;
+        sum = sum + simd_sum(vmul);
+        i = i + 8i64;
+    }
+
+    while (i < n) {
+        sum = sum + x[i] * y[i];
+        i = i + 1i64;
+    }
+
+    s[0i64] = sum;
+    pass(0i32);
+};
+
+extern func:sqrtf = flt32(flt32:x);
+extern func:sinf = flt32(flt32:x);
+extern func:cosf = flt32(flt32:x);
+extern func:powf = flt32(flt32:base, flt32:exp);
+extern func:expf = flt32(flt32:x);
+
+pub func:ggml_rms_norm = int32(int64:n, flt32->:dst, flt32->:src, flt32:eps) {
+    int64:i = 0i64;
+    flt32:sum = 0.0f32;
+    while (i < n) {
+        sum = sum + (src[i] * src[i]);
+        i = i + 1i64;
+    }
+    
+    flt32:mean = sum / (n => flt32);
+    flt32:scale = 1.0f32 / sqrtf(mean + eps);
+    
+    i = 0i64;
+    while (i < n) {
+        dst[i] = src[i] * scale;
+        i = i + 1i64;
+    }
+    pass(0i32);
+};
+
+pub func:ggml_silu = int32(int64:n, flt32->:dst, flt32->:src) {
+    int64:i = 0i64;
+    while (i < n) {
+        flt32:x = src[i];
+        dst[i] = x / (1.0f32 + expf(0.0f32 - x));
+        i = i + 1i64;
+    }
+    pass(0i32);
+};
+
+pub func:ggml_rope = int32(int64:n, int64:n_dims, int32:pos, flt32->:dst, flt32->:src) {
+    int64:i = 0i64;
+    while (i < n) {
+        int64:j = 0i64;
+        while (j < n_dims) {
+            flt32:theta = powf(10000.0f32, (0.0f32 - (j => flt32)) / (n_dims => flt32));
+            flt32:m_theta = (pos => flt32) * theta;
+            flt32:cos_theta = cosf(m_theta);
+            flt32:sin_theta = sinf(m_theta);
+            
+            flt32:x0 = src[i + j];
+            flt32:x1 = src[i + j + 1i64];
+            
+            dst[i + j] = x0 * cos_theta - x1 * sin_theta;
+            dst[i + j + 1i64] = x0 * sin_theta + x1 * cos_theta;
+            
+            j = j + 2i64;
+        }
+        i = i + n_dims;
+    }
+    pass(0i32);
+};
+
+func:ggml_mul_mat_worker = any->(any->:arg) {
+    any->:task_any = arg;
+    thread_task->:task = task_any => thread_task->;
+    int64:r = task->r_start;
+    while (r < task->r_end) {
+        flt32->:x_row = task->x[(r * task->cols)..((r + 1i64) * task->cols)];
+        flt32:sum = 0.0f32;
+        drop(ggml_vec_dot_f32(task->cols, @sum, x_row, task->y));
+        task->dst[r] = sum;
+        r = r + 1i64;
+    }
+    pass(0i64 => any->);
+};
+
+pub func:ggml_mul_mat_f32 = int32(int64:rows, int64:cols, flt32->:dst, flt32->:x, flt32->:y) {
+    // 4 threads
+    int64:n_threads = 4i64;
+    int64->:threads = malloc(n_threads * 8i64) => int64->;
+    any->:tasks_any = malloc(n_threads * 48i64);
+    thread_task->:tasks = tasks_any => thread_task->;
+    
+    int64:rows_per_thread = rows / n_threads;
+    if (rows_per_thread == 0i64) {
+        rows_per_thread = 1i64;
+        n_threads = 1i64;
+    }
+    
+    int64:t = 0i64;
+    while (t < n_threads) {
+        tasks[t].r_start = t * rows_per_thread;
+        tasks[t].r_end = (t + 1i64) * rows_per_thread;
+        if (t == (n_threads - 1i64)) {
+            tasks[t].r_end = rows;
+        }
+        tasks[t].cols = cols;
+        tasks[t].dst = dst;
+        tasks[t].x = x;
+        tasks[t].y = y;
+        
+        any->:task_ptr = (tasks + t * 1i64) => any->;
+        any->:thread_ptr = (threads + t * 1i64) => any->;
+        
+        drop(pthread_create(thread_ptr => any->, 0i64 => any->, ggml_mul_mat_worker => any->, task_ptr => any->));
+        
+        t = t + 1i64;
+    }
+    
+    // Join threads
+    t = 0i64;
+    while (t < n_threads) {
+        int64:tid = threads[t];
+        // pthread_join takes the thread ID by value in C, wait!
+        // pthread_join(pthread_t thread, void **retval)
+        // thread is passed by value. So it's int64 in pthread_join.
+        // Let's redefine pthread_join if needed, but any* can be passed an int64 if casted!
+        drop(pthread_join(tid => any->, 0i64 => any->));
+        t = t + 1i64;
+    }
+    
+    dalloc(threads => byte->);
+    dalloc(tasks => byte->);
+    
+    pass(0i32);
+};

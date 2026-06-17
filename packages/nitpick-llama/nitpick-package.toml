@@ -1,0 +1,7 @@
+[package]
+name = "nitpick-llama"
+version = "0.1.0"
+description = "Native LLaMA / ggml inference engine in Nitpick"
+entry = "src/nitpick_llama.npk"
+type = "pure"
+deps = ["nitpick-libc_mem", "nitpick-libc_math"]

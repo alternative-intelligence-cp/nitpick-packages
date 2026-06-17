@@ -1,0 +1,34 @@
+// LLaMA Model Architecture
+use "cgraph.npk".*;
+use "ops.npk".*;
+use "structs.npk".*;
+// Builds the computation graph for a forward pass
+pub func:llama_build_cgraph = int32(llama_model->:model, llama_kv_cache->:kv, ggml_cgraph->:graph) {
+    // 1. Embeddings lookup
+    // 2. Transformer layers (Attention + FFN)
+    int32:i = 0i32;
+    llama_layer:layer;
+    while (i < model.n_layer) {
+        layer = model.layers[i => int64];
+        
+        // Attention
+        // - RMSNorm
+        // - Q, K, V projections
+        // - RoPE on Q, K
+        // - Save K, V to KV Cache
+        // - K * Q => KQ
+        // - Softmax(KQ) * V => KQV
+        // - Output projection
+        
+        // Feed Forward
+        // - RMSNorm
+        // - W1, W3 projections
+        // - SiLU activation
+        // - W2 projection
+        
+        i++;
+    }
+    
+    // 3. Output Norm & Projection
+    pass(0i32);
+};

@@ -1,0 +1,22 @@
+use "../src/tensor.npk".*;
+func:main = int32() {
+    int64:n = 16i64;
+    flt32->:x = alloc(n * 4i64) => flt32->;
+    flt32->:y = alloc(n * 4i64) => flt32->;
+    x[8i64] = 42.0f32;
+    y[8i64] = 2.0f32;
+    
+    int64:i = 8i64;
+    flt32->:x_ptr = x[i..n];
+    flt32->:y_ptr = y[i..n];
+    
+    simd<flt32, 8>:vx = simd_load(x_ptr, 8);
+    simd<flt32, 8>:vy = simd_load(y_ptr, 8);
+    simd<flt32, 8>:vmul = vx * vy;
+    flt32:sum = simd_sum(vmul);
+    
+    if (sum != 84.0f32) {
+        exit(1i32);
+    }
+    exit(0i32);
+};

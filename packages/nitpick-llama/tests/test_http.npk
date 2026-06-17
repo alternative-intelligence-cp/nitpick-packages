@@ -1,0 +1,10 @@
+// Test HTTP Client
+
+use "../src/http.npk".*;
+
+func:main = int32() {
+    // Port 8080 is 0x1F90. port_hi = 31i32, port_lo = 144i32
+    // Localhost: 127.0.0.1
+    raw http_get("127.0.0.1", 31i32, 144i32);
+    exit(0i32);
+};

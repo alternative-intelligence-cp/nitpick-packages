@@ -1,0 +1,9 @@
+use "src/tensor.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit(1i32); };
+
+func:main = int32() {
+    flt32->:x;
+    int64:addr = x => any-> => int64;
+    exit(0i32);
+};

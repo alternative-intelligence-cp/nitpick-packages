@@ -1,0 +1,30 @@
+use "../src/nitpick_llama.npk".*;
+use "../src/ops.npk".*;
+
+func:main = int32() {
+    drop(llama_init_example());
+    int64:n = 100000i64;
+    flt32->:x = alloc(n * 4i64) => flt32->;
+    flt32->:y = alloc(n * 4i64) => flt32->;
+
+    int64:i = 0i64;
+    while (i < n) {
+        x[i] = 1.0f32;
+        y[i] = 2.0f32;
+        i = i + 1i64;
+    }
+
+    flt32->:sum_ptr = alloc(4i64) => flt32->;
+    sum_ptr[0i64] = 0.0f32;
+    drop(ggml_vec_dot_f32(n, sum_ptr, x, y));
+    flt32:sum = sum_ptr[0i64];
+
+    if (sum != 200000.0f32) {
+        exit(2i32);
+    }
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:_err) {
+    exit(1i32);
+};

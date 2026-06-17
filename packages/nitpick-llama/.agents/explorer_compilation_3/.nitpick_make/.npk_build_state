@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+
+  }
+}

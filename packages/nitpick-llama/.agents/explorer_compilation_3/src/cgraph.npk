@@ -1,0 +1,37 @@
+// Computational Graph definitions
+use "tensor.npk".*;
+
+pub enum:ggml_op = {
+    GGML_OP_NONE = 0,
+    GGML_OP_ADD = 1,
+    GGML_OP_MUL = 2,
+    GGML_OP_MUL_MAT = 3,
+    GGML_OP_RMS_NORM = 4,
+    GGML_OP_ROPE = 5
+};
+
+// Graph node representing a tensor operation
+pub struct:ggml_cgraph_node = {
+    ggml_op:op;
+    wild ggml_tensor->:src0;
+    wild ggml_tensor->:src1;
+    wild ggml_tensor->:dst;
+};
+
+// The full computation graph
+pub struct:ggml_cgraph = {
+    int32:n_nodes;
+    int32:n_leafs;
+    wild ggml_cgraph_node->:nodes;
+    wild ggml_tensor->:leafs;
+};
+
+// Function to compute the graph (single threaded for now, to be parallelized)
+pub func:ggml_graph_compute = int32(ggml_cgraph->:graph) {
+    int32:i = 0i32;
+    while (i < graph.n_nodes) {
+        // ... dispatch to ops based on node.op ...
+        i++;
+    }
+    return 0i32;
+};

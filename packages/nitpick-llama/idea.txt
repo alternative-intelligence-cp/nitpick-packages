@@ -1,0 +1,48 @@
+Phase 1: Workspace Scaffolding and Memory Foundations
+Objective: Set up the project structure and map out ggml's memory management to Nitpick's strict memory model.
+
+Agent Instructions:
+
+Initialize a nitpick.toml project for the port.
+
+Implement the foundational memory buffers. ggml requires strict memory alignment and zero runtime allocations during the computation graph execution.
+
+Use Nitpick's wild memory mode for manual heap allocation of large tensor buffers (to bypass the garbage collector) and strictly pair them with defer nitpick.free() to guarantee safe cleanup.  
+
+Phase 2: The GGUF Parser
+Objective: Implement a native reader for the GGUF file format.
+
+Agent Instructions:
+
+GGUF is a binary format designed for fast loading of models, encoding both the tensors and a standardized set of metadata key-value pairs.
+
+Create Nitpick structs to represent the gguf_context, gguf_header, gguf_kv, and gguf_tensor_info layouts.
+
+Use Nitpick's Result<T> and ?! (emphatic unwrap) operators to safely handle file I/O operations and instantly trigger the failsafe() if a model file is corrupted.  
+
+Phase 3: The ggml Tensor Core and Hardware Acceleration
+Objective: Replicate the ggml tensor operations (like mul_mat) with high-performance vector instructions.
+
+Agent Instructions:
+
+Construct the core tensor structs holding shapes, data types, and strides. Define explicit types for flt32 and flt64, and create custom data structures for quantized types (e.g., q8_0).
+
+To achieve high tokens-per-second (TPS), the ggml-cpu backend relies heavily on hardware-specific vector instructions. Instruct the agent to utilize Nitpick's simd<T, N> generic vector types (targeting AVX-512, AVX2, or NEON) to parallelize tensor math without relying on compiler auto-vectorization, which can be interrupted by safety branches.  
+
+Phase 4: Computational Graph (cgraph) and Concurrency
+Objective: Replicate the ggml_cgraph logic that schedules and executes tensor operations.
+
+Agent Instructions:
+
+Implement the graph node structures and the execution scheduler.
+
+For parallelizing matrix multiplications across multiple CPU cores, instruct the agent to leverage Nitpick's native concurrency primitives. Use atomic<T> types with explicit memory orderings (like Acquire/Release) and lock-free thread-safe Channels to distribute chunks of the tensor calculations to worker threads safely.  
+
+Phase 5: The LLaMA Architecture Integration
+Objective: Stitch the tensor core and parser together to implement the LLaMA model architecture.
+
+Agent Instructions:
+
+Translate the transformer layers (RMSNorm, RoPE, Feed-Forward, Attention) utilizing the newly built ggml operations.
+
+Task the agent with utilizing Antigravity's autonomous self-healing capabilities. Tell it to run continuous compilation tests against the rigid Result<T> and failsafe() safety layers, allowing the agent to automatically debug and patch any dimensional mismatch errors or unhandled edge cases in the tensor operations overnight.

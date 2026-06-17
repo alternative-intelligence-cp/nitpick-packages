@@ -1,0 +1,36 @@
+// Tests for nitpick-llama
+use "../src/nitpick_llama.npk".*;
+use "../src/ops.npk".*;
+
+func:main = int32(argc, argv) {
+    llama_init_example();
+    
+    // Test SIMD math vector dot product
+    int64:n = 8i64;
+    wild flt32->:x = alloc(n * 4i64);
+    wild flt32->:y = alloc(n * 4i64);
+    
+    int64:i = 0i64;
+    while (i < n) {
+        <-(x + i*4i64) = 1.0f32;
+        <-(y + i*4i64) = 2.0f32;
+        i++;
+    }
+    
+    flt32:sum = 0.0f32;
+    ggml_vec_dot_f32(n, @sum, x, y);
+    
+    // 8 elements * (1.0 * 2.0) = 16.0
+    if (sum != 16.0f32) {
+        exit(2i32); // Fail
+    }
+    
+    dalloc(x);
+    dalloc(y);
+    
+    exit(0i32); // Success
+};
+
+func:failsafe = int32(tbb32:_err) {
+    exit(1i32);
+};

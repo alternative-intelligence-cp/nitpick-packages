@@ -1,0 +1,30 @@
+use "src/tensor.npk".*;
+
+func:failsafe = int32(tbb32:err) { exit(1i32); };
+
+pub func:ggml_vec_dot_f32 = int32(int64:n, flt32->:s, flt32->:x, flt32->:y) {
+    int64:i = 0i64;
+    flt32:sum = 0.0f32;
+
+    int64: n8 = n / 8i64;
+    int64: i8 = 0i64;
+
+    while (i8 < n8) {
+        simd<flt32, 8>: vx = (x => simd<flt32, 8>->)[i8];
+        simd<flt32, 8>: vy = (y => simd<flt32, 8>->)[i8];
+        simd<flt32, 8>: vmul = vx * vy;
+        sum = sum + simd_sum(vmul);
+        i8 = i8 + 1i64;
+    }
+
+    i = n8 * 8i64;
+    while (i < n) {
+        sum = sum + x[i] * y[i];
+        i = i + 1i64;
+    }
+
+    s[0i64] = sum;
+    pass(0i32);
+};
+
+func:main = int32() { exit(0i32); };

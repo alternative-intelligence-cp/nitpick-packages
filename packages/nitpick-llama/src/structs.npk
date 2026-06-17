@@ -1,0 +1,73 @@
+use "tensor.npk".*;
+
+pub struct:ggml_cgraph_node = {
+    int32:op;
+    ggml_tensor->:src0;
+    ggml_tensor->:src1;
+    ggml_tensor->:dst;
+};
+
+pub struct:ggml_cgraph = {
+    int32:n_nodes;
+    int32:n_leafs;
+    ggml_cgraph_node->:nodes;
+    ggml_tensor->:leafs;
+};
+
+pub struct:llama_layer = {
+    ggml_tensor->:attention_norm;
+    ggml_tensor->:wq;
+    ggml_tensor->:wk;
+    ggml_tensor->:wv;
+    ggml_tensor->:wo;
+    ggml_tensor->:ffn_norm;
+    ggml_tensor->:w1;
+    ggml_tensor->:w2;
+    ggml_tensor->:w3;
+};
+
+pub struct:llama_model = {
+    ggml_tensor->:tok_embeddings;
+    ggml_tensor->:norm;
+    ggml_tensor->:output;
+    llama_layer->:layers;
+    int32:n_layer;
+};
+
+pub struct:llama_kv_cache = {
+    int32:head;
+    int32:size;
+    int32:n;
+    ggml_tensor->:k;
+    ggml_tensor->:v;
+};
+
+pub struct:llama_vocab_item = {
+    int32:id;
+    int8->:text;
+    flt32:score;
+};
+
+pub struct:string_ptr = {
+    int8->:str;
+};
+
+pub struct:llama_vocab = {
+    int32:n_vocab;
+    int32:padding;
+    int32->:item_ids;
+    string_ptr->:item_texts;
+    flt32->:item_scores;
+    int32:bos_token_id;
+    int32:eos_token_id;
+    int32:pad_token_id;
+};
+
+pub struct:thread_task = {
+    int64:r_start;
+    int64:r_end;
+    int64:cols;
+    flt32->:dst;
+    flt32->:x;
+    flt32->:y;
+};

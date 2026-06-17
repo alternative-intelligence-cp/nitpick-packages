@@ -1,0 +1,4 @@
+// POSIX Pthreads bindings
+
+extern func:pthread_create = int32(any*:thread, any*:attr, any*:start_routine, any*:arg);
+extern func:pthread_join = int32(any*:thread, any*:retval);

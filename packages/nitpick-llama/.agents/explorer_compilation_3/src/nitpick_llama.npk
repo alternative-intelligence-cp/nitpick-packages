@@ -1,0 +1,13 @@
+// nitpick-llama entry point
+
+use "memory.npk".*;
+
+pub func:llama_init_example = int32() {
+    // Example of strictly pairing allocation with defer nitpick.free()
+    int64:size = 1024i64 * 1024i64 * 256i64; // 256 MB buffer
+    ggml_context:ctx = ggml_init(size);
+    defer { ggml_free(ctx); }
+
+    // Context is now ready for zero-allocation tensor operations
+    return 0i32;
+};

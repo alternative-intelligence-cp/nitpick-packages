@@ -1,0 +1,9 @@
+[project]
+name = "nitpick-llama-test-complexity"
+version = "0.1.0"
+
+[target.test-complexity]
+type = "binary"
+sources = ["tests/test_complexity.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]

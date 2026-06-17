@@ -1,0 +1,5 @@
+func:main = int32() {
+    flt32->:x = alloc(32i64) => flt32->;
+    flt32->:x_ptr = x + 8i64;
+    exit(0i32);
+};

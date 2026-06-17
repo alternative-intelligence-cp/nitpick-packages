@@ -1,0 +1,59 @@
+// Quantization Operations
+use "tensor.npk".*;
+use "ops.npk".*;
+
+// Extracts 4-bit nibbles and scales them
+pub func:dequantize_row_q4_0 = int32(block_q4_0->:x, flt32->:y, int64:k) {
+    int64:nb = k / 32i64;
+    int64:i = 0i64;
+    while (i < nb) {
+        flt32:d = (x[i].d => flt32);
+        
+        int64:j = 0i64;
+        while (j < 16i64) {
+            int8:v = x[i].qs[j];
+            
+            int8:v0 = (v & 15i8) - 8i8;
+            int8:v1 = ((v >> 4i8) & 15i8) - 8i8;
+            
+            y[i * 32i64 + j] = (v0 => flt32) * d;
+            y[i * 32i64 + j + 16i64] = (v1 => flt32) * d;
+            
+            j++;
+        }
+        i++;
+    }
+    pass(0i32);
+};
+
+// SIMD dot product of Q4_0 and Q8_0 without full decompression
+pub func:ggml_vec_dot_q4_0_q8_0 = int32(int64:n, flt32->:s, block_q4_0->:x, block_q8_0->:y) {
+    int64:nb = n / 32i64;
+    int64:i = 0i64;
+    flt32:sum = 0.0f32;
+    
+    while (i < nb) {
+        flt32:d0 = (x[i].d => flt32);
+        flt32:d1 = (y[i].d => flt32);
+        
+        int64:j = 0i64;
+        while (j < 16i64) {
+            int8:v0 = x[i].qs[j];
+            int8:v0_0 = (v0 & 15i8) - 8i8;
+            int8:v0_1 = ((v0 >> 4i8) & 15i8) - 8i8;
+            
+            int8:v1_0 = y[i].qs[j];
+            int8:v1_1 = y[i].qs[j + 16i64];
+            
+            flt32:val0 = (v0_0 => flt32) * (v1_0 => flt32);
+            flt32:val1 = (v0_1 => flt32) * (v1_1 => flt32);
+            
+            sum = sum + ((val0 + val1) * d0 * d1);
+            j++;
+        }
+        i++;
+    }
+    
+    s[0i64] = sum;
+    pass(0i32);
+};

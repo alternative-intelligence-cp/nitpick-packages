@@ -1,0 +1,74 @@
+// ANSI Terminal UI
+
+extern func:printf = int32(string:str);
+extern func:puts = int32(int8*:str);
+extern func:fflush = int32(any*:file_ptr);
+
+// ANSI Color Codes
+// Reset: \033[0m
+// Red: \033[31m
+// Green: \033[32m
+// Yellow: \033[33m
+// Blue: \033[34m
+// Magenta: \033[35m
+// Cyan: \033[36m
+// White: \033[37m
+// Bold: \033[1m
+
+pub func:term_color_reset = int32() {
+    drop(printf("\033[0m"));
+    pass(0i32);
+};
+
+pub func:term_color_red = int32() {
+    drop(printf("\033[31m"));
+    pass(0i32);
+};
+
+pub func:term_color_green = int32() {
+    drop(printf("\033[32m"));
+    pass(0i32);
+};
+
+pub func:term_color_yellow = int32() {
+    drop(printf("\033[33m"));
+    pass(0i32);
+};
+
+pub func:term_color_blue = int32() {
+    drop(printf("\033[34m"));
+    pass(0i32);
+};
+
+pub func:term_color_magenta = int32() {
+    drop(printf("\033[35m"));
+    pass(0i32);
+};
+
+pub func:term_color_cyan = int32() {
+    drop(printf("\033[36m"));
+    pass(0i32);
+};
+
+pub func:term_color_bold = int32() {
+    drop(printf("\033[1m"));
+    pass(0i32);
+};
+
+pub func:term_clear = int32() {
+    drop(printf("\033[2J\033[H"));
+    pass(0i32);
+};
+
+pub func:term_print_colored = int32(string:str, int32:color) {
+    if (color == 31i32) { drop(term_color_red()); }
+    if (color == 32i32) { drop(term_color_green()); }
+    if (color == 33i32) { drop(term_color_yellow()); }
+    if (color == 34i32) { drop(term_color_blue()); }
+    if (color == 35i32) { drop(term_color_magenta()); }
+    if (color == 36i32) { drop(term_color_cyan()); }
+    
+    drop(printf(str));
+    drop(term_color_reset());
+    pass(0i32);
+};

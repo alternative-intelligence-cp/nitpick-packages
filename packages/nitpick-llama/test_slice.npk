@@ -1,0 +1,10 @@
+use "src/tensor.npk".*;
+func:failsafe = int32(tbb32:err) { exit(1i32); };
+
+func:main = int32() {
+    int64:n = 8i64;
+    flt32->:x = alloc(n * 4i64) => flt32->;
+    int64:i = 0i64;
+    flt32->:x_slice = x[i..n];
+    exit(0i32);
+};

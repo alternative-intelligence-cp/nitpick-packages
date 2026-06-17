@@ -1,0 +1,174 @@
+// GGUF Parser Implementation
+use "gguf.npk".*;
+use "memory.npk".*;
+use "structs.npk".*;
+
+// POSIX FFI Bindings
+extern func:open = int32(string:path, int32:flags);
+extern func:read = int64(int32:fd, any*:buf, int64:count);
+extern func:mmap = int8*(int64:addr, int64:length, int32:prot, int32:flags, int32:fd, int64:offset);
+extern func:lseek = int64(int32:fd, int64:offset, int32:whence);
+extern func:putchar = int32(int32:c);
+extern func:printf = int32(string:str);
+extern func:strncmp = int32(int8*:s1, string:s2, int64:n);
+extern func:malloc = any*(int64:size);
+extern func:sprintf = int32(int8*:buf, string:fmt, int32:val);
+
+extern func:puts = int32(int8*:str);
+
+func:set_item_text = int32(string_ptr->:texts, int32:k, int8->:str) {
+    texts[k => int64].str = str;
+    pass(0i32);
+};
+
+func:skip_value = int32(int32:fd, int32:v_type) {
+    if (v_type == 0i32) { drop(lseek(fd, 1i64, 1i32)); pass(0i32); }
+    if (v_type == 1i32) { drop(lseek(fd, 1i64, 1i32)); pass(0i32); }
+    if (v_type == 2i32) { drop(lseek(fd, 2i64, 1i32)); pass(0i32); }
+    if (v_type == 3i32) { drop(lseek(fd, 2i64, 1i32)); pass(0i32); }
+    if (v_type == 4i32) { drop(lseek(fd, 4i64, 1i32)); pass(0i32); }
+    if (v_type == 5i32) { drop(lseek(fd, 4i64, 1i32)); pass(0i32); }
+    if (v_type == 6i32) { drop(lseek(fd, 4i64, 1i32)); pass(0i32); }
+    if (v_type == 7i32) { drop(lseek(fd, 1i64, 1i32)); pass(0i32); }
+    if (v_type == 10i32) { drop(lseek(fd, 8i64, 1i32)); pass(0i32); }
+    if (v_type == 11i32) { drop(lseek(fd, 8i64, 1i32)); pass(0i32); }
+    if (v_type == 12i32) { drop(lseek(fd, 8i64, 1i32)); pass(0i32); }
+    
+    if (v_type == 8i32) { // string
+        int64:slen = 0i64;
+        drop(read(fd, @slen => any->, 8i64));
+        drop(lseek(fd, slen, 1i32));
+        pass(0i32);
+    }
+    
+    if (v_type == 9i32) { // array
+        int32:a_type = 0i32;
+        drop(read(fd, @a_type => any->, 4i64));
+        int64:a_len = 0i64;
+        drop(read(fd, @a_len => any->, 8i64));
+        
+        int32:k = 0i32;
+        while (k < (a_len => int32)) {
+            drop(skip_value(fd, a_type));
+            k = k + 1i32;
+        }
+        pass(0i32);
+    }
+    
+    pass(0i32);
+};
+
+pub func:gguf_parse = int32(string:model_path, ggml_context->:ctx, llama_vocab->:vocab) {
+    int32:fd = 0i32;
+    fd = open(model_path, 0i32);
+
+
+    if (fd < 0i32) {
+        pass(-1i32);
+    }
+    
+    // Read Magic
+    int32:magic = 0i32;
+    int64:bytes_read = read(fd, @magic => any->, 4i64);
+    if (bytes_read != 4i64) { pass(-2i32); }
+    if (magic != 0x46554747i32) { // "GGUF" in little endian
+        pass(-3i32);
+    }
+
+    // Read Version
+    int32:version = 0i32;
+    drop(read(fd, @version => any->, 4i64));
+
+    // Read Tensor Count
+    int64:t_count = 0i64;
+    drop(read(fd, @t_count => any->, 8i64));
+
+    // Read KV Count
+    int64:k_count = 0i64;
+    drop(read(fd, @k_count => any->, 8i64));
+
+    // Map into memory (PROT_READ=1, MAP_PRIVATE=2)
+    // Map into memory (PROT_READ=1, MAP_PRIVATE=2)
+    // Map the file up to 20GB to ensure the header is available
+    int8->:mmap_ptr = mmap(0i64, 20000000000i64, 1i32, 2i32, fd, 0i64) => int8->;
+    
+    drop(printf("\n--- GGUF HYPERPARAMETERS ---\n"));
+    
+    int8->:key_buf = malloc(1024i64) => int8->;
+    
+    int32:i = 0i32;
+    while (i < (k_count => int32)) {
+        int64:key_len = 0i64;
+        drop(read(fd, @key_len => any->, 8i64));
+        
+        drop(read(fd, key_buf => any->, key_len));
+        key_buf[key_len] = 0i8;
+        
+        int32:is_tokens = strncmp(key_buf, "tokenizer.ggml.tokens", key_len);
+        
+        int32:v_type = 0i32;
+        drop(read(fd, @v_type => any->, 4i64));
+        
+        if (key_len == 21i64) {
+            drop(printf("Found key of length 21: \n"));
+            drop(puts(key_buf => int8->));
+            if (is_tokens == 0i32) {
+                drop(printf("Found vocabulary array! Extracting...\n"));
+                
+                int32:a_type = 0i32;
+                drop(read(fd, @a_type => any->, 4i64));
+                int64:a_len = 0i64;
+                drop(read(fd, @a_len => any->, 8i64));
+                
+                vocab->n_vocab = a_len => int32;
+                vocab->item_ids = malloc(a_len * 4i64) => int32->;
+                vocab->item_texts = malloc(a_len * 16i64) => string_ptr->;
+                vocab->item_scores = malloc(a_len * 4i64) => flt32->;
+                
+                int32->:ptr_ids = vocab->item_ids;
+                any->:ptr_texts_any = vocab->item_texts => any->;
+                flt32->:ptr_scores = vocab->item_scores;
+                
+                int32:k = 0i32;
+                while (k < (a_len => int32)) {
+                    int64:slen = 0i64;
+                    drop(read(fd, @slen => any->, 8i64));
+                    
+                    int8->:s_buf = malloc(slen + 1i64) => int8->;
+                    drop(read(fd, s_buf => any->, slen));
+                    s_buf[slen] = 0i8;
+                    
+                    drop(set_item_text(ptr_texts_any => string_ptr->, k, s_buf));
+                    ptr_scores[k => int64] = 0.0f32;
+                    ptr_ids[k => int64] = k;
+                    
+                    k = k + 1i32;
+                    if (k == 14500i32) {
+                        drop(printf("Token 14500 parsed!\n"));
+                    }
+                    if (k == 50000i32) {
+                        drop(printf("Extracted 50000 tokens...\n"));
+                    }
+                }
+                
+                drop(printf("Extracted vocabulary!\n"));
+                
+                // Skip the rest of the loop logic for this iteration
+                i = i + 1i32;
+                continue;
+            }
+        }
+        
+        drop(skip_value(fd, v_type));
+        
+        i = i + 1i32;
+        
+        // Print the first 15 keys to prove parsing works!
+        if (i == 15i32) {
+            drop(printf("... (skipping remaining metadata)\n\n"));
+            // Don't early exit anymore so we can find the tokens!
+        }
+    }
+    
+    pass(0i32);
+};

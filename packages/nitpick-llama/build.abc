@@ -1,0 +1,64 @@
+[project]
+name = "nitpick-llama"
+version = "0.1.0"
+
+[target.nitpick-llama]
+type = "library"
+sources = ["src/nitpick_llama.npk", "src/memory.npk", "src/ops.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-nitpick-llama]
+type = "binary"
+sources = ["tests/test_llama.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.chat-cli]
+type = "binary"
+sources = ["src/chat_cli.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-gguf-parse]
+type = "binary"
+sources = ["tests/test_gguf_parse.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-slice]
+type = "binary"
+sources = ["tests/test_slice.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-mod]
+type = "binary"
+sources = ["tests/test_mod.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+
+[target.test-simd]
+type = "binary"
+sources = ["tests/test_simd_harness.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-simd-slice]
+type = "binary"
+sources = ["tests/test_simd_slice.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-my-harness]
+type = "binary"
+sources = [".agents/teamwork_preview_explorer_fix_compilation_3_2/test_harness_fixed.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]
+
+[target.test-http]
+type = "binary"
+sources = ["tests/test_http.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]

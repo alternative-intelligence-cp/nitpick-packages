@@ -1,0 +1,31 @@
+// Tensor structures for nitpick-llama
+
+pub enum:ggml_type = {
+    GGML_TYPE_F32  = 0,
+    GGML_TYPE_F16  = 1,
+    GGML_TYPE_Q4_0 = 2,
+    GGML_TYPE_Q4_1 = 3,
+    GGML_TYPE_Q8_0 = 8
+};
+
+// 8-bit quantization block (e.g. Q8_0)
+pub struct:block_q8_0 = {
+    flt16:d;       // delta
+    int8[32]:qs;   // quants
+};
+
+pub struct:ggml_tensor = {
+    ggml_type:data_type;
+    int32:n_dims;
+    int64:ne_0;
+    int64:ne_1;
+    int64:ne_2;
+    int64:ne_3;
+    int64:nb_0; // stride in bytes
+    int64:nb_1;
+    int64:nb_2;
+    int64:nb_3;
+    
+    wild any->:data;
+    wild int8->:name;
+};

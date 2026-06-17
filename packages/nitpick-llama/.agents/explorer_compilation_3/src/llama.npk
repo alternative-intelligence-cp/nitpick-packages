@@ -1,0 +1,38 @@
+// LLaMA Model Architecture
+use "cgraph.npk".*;
+use "ops.npk".*;
+
+pub struct:llama_layer = {
+    // Attention Norm
+    wild ggml_tensor->:attention_norm;
+    
+    // Attention Projections
+    wild ggml_tensor->:wq;
+    wild ggml_tensor->:wk;
+    wild ggml_tensor->:wv;
+    wild ggml_tensor->:wo;
+    
+    // FFN Norm
+    wild ggml_tensor->:ffn_norm;
+    
+    // Feed Forward Network
+    wild ggml_tensor->:w1;
+    wild ggml_tensor->:w2;
+    wild ggml_tensor->:w3;
+};
+
+pub struct:llama_model = {
+    wild ggml_tensor->:tok_embeddings;
+    wild ggml_tensor->:norm;
+    wild ggml_tensor->:output;
+    
+    wild llama_layer->:layers;
+    int32:n_layer;
+};
+
+// Builds the computation graph for a forward pass
+pub func:llama_build_cgraph = int32(llama_model->:model, ggml_cgraph->:graph) {
+    // This is where we would stitch the RMSNorm, RoPE, Attention, and FFN layers.
+    // Graph nodes would be added to graph.nodes
+    return 0i32;
+};

@@ -1,0 +1,51 @@
+// GGUF Data Structures
+
+pub enum:gguf_type = {
+    GGUF_TYPE_UINT8 = 0,
+    GGUF_TYPE_INT8 = 1,
+    GGUF_TYPE_UINT16 = 2,
+    GGUF_TYPE_INT16 = 3,
+    GGUF_TYPE_UINT32 = 4,
+    GGUF_TYPE_INT32 = 5,
+    GGUF_TYPE_FLOAT32 = 6,
+    GGUF_TYPE_BOOL = 7,
+    GGUF_TYPE_STRING = 8,
+    GGUF_TYPE_ARRAY = 9,
+    GGUF_TYPE_UINT64 = 10,
+    GGUF_TYPE_INT64 = 11,
+    GGUF_TYPE_FLOAT64 = 12
+};
+
+pub struct:gguf_header = {
+    int32:magic;
+    int32:version;
+    int64:tensor_count;
+    int64:kv_count;
+};
+
+pub struct:gguf_kv = {
+    wild int8->:key;
+    gguf_type:value_type;
+    wild byte->:value;
+};
+
+pub struct:gguf_tensor_info = {
+    wild int8->:name;
+    int32:data_type; // e.g., f32, f16, q8_0
+    int32:n_dims;
+    int64:dims_0;
+    int64:dims_1;
+    int64:dims_2;
+    int64:dims_3;
+    int64:offset;
+};
+
+pub struct:gguf_file = {
+    gguf_header:header;
+    wild gguf_kv->:kvs;
+    wild gguf_tensor_info->:tensors;
+    
+    // The raw mmap'd or loaded buffer
+    wild byte->:data;
+    int64:size;
+};

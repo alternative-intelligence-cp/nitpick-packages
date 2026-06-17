@@ -1,0 +1,5 @@
+func:main = int32() {
+    wild byte->:x = alloc(10i64) => byte->;
+    wild byte->:y = ( (x => int64) + 5i64 ) => byte->;
+    return 0i32;
+};

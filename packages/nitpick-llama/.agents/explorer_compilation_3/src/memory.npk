@@ -1,0 +1,39 @@
+// Memory Foundations for nitpick-llama
+// Implements manual memory buffers for strict alignment and zero runtime allocations
+
+pub struct:ggml_context = {
+    byte->:mem_buffer;
+    int64:mem_size;
+    int64:mem_used;
+};
+
+pub func:ggml_init = ggml_context(int64:size) {
+    wild byte->:buf = nitpick.alloc(size);
+    ggml_context:ctx;
+    ctx.mem_buffer = buf;
+    ctx.mem_size = size;
+    ctx.mem_used = 0i64;
+    return ctx;
+};
+
+pub func:ggml_free = int32(ggml_context:ctx) {
+    nitpick.free(ctx.mem_buffer);
+    return 0i32;
+};
+
+// Allocates a chunk of aligned memory from the context buffer
+pub func:ggml_alloc = wild byte->(ggml_context->:ctx, int64:size, int64:alignment) {
+    int64:offset = ctx.mem_used;
+    int64:remainder = offset % alignment;
+    if (remainder != 0i64) {
+        offset = offset + (alignment - remainder);
+    }
+    if ((offset + size) > ctx.mem_size) {
+        // Out of memory in this context
+        failsafe("ggml_alloc out of memory");
+    }
+    
+    wild byte->:ptr = ctx.mem_buffer + offset;
+    ctx.mem_used = offset + size;
+    return ptr;
+};
