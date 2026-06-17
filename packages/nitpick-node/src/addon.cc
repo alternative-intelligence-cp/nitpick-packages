@@ -15,7 +15,7 @@ struct NpkString {
 };
 
 extern "C" {
-    NpkResult nitpick_execute_request(void* method, void* url, void* headers_pipe, void* body, int32_t* out_status, int64_t* out_body_ptr, int64_t* out_error_ptr);
+    NpkResult nitpick_execute_request(void* method, void* url, void* headers_pipe, void* body, int32_t* out_status, int64_t* out_headers_ptr, int64_t* out_body_ptr, int64_t* out_error_ptr);
     int64_t ptr_from_string(void* s) { return (int64_t)s; }
 
     void* npk_alloc(size_t size) { return malloc(size); }
@@ -110,6 +110,7 @@ Napi::Object ExecuteRequest(const Napi::CallbackInfo& info) {
     void* npk_body = CreateNitpickString(body.c_str(), body.length());
 
     int32_t status = 0;
+    int64_t headers_ptr = 0;
     int64_t body_ptr = 0;
     int64_t error_ptr = 0;
 
@@ -119,7 +120,7 @@ Napi::Object ExecuteRequest(const Napi::CallbackInfo& info) {
     NpkString body_str = { npk_body, (int64_t)body.length() };
 
     std::cout << "[ADDON] Calling nitpick_execute_request..." << std::endl;
-    nitpick_execute_request(&method_str, &url_str, &headers_str, &body_str, &status, &body_ptr, &error_ptr);
+    nitpick_execute_request(&method_str, &url_str, &headers_str, &body_str, &status, &headers_ptr, &body_ptr, &error_ptr);
     std::cout << "[ADDON] nitpick_execute_request returned!" << std::endl;
 
     // Free the strings we allocated for Nitpick
@@ -129,6 +130,15 @@ Napi::Object ExecuteRequest(const Napi::CallbackInfo& info) {
     free(npk_body);
 
     // Extract the body from the returned pointer
+    std::string res_headers_str = "";
+    if (headers_ptr != 0) {
+        NpkString* ret_headers = (NpkString*)headers_ptr;
+        if (ret_headers->data != nullptr) {
+            char* nitpick_headers = (char*)ret_headers->data;
+            res_headers_str = std::string(nitpick_headers, ret_headers->length);
+        }
+    }
+
     std::string res_body_str = "";
     if (body_ptr != 0) {
         NpkString* ret_body = (NpkString*)body_ptr;
@@ -149,6 +159,7 @@ Napi::Object ExecuteRequest(const Napi::CallbackInfo& info) {
 
     Napi::Object result = Napi::Object::New(env);
     result.Set("status", Napi::Number::New(env, status));
+    result.Set("headers", Napi::String::New(env, res_headers_str));
     result.Set("body", Napi::String::New(env, res_body_str));
     result.Set("error", Napi::String::New(env, res_error_str));
 

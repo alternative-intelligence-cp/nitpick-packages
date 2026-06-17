@@ -16,6 +16,7 @@ console.log("HELLO!");
 
 console.log("\n--- Response ---");
 console.log("Status:", response.status);
+console.log("Headers:", response.headers);
 console.log("Error:", response.error);
 console.log("Body:", response.body);
 console.log("----------------");
