@@ -1,0 +1,17 @@
+{
+  "name": "nitpick-node",
+  "version": "1.0.0",
+  "description": "Node.js Addon for Nitpick Interoperability",
+  "main": "index.js",
+  "scripts": {
+    "build": "make build",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "bindings": "^1.5.0",
+    "node-addon-api": "^8.0.0"
+  },
+  "devDependencies": {
+    "node-gyp": "^10.1.0"
+  }
+}

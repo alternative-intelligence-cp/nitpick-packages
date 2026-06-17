@@ -1,0 +1,7 @@
+[project]
+name = "core_logic"
+version = "1.0.0"
+
+[target.core_logic]
+type = "shared_library"
+sources = ["src/core_logic.npk"]

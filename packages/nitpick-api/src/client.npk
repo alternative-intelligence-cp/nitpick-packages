@@ -1,0 +1,89 @@
+use "types.npk".*;
+use "nitpick_http.npk".*;
+
+extern "libc" { func:string_length = int64(string:s); }
+
+func:_split_and_set_headers = NIL(string:headers_pipe) {
+    int64:len = string_length(headers_pipe);
+    int64:start = 0i64;
+    int64:sep = 0i64;
+    string:rest = "";
+    string:header = "";
+    
+    drop(http_clear_headers());
+    
+    while (start < len) {
+        rest = string_substring(headers_pipe, start, len);
+        sep = string_index_of(rest, "|");
+        if (sep < 0i64) { break; }
+        
+        header = string_substring(rest, 0i64, sep);
+        if (string_length(header) > 0i64) {
+            drop(http_set_header(header));
+        }
+        start = start + sep + 1i64;
+    }
+    pass NIL;
+};
+
+pub func:client_init = int32() {
+    pass raw http_init();
+};
+
+pub func:client_cleanup = NIL() {
+    pass raw http_cleanup();
+};
+
+pub func:client_send = Response(Request:req) {
+    Response:res;
+    int32:success = 0i32;
+    
+    drop(_split_and_set_headers(req.headers_pipe));
+    drop(http_set_timeout(req.timeout));
+    drop(http_follow_redirects(req.follow_redirects));
+    
+    if (string_equals(req.method, "GET")) {
+        success = raw http_get(req.url);
+    } else {
+        if (string_equals(req.method, "POST")) {
+            success = raw http_post(req.url, req.body);
+        } else {
+            if (string_equals(req.method, "PUT")) {
+                success = raw http_put(req.url, req.body);
+            } else {
+                if (string_equals(req.method, "DELETE")) {
+                    success = raw http_delete(req.url);
+                } else {
+                    if (string_equals(req.method, "PATCH")) {
+                        success = raw http_patch(req.url, req.body);
+                    } else {
+                        if (string_equals(req.method, "HEAD")) {
+                            success = raw http_head(req.url);
+                        } else {
+                            // default GET
+                            success = raw http_get(req.url);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    res.status = raw http_status();
+    res.body = raw http_body();
+    res.headers = raw http_response_headers();
+    res.error = raw http_error();
+    
+    pass res;
+};
+
+pub func:Client_get = Response(string:url) {
+    Request:req = raw Request_create("GET", url);
+    pass raw client_send(req);
+};
+
+pub func:Client_post = Response(string:url, string:body) {
+    Request:req = raw Request_create("POST", url);
+    req = raw Request_set_body(req, body);
+    pass raw client_send(req);
+};

@@ -14,6 +14,18 @@
 #include <string.h>
 #include <curl/curl.h>
 
+/* ── string conversions ────────────────────────────────────────────────── */
+
+static const char* from_npk_string(const char* npk_str) {
+    if (!npk_str) return "";
+    return npk_str;
+}
+
+static void* to_npk_string(const char* c_str, size_t len) {
+    // Return standard C string, wrapper handles NpkString struct
+    return (void*)c_str;
+}
+
 /* ── response buffer ─────────────────────────────────────────────────── */
 
 static char  *g_resp_buf  = NULL;
@@ -43,15 +55,16 @@ void nitpick_http_enable_ollama_stream(int32_t enable) {
 }
 
 const char* nitpick_http_get_ollama_content(void) {
-    return g_ollama_stream_buf ? g_ollama_stream_buf : "";
+    const char* str = g_ollama_stream_buf ? g_ollama_stream_buf : "";
+    return (const char*)to_npk_string(str, strlen(str));
 }
 
 const char* nitpick_http_get_ollama_tool(void) {
-    return g_ollama_tool_buf;
+    return (const char*)to_npk_string(g_ollama_tool_buf, strlen(g_ollama_tool_buf));
 }
 
 const char* nitpick_http_get_ollama_arg(void) {
-    return g_ollama_arg_buf;
+    return (const char*)to_npk_string(g_ollama_arg_buf, strlen(g_ollama_arg_buf));
 }
 
 int32_t nitpick_http_get_ollama_conf(void) {
@@ -225,12 +238,15 @@ static struct curl_slist *g_headers = NULL;
 static int32_t            g_status  = 0;
 static char               g_error[CURL_ERROR_SIZE] = {0};
 
-/* ── init / cleanup ──────────────────────────────────────────────────── */
+/* ── init & cleanup ────────────────────────────────────────────────────── */
 
 int32_t nitpick_http_init(void) {
+    fprintf(stderr, "[SHIM] nitpick_http_init called\n");
     if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) return 0;
+    fprintf(stderr, "[SHIM] curl_global_init succeeded\n");
     g_curl = curl_easy_init();
     if (!g_curl) return 0;
+    fprintf(stderr, "[SHIM] curl_easy_init succeeded\n");
     curl_easy_setopt(g_curl, CURLOPT_WRITEFUNCTION, write_cb);
     curl_easy_setopt(g_curl, CURLOPT_HEADERFUNCTION, header_cb);
     curl_easy_setopt(g_curl, CURLOPT_ERRORBUFFER, g_error);
@@ -251,10 +267,13 @@ void nitpick_http_cleanup(void) {
 /* ── request configuration ───────────────────────────────────────────── */
 
 void nitpick_http_set_header(const char *header) {
-    g_headers = curl_slist_append(g_headers, header);
+    g_headers = curl_slist_append(g_headers, from_npk_string(header));
 }
 
 void nitpick_http_clear_headers(void) {
+    if (g_curl) {
+        curl_easy_setopt(g_curl, CURLOPT_HTTPHEADER, NULL);
+    }
     if (g_headers) { curl_slist_free_all(g_headers); g_headers = NULL; }
 }
 
@@ -267,7 +286,7 @@ void nitpick_http_set_follow_redirects(int32_t follow) {
 }
 
 void nitpick_http_set_user_agent(const char *ua) {
-    if (g_curl) curl_easy_setopt(g_curl, CURLOPT_USERAGENT, ua);
+    if (g_curl) curl_easy_setopt(g_curl, CURLOPT_USERAGENT, from_npk_string(ua));
 }
 
 /* ── perform request (internal) ──────────────────────────────────────── */
@@ -286,6 +305,10 @@ static int32_t perform(void) {
     CURLcode res = curl_easy_perform(g_curl);
     if (res != CURLE_OK) {
         g_status = -1;
+        fprintf(stderr, "[SHIM] CURL ERROR: %d - %s\n", res, curl_easy_strerror(res));
+        if (strlen(g_error) == 0) {
+            snprintf(g_error, sizeof(g_error), "CURL error %d: %s", res, curl_easy_strerror(res));
+        }
         return 0;
     }
     long code = 0;
@@ -297,31 +320,34 @@ static int32_t perform(void) {
 /* ── HTTP methods ────────────────────────────────────────────────────── */
 
 int32_t nitpick_http_get(const char *url) {
+    fprintf(stderr, "[SHIM] nitpick_http_get called\n");
     if (!g_curl) return 0;
-    curl_easy_setopt(g_curl, CURLOPT_URL, url);
+    fprintf(stderr, "[SHIM] g_curl is valid, setting URL to: '%s'\n", from_npk_string(url));
+    curl_easy_setopt(g_curl, CURLOPT_URL, from_npk_string(url));
     curl_easy_setopt(g_curl, CURLOPT_HTTPGET, 1L);
+    fprintf(stderr, "[SHIM] performing request...\n");
     return perform();
 }
 
 int32_t nitpick_http_post(const char *url, const char *body) {
     if (!g_curl) return 0;
-    curl_easy_setopt(g_curl, CURLOPT_URL, url);
+    curl_easy_setopt(g_curl, CURLOPT_URL, from_npk_string(url));
     curl_easy_setopt(g_curl, CURLOPT_POST, 1L);
-    curl_easy_setopt(g_curl, CURLOPT_POSTFIELDS, body);
+    curl_easy_setopt(g_curl, CURLOPT_POSTFIELDS, from_npk_string(body));
     return perform();
 }
 
 int32_t nitpick_http_put(const char *url, const char *body) {
     if (!g_curl) return 0;
-    curl_easy_setopt(g_curl, CURLOPT_URL, url);
+    curl_easy_setopt(g_curl, CURLOPT_URL, from_npk_string(url));
     curl_easy_setopt(g_curl, CURLOPT_CUSTOMREQUEST, "PUT");
-    curl_easy_setopt(g_curl, CURLOPT_POSTFIELDS, body);
+    curl_easy_setopt(g_curl, CURLOPT_POSTFIELDS, from_npk_string(body));
     return perform();
 }
 
 int32_t nitpick_http_delete(const char *url) {
     if (!g_curl) return 0;
-    curl_easy_setopt(g_curl, CURLOPT_URL, url);
+    curl_easy_setopt(g_curl, CURLOPT_URL, from_npk_string(url));
     curl_easy_setopt(g_curl, CURLOPT_CUSTOMREQUEST, "DELETE");
     curl_easy_setopt(g_curl, CURLOPT_POSTFIELDS, "");
     return perform();
@@ -329,15 +355,15 @@ int32_t nitpick_http_delete(const char *url) {
 
 int32_t nitpick_http_patch(const char *url, const char *body) {
     if (!g_curl) return 0;
-    curl_easy_setopt(g_curl, CURLOPT_URL, url);
+    curl_easy_setopt(g_curl, CURLOPT_URL, from_npk_string(url));
     curl_easy_setopt(g_curl, CURLOPT_CUSTOMREQUEST, "PATCH");
-    curl_easy_setopt(g_curl, CURLOPT_POSTFIELDS, body);
+    curl_easy_setopt(g_curl, CURLOPT_POSTFIELDS, from_npk_string(body));
     return perform();
 }
 
 int32_t nitpick_http_head(const char *url) {
     if (!g_curl) return 0;
-    curl_easy_setopt(g_curl, CURLOPT_URL, url);
+    curl_easy_setopt(g_curl, CURLOPT_URL, from_npk_string(url));
     curl_easy_setopt(g_curl, CURLOPT_NOBODY, 1L);
     int32_t r = perform();
     curl_easy_setopt(g_curl, CURLOPT_NOBODY, 0L);
@@ -351,7 +377,7 @@ int32_t nitpick_http_status(void) {
 }
 
 const char *nitpick_http_response_body(void) {
-    return g_resp_buf ? g_resp_buf : "";
+    return (const char*)to_npk_string(g_resp_buf ? g_resp_buf : "", g_resp_len);
 }
 
 int32_t nitpick_http_response_length(void) {
@@ -359,11 +385,11 @@ int32_t nitpick_http_response_length(void) {
 }
 
 const char *nitpick_http_response_headers(void) {
-    return g_resp_headers ? g_resp_headers : "";
+    return (const char*)to_npk_string(g_resp_headers ? g_resp_headers : "", g_resp_headers_len);
 }
 
 const char *nitpick_http_error(void) {
-    return g_error;
+    return (const char*)to_npk_string(g_error, strlen(g_error));
 }
 
 /* ── URL encoding ────────────────────────────────────────────────────── */
@@ -373,13 +399,15 @@ static const char *g_last_result = "";
 
 const char *nitpick_http_url_encode(const char *str) {
     if (g_encoded) { curl_free(g_encoded); g_encoded = NULL; }
-    if (!g_curl) { g_last_result = ""; return g_last_result; }
-    g_encoded = curl_easy_escape(g_curl, str, 0);
+    if (!g_curl) { g_last_result = ""; return (const char*)to_npk_string(g_last_result, 0); }
+    g_encoded = curl_easy_escape(g_curl, from_npk_string(str), 0);
     g_last_result = g_encoded ? g_encoded : "";
-    return g_last_result;
+    return (const char*)to_npk_string(g_last_result, strlen(g_last_result));
 }
 
-const char *nitpick_http_last_result(void) { return g_last_result; }
+const char *nitpick_http_last_result(void) { 
+    return (const char*)to_npk_string(g_last_result, strlen(g_last_result)); 
+}
 
 /* ── test helpers ────────────────────────────────────────────────────── */
 

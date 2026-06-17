@@ -1,0 +1,22 @@
+use "types.npk".*;
+use "client.npk".*;
+
+extern "addon" { func:ptr_from_string = int64(string:s); }
+
+pub func:nitpick_execute_request = NIL(string:method, string:url, string:headers_pipe, string:body, int32->:out_status, int64->:out_body_ptr, int64->:out_error_ptr) {
+    drop(client_init());
+    
+    Request:req = raw Request_create(method, url);
+    req.headers_pipe = headers_pipe;
+    req.body = body;
+    req.timeout = 30i32;
+    req.follow_redirects = 1i32;
+    
+    Response:res = raw client_send(req);
+    
+    out_status[0i64] = res.status;
+    out_body_ptr[0i64] = ptr_from_string(res.body);
+    out_error_ptr[0i64] = ptr_from_string(res.error);
+    
+    pass NIL;
+};

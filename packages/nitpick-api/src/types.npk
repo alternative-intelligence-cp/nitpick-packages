@@ -1,0 +1,38 @@
+pub struct:Request = {
+    string:method;
+    string:url;
+    string:headers_pipe;
+    string:body;
+    int32:timeout;
+    int32:follow_redirects;
+};
+
+pub struct:Response = {
+    int32:status;
+    string:headers;
+    string:body;
+    string:error;
+};
+
+pub func:Request_create = Request(string:method, string:url) {
+    Request:r;
+    r.method = method;
+    r.url = url;
+    r.headers_pipe = "";
+    r.body = "";
+    r.timeout = 30i32;
+    r.follow_redirects = 1i32;
+    pass r;
+};
+
+pub func:Request_add_header = Request(Request:req, string:header) {
+    Request:out = req;
+    out.headers_pipe = string_concat(out.headers_pipe, string_concat(header, "|"));
+    pass out;
+};
+
+pub func:Request_set_body = Request(Request:req, string:body) {
+    Request:out = req;
+    out.body = body;
+    pass out;
+};

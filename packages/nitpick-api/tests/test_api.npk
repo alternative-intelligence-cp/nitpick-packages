@@ -1,0 +1,50 @@
+use "../src/types.npk".*;
+use "../src/client.npk".*;
+
+extern "libc" { 
+    func:string_length = int64(string:s); 
+    func:printf = int32(string:fmt, int32:v1);
+}
+
+pub func:main = int32() {
+    int32:init_res = raw client_init();
+    if (init_res == 0i32) {
+        print("Failed to init HTTP client\n");
+        exit(1i32);
+    }
+    
+    print("Testing GET request...\n");
+    Request:req = raw Request_create("GET", "http://httpbin.org/get");
+    req = raw Request_add_header(req, "User-Agent: nitpick-api/0.1.0");
+    req = raw Request_add_header(req, "Accept: application/json");
+    
+    Response:res = raw client_send(req);
+    
+    if (res.status == 200i32) {
+        print("Status: 200 OK\n");
+    } else {
+        print("Status: ERROR\n");
+    }
+    
+    print("Error: ");
+    print(res.error);
+    print("\nBody received.\n");
+    print("\n");
+    
+    print("Testing Client_get helper...\n");
+    Response:res_get = raw Client_get("http://httpbin.org/get");
+    if (res_get.status == 200i32) {
+        print("Status: 200 OK\n");
+    } else {
+        print("Status: ERROR\n");
+    }
+    
+    raw client_cleanup();
+    print("All tests passed.\n");
+    exit(0i32);
+};
+
+pub func:failsafe = int32(tbb32:err) {
+    print("Failsafe triggered.\n");
+    exit(1i32);
+};

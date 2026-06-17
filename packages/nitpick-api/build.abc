@@ -1,0 +1,17 @@
+[project]
+name = "nitpick-api"
+version = "0.1.0"
+
+[target.nitpick-api]
+type = "library"
+sources = ["src/types.npk", "src/client.npk"]
+deps = []
+flags = ["-I", "../nitpick-http/src"]
+
+[target.test-nitpick-api]
+type = "binary"
+sources = ["tests/test_api.npk"]
+deps = ["nitpick-api"]
+flags = ["-I", "../nitpick-http/src"]
+link_libraries = ["nitpick_http_shim", "curl"]
+link_paths = ["../nitpick-http"]
