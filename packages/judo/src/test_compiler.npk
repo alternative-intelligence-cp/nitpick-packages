@@ -1,0 +1,6 @@
+func:foo = NIL() { pass NIL; };
+
+func:main = int32() {
+    drop raw foo();
+    exit 0i32;
+};

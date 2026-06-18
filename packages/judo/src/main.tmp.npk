@@ -1,0 +1,18 @@
+use "../../nitpick-tui/src/nitpick_tui.npk".*;
+use "../../nitpick-str/src/nitpick_str.npk".*;
+use "db.npk".*;
+use "stdlib/string.npk".*;
+
+func:failsafe = int32(tbb32:err) {
+    raw Tui.shutdown();
+    exit 1i32;
+};
+
+func:main = int32() {
+    int32:running = 1i32;
+    while (running == 1i32) {
+        int32:vk = Input.read_key();
+        if (vk == 113i32) { running = 0i32; }
+    }
+    exit 0i32;
+};

@@ -1,0 +1,108 @@
+use "../../nitpick-sqlite/src/nitpick_sqlite.npk".*;
+use "../../nitpick-mysql/src/nitpick_mysql.npk".*;
+use "../../nitpick-db-pool/src/nitpick_db_pool.npk".*;
+use "stdlib/string.npk".*;
+
+extern "libc" {
+    func:sprintf = int32(int64:buf, string:fmt, int64:v1, string:v2, int32:v3);
+}
+
+int32:g_db_engine = 0i32; // 0 = SQLite, 1 = MySQL
+int32:g_db_handle = -1i32;
+
+pub func:db_init = int32(int32:engine) {
+    g_db_engine = engine;
+    
+    if (g_db_handle != -1i32) {
+        if (g_db_engine == 0i32) { drop(raw Sqlite.disconnect(g_db_handle)); }
+        if (g_db_engine == 1i32) { drop(raw mysql_db_disconnect(g_db_handle)); }
+        g_db_handle = -1i32;
+    }
+    
+    if (engine == 0i32) {
+        g_db_handle = raw Sqlite.open("judo.db\0");
+        drop(raw Sqlite.exec(g_db_handle, "CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY, title TEXT, done INT);\0"));
+    } else {
+        g_db_handle = raw mysql_db_connect("localhost\0", "root\0", "password\0", "judo_db\0", 3306i32);
+        drop(raw mysql_db_exec(g_db_handle, "CREATE TABLE IF NOT EXISTS todos (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(255), done INT);\0"));
+    }
+    pass 1i32;
+};
+
+pub func:db_get_todos = string() {
+    string:res = "ID,Task,Done\0";
+    if (g_db_handle == -1i32) { pass res; }
+    
+    if (g_db_engine == 0i32) {
+        int32:stmt = raw Sqlite.prepare(g_db_handle, "SELECT id, title, done FROM todos ORDER BY id ASC;\0");
+        while (raw Sqlite.step(stmt) == 1i32) { // 1 for SQLITE_ROW in the shim
+            int64:id = raw Sqlite.column_int(0i32);
+            string:title = raw Sqlite.column_text(1i32);
+            int64:done = raw Sqlite.column_int(2i32);
+            
+            int64:buf = nitpick_libc_mem_malloc(1024i64);
+            int32:len = sprintf(buf, "|%ld,%s,%d\0", id, title, @cast<int32>(done));
+            string:row_s = nitpick_libc_string_from_buf(buf, 0i64, @cast<int64>(len));
+            res = string_concat(res, row_s);
+            drop(nitpick_libc_mem_free(buf));
+        }
+        drop(raw Sqlite.end_stmt(stmt));
+    } else {
+        drop(raw mysql_db_simple_query(g_db_handle, "SELECT id, title, done FROM todos ORDER BY id ASC;\0"));
+        while (raw mysql_db_next_row(g_db_handle) == 1i32) {
+            int64:id = raw mysql_db_column_int(g_db_handle, 0i32);
+            string:title = raw mysql_db_column_text(g_db_handle, 1i32);
+            int64:done = raw mysql_db_column_int(g_db_handle, 2i32);
+            
+            int64:buf = nitpick_libc_mem_malloc(1024i64);
+            int32:len = sprintf(buf, "|%ld,%s,%d\0", id, title, @cast<int32>(done));
+            string:row_s = nitpick_libc_string_from_buf(buf, 0i64, @cast<int64>(len));
+            res = string_concat(res, row_s);
+            drop(nitpick_libc_mem_free(buf));
+        }
+        drop(raw mysql_db_clear_result(g_db_handle));
+    }
+    pass res;
+};
+
+pub func:db_add_todo = int32(string:title) {
+    if (g_db_engine == 0i32) {
+        int32:stmt = raw Sqlite.prepare(g_db_handle, "INSERT INTO todos (title, done) VALUES (?, 0);\0");
+        drop(raw Sqlite.bind_text(stmt, 1i32, title));
+        drop(raw Sqlite.step(stmt));
+        drop(raw Sqlite.end_stmt(stmt));
+    } else {
+        drop(raw mysql_db_param_clear());
+        drop(raw mysql_db_param_add_text(title));
+        drop(raw mysql_db_execute(g_db_handle, "INSERT INTO todos (title, done) VALUES (?, 0);\0"));
+    }
+    pass 1i32;
+};
+
+pub func:db_toggle_todo = int32(int64:id) {
+    if (g_db_engine == 0i32) {
+        int32:stmt = raw Sqlite.prepare(g_db_handle, "UPDATE todos SET done = 1 - done WHERE id = ?;\0");
+        drop(raw Sqlite.bind_int(stmt, 1i32, id));
+        drop(raw Sqlite.step(stmt));
+        drop(raw Sqlite.end_stmt(stmt));
+    } else {
+        drop(raw mysql_db_param_clear());
+        drop(raw mysql_db_param_add_int(id));
+        drop(raw mysql_db_execute(g_db_handle, "UPDATE todos SET done = 1 - done WHERE id = ?;\0"));
+    }
+    pass 1i32;
+};
+
+pub func:db_delete_todo = int32(int64:id) {
+    if (g_db_engine == 0i32) {
+        int32:stmt = raw Sqlite.prepare(g_db_handle, "DELETE FROM todos WHERE id = ?;\0");
+        drop(raw Sqlite.bind_int(stmt, 1i32, id));
+        drop(raw Sqlite.step(stmt));
+        drop(raw Sqlite.end_stmt(stmt));
+    } else {
+        drop(raw mysql_db_param_clear());
+        drop(raw mysql_db_param_add_int(id));
+        drop(raw mysql_db_execute(g_db_handle, "DELETE FROM todos WHERE id = ?;\0"));
+    }
+    pass 1i32;
+};

@@ -1,0 +1,248 @@
+use "nitpick_tui.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_display.npk".*;
+use "nitpick_input.npk".*;
+use "db.npk".*;
+use "string.npk".*;
+use "nitpick_thread.npk".*;
+use "mutex.npk".*;
+
+extern "libc" {
+    func:getchar = int32();
+    func:judo_push_key = void(int32:key);
+    func:judo_pop_key = int32();
+    func:judo_spawn_workers = void();
+}
+
+pub int32:g_running = 1i32;
+pub int64:g_csv_data_ptr = 0i64;
+pub string:g_csv_data = "ID,Task,Done|\0";
+pub int64:g_mtx = 0i64;
+pub int32:g_needs_redraw = 1i32;
+
+// DB Actions
+pub int32:g_db_action = 0i32; // 1=fetch, 2=add, 3=toggle, 4=delete, 5=switch
+pub string:g_db_add_task = "\0";
+pub int64:g_db_target_id = 0i64;
+pub int32:g_db_target_mode = 0i32;
+
+
+
+func:failsafe = int32(tbb32:err) {
+    drop(Tui.shutdown());
+    exit 1i32;
+};
+
+pub func:judo_input_worker = int64(int64:arg) {
+    while (g_running == 1i32) {
+        int32:vk = getchar();
+        if (vk != -1i32) {
+            drop(judo_push_key(vk));
+        }
+        drop(thread_sleep_ms(5i64));
+    }
+    pass 0i64;
+};
+
+pub func:judo_db_worker = int64(int64:arg) {
+    while (g_running == 1i32) {
+        int32:action = 0i32;
+        int32:ign = raw Mutex.lock(g_mtx);
+        action = g_db_action;
+        g_db_action = 0i32;
+        int32:ign2 = raw Mutex.unlock(g_mtx);
+
+        if (action > 0i32) {
+            if (action == 2i32) { // add
+                int32:d1 = raw db_add_todo(g_db_add_task);
+            }
+            if (action == 3i32) { // toggle
+                int32:d2 = raw db_toggle_todo(g_db_target_id);
+            }
+            if (action == 4i32) { // delete
+                int32:d3 = raw db_delete_todo(g_db_target_id);
+            }
+            if (action == 5i32) { // switch
+                int32:d4 = raw db_init(g_db_target_mode);
+            }
+
+            string:new_csv = raw db_get_todos();
+            
+            int32:ign3 = raw Mutex.lock(g_mtx);
+            g_csv_data = new_csv;
+            g_needs_redraw = 1i32;
+            int32:ign4 = raw Mutex.unlock(g_mtx);
+        } else {
+            drop(thread_sleep_ms(20i64));
+        }
+    }
+    pass 0i64;
+};
+
+func:main = int32() {
+    drop(Tui.init());
+    
+    g_mtx = raw Mutex.create();
+    g_db_action = 5i32; // Init + fetch
+    g_db_target_mode = 0i32;
+    
+    drop(judo_spawn_workers());
+    
+    int32:grid_sel = 0i32;
+    int32:show_dialog = 0i32;
+    int32:db_mode = 0i32;
+    
+    int64:input_buf = nitpick_libc_mem_malloc(256i64);
+    drop(nitpick_libc_mem_write_byte(input_buf, 0i64, 0i32));
+    int64:input_len = 0i64;
+
+    while (g_running == 1i32) {
+        int32:vk = judo_pop_key();
+        int32:do_render = 0i32;
+
+        if (vk == -1i32) {
+            int32:ign5 = raw Mutex.lock(g_mtx);
+            do_render = g_needs_redraw;
+            int32:ign6 = raw Mutex.unlock(g_mtx);
+        } else {
+            do_render = 1i32;
+        }
+
+        if (do_render == 1i32) {
+            int32:ign7 = raw Mutex.lock(g_mtx);
+            g_needs_redraw = 0i32;
+            string:csv_data = g_csv_data;
+            int32:ign8 = raw Mutex.unlock(g_mtx);
+
+            print("\x1b[2J\x1b[H\0");
+            
+            string:title_s = "Judo - Multi-DB Todo List (Mode: SQLite)\0";
+            if (db_mode == 1i32) {
+                title_s = "Judo - Multi-DB Todo List (Mode: MySQL)\0";
+            }
+
+            Widget:title = raw Tui.label(2i32, 1i32, title_s, 6i32, 0i32);
+            drop(Tui.draw_widget(title));
+
+            LayoutCursor:content = raw Layout.create(2i32, 3i32, 2i32);
+
+            Widget:grid = raw Tui.datagrid(0i32, 0i32, 60i32, 15i32, csv_data, grid_sel);
+            grid.focused = 1i32;
+            grid = raw Layout.hbox_add(content, grid);
+
+            drop(Layout.newline(content));
+            
+            Widget:help = raw Tui.label(2i32, 20i32, "Keys: [a] Add  [Enter] Toggle  [d] Delete  [s] Switch DB  [q] Quit\0", 7i32, 0i32);
+            drop(Tui.draw_widget(help));
+            
+            drop(Tui.draw_widget(grid));
+
+            if (show_dialog == 1i32) {
+                string:typed_str = nitpick_libc_string_from_buf(input_buf, 0i64, input_len);
+                string:input_label = string_concat("Enter Task: \0", typed_str);
+                Widget:dlg = raw Tui.dialog(10i32, 5i32, 50i32, 5i32, "Add New Task|\0", 0i32);
+                drop(Tui.draw_widget(dlg));
+                Widget:inp = raw Tui.input(12i32, 7i32, 46i32, input_label);
+                inp.focused = 1i32;
+                drop(Tui.draw_widget(inp));
+            }
+
+            if (show_dialog == 1i32) {
+                if (vk == 27i32) { show_dialog = 0i32; }
+                if (vk == 10i32) {
+                    if (input_len > 0i64) {
+                        string:new_task = nitpick_libc_string_from_buf(input_buf, 0i64, input_len);
+                        int32:ign_add1 = raw Mutex.lock(g_mtx);
+                        g_db_add_task = new_task;
+                        g_db_action = 2i32;
+                        int32:ign_add2 = raw Mutex.unlock(g_mtx);
+                    }
+                    show_dialog = 0i32;
+                }
+                if (vk == 127i32) {
+                    if (input_len > 0i64) {
+                        input_len = input_len - 1i64;
+                        drop(nitpick_libc_mem_write_byte(input_buf, input_len, 0i32));
+                    }
+                }
+                if (vk >= 32i32) {
+                    if (vk <= 126i32) {
+                        if (input_len < 250i64) {
+                            drop(nitpick_libc_mem_write_byte(input_buf, input_len, vk));
+                            input_len = input_len + 1i64;
+                            drop(nitpick_libc_mem_write_byte(input_buf, input_len, 0i32));
+                        }
+                    }
+                }
+            }
+            
+            if (show_dialog == 0i32) {
+                if (vk == 113i32) { g_running = 0i32; } // 'q'
+                if (vk == 27i32) { g_running = 0i32; }  // ESC
+                
+                if (vk == 200i32) { grid_sel = grid_sel - 1i32; if (grid_sel < 0i32) { grid_sel = 0i32; } } // UP
+                if (vk == 201i32) { grid_sel = grid_sel + 1i32; } // DOWN
+
+                if (vk == 97i32) { // 'a'
+                    show_dialog = 1i32;
+                    input_len = 0i64;
+                    drop(nitpick_libc_mem_write_byte(input_buf, 0i64, 0i32));
+                }
+                if (vk == 115i32) { // 's'
+                    db_mode = 1i32 - db_mode;
+                    int32:ign_s1 = raw Mutex.lock(g_mtx);
+                    g_db_target_mode = db_mode;
+                    g_db_action = 5i32;
+                    int32:ign_s2 = raw Mutex.unlock(g_mtx);
+                    grid_sel = 0i32;
+                }
+                if (vk == 100i32) { // 'd'
+                    int64:h1 = raw str_split(csv_data, "|\0");
+                    int64:row_count = raw str_split_count(h1);
+                    if (@cast<int64>(grid_sel) < row_count) {
+                        if (grid_sel > 0i32) { // Skip header
+                            string:row = raw str_split_get(h1, @cast<int64>(grid_sel));
+                            int64:h2 = raw str_split(row, ",\0");
+                            string:id_str = raw str_split_get(h2, 0i64);
+                            int64:id = raw str_to_int(id_str);
+                            if (id > 0i64) {
+                                int32:ign_d1 = raw Mutex.lock(g_mtx);
+                                g_db_target_id = id;
+                                g_db_action = 4i32;
+                                int32:ign_d2 = raw Mutex.unlock(g_mtx);
+                                grid_sel = grid_sel - 1i32;
+                            }
+                            raw str_split_free(h2);
+                        }
+                    }
+                    raw str_split_free(h1);
+                }
+                if (vk == 10i32) { // 'Enter'
+                    int64:h1 = raw str_split(csv_data, "|\0");
+                    int64:row_count = raw str_split_count(h1);
+                    if (@cast<int64>(grid_sel) < row_count) {
+                        if (grid_sel > 0i32) { // Skip header
+                            string:row = raw str_split_get(h1, @cast<int64>(grid_sel));
+                            int64:h2 = raw str_split(row, ",\0");
+                            string:id_str = raw str_split_get(h2, 0i64);
+                            int64:id = raw str_to_int(id_str);
+                            if (id > 0i64) {
+                                int32:ign_t1 = raw Mutex.lock(g_mtx);
+                                g_db_target_id = id;
+                                g_db_action = 3i32;
+                                int32:ign_t2 = raw Mutex.unlock(g_mtx);
+                            }
+                            raw str_split_free(h2);
+                        }
+                    }
+                    raw str_split_free(h1);
+                }
+            }
+        } else {
+            drop(thread_sleep_ms(10i64));
+        }
+    }
+
+    drop(Tui.shutdown());
+    exit 0i32;
+};
