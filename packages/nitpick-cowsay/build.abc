@@ -1,9 +1,0 @@
-[project]
-name = "nitpick-cowsay"
-version = "0.1.0"
-
-[target.nitpick-cowsay]
-type = "binary"
-sources = ["src/cowsay.npk", "src/main.npk"]
-deps = []
-flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]

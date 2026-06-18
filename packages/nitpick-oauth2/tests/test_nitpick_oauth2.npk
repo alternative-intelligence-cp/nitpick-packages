@@ -1,0 +1,51 @@
+use "nitpick_oauth2.npk".*;
+
+extern "c" {
+    func:printf = int32(string:fmt);
+}
+
+pub func:main = int32() {
+    string:client_id = "123456";
+    string:redirect_uri = "https://myapp.com/callback";
+    string:scope = "read:user";
+    string:state = "random_nonce_xyz";
+    
+    // 1. Generate Auth URL
+    string:auth_url = raw Oauth2.get_auth_url(
+        "https://github.com/login/oauth/authorize",
+        client_id, redirect_uri, scope, state
+    );
+    drop(printf("Generated Auth URL:\n\0"));
+    string:u_out = string_concat(auth_url, "\n\n\0");
+    drop(printf(u_out));
+    
+    // 2. Parse Callback URL
+    string:callback_url = "https://myapp.com/callback?code=abc123def456&state=random_nonce_xyz";
+    string:code = raw Oauth2.extract_code(callback_url);
+    int64:state_ok = raw Oauth2.verify_state(callback_url, state);
+    
+    drop(printf("Extracted Code: \0"));
+    string:c_out = string_concat(code, "\n\0");
+    drop(printf(c_out));
+    
+    drop(printf("State Verification OK: \0"));
+    if (state_ok == 1i64) {
+        drop(printf("true\n\n\0"));
+    } else {
+        drop(printf("false\n\n\0"));
+    }
+    
+    // 3. Generate Token Payload
+    string:payload = raw Oauth2.get_token_payload(client_id, "my_secret_999", code, redirect_uri);
+    drop(printf("Token Exchange Payload:\n\0"));
+    string:p_out = string_concat(payload, "\n\n\0");
+    drop(printf(p_out));
+    
+    // 4. Generate Bearer Header
+    string:header = raw Oauth2.get_bearer_header("gho_xyz789");
+    drop(printf("Bearer Header:\n\0"));
+    string:h_out = string_concat(header, "\n\0");
+    drop(printf(h_out));
+    
+    exit 0i32;
+};

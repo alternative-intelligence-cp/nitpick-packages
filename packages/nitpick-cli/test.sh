@@ -1,22 +1,19 @@
 #!/usr/bin/env bash
 set -e
 
-echo "Compiling test_nitpick_cli..."
-/home/randy/Workspace/REPOS/nitpick/build/npkc tests/test_nitpick_cli.npk \
+echo "Compiling cli_args.c..."
+clang -c src/cli_args.c -o cli_args.o
+ar rcs libcli_args.a cli_args.o
+
+echo "Compiling test_cli..."
+/home/randy/Workspace/REPOS/nitpick/build/npkc tests/test_cli.npk \
     -I src \
-    -I ../nitpick-str/src \
-    --emit-llvm -o out_test.ll
+    -L. -lcli_args \
+    -L../../../nitpick-libc/shim \
+    -o test_cli
 
-sed -i 's/getelementptr inbounds nuw/getelementptr inbounds/g' out_test.ll
+echo "Running test_cli without args..."
+./test_cli
 
-echo "Linking test_nitpick_cli..."
-make nitpick_cli_shim.o
-clang++ -O1 out_test.ll \
-    nitpick_cli_shim.o \
-    /home/randy/Workspace/REPOS/nitpick/build/libnitpick_runtime.a \
-    -L/home/randy/Workspace/REPOS/nitpick-libc/shim \
-    -lnitpick_libc_mem -lnitpick_libc_io -lnitpick_libc_math -lm \
-    -o test_nitpick_cli
-
-echo "Running test_nitpick_cli..."
-./test_nitpick_cli
+echo "Running test_cli with args..."
+./test_cli --verbose --port 8080 file.txt

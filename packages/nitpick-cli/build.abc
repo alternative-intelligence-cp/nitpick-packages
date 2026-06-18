@@ -1,15 +1,6 @@
-[project]
-name = "nitpick-cli"
-version = "0.11.2"
+LIBRARY "nitpick_cli"
 
-[target.nitpick-cli]
-type = "library"
-sources = ["src/nitpick_cli.npk"]
-deps = []
-flags = ["-L.", "-lnitpick_cli_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+SOURCES:
+    src/nitpick_cli.npk
 
-[target.test-nitpick-cli]
-type = "binary"
-sources = ["tests/test_nitpick_cli.npk"]
-deps = []
-flags = ["-I", "src", "-L.", "-lnitpick_cli_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+DEPENDENCIES:

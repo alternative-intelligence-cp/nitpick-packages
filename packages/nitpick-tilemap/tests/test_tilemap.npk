@@ -1,0 +1,50 @@
+use "nitpick_tilemap.npk".*;
+
+extern "c" {
+    func:printf = int32(string:fmt);
+    func:printf_f = int32(string:fmt, float64:v);
+    func:printf_i = int32(string:fmt, int64:v);
+}
+
+pub func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    drop printf("--- nitpick-tilemap Tests ---\n\0");
+    
+    raw TileMap.clear();
+    
+    // Create a 10x10 map with 32x32 tiles
+    int64:map1 = raw TileMap.create_map(10i64, 10i64, 32.0, 32.0);
+    drop printf_i("Created Map ID: %lld\n\0", map1);
+    
+    // Test initial values (should be -1)
+    int64:t = raw TileMap.get_tile(map1, 5i64, 5i64);
+    drop printf_i("Initial tile at (5,5): %lld (expected -1)\n\0", t);
+    
+    // Set tile
+    raw TileMap.set_tile(map1, 5i64, 5i64, 42i64);
+    t = raw TileMap.get_tile(map1, 5i64, 5i64);
+    drop printf_i("Tile at (5,5): %lld (expected 42)\n\0", t);
+    
+    // Out of bounds get/set
+    raw TileMap.set_tile(map1, 10i64, 10i64, 99i64); // OOB right/bottom
+    raw TileMap.set_tile(map1, 0i64 - 1i64, 0i64, 99i64); // OOB left
+    
+    t = raw TileMap.get_tile(map1, 10i64, 10i64);
+    drop printf_i("Tile OOB (10,10): %lld (expected -1)\n\0", t);
+    
+    // Test coordinate math
+    int64:tx = raw TileMap.world_to_tile_x(map1, 100.0);
+    drop printf_i("World 100.0x -> Tile X: %lld (expected 3)\n\0", tx);
+    
+    int64:ty = raw TileMap.world_to_tile_y(map1, -10.0);
+    drop printf_i("World -10.0y -> Tile Y: %lld (expected -1)\n\0", ty);
+    
+    float64:wx = raw TileMap.tile_to_world_x(map1, 3.0);
+    drop printf_f("Tile X 3 -> World X: %f (expected 96.000000)\n\0", wx);
+    
+    drop printf("--- All Tests Finished ---\n\0");
+    exit 0i32;
+};

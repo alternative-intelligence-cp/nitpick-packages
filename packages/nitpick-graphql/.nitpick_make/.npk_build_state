@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-graphql": {
+      "artifact_path": ".nitpick_make/build/libnitpick-graphql.a",
+      "source_hash": "fnv1a:6197114767328164643",
+      "command_hash": 16934450074135495069,
+      "source_timestamp": 18446744069053631813,
+      "build_timestamp": 1781744203,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-nitpick-graphql": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-graphql",
+      "source_hash": "fnv1a:17550248372884637892",
+      "command_hash": 16934450074135495069,
+      "source_timestamp": 18446744069053631813,
+      "build_timestamp": 1781744203,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

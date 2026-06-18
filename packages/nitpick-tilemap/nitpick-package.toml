@@ -1,0 +1,6 @@
+[package]
+name = "nitpick-tilemap"
+version = "0.1.0"
+description = "A fast, 2D tilemap and grid logic library for Nitpick"
+
+[dependencies]

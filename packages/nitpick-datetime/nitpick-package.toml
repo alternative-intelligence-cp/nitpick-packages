@@ -1,0 +1,6 @@
+[package]
+name = "nitpick-datetime"
+version = "0.1.0"
+description = "Native datetime handling, formatting, and parsing"
+
+[dependencies]

@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-wasm-bindgen"
+version = "0.1.0"
+
+[target.nitpick-wasm-bindgen]
+type = "library"
+sources = ["src/nitpick_wasm_bindgen.npk"]
+deps = []
+flags = ["-I", "src"]
+
+[target.test-nitpick-wasm-bindgen]
+type = "binary"
+sources = ["tests/test_wasm_bindgen.npk"]
+deps = ["nitpick-wasm-bindgen"]
+flags = ["-I", "src", "--target=wasm32-wasi", "-Wl,--export=wasm_alloc", "-Wl,--export=wasm_free", "-Wl,--export=process_string", "-Wl,--undefined=wasm_alloc", "-Wl,--undefined=wasm_free", "-Wl,--allow-undefined"]

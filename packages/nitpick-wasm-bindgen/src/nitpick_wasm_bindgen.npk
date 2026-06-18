@@ -1,0 +1,32 @@
+// nitpick_wasm_bindgen.npk
+
+extern "env" {
+    func:js_malloc = int64(int64:size);
+    func:js_free = void(int64:ptr);
+}
+
+extern "nitpick_libc_string" {
+    func:nitpick_libc_string_copy_to_buf = void(int64:dst, int64:dst_off, string:src, int64:src_off, int64:len);
+    func:nitpick_libc_string_from_buf = string(int64:buf, int64:offset, int64:len);
+}
+
+// Memory Allocation Exports
+pub func:wasm_alloc = int64(int64:size) {
+    pass js_malloc(size);
+};
+
+pub func:wasm_free = NIL(int64:ptr) {
+    drop js_free(ptr);
+};
+
+// String Conversion Utilities
+pub func:wasm_string_to_ptr = int64(string:s) {
+    int64:len = string_length(s);
+    int64:ptr = js_malloc(len);
+    drop nitpick_libc_string_copy_to_buf(ptr, 0i64, s, 0i64, len);
+    pass ptr;
+};
+
+pub func:wasm_ptr_to_string = string(int64:ptr, int64:len) {
+    pass nitpick_libc_string_from_buf(ptr, 0i64, len);
+};

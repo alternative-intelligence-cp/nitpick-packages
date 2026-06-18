@@ -1,0 +1,7 @@
+extern "c" {
+    func:printf = int32(string:fmt, int32:val);
+}
+pub func:main = int32(int32:argc, int64:argv) {
+    drop printf("Argc: %d\n\0", argc);
+    pass 0i32;
+};

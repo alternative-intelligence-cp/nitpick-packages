@@ -1,0 +1,4 @@
+[package]
+name = "nitpick-wasm-bindgen"
+version = "0.1.0"
+description = "WebAssembly interoperability for Nitpick"

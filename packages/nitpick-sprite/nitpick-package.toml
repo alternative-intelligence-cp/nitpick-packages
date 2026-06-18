@@ -1,0 +1,6 @@
+[package]
+name = "nitpick-sprite"
+version = "0.1.0"
+description = "A lightweight 2D sprite and animation logic library for Nitpick"
+
+[dependencies]

@@ -1,0 +1,7 @@
+LIBRARY "nitpick_sprite"
+
+SOURCES:
+    src/nitpick_sprite.npk
+
+DEPENDENCIES:
+    ../nitpick-math (optional)

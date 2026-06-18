@@ -1,0 +1,113 @@
+// --- GLOBALS ---
+
+// Memory Pool for Tile Data
+int64[65536]:g_map_data;
+int64:g_data_ptr = 0i64;
+
+// Map Registry
+int64:g_map_count = 0i64;
+int64[4096]:g_map_data_start;
+int64[4096]:g_map_width;
+int64[4096]:g_map_height;
+float64[4096]:g_map_tile_w;
+float64[4096]:g_map_tile_h;
+
+// Utility functions
+func:floor_div = int64(float64:val, float64:div) {
+    float64:res = val / div;
+    int64:ires = @cast<int64>(res);
+    if (res < 0.0) {
+        float64:f_ires = @cast<float64>(ires);
+        if (res < f_ires) {
+            ires = ires - 1i64;
+        }
+    }
+    pass ires;
+};
+
+// --- PUBLIC API EXPORTS ---
+pub Type:TileMap = {
+
+    // Register a new tilemap, returns map ID
+    func:create_map = int64(int64:width, int64:height, float64:tile_w, float64:tile_h) {
+        int64:id = g_map_count;
+        g_map_count = g_map_count + 1i64;
+        
+        g_map_width[id] = width;
+        g_map_height[id] = height;
+        g_map_tile_w[id] = tile_w;
+        g_map_tile_h[id] = tile_h;
+        
+        g_map_data_start[id] = g_data_ptr;
+        
+        // Advance data ptr
+        int64:area = width * height;
+        
+        // Initialize area to -1 (empty)
+        int64:i = 0i64;
+        while (i < area) {
+            g_map_data[g_data_ptr + i] = 0i64 - 1i64;
+            i = i + 1i64;
+        }
+        
+        g_data_ptr = g_data_ptr + area;
+        
+        pass id;
+    };
+    
+    // Set a tile. Out of bounds is safely ignored.
+    func:set_tile = NIL(int64:map_id, int64:x, int64:y, int64:tile_id) {
+        int64:w = g_map_width[map_id];
+        int64:h = g_map_height[map_id];
+        
+        if (x < 0i64) { pass NIL; }
+        if (y < 0i64) { pass NIL; }
+        if (x >= w) { pass NIL; }
+        if (y >= h) { pass NIL; }
+        
+        int64:idx = g_map_data_start[map_id] + (y * w) + x;
+        g_map_data[idx] = tile_id;
+        pass NIL;
+    };
+    
+    // Get a tile. Returns -1 if out of bounds.
+    func:get_tile = int64(int64:map_id, int64:x, int64:y) {
+        int64:w = g_map_width[map_id];
+        int64:h = g_map_height[map_id];
+        
+        if (x < 0i64) { pass 0i64 - 1i64; }
+        if (y < 0i64) { pass 0i64 - 1i64; }
+        if (x >= w) { pass 0i64 - 1i64; }
+        if (y >= h) { pass 0i64 - 1i64; }
+        
+        int64:idx = g_map_data_start[map_id] + (y * w) + x;
+        pass g_map_data[idx];
+    };
+    
+    // Convert World X to Tile X
+    func:world_to_tile_x = int64(int64:map_id, float64:wx) {
+        pass raw floor_div(wx, g_map_tile_w[map_id]);
+    };
+    
+    // Convert World Y to Tile Y
+    func:world_to_tile_y = int64(int64:map_id, float64:wy) {
+        pass raw floor_div(wy, g_map_tile_h[map_id]);
+    };
+    
+    // Convert Tile X to World X (top-left edge of tile)
+    func:tile_to_world_x = float64(int64:map_id, float64:tx) {
+        pass tx * g_map_tile_w[map_id];
+    };
+    
+    // Convert Tile Y to World Y (top-left edge of tile)
+    func:tile_to_world_y = float64(int64:map_id, float64:ty) {
+        pass ty * g_map_tile_h[map_id];
+    };
+    
+    // Clear all memory (useful for tests)
+    func:clear = NIL() {
+        g_map_count = 0i64;
+        g_data_ptr = 0i64;
+        pass NIL;
+    };
+};

@@ -1,15 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
-# Make sure the shim is built
-make -C shim
+echo "Compiling regex_shim.c..."
+clang -c src/regex_shim.c -o regex_shim.o
+ar rcs libregex_shim.a regex_shim.o
 
-echo "Compiling test_nitpick_regex..."
-/home/randy/Workspace/REPOS/nitpick/build/npkc tests/test_nitpick_regex.npk \
+echo "Compiling test_regex..."
+/home/randy/Workspace/REPOS/nitpick/build/npkc tests/test_regex.npk \
     -I src \
-    -L shim -lnitpick_regex_shim \
-    -L ../../../nitpick-libc/shim -lnitpick_libc_mem \
-    -o tests/a.out
+    -L. -lregex_shim \
+    -o test_regex
 
-echo "Running tests..."
-./tests/a.out
+echo "Running test_regex..."
+./test_regex

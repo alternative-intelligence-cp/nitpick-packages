@@ -1,0 +1,30 @@
+use "nitpick_pdf.npk".*;
+
+extern "c" {
+    func:printf = int32(string:fmt);
+}
+
+pub func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    drop printf("--- nitpick-pdf Tests ---\n\0");
+    
+    int64:res = raw PDF.begin_document("hello_world.pdf\0");
+    if (res == 0i64) {
+        drop printf("Failed to create PDF!\n\0");
+        exit 1i32;
+    }
+    
+    // Draw a box and some text
+    drop PDF.draw_rect(50.0, 700.0, 200.0, 50.0);
+    drop PDF.draw_text(60.0, 720.0, "Hello from Nitpick!\0");
+    
+    drop PDF.end_document();
+    
+    drop printf("Successfully created hello_world.pdf\n\0");
+    drop printf("--- All Tests Finished ---\n\0");
+    
+    exit 0i32;
+};

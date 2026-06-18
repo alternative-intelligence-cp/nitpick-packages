@@ -1,0 +1,57 @@
+use "nitpick_sprite.npk".*;
+
+extern "c" {
+    func:printf = int32(string:fmt);
+    func:printf_f = int32(string:fmt, float64:v);
+    func:printf_i = int32(string:fmt, int64:v);
+}
+
+pub func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    drop printf("--- nitpick-sprite Tests ---\n\0");
+    
+    raw Sprite2D.clear();
+    
+    // Register 3 sprites (frames of an animation)
+    int64:tex = 42i64; // dummy texture ID
+    int64:s0 = raw Sprite2D.create_sprite(tex, 0.0, 0.0, 16.0, 16.0);
+    int64:s1 = raw Sprite2D.create_sprite(tex, 16.0, 0.0, 16.0, 16.0);
+    int64:s2 = raw Sprite2D.create_sprite(tex, 32.0, 0.0, 16.0, 16.0);
+    
+    // Create an animation that loops
+    int64:walk_anim = raw Sprite2D.create_anim(1i64); // loop = true
+    raw Sprite2D.anim_add_frame(walk_anim, s0, 0.1);
+    raw Sprite2D.anim_add_frame(walk_anim, s1, 0.1);
+    raw Sprite2D.anim_add_frame(walk_anim, s2, 0.2); // frame 2 is held longer
+    
+    // Create an entity instance
+    int64:player = raw Sprite2D.create_instance();
+    raw Sprite2D.play(player, walk_anim);
+    
+    drop printf("Testing Playback...\n\0");
+    
+    // T=0.0s
+    int64:curr = raw Sprite2D.get_current_sprite(player);
+    drop printf_i("  T=0.00s | Sprite ID: %lld (expected 0)\n\0", curr);
+    
+    // T=0.05s
+    raw Sprite2D.step(0.05);
+    curr = raw Sprite2D.get_current_sprite(player);
+    drop printf_i("  T=0.05s | Sprite ID: %lld (expected 0)\n\0", curr);
+    
+    // T=0.15s (total elapsed 0.2s)
+    raw Sprite2D.step(0.15);
+    curr = raw Sprite2D.get_current_sprite(player);
+    drop printf_i("  T=0.20s | Sprite ID: %lld (expected 2)\n\0", curr);
+    
+    // T=0.25s (total elapsed 0.45s) - looped around
+    raw Sprite2D.step(0.25);
+    curr = raw Sprite2D.get_current_sprite(player);
+    drop printf_i("  T=0.45s | Sprite ID: %lld (expected 0)\n\0", curr);
+    
+    drop printf("--- All Tests Finished ---\n\0");
+    exit 0i32;
+};

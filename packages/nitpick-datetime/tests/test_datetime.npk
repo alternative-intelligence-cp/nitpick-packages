@@ -1,0 +1,30 @@
+use "nitpick_datetime.npk".*;
+
+extern "c" {
+    func:printf = int32(string:fmt, string:val);
+    func:printf_int = int32(string:fmt, int64:val);
+}
+
+pub func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    drop printf("--- nitpick-datetime Tests ---\n\0", "\0");
+    
+    int64:now = raw Datetime.now();
+    drop printf_int("Timestamp now: %d\n\0", now);
+    
+    // 2024-01-01 12:00:00 UTC is 1704110400
+    int64:ts = 1704110400i64;
+    
+    string:formatted = raw Datetime.format_utc(ts, "%Y-%m-%d %H:%M:%S\0");
+    drop printf("Formatted UTC: %s\n\0", formatted);
+    
+    int64:parsed = raw Datetime.parse_utc("2024-01-01 12:00:00\0", "%Y-%m-%d %H:%M:%S\0");
+    drop printf_int("Parsed UTC: %d\n\0", parsed);
+    
+    drop printf("--- All Tests Finished ---\n\0", "\0");
+    
+    exit 0i32;
+};

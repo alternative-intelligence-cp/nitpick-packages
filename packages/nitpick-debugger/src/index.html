@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Nitpick Studio</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Toolbar -->
+        <header class="toolbar glass">
+            <div class="logo">
+                <div class="logo-icon">N</div>
+                <span>Nitpick Studio</span>
+            </div>
+            <div class="controls">
+                <button id="btn-open" class="btn primary">Open File</button>
+                <div class="divider"></div>
+                <button id="btn-play" class="btn success" disabled>▶ Run</button>
+                <button id="btn-step" class="btn warning" disabled>⤵ Step In</button>
+                <button id="btn-next" class="btn warning" disabled>⏭ Next</button>
+                <button id="btn-continue" class="btn primary" disabled>⏯ Continue</button>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <main class="main-layout">
+            <!-- Left Sidebar -->
+            <aside class="sidebar glass">
+                <div class="panel-header">Call Stack</div>
+                <div id="callstack-container" class="callstack-list">
+                    <div class="empty-state">No active session</div>
+                </div>
+                
+                <div class="panel-header">Variables</div>
+                <div id="variables-container" class="variables-list">
+                    <div class="empty-state">No active session</div>
+                </div>
+            </aside>
+
+            <!-- Center: Code Viewer -->
+            <section class="editor-pane glass">
+                <div class="panel-header">
+                    <span id="current-file">No file loaded</span>
+                </div>
+                <div class="code-container" id="code-container">
+                    <div class="empty-state">Open a .npk file to start debugging</div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom: Console -->
+        <footer class="console glass">
+            <div class="panel-header">Terminal Output</div>
+            <div id="console-output" class="console-text"></div>
+        </footer>
+    </div>
+    
+    <script src="renderer.js"></script>
+</body>
+</html>

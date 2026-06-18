@@ -1,0 +1,75 @@
+// sysfs.npk
+
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+
+pub func:get_os_kernel = string() {
+    string:content = raw fs_read_file("/proc/version");
+    if (string_length(content) > 0i64) {
+        pass raw Str.token(content, " (", 0i64);
+    } else {
+        pass "Unknown Linux";
+    }
+};
+
+pub func:get_uptime = string() {
+    string:content = raw fs_read_file("/proc/uptime");
+    if (string_length(content) > 0i64) {
+        string:up_sec = raw Str.token(content, " ", 0i64);
+        // We only want the integer part
+        up_sec = raw Str.before(up_sec, ".");
+        int64:sec = string_to_int(up_sec);
+        int64:h = sec / 3600i64;
+        int64:m = (sec / 60i64) % 60i64;
+        pass string_concat(string_concat(string_from_int(h), "h "), string_concat(string_from_int(m), "m"));
+    } else {
+        pass "Unknown";
+    }
+};
+
+pub func:get_loadavg = string() {
+    string:content = raw fs_read_file("/proc/loadavg");
+    if (string_length(content) > 0i64) {
+        string:l1 = raw Str.token(content, " ", 0i64);
+        string:l5 = raw Str.token(content, " ", 1i64);
+        string:l15 = raw Str.token(content, " ", 2i64);
+        pass string_concat(l1, string_concat(", ", string_concat(l5, string_concat(", ", l15))));
+    } else {
+        pass "Unknown";
+    }
+};
+
+// Memory values in KB
+pub func:get_mem_total = int64() {
+    string:content = raw fs_read_file("/proc/meminfo");
+    string:line = raw Str.between(content, "MemTotal:", "\n");
+    string:val = string_trim(raw Str.before(line, "kB"));
+    pass string_to_int(val);
+};
+
+pub func:get_mem_free = int64() {
+    string:content = raw fs_read_file("/proc/meminfo");
+    string:line = raw Str.between(content, "MemAvailable:", "\n");
+    if (string_is_empty(line)) {
+        line = raw Str.between(content, "MemFree:", "\n");
+    }
+    string:val = string_trim(raw Str.before(line, "kB"));
+    pass string_to_int(val);
+};
+
+pub func:get_cpu_model = string() {
+    string:content = raw fs_read_file("/proc/cpuinfo");
+    string:line = raw Str.between(content, "model name", "\n");
+    string:val = string_trim(raw Str.after(line, ":"));
+    pass val;
+};
+
+pub func:get_cpu_cores = int64() {
+    string:content = raw fs_read_file("/proc/cpuinfo");
+    pass raw Str.count(content, "processor\t:");
+};
+
+pub func:format_mem = string(int64:kb) {
+    int64:mb = kb / 1024i64;
+    pass string_concat(string_from_int(mb), " MB");
+};

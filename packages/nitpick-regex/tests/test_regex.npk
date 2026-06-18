@@ -1,0 +1,38 @@
+use "nitpick_regex.npk".*;
+
+extern "c" {
+    func:printf = int32(string:fmt, string:val);
+    func:printf_int = int32(string:fmt, int64:val);
+}
+
+pub func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    drop printf("--- nitpick-regex Tests ---\n\0", "\0");
+    
+    // Test basic match
+    Regex:r = raw Regex.compile("^([a-z]+)@([a-z]+)\\.com$\0");
+    int64:is_match = raw r.match("test@example.com\0");
+    drop printf_int("Matched Email: %d\n\0", is_match);
+    
+    if (is_match == 1i64) {
+        string:user = raw r.get_group_str("test@example.com\0", 1i64);
+        string:domain = raw r.get_group_str("test@example.com\0", 2i64);
+        
+        drop printf("User: %s\n\0", user);
+        drop printf("Domain: %s\n\0", domain);
+    }
+    
+    // Test failed match
+    int64:is_match2 = raw r.match("invalid@email.org\0");
+    drop printf_int("Matched Invalid Email: %d\n\0", is_match2);
+    
+    // Free the regex
+    drop r.free();
+    
+    drop printf("--- All Tests Finished ---\n\0", "\0");
+    
+    exit 0i32;
+};

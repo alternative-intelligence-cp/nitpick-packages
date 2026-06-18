@@ -1,0 +1,188 @@
+// nitpick_graphql.npk
+use "nitpick_str.npk".*;
+
+// AST
+int64[4096]:g_ast_first_child;
+int64[4096]:g_ast_next_sibling;
+string[4096]:g_ast_name;
+int64:g_ast_count = 0i64;
+
+// Lexer state
+string:g_query_str = "";
+int64:g_query_pos = 0i64;
+int64:g_query_len = 0i64;
+
+string:g_token_type = "";
+string:g_token_val = "";
+
+pub func:gql_str_eq = int64(string:a, string:b) {
+    if (string_length(a) != string_length(b)) { pass 0i64; }
+    if (string_starts_with(a, b) == false) { pass 0i64; }
+    pass 1i64;
+};
+
+// Utils
+func:is_whitespace = int64(string:c) {
+    if (raw gql_str_eq(c, " ") == 1i64) { pass 1i64; }
+    if (raw gql_str_eq(c, "\n") == 1i64) { pass 1i64; }
+    if (raw gql_str_eq(c, "\t") == 1i64) { pass 1i64; }
+    if (raw gql_str_eq(c, "\r") == 1i64) { pass 1i64; }
+    if (raw gql_str_eq(c, ",") == 1i64) { pass 1i64; } // treat comma as whitespace
+    pass 0i64;
+};
+
+func:is_alpha = int64(string:c) {
+    // Just a rough check: if it's not whitespace and not { or }
+    if (raw is_whitespace(c) == 1i64) { pass 0i64; }
+    if (raw gql_str_eq(c, "{") == 1i64) { pass 0i64; }
+    if (raw gql_str_eq(c, "}") == 1i64) { pass 0i64; }
+    if (raw gql_str_eq(c, "") == 1i64) { pass 0i64; }
+    pass 1i64;
+};
+
+pub func:gql_next_token = int64() {
+    // Skip whitespace
+    int64:skip = 1i64;
+    while (skip == 1i64) {
+        if (g_query_pos >= g_query_len) {
+            g_token_type = "EOF";
+            g_token_val = "";
+            pass 0i64;
+        }
+        string:c = raw Str.char_at(g_query_str, g_query_pos);
+        if (raw is_whitespace(c) == 1i64) {
+            g_query_pos = g_query_pos + 1i64;
+        } else {
+            skip = 0i64;
+        }
+    }
+    
+    string:c2 = raw Str.char_at(g_query_str, g_query_pos);
+    if (raw gql_str_eq(c2, "{") == 1i64) {
+        g_token_type = "LBRACE";
+        g_token_val = "{";
+        g_query_pos = g_query_pos + 1i64;
+        pass 1i64;
+    }
+    if (raw gql_str_eq(c2, "}") == 1i64) {
+        g_token_type = "RBRACE";
+        g_token_val = "}";
+        g_query_pos = g_query_pos + 1i64;
+        pass 1i64;
+    }
+    
+    // Identifier
+    string:ident = "";
+    int64:reading = 1i64;
+    while (reading == 1i64) {
+        if (g_query_pos >= g_query_len) {
+            reading = 0i64;
+        } else {
+            string:cc = raw Str.char_at(g_query_str, g_query_pos);
+            if (raw is_alpha(cc) == 1i64) {
+                ident = string_concat(ident, cc);
+                g_query_pos = g_query_pos + 1i64;
+            } else {
+                reading = 0i64;
+            }
+        }
+    }
+    
+    g_token_type = "IDENT";
+    g_token_val = ident;
+    pass 1i64;
+};
+
+pub func:gql_parse_selection_set = int64() {
+    int64:list_id = g_ast_count;
+    g_ast_count = g_ast_count + 1i64;
+    g_ast_name[list_id] = "SelectionSet";
+    g_ast_first_child[list_id] = -1i64;
+    g_ast_next_sibling[list_id] = -1i64;
+    
+    // Consume LBRACE (assumed already matched before calling, or we check here)
+    if (raw gql_str_eq(g_token_type, "LBRACE") == 1i64) {
+        drop(raw gql_next_token());
+    }
+    
+    int64:parsing = 1i64;
+    while (parsing == 1i64) {
+        if (raw gql_str_eq(g_token_type, "RBRACE") == 1i64) {
+            drop(raw gql_next_token());
+            parsing = 0i64;
+        } else {
+            if (raw gql_str_eq(g_token_type, "EOF") == 1i64) {
+                parsing = 0i64;
+            } else {
+                if (raw gql_str_eq(g_token_type, "IDENT") == 1i64) {
+                    int64:field_id = g_ast_count;
+                    g_ast_count = g_ast_count + 1i64;
+                    g_ast_name[field_id] = g_token_val;
+                    g_ast_first_child[field_id] = -1i64;
+                    g_ast_next_sibling[field_id] = -1i64;
+                    
+                    drop(raw gql_ast_add_child(list_id, field_id));
+                    drop(raw gql_next_token());
+                    
+                    // If next is LBRACE, parse sub-selection
+                    if (raw gql_str_eq(g_token_type, "LBRACE") == 1i64) {
+                        int64:sub = raw gql_parse_selection_set();
+                        drop(raw gql_ast_add_child(field_id, sub));
+                    }
+                } else {
+                    // unexpected
+                    drop(raw gql_next_token());
+                }
+            }
+        }
+    }
+    pass list_id;
+};
+
+pub func:gql_ast_add_child = int64(int64:parent, int64:child) {
+    if (g_ast_first_child[parent] == -1i64) {
+        g_ast_first_child[parent] = child;
+    } else {
+        int64:curr = g_ast_first_child[parent];
+        while (g_ast_next_sibling[curr] != -1i64) {
+            curr = g_ast_next_sibling[curr];
+        }
+        g_ast_next_sibling[curr] = child;
+    }
+    pass parent;
+};
+
+pub func:gql_parse = int64(string:query) {
+    g_query_str = query;
+    g_query_pos = 0i64;
+    g_query_len = string_length(query);
+    g_ast_count = 0i64;
+    
+    drop(raw gql_next_token());
+    
+    // Optional "query" keyword
+    if (raw gql_str_eq(g_token_type, "IDENT") == 1i64) {
+        if (raw gql_str_eq(g_token_val, "query") == 1i64) {
+            drop(raw gql_next_token());
+        }
+    }
+    
+    if (raw gql_str_eq(g_token_type, "LBRACE") == 1i64) {
+        pass raw gql_parse_selection_set();
+    }
+    pass -1i64;
+};
+
+// Execution takes a callback: `func:resolve(path, field) -> string`
+// We will mock this by hardcoding a specific external resolve call shape
+// since Nitpick lacks first-class generic callbacks in this module scope without knowing the signature ahead.
+extern "c" {
+    func:my_gql_resolver = string(string:path, string:field);
+}
+
+pub Type:Gql = {
+    func:parse = int64(string:q) { pass raw gql_parse(q); };
+    func:ast_name = string(int64:id) { pass g_ast_name[id]; };
+    func:ast_first_child = int64(int64:id) { pass g_ast_first_child[id]; };
+    func:ast_next_sibling = int64(int64:id) { pass g_ast_next_sibling[id]; };
+};

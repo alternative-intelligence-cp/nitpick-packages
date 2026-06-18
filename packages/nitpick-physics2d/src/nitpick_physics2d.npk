@@ -1,0 +1,350 @@
+use "nitpick_math.npk".*;
+
+pub struct:Vec2 = {
+    float64:x;
+    float64:y;
+};
+
+pub struct:Manifold = {
+    int64:bodyA;
+    int64:bodyB;
+    float64:penetration;
+    float64:normal_x;
+    float64:normal_y;
+    int64:is_colliding;
+};
+
+// --- GLOBALS ---
+int64:PHYSICS_MAX_BODIES = 4096i64;
+int64:g_body_count = 0i64;
+
+float64[4096]:g_body_pos_x;
+float64[4096]:g_body_pos_y;
+float64[4096]:g_body_vel_x;
+float64[4096]:g_body_vel_y;
+float64[4096]:g_body_force_x;
+float64[4096]:g_body_force_y;
+
+float64[4096]:g_body_mass;
+float64[4096]:g_body_inv_mass;
+float64[4096]:g_body_restitution;
+
+int64[4096]:g_body_collider_type;
+float64[4096]:g_body_width;
+float64[4096]:g_body_height;
+float64[4096]:g_body_radius;
+
+float64:g_gravity_x = 0.0;
+float64:g_gravity_y = 9.81;
+
+// --- MATH & UTILS ---
+func:manifold_none = Manifold() {
+    Manifold:m;
+    m.is_colliding = 0i64;
+    pass m;
+};
+
+func:math_min = float64(float64:a, float64:b) {
+    if (a < b) { pass a; }
+    pass b;
+};
+
+func:math_max = float64(float64:a, float64:b) {
+    if (a > b) { pass a; }
+    pass b;
+};
+
+func:math_clamp = float64(float64:val, float64:min, float64:max) {
+    if (val < min) { pass min; }
+    if (val > max) { pass max; }
+    pass val;
+};
+
+// --- COLLISIONS ---
+func:check_circle_circle = Manifold(int64:a, int64:b) {
+    float64:dx = g_body_pos_x[b] - g_body_pos_x[a];
+    float64:dy = g_body_pos_y[b] - g_body_pos_y[a];
+    float64:dist_sq = dx * dx + dy * dy;
+    float64:radius_sum = g_body_radius[a] + g_body_radius[b];
+    
+    if (dist_sq >= radius_sum * radius_sum) {
+        pass raw manifold_none();
+    }
+    
+    float64:dist = raw math_sqrt(dist_sq);
+    Manifold:m;
+    m.bodyA = a;
+    m.bodyB = b;
+    m.is_colliding = 1i64;
+    
+    if (dist == 0.0) {
+        m.penetration = g_body_radius[a];
+        m.normal_x = 1.0;
+        m.normal_y = 0.0;
+    } else {
+        m.penetration = radius_sum - dist;
+        m.normal_x = dx / dist;
+        m.normal_y = dy / dist;
+    }
+    pass m;
+};
+
+func:check_aabb_aabb = Manifold(int64:a, int64:b) {
+    float64:dx = g_body_pos_x[b] - g_body_pos_x[a];
+    float64:dy = g_body_pos_y[b] - g_body_pos_y[a];
+    
+    float64:half_wa = g_body_width[a] / 2.0;
+    float64:half_wb = g_body_width[b] / 2.0;
+    float64:half_ha = g_body_height[a] / 2.0;
+    float64:half_hb = g_body_height[b] / 2.0;
+    
+    float64:abs_dx = raw math_abs(dx);
+    float64:x_overlap = half_wa + half_wb - abs_dx;
+    if (x_overlap <= 0.0) { pass raw manifold_none(); }
+    
+    float64:abs_dy = raw math_abs(dy);
+    float64:y_overlap = half_ha + half_hb - abs_dy;
+    if (y_overlap <= 0.0) { pass raw manifold_none(); }
+    
+    Manifold:m;
+    m.bodyA = a;
+    m.bodyB = b;
+    m.is_colliding = 1i64;
+    
+    if (x_overlap < y_overlap) {
+        m.penetration = x_overlap;
+        if (dx < 0.0) { m.normal_x = -1.0; m.normal_y = 0.0; }
+        else { m.normal_x = 1.0; m.normal_y = 0.0; }
+    } else {
+        m.penetration = y_overlap;
+        if (dy < 0.0) { m.normal_x = 0.0; m.normal_y = -1.0; }
+        else { m.normal_x = 0.0; m.normal_y = 1.0; }
+    }
+    pass m;
+};
+
+func:check_circle_aabb = Manifold(int64:circle_id, int64:aabb_id, int64:flip_normal) {
+    float64:cx = g_body_pos_x[circle_id];
+    float64:cy = g_body_pos_y[circle_id];
+    float64:bx = g_body_pos_x[aabb_id];
+    float64:by = g_body_pos_y[aabb_id];
+    
+    float64:half_w = g_body_width[aabb_id] / 2.0;
+    float64:half_h = g_body_height[aabb_id] / 2.0;
+    
+    float64:closest_x = raw math_clamp(cx, bx - half_w, bx + half_w);
+    float64:closest_y = raw math_clamp(cy, by - half_h, by + half_h);
+    
+    int64:inside = 0i64;
+    if (closest_x == cx) {
+        if (closest_y == cy) {
+            inside = 1i64;
+            if (raw math_abs(cx - bx) > raw math_abs(cy - by)) {
+                if (cx > bx) { closest_x = bx + half_w; } else { closest_x = bx - half_w; }
+            } else {
+                if (cy > by) { closest_y = by + half_h; } else { closest_y = by - half_h; }
+            }
+        }
+    }
+    
+    float64:dx = cx - closest_x;
+    float64:dy = cy - closest_y;
+    float64:dist_sq = dx * dx + dy * dy;
+    float64:radius = g_body_radius[circle_id];
+    
+    if (inside == 0i64) {
+        if (dist_sq > radius * radius) {
+            pass raw manifold_none();
+        }
+    }
+    
+    float64:dist = raw math_sqrt(dist_sq);
+    Manifold:m;
+    if (flip_normal == 1i64) {
+        m.bodyA = aabb_id;
+        m.bodyB = circle_id;
+    } else {
+        m.bodyA = circle_id;
+        m.bodyB = aabb_id;
+    }
+    m.is_colliding = 1i64;
+    
+    if (dist == 0.0) {
+        m.penetration = radius;
+        m.normal_x = 1.0;
+        m.normal_y = 0.0;
+    } else {
+        m.penetration = radius - dist;
+        m.normal_x = dx / dist;
+        m.normal_y = dy / dist;
+        if (inside == 1i64) {
+            m.normal_x = 0.0 - m.normal_x;
+            m.normal_y = 0.0 - m.normal_y;
+            m.penetration = radius + dist;
+        }
+    }
+    
+    if (flip_normal == 1i64) {
+        m.normal_x = 0.0 - m.normal_x;
+        m.normal_y = 0.0 - m.normal_y;
+    }
+    pass m;
+};
+
+func:collision_check = Manifold(int64:a, int64:b) {
+    int64:typeA = g_body_collider_type[a];
+    int64:typeB = g_body_collider_type[b];
+    
+    if (typeA == 1i64) {
+        if (typeB == 1i64) { pass raw check_aabb_aabb(a, b); }
+        if (typeB == 2i64) { pass raw check_circle_aabb(b, a, 1i64); }
+    }
+    if (typeA == 2i64) {
+        if (typeB == 1i64) { pass raw check_circle_aabb(a, b, 0i64); }
+        if (typeB == 2i64) { pass raw check_circle_circle(a, b); }
+    }
+    pass raw manifold_none();
+};
+
+func:resolve_collision = NIL(Manifold:m) {
+    int64:a = m.bodyA;
+    int64:b = m.bodyB;
+    
+    float64:rv_x = g_body_vel_x[b] - g_body_vel_x[a];
+    float64:rv_y = g_body_vel_y[b] - g_body_vel_y[a];
+    float64:vel_along_normal = rv_x * m.normal_x + rv_y * m.normal_y;
+    
+    if (vel_along_normal > 0.0) { pass NIL; }
+    
+    float64:e = raw math_min(g_body_restitution[a], g_body_restitution[b]);
+    float64:inv_mass_sum = g_body_inv_mass[a] + g_body_inv_mass[b];
+    float64:j = (0.0 - (1.0 + e)) * vel_along_normal;
+    j = j / inv_mass_sum;
+    
+    float64:impulse_x = m.normal_x * j;
+    float64:impulse_y = m.normal_y * j;
+    
+    g_body_vel_x[a] = g_body_vel_x[a] - impulse_x * g_body_inv_mass[a];
+    g_body_vel_y[a] = g_body_vel_y[a] - impulse_y * g_body_inv_mass[a];
+    
+    g_body_vel_x[b] = g_body_vel_x[b] + impulse_x * g_body_inv_mass[b];
+    g_body_vel_y[b] = g_body_vel_y[b] + impulse_y * g_body_inv_mass[b];
+    
+    float64:percent = 0.2;
+    float64:slop = 0.01;
+    float64:penetration_diff = raw math_max(m.penetration - slop, 0.0);
+    float64:correction_mag = (penetration_diff / inv_mass_sum) * percent;
+    float64:correction_x = m.normal_x * correction_mag;
+    float64:correction_y = m.normal_y * correction_mag;
+    
+    g_body_pos_x[a] = g_body_pos_x[a] - correction_x * g_body_inv_mass[a];
+    g_body_pos_y[a] = g_body_pos_y[a] - correction_y * g_body_inv_mass[a];
+    
+    g_body_pos_x[b] = g_body_pos_x[b] + correction_x * g_body_inv_mass[b];
+    g_body_pos_y[b] = g_body_pos_y[b] + correction_y * g_body_inv_mass[b];
+    
+    pass NIL;
+};
+
+// --- PUBLIC API EXPORTS ---
+pub Type:Physics2D = {
+    func:set_gravity = NIL(float64:x, float64:y) {
+        g_gravity_x = x;
+        g_gravity_y = y;
+        pass NIL;
+    };
+    
+    func:step = NIL(float64:dt) {
+        int64:i = 0i64;
+        while (i < g_body_count) {
+            if (g_body_inv_mass[i] > 0.0) {
+                g_body_vel_x[i] = g_body_vel_x[i] + (g_body_force_x[i] * g_body_inv_mass[i] + g_gravity_x) * dt;
+                g_body_vel_y[i] = g_body_vel_y[i] + (g_body_force_y[i] * g_body_inv_mass[i] + g_gravity_y) * dt;
+                g_body_pos_x[i] = g_body_pos_x[i] + g_body_vel_x[i] * dt;
+                g_body_pos_y[i] = g_body_pos_y[i] + g_body_vel_y[i] * dt;
+            }
+            g_body_force_x[i] = 0.0;
+            g_body_force_y[i] = 0.0;
+            i = i + 1i64;
+        }
+        
+        i = 0i64;
+        while (i < g_body_count) {
+            int64:j = i + 1i64;
+            while (j < g_body_count) {
+                if (g_body_inv_mass[i] == 0.0) {
+                    if (g_body_inv_mass[j] == 0.0) {
+                        j = j + 1i64;
+                        continue;
+                    }
+                }
+                Manifold:m = raw collision_check(i, j);
+                if (m.is_colliding == 1i64) {
+                    raw resolve_collision(m);
+                }
+                j = j + 1i64;
+            }
+            i = i + 1i64;
+        }
+        pass NIL;
+    };
+    
+    func:create_box = int64(float64:x, float64:y, float64:w, float64:h, float64:mass) {
+        int64:id = g_body_count;
+        g_body_count = g_body_count + 1i64;
+        g_body_pos_x[id] = x; g_body_pos_y[id] = y;
+        g_body_vel_x[id] = 0.0; g_body_vel_y[id] = 0.0;
+        g_body_force_x[id] = 0.0; g_body_force_y[id] = 0.0;
+        g_body_mass[id] = mass;
+        if (mass == 0.0) { g_body_inv_mass[id] = 0.0; } else { g_body_inv_mass[id] = 1.0 / mass; }
+        g_body_restitution[id] = 0.2;
+        g_body_collider_type[id] = 1i64;
+        g_body_width[id] = w; g_body_height[id] = h;
+        g_body_radius[id] = 0.0;
+        pass id;
+    };
+    
+    func:create_circle = int64(float64:x, float64:y, float64:radius, float64:mass) {
+        int64:id = g_body_count;
+        g_body_count = g_body_count + 1i64;
+        g_body_pos_x[id] = x; g_body_pos_y[id] = y;
+        g_body_vel_x[id] = 0.0; g_body_vel_y[id] = 0.0;
+        g_body_force_x[id] = 0.0; g_body_force_y[id] = 0.0;
+        g_body_mass[id] = mass;
+        if (mass == 0.0) { g_body_inv_mass[id] = 0.0; } else { g_body_inv_mass[id] = 1.0 / mass; }
+        g_body_restitution[id] = 0.2;
+        g_body_collider_type[id] = 2i64;
+        g_body_width[id] = 0.0; g_body_height[id] = 0.0;
+        g_body_radius[id] = radius;
+        pass id;
+    };
+    
+    func:apply_force = NIL(int64:id, float64:fx, float64:fy) {
+        g_body_force_x[id] = g_body_force_x[id] + fx;
+        g_body_force_y[id] = g_body_force_y[id] + fy;
+        pass NIL;
+    };
+    
+    func:set_restitution = NIL(int64:id, float64:e) {
+        g_body_restitution[id] = e;
+        pass NIL;
+    };
+    
+    func:get_pos = Vec2(int64:id) {
+        Vec2:res; res.x = g_body_pos_x[id]; res.y = g_body_pos_y[id]; pass res;
+    };
+    
+    func:set_pos = NIL(int64:id, float64:x, float64:y) {
+        g_body_pos_x[id] = x; g_body_pos_y[id] = y; pass NIL;
+    };
+    
+    func:get_vel = Vec2(int64:id) {
+        Vec2:res; res.x = g_body_vel_x[id]; res.y = g_body_vel_y[id]; pass res;
+    };
+    
+    func:set_vel = NIL(int64:id, float64:x, float64:y) {
+        g_body_vel_x[id] = x; g_body_vel_y[id] = y; pass NIL;
+    };
+    
+    func:clear = NIL() { g_body_count = 0i64; pass NIL; };
+};

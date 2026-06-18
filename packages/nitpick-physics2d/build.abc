@@ -1,0 +1,8 @@
+[target.nitpick_physics2d]
+type = "lib"
+sources = ["src/nitpick_physics2d.npk"]
+
+[target.test_physics2d]
+type = "binary"
+sources = ["tests/test_physics2d.npk"]
+flags = ["-lm", "-lnitpick_libc_math"]

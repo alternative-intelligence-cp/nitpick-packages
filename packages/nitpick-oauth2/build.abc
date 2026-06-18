@@ -1,0 +1,19 @@
+[project]
+name = "nitpick-oauth2"
+version = "0.1.0"
+
+[target.nitpick-oauth2]
+type = "library"
+sources = ["src/nitpick_oauth2.npk"]
+deps = []
+flags = ["-I", "src", "-I", "../nitpick-str/src"]
+link_libraries = []
+link_paths = []
+
+[target.test-nitpick-oauth2]
+type = "binary"
+sources = ["tests/test_nitpick_oauth2.npk"]
+deps = ["nitpick-oauth2"]
+flags = ["-I", "src", "-I", "../nitpick-str/src"]
+link_libraries = []
+link_paths = []

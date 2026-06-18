@@ -1,0 +1,19 @@
+[project]
+name = "nitpick-graphql"
+version = "0.1.0"
+
+[target.nitpick-graphql]
+type = "library"
+sources = ["src/nitpick_graphql.npk"]
+deps = []
+flags = ["-I", "src", "-I", "../nitpick-str/src"]
+link_libraries = []
+link_paths = []
+
+[target.test-nitpick-graphql]
+type = "binary"
+sources = ["tests/test_nitpick_graphql.npk"]
+deps = ["nitpick-graphql"]
+flags = ["-I", "src", "-I", "../nitpick-str/src"]
+link_libraries = []
+link_paths = []

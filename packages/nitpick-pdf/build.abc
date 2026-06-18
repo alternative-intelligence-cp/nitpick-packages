@@ -1,0 +1,6 @@
+LIBRARY "nitpick_pdf"
+
+SOURCES:
+    src/nitpick_pdf.npk
+
+DEPENDENCIES:

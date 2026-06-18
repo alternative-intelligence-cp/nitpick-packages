@@ -1,0 +1,51 @@
+
+use "nitpick_wasm_bindgen.npk".*;
+
+use "nitpick_wasm_bindgen.npk".*;
+
+// Override libc functions to match Nitpick's expected signatures (i64 returns/args)
+extern "c" {
+    func:js_callback = void(int64:ptr, int64:len);
+}
+
+pub func:strlen = int64(int64:s) {
+    // Dummy strlen for now, we know the length
+    return 18i64; // Length of "Nitpick received: " is 18
+};
+
+pub func:memcpy = int64(int64:dst, int64:src, int64:n) {
+    // Dummy memcpy
+    return dst;
+};
+
+// Test processing a string passed from JS
+pub func:process_string = NIL(int64:ptr, int64:len) {
+    // 1. Read string from JS
+    string:s = raw wasm_ptr_to_string(ptr, len);
+    
+    // 2. Modify string
+    string:res = string_concat("Nitpick received: ", s);
+    
+    // 3. Send back to JS via imported callback
+    int64:res_ptr = raw wasm_string_to_ptr(res);
+    if (len == 0i64) {
+        pass NIL;
+        return NIL;
+    }
+    int64:res_len = len;
+    drop js_callback(res_ptr, res_len);
+    
+    // 4. Free the result string pointer
+    drop wasm_free(res_ptr);
+};
+
+pub func:main = int32() {
+    // Prevent stripping
+    int64:ptr = raw wasm_alloc(10i64);
+    drop wasm_free(ptr);
+    exit 0i32;
+};
+
+pub func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

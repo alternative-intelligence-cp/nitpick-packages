@@ -1,0 +1,6 @@
+[package]
+name = "nitpick-cli"
+version = "0.1.0"
+description = "Command-line argument parser for Nitpick"
+
+[dependencies]

@@ -1,0 +1,9 @@
+[package]
+name = "nitpick-physics2d"
+version = "0.1.0"
+authors = ["Randy"]
+description = "A native 2D physics engine for Nitpick"
+
+[dependencies]
+nitpick-math = "*"
+nitpick-list = "*"

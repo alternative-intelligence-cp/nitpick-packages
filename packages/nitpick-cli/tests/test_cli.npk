@@ -1,0 +1,38 @@
+use "nitpick_cli.npk".*;
+
+extern "c" {
+    func:printf = int32(string:fmt, string:val);
+    func:printf_int = int32(string:fmt, int64:val);
+}
+
+pub func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    drop printf("--- nitpick-cli Tests ---\n\0", "\0");
+    
+    drop Cli.register_flag("--verbose\0", "-v\0");
+    drop Cli.register_option("--port\0", "-p\0", "80\0");
+    
+    drop Cli.parse();
+    
+    int64:is_verbose = raw Cli.get_flag("--verbose\0");
+    string:port = raw Cli.get_option("--port\0");
+    int64:pos_count = raw Cli.get_positional_count();
+    
+    drop printf_int("Verbose Flag: %d\n\0", is_verbose);
+    drop printf("Port Option: %s\n\0", port);
+    drop printf_int("Positional Count: %d\n\0", pos_count);
+    
+    int64:i = 0i64;
+    while (i < pos_count) {
+        string:pos_arg = raw Cli.get_positional(i);
+        drop printf("Positional Arg: %s\n\0", pos_arg);
+        i = i + 1i64;
+    }
+    
+    drop printf("--- All Tests Finished ---\n\0", "\0");
+    
+    exit 0i32;
+};

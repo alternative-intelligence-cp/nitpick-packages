@@ -1,39 +1,43 @@
-// nitpick_regex.npk — Regular expression library for Nitpick
-//
-// POSIX extended regex: compile, match, search, groups, replace.
-// Requires: libnitpick_regex_shim.so
-
-extern "nitpick_regex_shim" {
-    func:nitpick_regex_compile       = int32(string:pattern);
-    func:nitpick_regex_compile_icase = int32(string:pattern);
-    func:nitpick_regex_cleanup      = void();
-    func:nitpick_regex_error         = string();
-
-    func:nitpick_regex_match      = int32(string:text);
-    func:nitpick_regex_match_full = int32(string:text);
-    func:nitpick_regex_search     = int32(string:text);
-
-    func:nitpick_regex_group_count = int32();
-    func:nitpick_regex_group       = string(int32:idx);
-    func:nitpick_regex_group_start = int32(int32:idx);
-    func:nitpick_regex_group_end   = int32(int32:idx);
-
-    func:nitpick_regex_replace = string(string:text, string:replacement);
-    func:nitpick_regex_last_result = string();
+extern "c" {
+    func:cli_regex_compile = int64(string:pattern);
+    func:cli_regex_match = int64(int64:handle, string:text);
+    func:cli_regex_get_start = int64(int64:handle, int64:group);
+    func:cli_regex_get_end = int64(int64:handle, int64:group);
+    func:cli_regex_get_group_str = string(int64:handle, string:text, int64:group);
+    func:cli_regex_free = NIL(int64:handle);
 }
 
-pub func:regex_compile = int32(string:pattern) { int32:r = nitpick_regex_compile(pattern); pass(r); };
-pub func:regex_compile_icase = int32(string:pattern) { int32:r = nitpick_regex_compile_icase(pattern); pass(r); };
-pub func:regex_cleanup = NIL() { nitpick_regex_cleanup(); pass(NIL); };
-pub func:regex_error = string() { string:r = nitpick_regex_error(); pass(r); };
+pub struct:Regex = {
+    int64:handle;
+};
 
-pub func:regex_match = int32(string:text) { int32:r = nitpick_regex_match(text); pass(r); };
-pub func:regex_match_full = int32(string:text) { int32:r = nitpick_regex_match_full(text); pass(r); };
-pub func:regex_search = int32(string:text) { int32:r = nitpick_regex_search(text); pass(r); };
-
-pub func:regex_group_count = int32() { int32:r = nitpick_regex_group_count(); pass(r); };
-pub func:regex_group = string(int32:idx) { drop(nitpick_regex_group(idx)); string:r = nitpick_regex_last_result(); pass(r); };
-pub func:regex_group_start = int32(int32:idx) { int32:r = nitpick_regex_group_start(idx); pass(r); };
-pub func:regex_group_end = int32(int32:idx) { int32:r = nitpick_regex_group_end(idx); pass(r); };
-
-pub func:regex_replace = string(string:text, string:replacement) { drop(nitpick_regex_replace(text, replacement)); string:r = nitpick_regex_last_result(); pass(r); };
+pub Type:Regex = {
+    
+    func:compile = Regex(string:pattern) {
+        int64:h = cli_regex_compile(pattern);
+        Regex:r;
+        r.handle = h;
+        pass r;
+    };
+    
+    func:match = int64(Regex:self, string:text) {
+        pass cli_regex_match(self.handle, text);
+    };
+    
+    func:get_start = int64(Regex:self, int64:group) {
+        pass cli_regex_get_start(self.handle, group);
+    };
+    
+    func:get_end = int64(Regex:self, int64:group) {
+        pass cli_regex_get_end(self.handle, group);
+    };
+    
+    func:get_group_str = string(Regex:self, string:text, int64:group) {
+        pass cli_regex_get_group_str(self.handle, text, group);
+    };
+    
+    func:free = NIL(Regex:self) {
+        cli_regex_free(self.handle);
+        pass NIL;
+    };
+};

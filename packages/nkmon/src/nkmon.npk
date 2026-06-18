@@ -1,0 +1,107 @@
+// nkmon.npk
+use "nitpick_display.npk".*;
+use "nitpick_input.npk".*;
+use "nitpick_tui.npk".*;
+use "sysfs.npk".*;
+
+extern func:read = int64(int32:fd, any*:buf, int64:count);
+extern func:usleep = int32(int32:usec);
+extern func:fcntl = int32(int32:fd, int32:cmd, int32:arg);
+extern func:malloc = any*(int64:size);
+extern func:free = void(any*:ptr);
+
+func:set_nonblocking = int32() {
+    int32:flags = fcntl(0i32, 3i32, 0i32);
+    flags = flags | 2048i32; // O_NONBLOCK
+    drop(fcntl(0i32, 4i32, flags));
+    pass 0i32;
+};
+
+func:main = int32() {
+    drop(set_nonblocking());
+    drop(Tui.init());
+    
+    int32:running = 1i32;
+    int8->:c = malloc(1i64) => int8->;
+    
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0");
+        
+        string:kernel = raw get_os_kernel();
+        string:uptime = raw get_uptime();
+        string:load = raw get_loadavg();
+        
+        int64:mtot = raw get_mem_total();
+        int64:mfree = raw get_mem_free();
+        int64:mused = mtot - mfree;
+        int32:mperc = 0i32;
+        if (mtot > 0i64) {
+            mperc = @cast_unchecked<int32>((mused * 100i64) / mtot);
+        }
+        
+        string:cmodel = raw get_cpu_model();
+        int64:ccores = raw get_cpu_cores();
+        if (ccores == 0i64) {
+            ccores = 1i64; // fallback just in case
+        }
+        
+        // System Info Panel
+        Widget:p1 = raw Tui.panel(2i32, 2i32, 76i32, 6i32, 7i32, 0i32);
+        drop(Tui.draw_widget(p1));
+        Widget:l1 = raw Tui.label(4i32, 3i32, string_concat("OS/Kernel: ", kernel), 6i32, 0i32);
+        drop(Tui.draw_widget(l1));
+        Widget:l2 = raw Tui.label(4i32, 4i32, string_concat("Uptime: ", uptime), 6i32, 0i32);
+        drop(Tui.draw_widget(l2));
+        Widget:l3 = raw Tui.label(4i32, 5i32, string_concat("Load Average: ", load), 6i32, 0i32);
+        drop(Tui.draw_widget(l3));
+        
+        // Memory Panel
+        Widget:p2 = raw Tui.panel(2i32, 9i32, 76i32, 6i32, 7i32, 0i32);
+        drop(Tui.draw_widget(p2));
+        Widget:lm1 = raw Tui.label(4i32, 10i32, "Memory Usage:", 7i32, 0i32);
+        drop(Tui.draw_widget(lm1));
+        
+        Widget:bar = raw Tui.progress(18i32, 10i32, 50i32, mperc);
+        drop(Tui.draw_widget(bar));
+        
+        string:mstr = string_concat(string_concat(raw format_mem(mused), " / "), raw format_mem(mtot));
+        Widget:lm2 = raw Tui.label(4i32, 12i32, string_concat("Used: ", mstr), 6i32, 0i32);
+        drop(Tui.draw_widget(lm2));
+        
+        // CPU Panel
+        Widget:p3 = raw Tui.panel(2i32, 16i32, 76i32, 5i32, 7i32, 0i32);
+        drop(Tui.draw_widget(p3));
+        Widget:lc1 = raw Tui.label(4i32, 17i32, string_concat("CPU Model: ", cmodel), 2i32, 0i32);
+        drop(Tui.draw_widget(lc1));
+        Widget:lc2 = raw Tui.label(4i32, 18i32, string_concat("CPU Cores: ", string_from_int(ccores)), 2i32, 0i32);
+        drop(Tui.draw_widget(lc2));
+        
+        // Footer
+        Widget:foot = raw Tui.label(2i32, 22i32, "[q] Quit    [nkmon - Nitpick Kernel Monitor]", 3i32, 0i32);
+        drop(Tui.draw_widget(foot));
+        
+        // Sleep for 1 second total, checking input every 100ms
+        int32:wait = 0i32;
+        while (wait < 10i32) {
+            int64:r = read(0i32, c => any->, 1i64);
+            if (r > 0i64) {
+                if (c[0i64] == 113i8) { // 'q'
+                    running = 0i32;
+                    wait = 10i32;
+                }
+            }
+            drop(usleep(100000i32));
+            wait = wait + 1i32;
+        }
+    }
+    
+    drop(Tui.shutdown());
+    free(c => any->);
+    
+    // reset nonblocking
+    int32:flags2 = fcntl(0i32, 3i32, 0i32);
+    flags2 = flags2 & (-2049i32); // ~O_NONBLOCK (actually ~2048 = -2049)
+    drop(fcntl(0i32, 4i32, flags2));
+    
+    exit(0i32);
+};

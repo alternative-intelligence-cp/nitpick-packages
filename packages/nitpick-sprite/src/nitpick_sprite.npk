@@ -1,0 +1,204 @@
+pub struct:Sprite = {
+    int64:texture_id;
+    float64:u;
+    float64:v;
+    float64:w;
+    float64:h;
+};
+
+// --- GLOBALS ---
+// Sprites Registry
+int64:g_sprite_count = 0i64;
+int64[4096]:g_sprite_texture;
+float64[4096]:g_sprite_u;
+float64[4096]:g_sprite_v;
+float64[4096]:g_sprite_w;
+float64[4096]:g_sprite_h;
+
+// Animation Frames Pool (Max 16384 frames total across all animations)
+int64:g_frame_count = 0i64;
+int64[16384]:g_frame_sprite;
+float64[16384]:g_frame_duration;
+
+// Animation Definitions
+int64:g_anim_count = 0i64;
+int64[4096]:g_anim_start;
+int64[4096]:g_anim_length;
+int64[4096]:g_anim_loop; // 1 = loop, 0 = play once
+
+// Active Instances
+int64:g_instance_count = 0i64;
+int64[4096]:g_inst_anim_id;
+int64[4096]:g_inst_frame_idx;
+float64[4096]:g_inst_timer;
+int64[4096]:g_inst_playing; // 1 = playing, 0 = stopped/finished
+
+// --- PUBLIC API EXPORTS ---
+pub Type:Sprite2D = {
+    // ----------------------------------------
+    // Definitions
+    // ----------------------------------------
+    
+    // Register a new sprite, returns sprite ID
+    func:create_sprite = int64(int64:texture_id, float64:u, float64:v, float64:w, float64:h) {
+        int64:id = g_sprite_count;
+        g_sprite_count = g_sprite_count + 1i64;
+        
+        g_sprite_texture[id] = texture_id;
+        g_sprite_u[id] = u;
+        g_sprite_v[id] = v;
+        g_sprite_w[id] = w;
+        g_sprite_h[id] = h;
+        
+        pass id;
+    };
+    
+    // Create a new animation definition, returns anim ID
+    func:create_anim = int64(int64:is_looping) {
+        int64:id = g_anim_count;
+        g_anim_count = g_anim_count + 1i64;
+        
+        g_anim_start[id] = g_frame_count;
+        g_anim_length[id] = 0i64;
+        g_anim_loop[id] = is_looping;
+        
+        pass id;
+    };
+    
+    // Add a frame to an animation definition
+    func:anim_add_frame = NIL(int64:anim_id, int64:sprite_id, float64:duration) {
+        int64:f_idx = g_frame_count;
+        g_frame_count = g_frame_count + 1i64;
+        
+        g_frame_sprite[f_idx] = sprite_id;
+        g_frame_duration[f_idx] = duration;
+        
+        g_anim_length[anim_id] = g_anim_length[anim_id] + 1i64;
+        pass NIL;
+    };
+    
+    // ----------------------------------------
+    // Instances (Playback)
+    // ----------------------------------------
+    
+    // Create an instance that can play animations, returns instance ID
+    func:create_instance = int64() {
+        int64:id = g_instance_count;
+        g_instance_count = g_instance_count + 1i64;
+        
+        g_inst_anim_id[id] = 0i64 - 1i64; // No animation initially
+        g_inst_playing[id] = 0i64;
+        
+        pass id;
+    };
+    
+    // Play an animation on an instance
+    func:play = NIL(int64:inst_id, int64:anim_id) {
+        g_inst_anim_id[inst_id] = anim_id;
+        g_inst_frame_idx[inst_id] = 0i64;
+        g_inst_timer[inst_id] = 0.0;
+        
+        if (g_anim_length[anim_id] > 0i64) {
+            g_inst_playing[inst_id] = 1i64;
+        } else {
+            g_inst_playing[inst_id] = 0i64;
+        }
+        pass NIL;
+    };
+    
+    // Stop playing animation on instance
+    func:stop = NIL(int64:inst_id) {
+        g_inst_playing[inst_id] = 0i64;
+        pass NIL;
+    };
+    
+    // ----------------------------------------
+    // Simulation / Update
+    // ----------------------------------------
+    
+    // Step animations forward by delta time (dt)
+    func:step = NIL(float64:dt) {
+        int64:i = 0i64;
+        while (i < g_instance_count) {
+            if (g_inst_playing[i] == 1i64) {
+                int64:anim_id = g_inst_anim_id[i];
+                int64:f_idx = g_inst_frame_idx[i];
+                
+                int64:global_frame = g_anim_start[anim_id] + f_idx;
+                float64:duration = g_frame_duration[global_frame];
+                
+                g_inst_timer[i] = g_inst_timer[i] + dt;
+                
+                while (g_inst_timer[i] >= duration) {
+                    if (g_inst_playing[i] == 0i64) {
+                        break;
+                    }
+                    
+                    g_inst_timer[i] = g_inst_timer[i] - duration;
+                    f_idx = f_idx + 1i64;
+                    
+                    if (f_idx >= g_anim_length[anim_id]) {
+                        if (g_anim_loop[anim_id] == 1i64) {
+                            f_idx = 0i64; // Loop back
+                        } else {
+                            f_idx = g_anim_length[anim_id] - 1i64; // Hold last frame
+                            g_inst_playing[i] = 0i64; // Stop
+                            g_inst_timer[i] = 0.0;
+                        }
+                    }
+                    g_inst_frame_idx[i] = f_idx;
+                    
+                    // Update duration for next while iteration
+                    global_frame = g_anim_start[anim_id] + f_idx;
+                    duration = g_frame_duration[global_frame];
+                }
+            }
+            i = i + 1i64;
+        }
+        pass NIL;
+    };
+    
+    // ----------------------------------------
+    // Getters
+    // ----------------------------------------
+    
+    // Get current sprite ID for instance
+    func:get_current_sprite = int64(int64:inst_id) {
+        if (g_inst_playing[inst_id] == 0i64) {
+            // Still return the frame it stopped on, if it has one
+            if (g_inst_anim_id[inst_id] >= 0i64) {
+                int64:anim_id = g_inst_anim_id[inst_id];
+                int64:f_idx = g_inst_frame_idx[inst_id];
+                if (g_anim_length[anim_id] > 0i64) {
+                    pass g_frame_sprite[g_anim_start[anim_id] + f_idx];
+                }
+            }
+            pass 0i64 - 1i64;
+        }
+        
+        int64:anim_id = g_inst_anim_id[inst_id];
+        int64:f_idx = g_inst_frame_idx[inst_id];
+        int64:global_frame = g_anim_start[anim_id] + f_idx;
+        pass g_frame_sprite[global_frame];
+    };
+    
+    // Get Sprite struct by ID
+    func:get_sprite_data = Sprite(int64:sprite_id) {
+        Sprite:s;
+        s.texture_id = g_sprite_texture[sprite_id];
+        s.u = g_sprite_u[sprite_id];
+        s.v = g_sprite_v[sprite_id];
+        s.w = g_sprite_w[sprite_id];
+        s.h = g_sprite_h[sprite_id];
+        pass s;
+    };
+    
+    // Clear all state (useful for tests)
+    func:clear = NIL() {
+        g_sprite_count = 0i64;
+        g_frame_count = 0i64;
+        g_anim_count = 0i64;
+        g_instance_count = 0i64;
+        pass NIL;
+    };
+};

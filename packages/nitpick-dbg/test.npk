@@ -1,0 +1,15 @@
+pub func:calculate_sum = int32(int32:a, int32:b) {
+    int32:result = a + b;
+    pass result;
+};
+
+pub func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    int32:x = 10i32;
+    int32:y = 32i32;
+    int32:sum = raw calculate_sum(x, y);
+    exit sum;
+};

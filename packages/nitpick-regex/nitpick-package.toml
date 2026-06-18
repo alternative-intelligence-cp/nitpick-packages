@@ -1,11 +1,6 @@
 [package]
-name            = "nitpick-regex"
-version         = "0.2.2"
-description     = "Regular expression library for Nitpick — POSIX extended regex"
-license         = "MIT"
-repository      = "https://github.com/alternative-intelligence-cp/aria"
+name = "nitpick-regex"
+version = "0.1.0"
+description = "Native regular expression engine using POSIX regex.h"
 
 [dependencies]
-
-[build]
-link_libraries = ["nitpick_regex_shim"]

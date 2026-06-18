@@ -1,0 +1,85 @@
+use "nitpick_str.npk".*;
+
+// Basic string equality helper
+pub func:oauth2_str_eq = int64(string:a, string:b) {
+    if (string_length(a) != string_length(b)) { pass 0i64; }
+    if (string_starts_with(a, b) == false) { pass 0i64; }
+    pass 1i64;
+};
+
+pub func:oauth2_get_auth_url = string(string:base, string:client_id, string:redirect_uri, string:scope, string:state) {
+    string:url = string_concat(base, "?response_type=code");
+    url = string_concat(url, "&client_id=");
+    url = string_concat(url, client_id);
+    url = string_concat(url, "&redirect_uri=");
+    url = string_concat(url, redirect_uri);
+    url = string_concat(url, "&scope=");
+    url = string_concat(url, scope);
+    url = string_concat(url, "&state=");
+    url = string_concat(url, state);
+    pass url;
+};
+
+pub func:oauth2_extract_param = string(string:url, string:param) {
+    string:search = string_concat(param, "=");
+    if (string_contains(url, search) == false) {
+        pass "";
+    }
+    string:after = raw Str.after(url, search);
+    
+    if (string_contains(after, "&") == true) {
+        pass raw Str.before(after, "&");
+    }
+    pass after;
+};
+
+pub func:oauth2_extract_code = string(string:url) {
+    pass raw oauth2_extract_param(url, "code");
+};
+
+pub func:oauth2_verify_state = int64(string:url, string:expected_state) {
+    string:actual = raw oauth2_extract_param(url, "state");
+    pass raw oauth2_str_eq(actual, expected_state);
+};
+
+pub func:oauth2_get_token_payload = string(string:client_id, string:secret, string:code, string:redirect_uri) {
+    string:payload = "grant_type=authorization_code";
+    payload = string_concat(payload, "&client_id=");
+    payload = string_concat(payload, client_id);
+    payload = string_concat(payload, "&client_secret=");
+    payload = string_concat(payload, secret);
+    payload = string_concat(payload, "&code=");
+    payload = string_concat(payload, code);
+    payload = string_concat(payload, "&redirect_uri=");
+    payload = string_concat(payload, redirect_uri);
+    pass payload;
+};
+
+pub func:oauth2_get_bearer_header = string(string:token) {
+    string:header = "Authorization: Bearer ";
+    header = string_concat(header, token);
+    header = string_concat(header, "\r\n");
+    pass header;
+};
+
+pub Type:Oauth2 = {
+    func:get_auth_url = string(string:base, string:client_id, string:redirect_uri, string:scope, string:state) {
+        pass raw oauth2_get_auth_url(base, client_id, redirect_uri, scope, state);
+    };
+    
+    func:extract_code = string(string:url) {
+        pass raw oauth2_extract_code(url);
+    };
+    
+    func:verify_state = int64(string:url, string:expected_state) {
+        pass raw oauth2_verify_state(url, expected_state);
+    };
+    
+    func:get_token_payload = string(string:client_id, string:secret, string:code, string:redirect_uri) {
+        pass raw oauth2_get_token_payload(client_id, secret, code, redirect_uri);
+    };
+    
+    func:get_bearer_header = string(string:token) {
+        pass raw oauth2_get_bearer_header(token);
+    };
+};

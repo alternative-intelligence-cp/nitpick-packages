@@ -1,0 +1,102 @@
+use "nitpick_graphql.npk".*;
+use "nitpick_str.npk".*;
+
+extern "c" {
+    func:printf = int32(string:fmt);
+}
+
+// Our custom resolver for the test
+pub func:my_gql_resolver = string(string:path, string:field) {
+    if (raw gql_str_eq(path, "Query") == 1i64) {
+        if (raw gql_str_eq(field, "user") == 1i64) { pass "{}"; }
+        if (raw gql_str_eq(field, "post") == 1i64) { pass "{}"; }
+    }
+    if (raw gql_str_eq(path, "Query.user") == 1i64) {
+        if (raw gql_str_eq(field, "id") == 1i64) { pass "\"u_123\""; }
+        if (raw gql_str_eq(field, "name") == 1i64) { pass "\"Randy\""; }
+        if (raw gql_str_eq(field, "age") == 1i64) { pass "30"; }
+    }
+    if (raw gql_str_eq(path, "Query.post") == 1i64) {
+        if (raw gql_str_eq(field, "title") == 1i64) { pass "\"Hello GraphQL\""; }
+    }
+    
+    pass "null";
+};
+
+pub func:my_gql_execute_field = string(int64:field_id, string:path) {
+    string:field_name = raw Gql.ast_name(field_id);
+    string:resolved_val = raw my_gql_resolver(path, field_name);
+    
+    int64:sel_set = raw Gql.ast_first_child(field_id);
+    if (sel_set != -1i64) {
+        string:new_path = string_concat(path, ".");
+        new_path = string_concat(new_path, field_name);
+        
+        string:obj_json = "{";
+        int64:child = raw Gql.ast_first_child(sel_set);
+        int64:first = 1i64;
+        
+        while (child != -1i64) {
+            if (first == 0i64) {
+                obj_json = string_concat(obj_json, ", ");
+            }
+            first = 0i64;
+            
+            string:child_res = raw my_gql_execute_field(child, new_path);
+            obj_json = string_concat(obj_json, "\"");
+            obj_json = string_concat(obj_json, raw Gql.ast_name(child));
+            obj_json = string_concat(obj_json, "\": ");
+            obj_json = string_concat(obj_json, child_res);
+            
+            child = raw Gql.ast_next_sibling(child);
+        }
+        obj_json = string_concat(obj_json, "}");
+        pass obj_json;
+    }
+    
+    pass resolved_val;
+};
+
+pub func:my_gql_execute = string(int64:ast_root) {
+    if (ast_root == -1i64) { pass "null"; }
+    
+    string:json = "{\"data\": {";
+    
+    int64:child = raw Gql.ast_first_child(ast_root);
+    int64:first = 1i64;
+    while (child != -1i64) {
+        if (first == 0i64) {
+            json = string_concat(json, ", ");
+        }
+        first = 0i64;
+        
+        string:child_res = raw my_gql_execute_field(child, "Query");
+        json = string_concat(json, "\"");
+        json = string_concat(json, raw Gql.ast_name(child));
+        json = string_concat(json, "\": ");
+        json = string_concat(json, child_res);
+        
+        child = raw Gql.ast_next_sibling(child);
+    }
+    
+    json = string_concat(json, "}}");
+    pass json;
+};
+
+pub func:main = int32() {
+    string:query = "query { user { id name age } post { title } }";
+    
+    drop(printf("Parsing query:\n\0"));
+    string:sq = string_concat(query, "\n\0");
+    drop(printf(sq));
+    
+    int64:ast = raw Gql.parse(query);
+    
+    drop(printf("\nExecuting query...\n\0"));
+    string:json = raw my_gql_execute(ast);
+    
+    string:sout = string_concat(json, "\n\0");
+    drop(printf(sout));
+    
+    exit 0i32;
+};

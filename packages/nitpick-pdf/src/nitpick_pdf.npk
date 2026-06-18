@@ -1,0 +1,123 @@
+extern "c" {
+    func:pdf_open = int64(string:filename);
+    func:pdf_write = NIL(int64:f, string:str);
+    func:pdf_write_int = NIL(int64:f, int64:val);
+    func:pdf_write_float = NIL(int64:f, float64:val);
+    func:pdf_get_offset = int64(int64:f);
+    func:pdf_close = NIL(int64:f);
+}
+
+// Global state
+int64:g_pdf_file = 0i64;
+int64[4096]:g_xref_offsets;
+int64:g_stream_start = 0i64;
+int64:g_stream_length = 0i64;
+
+func:record_obj = NIL(int64:obj_id) {
+    g_xref_offsets[obj_id] = pdf_get_offset(g_pdf_file);
+    pass NIL;
+};
+
+pub Type:PDF = {
+    func:begin_document = int64(string:filename) {
+        g_pdf_file = pdf_open(filename);
+        if (@cast<int64>(g_pdf_file) == 0i64) {
+            pass 0i64; // Failed
+        }
+        
+        drop pdf_write(g_pdf_file, "%PDF-1.4\n\0");
+        
+        // Object 1: Catalog
+        drop record_obj(1i64);
+        drop pdf_write(g_pdf_file, "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n\0");
+        
+        // Object 2: Pages
+        drop record_obj(2i64);
+        drop pdf_write(g_pdf_file, "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n\0");
+        
+        // Object 3: Page 1
+        drop record_obj(3i64);
+        drop pdf_write(g_pdf_file, "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n\0");
+        
+        // Object 4: Content Stream
+        drop record_obj(4i64);
+        drop pdf_write(g_pdf_file, "4 0 obj\n<< /Length 6 0 R >>\nstream\n\0");
+        
+        g_stream_start = pdf_get_offset(g_pdf_file);
+        
+        pass 1i64; // Success
+    };
+    
+    func:draw_text = NIL(float64:x, float64:y, string:text) {
+        drop pdf_write(g_pdf_file, "BT /F1 12 Tf \0");
+        drop pdf_write_float(g_pdf_file, x);
+        drop pdf_write(g_pdf_file, " \0");
+        drop pdf_write_float(g_pdf_file, y);
+        drop pdf_write(g_pdf_file, " Td (\0");
+        drop pdf_write(g_pdf_file, text);
+        drop pdf_write(g_pdf_file, ") Tj ET\n\0");
+        pass NIL;
+    };
+    
+    func:draw_rect = NIL(float64:x, float64:y, float64:w, float64:h) {
+        drop pdf_write_float(g_pdf_file, x);
+        drop pdf_write(g_pdf_file, " \0");
+        drop pdf_write_float(g_pdf_file, y);
+        drop pdf_write(g_pdf_file, " \0");
+        drop pdf_write_float(g_pdf_file, w);
+        drop pdf_write(g_pdf_file, " \0");
+        drop pdf_write_float(g_pdf_file, h);
+        drop pdf_write(g_pdf_file, " re S\n\0");
+        pass NIL;
+    };
+    
+    func:end_document = NIL() {
+        int64:stream_end = pdf_get_offset(g_pdf_file);
+        g_stream_length = stream_end - g_stream_start;
+        
+        drop pdf_write(g_pdf_file, "endstream\nendobj\n\0");
+        
+        // Object 5: Font
+        drop record_obj(5i64);
+        drop pdf_write(g_pdf_file, "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n\0");
+        
+        // Object 6: Stream Length
+        drop record_obj(6i64);
+        drop pdf_write(g_pdf_file, "6 0 obj\n\0");
+        drop pdf_write_int(g_pdf_file, g_stream_length);
+        drop pdf_write(g_pdf_file, "\nendobj\n\0");
+        
+        // XREF Table
+        int64:xref_start = pdf_get_offset(g_pdf_file);
+        drop pdf_write(g_pdf_file, "xref\n0 7\n0000000000 65535 f \n\0");
+        
+        int64:i = 1i64;
+        while (i <= 6i64) {
+            int64:off = g_xref_offsets[i];
+            
+            // Basic zero padding hack for up to 10 digits
+            if (off < 10i64) { pdf_write(g_pdf_file, "000000000\0"); }
+            else if (off < 100i64) { pdf_write(g_pdf_file, "00000000\0"); }
+            else if (off < 1000i64) { pdf_write(g_pdf_file, "0000000\0"); }
+            else if (off < 10000i64) { pdf_write(g_pdf_file, "000000\0"); }
+            else if (off < 100000i64) { pdf_write(g_pdf_file, "00000\0"); }
+            else if (off < 1000000i64) { pdf_write(g_pdf_file, "0000\0"); }
+            else if (off < 10000000i64) { pdf_write(g_pdf_file, "000\0"); }
+            else if (off < 100000000i64) { pdf_write(g_pdf_file, "00\0"); }
+            else if (off < 1000000000i64) { pdf_write(g_pdf_file, "0\0"); }
+            
+        drop pdf_write_int(g_pdf_file, off);
+        drop pdf_write(g_pdf_file, " 00000 n \n\0");
+            
+            i = i + 1i64;
+        }
+        
+        // Trailer
+        drop pdf_write(g_pdf_file, "trailer\n<< /Size 7 /Root 1 0 R >>\nstartxref\n\0");
+        drop pdf_write_int(g_pdf_file, xref_start);
+        drop pdf_write(g_pdf_file, "\n%%EOF\n\0");
+        
+        drop pdf_close(g_pdf_file);
+        pass NIL;
+    };
+};

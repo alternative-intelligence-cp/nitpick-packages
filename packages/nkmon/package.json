@@ -1,0 +1,13 @@
+{
+  "name": "nkmon",
+  "version": "1.0.0",
+  "description": "Nitpick Kernel Manager and Activity Monitor TUI",
+  "main": "src/nkmon.npk",
+  "dependencies": {
+    "nitpick-fs": "1.0.0",
+    "nitpick-str": "1.0.0",
+    "nitpick-display": "1.0.0",
+    "nitpick-input": "1.0.0",
+    "nitpick-tui": "1.0.0"
+  }
+}

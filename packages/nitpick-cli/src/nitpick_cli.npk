@@ -1,56 +1,42 @@
-// nitpick_cli.npk — Rich CLI output library for Nitpick (v0.11.2)
-//
-// Keeps C shim for ANSI escape byte generation (ESC not expressible in Nitpick strings).
-// Import with: use "nitpick_cli.npk".*;
-
-extern "nitpick_cli_shim" {
-    func:nitpick_cli_red          = string(string:text);
-    func:nitpick_cli_green        = string(string:text);
-    func:nitpick_cli_yellow       = string(string:text);
-    func:nitpick_cli_blue         = string(string:text);
-    func:nitpick_cli_magenta      = string(string:text);
-    func:nitpick_cli_cyan         = string(string:text);
-    func:nitpick_cli_white        = string(string:text);
-    func:nitpick_cli_gray         = string(string:text);
-    func:nitpick_cli_bold         = string(string:text);
-    func:nitpick_cli_dim          = string(string:text);
-    func:nitpick_cli_italic       = string(string:text);
-    func:nitpick_cli_underline    = string(string:text);
-    func:nitpick_cli_strikethrough = string(string:text);
-    func:nitpick_cli_bright_red   = string(string:text);
-    func:nitpick_cli_bright_green = string(string:text);
-    func:nitpick_cli_bright_blue  = string(string:text);
-    func:nitpick_cli_progress     = string(int32:current, int32:total, int32:width);
-    func:nitpick_cli_hr           = string(int32:width, string:ch);
-    func:nitpick_cli_banner       = string(string:text, int32:width);
-    func:nitpick_cli_strip        = string(string:text);
+extern "c" {
+    func:cli_register_flag = NIL(string:name, string:short_name);
+    func:cli_register_option = NIL(string:name, string:short_name, string:default_val);
+    func:cli_parse = NIL();
+    func:cli_get_flag = int64(string:name);
+    func:cli_get_option = string(string:name);
+    func:cli_get_positional_count = int64();
+    func:cli_get_positional = string(int64:index);
 }
 
-extern "libc" { func:string_length = int64(string:s); }
-
-// ── Type wrapper ───────────────────────────────────────────────────────────────
-
 pub Type:Cli = {
-
-    func:red = string(string:text) { pass nitpick_cli_red(text); };
-    func:green = string(string:text) { pass nitpick_cli_green(text); };
-    func:yellow = string(string:text) { pass nitpick_cli_yellow(text); };
-    func:blue = string(string:text) { pass nitpick_cli_blue(text); };
-    func:magenta = string(string:text) { pass nitpick_cli_magenta(text); };
-    func:cyan = string(string:text) { pass nitpick_cli_cyan(text); };
-    func:white = string(string:text) { pass nitpick_cli_white(text); };
-    func:gray = string(string:text) { pass nitpick_cli_gray(text); };
-    func:bold = string(string:text) { pass nitpick_cli_bold(text); };
-    func:dim = string(string:text) { pass nitpick_cli_dim(text); };
-    func:italic = string(string:text) { pass nitpick_cli_italic(text); };
-    func:underline = string(string:text) { pass nitpick_cli_underline(text); };
-    func:strikethrough = string(string:text) { pass nitpick_cli_strikethrough(text); };
-    func:bright_red = string(string:text) { pass nitpick_cli_bright_red(text); };
-    func:bright_green = string(string:text) { pass nitpick_cli_bright_green(text); };
-    func:bright_blue = string(string:text) { pass nitpick_cli_bright_blue(text); };
-    func:progress = string(int32:current, int32:total, int32:width) { pass nitpick_cli_progress(current, total, width); };
-    func:hr = string(int32:width, string:ch) { pass nitpick_cli_hr(width, ch); };
-    func:banner = string(string:text, int32:width) { pass nitpick_cli_banner(text, width); };
-    func:strip = string(string:text) { pass nitpick_cli_strip(text); };
-    func:count = int32() { pass 20i32; };
+    func:register_flag = NIL(string:name, string:short_name) {
+        cli_register_flag(name, short_name);
+        pass NIL;
+    };
+    
+    func:register_option = NIL(string:name, string:short_name, string:default_val) {
+        cli_register_option(name, short_name, default_val);
+        pass NIL;
+    };
+    
+    func:parse = NIL() {
+        cli_parse();
+        pass NIL;
+    };
+    
+    func:get_flag = int64(string:name) {
+        pass cli_get_flag(name);
+    };
+    
+    func:get_option = string(string:name) {
+        pass cli_get_option(name);
+    };
+    
+    func:get_positional_count = int64() {
+        pass cli_get_positional_count();
+    };
+    
+    func:get_positional = string(int64:index) {
+        pass cli_get_positional(index);
+    };
 };

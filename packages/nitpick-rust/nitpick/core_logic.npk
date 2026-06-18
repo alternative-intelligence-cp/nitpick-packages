@@ -1,0 +1,7 @@
+pub func:nitpick_add = int64(int64:a, int64:b) {
+    pass a + b;
+};
+
+pub func:nitpick_greet = string(string:name) {
+    pass "Hello, " + name + "!\0";
+};

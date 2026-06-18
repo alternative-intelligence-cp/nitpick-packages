@@ -1,0 +1,7 @@
+LIBRARY "nitpick_tilemap"
+
+SOURCES:
+    src/nitpick_tilemap.npk
+
+DEPENDENCIES:
+    ../nitpick-math (optional)

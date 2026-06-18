@@ -1,0 +1,82 @@
+use "nitpick_physics2d.npk".*;
+
+extern "c" {
+    func:printf = int32(string:fmt);
+    func:printf_f = int32(string:fmt, float64:v);
+}
+
+pub func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    drop printf("--- nitpick-physics2d Tests ---\n\0");
+    
+    // Test 1: Falling Box (Gravity integration)
+    drop printf("Test 1: Falling Box\n\0");
+    raw Physics2D.clear();
+    raw Physics2D.set_gravity(0.0, 9.8);
+    
+    int64:box1 = raw Physics2D.create_box(0.0, 0.0, 10.0, 10.0, 1.0); // 1kg box
+    
+    // Simulate 1 second at 60 FPS (60 steps of 1/60s)
+    int64:step = 0i64;
+    while (step < 60i64) {
+        raw Physics2D.step(0.016666); // approx 1/60
+        step = step + 1i64;
+    }
+    
+    Vec2:pos = raw Physics2D.get_pos(box1);
+    Vec2:vel = raw Physics2D.get_vel(box1);
+    drop printf_f("  Box Y Position after 1s: %f (expected ~4.9)\n\0", pos.y);
+    drop printf_f("  Box Y Velocity after 1s: %f (expected ~9.8)\n\0", vel.y);
+    
+    // Test 2: Collision with Static Floor
+    drop printf("Test 2: Collision with Static Floor\n\0");
+    raw Physics2D.clear();
+    
+    int64:floor = raw Physics2D.create_box(0.0, 100.0, 1000.0, 10.0, 0.0); // 0 mass = static
+    int64:falling_box = raw Physics2D.create_box(0.0, 0.0, 10.0, 10.0, 1.0);
+    raw Physics2D.set_restitution(falling_box, 0.5); // bounce
+    
+    // Simulate until collision and bounce (approx 6 seconds)
+    step = 0i64;
+    while (step < 360i64) {
+        raw Physics2D.step(0.016666);
+        step = step + 1i64;
+    }
+    
+    pos = raw Physics2D.get_pos(falling_box);
+    vel = raw Physics2D.get_vel(falling_box);
+    drop printf_f("  Falling Box Y Pos: %f (expected ~90.0, floor is at 100, half_h=5, half_h_floor=5)\n\0", pos.y);
+    drop printf_f("  Falling Box Y Vel: %f (expected negative velocity from bounce)\n\0", vel.y);
+    
+    // Test 3: Circle vs Circle collision
+    drop printf("Test 3: Circle vs Circle Elastic Collision\n\0");
+    raw Physics2D.clear();
+    raw Physics2D.set_gravity(0.0, 0.0); // no gravity
+    
+    int64:c1 = raw Physics2D.create_circle(0.0, 0.0, 5.0, 1.0);
+    int64:c2 = raw Physics2D.create_circle(20.0, 0.0, 5.0, 1.0);
+    
+    // Move c1 towards c2
+    raw Physics2D.set_vel(c1, 10.0, 0.0);
+    raw Physics2D.set_restitution(c1, 1.0); // Perfectly elastic
+    raw Physics2D.set_restitution(c2, 1.0);
+    
+    // Simulate 2 seconds
+    step = 0i64;
+    while (step < 120i64) {
+        raw Physics2D.step(0.016666);
+        step = step + 1i64;
+    }
+    
+    Vec2:c1_vel = raw Physics2D.get_vel(c1);
+    Vec2:c2_vel = raw Physics2D.get_vel(c2);
+    drop printf_f("  Circle 1 X Vel: %f (expected ~0.0)\n\0", c1_vel.x);
+    drop printf_f("  Circle 2 X Vel: %f (expected ~10.0)\n\0", c2_vel.x);
+    
+    drop printf("--- All Tests Finished ---\n\0");
+    
+    exit 0i32;
+};
