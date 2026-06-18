@@ -1,0 +1,51 @@
+use "nitpick_cli.npk".*;
+
+extern func:nneeds_check_bin = int32(string:bin);
+extern func:nneeds_get_version = string(string:bin);
+
+func:main = int32() {
+    drop(Cli.register_flag("--help\0", "-h\0"));
+    drop(Cli.parse());
+    
+    if (raw Cli.get_flag("--help\0") == 1i32) {
+        print("nneeds - checks if bin(s) are installed, oh and the version too.\n\0");
+        print("Usage: nneeds <bin1> <bin2> ...\n\0");
+        exit(0i32);
+    }
+    
+    int64:count = raw Cli.get_positional_count();
+    if (count == 0i64) {
+        print("Please provide at least one binary to check.\n\0");
+        print("Usage: nneeds <bin1> <bin2> ...\n\0");
+        exit(1i32);
+    }
+    
+    int64:i = 0i64;
+    till (1000, 1) {
+        if (i < count) {
+            string:bin = raw Cli.get_positional(i);
+            int32:exists = nneeds_check_bin(bin);
+            
+            if (exists == 1i32) {
+                print("[\0");
+                print("OK");
+                print("] \0");
+                print(bin);
+                print(" is installed! (\0");
+                print(nneeds_get_version(bin));
+                print(")\n\0");
+            } else {
+                print("[XX] \0");
+                print(bin);
+                print(" is missing!\n\0");
+            }
+            i = i + 1i64;
+        }
+    }
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};
