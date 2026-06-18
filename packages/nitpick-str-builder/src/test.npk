@@ -1,0 +1,23 @@
+use "nitpick_str_builder.npk".*;
+
+func:main = int32() {
+    StrBuilder:sb = raw StrB.new(16i64);
+    
+    drop(StrB.append(sb, "Hello \0"));
+    drop(StrB.append(sb, "World!\0"));
+    drop(StrB.append_char(sb, 10i64)); // newline
+    drop(StrB.append(sb, "Count: \0"));
+    drop(StrB.append_int(sb, 42i64));
+    
+    string:res = raw StrB.build(sb);
+    print(res);
+    print("\n\0");
+    
+    drop(StrB.free(sb));
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};

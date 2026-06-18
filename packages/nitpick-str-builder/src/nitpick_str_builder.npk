@@ -1,0 +1,49 @@
+extern func:str_builder_sys_new = int64(int64:capacity);
+extern func:str_builder_sys_append = void(int64:handle, string:str);
+extern func:str_builder_sys_append_char = void(int64:handle, int64:c);
+extern func:str_builder_sys_append_int = void(int64:handle, int64:val);
+extern func:str_builder_sys_build = string(int64:handle);
+extern func:str_builder_sys_free = void(int64:handle);
+
+pub struct:StrBuilder = {
+    int64:handle;
+};
+
+pub Type:StrB = {
+    // Creates a new string builder with the given initial capacity.
+    func:new = StrBuilder(int64:capacity) {
+        int64:h = str_builder_sys_new(capacity);
+        pass(StrBuilder {
+            handle: h
+        });
+    };
+    
+    // Appends a string to the builder.
+    func:append = int32(StrBuilder:sb, string:s) {
+        str_builder_sys_append(sb.handle, s);
+        pass(0i32);
+    };
+    
+    // Appends a single character to the builder.
+    func:append_char = int32(StrBuilder:sb, int64:c) {
+        str_builder_sys_append_char(sb.handle, c);
+        pass(0i32);
+    };
+    
+    // Appends an integer to the builder.
+    func:append_int = int32(StrBuilder:sb, int64:val) {
+        str_builder_sys_append_int(sb.handle, val);
+        pass(0i32);
+    };
+    
+    // Returns the fully constructed string.
+    func:build = string(StrBuilder:sb) {
+        pass(str_builder_sys_build(sb.handle));
+    };
+    
+    // Frees the underlying memory of the string builder.
+    func:free = int32(StrBuilder:sb) {
+        str_builder_sys_free(sb.handle);
+        pass(0i32);
+    };
+};

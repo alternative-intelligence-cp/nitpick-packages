@@ -83,6 +83,13 @@ Ecosystem package libraries for the [Nitpick programming language](https://githu
 | nitpick-nmdcat | Markdown viewer for the terminal |
 | nitpick-ndog | A simple command-line DNS client |
 | nitpick-nkibi | A simple, lightweight terminal text editor |
+| nitpick-nmotus | Dead simple password generator |
+| nitpick-nnotox | Filename sanitizer that removes unsafe characters |
+| nitpick-nnetscanner | Simple TCP port scanner for local targets |
+| nitpick-nscooter | Simple command-line find and replace tool |
+| nitpick-nneeds | Checks if binaries are installed and prints their versions |
+| nitpick-nfend | An arbitrary-precision unit-aware calculator for mathematical expressions |
+| nitpick-str-builder | High-performance C-backed string builder library |
 | nitpick-ntere | A fast TUI directory browser (alternative to `cd + ls`) |
 | nitpick-nn | Neural network framework built on nitpick-matrix |
 | nitpick-nkondo | Fast TUI utility to find and delete heavy project directories |
