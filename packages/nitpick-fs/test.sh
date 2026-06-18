@@ -13,7 +13,7 @@ for t in "${TESTS[@]}"; do
     bin_name="${t%.npk}"
     echo "Compiling $bin_name..."
     /home/randy/Workspace/REPOS/nitpick/build/npkc tests/$t \
-        -I src \
+        -I src -I ../nitpick-thread/src \
         --emit-llvm -o out_${bin_name}.ll
 
     sed -i 's/getelementptr inbounds nuw/getelementptr inbounds/g' out_${bin_name}.ll

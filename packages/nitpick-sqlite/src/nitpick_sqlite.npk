@@ -37,6 +37,7 @@ extern "nitpick_sqlite_shim" {
     func:nitpick_sqlite_column_type    = int32(int32:col);
     func:nitpick_sqlite_column_int     = int64(int32:col);
     func:nitpick_sqlite_column_double  = float64(int32:col);
+    func:nitpick_sqlite_column_text    = string(int32:col);
     func:nitpick_sqlite_column_is_null = int32(int32:col);
 
     func:nitpick_sqlite_begin    = int32(int32:db_id);
@@ -158,6 +159,11 @@ func:sqlite_column_double = float64(int32:col) {
     pass(r);
 };
 
+func:sqlite_column_text = string(int32:col) {
+    string:r = nitpick_sqlite_column_text(col);
+    pass(r);
+};
+
 func:sqlite_column_is_null = int32(int32:col) {
     int32:r = nitpick_sqlite_column_is_null(col);
     pass(r);
@@ -216,6 +222,7 @@ pub Type:Sqlite = {
     func:column_type = int32(int32:col) { pass raw sqlite_column_type(col); };
     func:column_int = int64(int32:col) { pass raw sqlite_column_int(col); };
     func:column_double = float64(int32:col) { pass raw sqlite_column_double(col); };
+    func:column_text = string(int32:col) { pass raw sqlite_column_text(col); };
     func:column_is_null = int32(int32:col) { pass raw sqlite_column_is_null(col); };
     func:begin = int32(int32:db_id) { pass raw sqlite_begin(db_id); };
     func:commit = int32(int32:db_id) { pass raw sqlite_commit(db_id); };

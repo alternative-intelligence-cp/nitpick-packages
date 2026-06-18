@@ -4,6 +4,7 @@ extern "libc" {
     func:puts = int32(string:msg);
 }
 use "../src/nitpick_db_pool.npk".*;
+use "../../nitpick-thread/src/nitpick_thread.npk".*;
 
 func:failsafe = int32(tbb32:_err) {
     drop(puts("FAIL: Uncaught fail() inside pool logic"));
@@ -11,50 +12,63 @@ func:failsafe = int32(tbb32:_err) {
 };
 
 func:main = int32() {
-    raw db_pool_init();
+    raw DbPool.init();
 
     // Add some mock connection handles: 100, 200, 300
-    int32:c1 = raw db_pool_add(100i32);
-    int32:c2 = raw db_pool_add(200i32);
-    int32:c3 = raw db_pool_add(300i32);
+    int32:c1 = raw DbPool.add(100i32);
+    int32:c2 = raw DbPool.add(200i32);
+    int32:c3 = raw DbPool.add(300i32);
     drop(c1); drop(c2); drop(c3);
     
     // Acquire the first one
-    int32:acq1 = raw db_pool_acquire();
+    int32:acq1 = raw DbPool.get_conn();
     if (acq1 == 100i32) {
-        drop(puts("PASS: T01 Acquire first conn"));
+        drop(puts("PASS: T01 Acquire first conn\0"));
     } else {
-        drop(puts("FAIL: T01 Acquire first conn"));
+        drop(puts("FAIL: T01 Acquire first conn\0"));
         exit 1i32;
     }
 
     // Acquire the second one
-    int32:acq2 = raw db_pool_acquire();
+    int32:acq2 = raw DbPool.get_conn();
     if (acq2 == 200i32) {
-        drop(puts("PASS: T02 Acquire second conn"));
+        drop(puts("PASS: T02 Acquire second conn\0"));
     } else {
-        drop(puts("FAIL: T02 Acquire second conn"));
+        drop(puts("FAIL: T02 Acquire second conn\0"));
         exit 1i32;
     }
 
     // Release the first one
-    int32:rel = raw db_pool_release(100i32);
+    int32:rel = raw DbPool.free_conn(100i32);
     if (rel == 1i32) {
-        drop(puts("PASS: T03 Release first conn"));
+        drop(puts("PASS: T03 Release first conn\0"));
     } else {
-        drop(puts("FAIL: T03 Release first conn"));
+        drop(puts("FAIL: T03 Release first conn\0"));
         exit 1i32;
     }
 
     // Acquire again, should get the first one since we released it!
-    int32:acq3 = raw db_pool_acquire();
+    int32:acq3 = raw DbPool.get_conn();
     if (acq3 == 100i32) {
-        drop(puts("PASS: T04 Re-acquire released conn"));
+        drop(puts("PASS: T04 Re-acquire released conn\0"));
     } else {
-        drop(puts("FAIL: T04 Re-acquire released conn"));
+        drop(puts("FAIL: T04 Re-acquire released conn\0"));
         exit 1i32;
     }
     
-    drop(puts("ALL TESTS PASSED"));
+    // Concurrency test
+    (int64)(int64):pool_worker = int64(int64:arg) {
+        int32:conn = raw DbPool.get_conn();
+        drop(thread_sleep_ms(50i64));
+        drop(raw DbPool.free_conn(conn));
+        pass 0i64;
+    };
+    int64:th1 = npk_shim_thread_spawn(pool_worker, 0i64);
+    int64:th2 = npk_shim_thread_spawn(pool_worker, 0i64);
+    drop(npk_shim_thread_join(th1));
+    drop(npk_shim_thread_join(th2));
+    drop(puts("PASS: T05 Concurrent acquire and release\0"));
+    
+    drop(puts("ALL TESTS PASSED\0"));
     exit 0i32;
 };

@@ -1,0 +1,37 @@
+[project]
+name = "nigrep"
+version = "0.1.0"
+
+[target.nigrep]
+type = "binary"
+sources = ["src/main.npk"]
+deps = [
+    "nitpick-tui",
+    "nitpick-display",
+    "nitpick-input",
+    "nitpick-str",
+    "nitpick-fs",
+    "nitpick-thread",
+    "nitpick-sync"
+]
+flags = [
+    "-I", "src",
+    "-I", "../nitpick-tui/src",
+    "-I", "../nitpick-display/src",
+    "-I", "../nitpick-input/src",
+    "-I", "../nitpick-str/src",
+    "-I", "../nitpick-fs/src",
+    "-I", "../nitpick-thread/src",
+    "-I", "../nitpick-sync/src"
+]
+link_libraries = [
+    "nitpick_display_shim", 
+    "nitpick_input",
+    "nitpick_fs_shim",
+    "pthread"
+]
+link_paths = [
+    "../nitpick-display/shim",
+    "../nitpick-input/shim",
+    "../nitpick-fs/shim"
+]

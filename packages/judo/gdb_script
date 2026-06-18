@@ -1,0 +1,7 @@
+run < <(echo -e 'a
+test async task
+
+
+q')
+bt
+quit

@@ -1,0 +1,12 @@
+func:main = int32() {
+    int64:i = 0i64;
+    while (i < 5000000i64) {
+        drop(dalloc(alloc(64i64)));
+        i = i + 1i64;
+    }
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};

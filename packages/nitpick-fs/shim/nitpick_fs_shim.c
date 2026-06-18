@@ -17,8 +17,8 @@
 
 /* ═══════════════════ error buffer ═══════════════════ */
 
-static char g_err[512] = "";
-static const char *g_last_result = "";
+static _Thread_local char g_err[512] = "";
+static _Thread_local const char *g_last_result = "";
 
 static void set_err(const char *msg) {
     snprintf(g_err, sizeof(g_err), "%s", msg);
@@ -32,8 +32,8 @@ const char *nitpick_fs_error(void) { return g_err; }
 
 /* ═══════════════════ file read / write ═══════════════════ */
 
-static char  *g_read_buf  = NULL;
-static int64_t g_read_len = 0;
+static _Thread_local char  *g_read_buf  = NULL;
+static _Thread_local int64_t g_read_len = 0;
 
 const char *nitpick_fs_read_file(const char *path) {
     g_err[0] = '\0';
@@ -131,7 +131,7 @@ int32_t nitpick_fs_rmdir(const char *path) {
 }
 
 /* readdir — returns entries as newline-separated string */
-static char *g_dir_buf = NULL;
+static _Thread_local char *g_dir_buf = NULL;
 
 const char *nitpick_fs_list_dir(const char *path) {
     g_err[0] = '\0';
@@ -205,7 +205,7 @@ int32_t nitpick_fs_copy(const char *src, const char *dst) {
 
 /* ═══════════════════ path helpers ═══════════════════ */
 
-static char g_cwd[4096] = "";
+static _Thread_local char g_cwd[4096] = "";
 
 const char *nitpick_fs_get_cwd(void) {
     if (getcwd(g_cwd, sizeof(g_cwd)) == NULL) {
@@ -215,7 +215,7 @@ const char *nitpick_fs_get_cwd(void) {
     return g_cwd;
 }
 
-static char g_abs[4096] = "";
+static _Thread_local char g_abs[4096] = "";
 
 const char *nitpick_fs_absolute(const char *path) {
     if (realpath(path, g_abs) == NULL) {
@@ -227,7 +227,7 @@ const char *nitpick_fs_absolute(const char *path) {
     return g_last_result;
 }
 
-static char g_ext[256] = "";
+static _Thread_local char g_ext[256] = "";
 
 const char *nitpick_fs_extension(const char *path) {
     const char *dot = strrchr(path, '.');
@@ -238,7 +238,7 @@ const char *nitpick_fs_extension(const char *path) {
     return g_last_result;
 }
 
-static char g_base[256] = "";
+static _Thread_local char g_base[256] = "";
 
 const char *nitpick_fs_basename(const char *path) {
     const char *sep = strrchr(path, '/');
@@ -248,7 +248,7 @@ const char *nitpick_fs_basename(const char *path) {
     return g_last_result;
 }
 
-static char g_dirname[4096] = "";
+static _Thread_local char g_dirname[4096] = "";
 
 const char *nitpick_fs_dirname(const char *path) {
     snprintf(g_dirname, sizeof(g_dirname), "%s", path);

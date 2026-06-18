@@ -206,14 +206,10 @@ func:main = int32() {
     drop raw Server.close_cli(cfd12);
 
     // T13: Concurrent parsing
-    // We will spawn a background thread to read a request and respond.
     int64:cli13 = raw cli_connect(test_port);
     int64:cfd13 = raw Server.accept_client(srv);
 
-    int64:ch = raw channel_create(0i64); // unbuffered channel to wait
-    
-    // Spawn a thread to handle cfd13
-    int64:th13 = raw thread_spawn(func(int64:fd, int64:sync_ch) {
+    (int64)(int64):worker = int64(int64:fd) {
         drop raw Server.read_req(fd);
         string:pth = raw Server.uri_path();
         
@@ -226,8 +222,10 @@ func:main = int32() {
             drop raw Server.send_text(fd, 500i64, "fail\0");
         }
         drop raw Server.close_cli(fd);
-        drop raw channel_send(sync_ch, 1i64); // signal done
-    }, cfd13, ch);
+        pass 0i64;
+    };
+    
+    int64:th13 = npk_shim_thread_spawn(worker, cfd13);
 
     // Concurrently, the main thread handles another client
     int64:cli14 = raw cli_connect(test_port);
@@ -245,11 +243,10 @@ func:main = int32() {
     drop raw Server.send_text(cfd14, 200i64, "main_ok\0");
     string:recv14 = raw cli_recv(cli14);
     
-    drop assert_eq_str(recv13, "HTTP/1.1 200 OK\r\nContent-Length: 9\r\n\r\nthread_ok\0", "T13 thread handled response isolated\0");
-    drop assert_eq_str(recv14, "HTTP/1.1 200 OK\r\nContent-Length: 7\r\n\r\nmain_ok\0", "T13 main handled response isolated\0");
+    drop assert_eq_str(recv13, "HTTP/1.1 200 OK\r\nContent-Length: 9\r\n\r\nthread_ok", "T13 thread handled response isolated\0");
+    drop assert_eq_str(recv14, "HTTP/1.1 200 OK\r\nContent-Length: 7\r\n\r\nmain_ok", "T13 main handled response isolated\0");
 
-    drop raw channel_recv(ch); // wait for thread to finish
-    drop raw channel_destroy(ch);
+    drop npk_shim_thread_join(th13);
 
     drop raw cli_close(cli13);
     drop raw cli_close(cli14);

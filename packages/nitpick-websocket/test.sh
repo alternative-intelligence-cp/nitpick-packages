@@ -3,7 +3,7 @@ set -e
 make -C shim
 
 echo "Compiling..."
-/home/randy/Workspace/REPOS/nitpick/build/npkc tests/test_nitpick_websocket.npk -I src -c -o test_ws.o
+/home/randy/Workspace/REPOS/nitpick/build/npkc tests/test_nitpick_websocket.npk -I src -I ../nitpick-thread/src -c -o test_ws.o
 
 echo "Linking..."
 clang++ test_ws.o \

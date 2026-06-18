@@ -1,0 +1,16 @@
+extern func:c_malloc = int64(int64:size);
+extern func:c_free = int32(int64:ptr);
+
+func:main = int32() {
+    int64:i = 0i64;
+    while (i < 5000000i64) {
+        int64:ptr = c_malloc(64i64);
+        drop(c_free(ptr));
+        i = i + 1i64;
+    }
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};

@@ -3,6 +3,7 @@ use "nitpick_display.npk".*;
 use "nitpick_input.npk".*;
 use "nitpick_tui.npk".*;
 use "sysfs.npk".*;
+use "../../../nitpick-thread/src/nitpick_thread.npk".*;
 
 extern func:read = int64(int32:fd, any*:buf, int64:count);
 extern func:usleep = int32(int32:usec);
@@ -10,21 +11,27 @@ extern func:fcntl = int32(int32:fd, int32:cmd, int32:arg);
 extern func:malloc = any*(int64:size);
 extern func:free = void(any*:ptr);
 
-func:set_nonblocking = int32() {
-    int32:flags = fcntl(0i32, 3i32, 0i32);
-    flags = flags | 2048i32; // O_NONBLOCK
-    drop(fcntl(0i32, 4i32, flags));
-    pass 0i32;
-};
+int32:g_running = 1i32;
 
 func:main = int32() {
-    drop(set_nonblocking());
     drop(Tui.init());
     
-    int32:running = 1i32;
-    int8->:c = malloc(1i64) => int8->;
+    (int64)(int64):input_worker = int64(int64:arg) {
+        int8->:c = malloc(1i64) => int8->;
+        while (g_running == 1i32) {
+            int64:r = read(0i32, c => any->, 1i64);
+            if (r > 0i64) {
+                if (c[0i64] == 113i8) { // 'q'
+                    g_running = 0i32;
+                }
+            }
+        }
+        free(c => any->);
+        pass 0i64;
+    };
+    int64:input_th = npk_shim_thread_spawn(input_worker, 0i64);
     
-    while (running == 1i32) {
+    while (g_running == 1i32) {
         print("\x1b[2J\x1b[H\0");
         
         string:kernel = raw get_os_kernel();
@@ -80,28 +87,17 @@ func:main = int32() {
         Widget:foot = raw Tui.label(2i32, 22i32, "[q] Quit    [nkmon - Nitpick Kernel Monitor]", 3i32, 0i32);
         drop(Tui.draw_widget(foot));
         
-        // Sleep for 1 second total, checking input every 100ms
+        // Sleep for 1 second total (checking running flag every 100ms for fast exit)
         int32:wait = 0i32;
-        while (wait < 10i32) {
-            int64:r = read(0i32, c => any->, 1i64);
-            if (r > 0i64) {
-                if (c[0i64] == 113i8) { // 'q'
-                    running = 0i32;
-                    wait = 10i32;
-                }
-            }
+        while ((wait < 10i32) && (g_running == 1i32)) {
             drop(usleep(100000i32));
             wait = wait + 1i32;
         }
     }
     
     drop(Tui.shutdown());
-    free(c => any->);
     
-    // reset nonblocking
-    int32:flags2 = fcntl(0i32, 3i32, 0i32);
-    flags2 = flags2 & (-2049i32); // ~O_NONBLOCK (actually ~2048 = -2049)
-    drop(fcntl(0i32, 4i32, flags2));
-    
+    // We don't join the input thread since it's blocking on read.
+    // It will die when the process exits.
     exit(0i32);
 };

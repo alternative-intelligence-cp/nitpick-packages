@@ -5,6 +5,7 @@ source_filename = "tests/test_db_pool.npk"
 %Display_vtable_t = type {}
 %struct.NpkString = type { ptr, i64 }
 %struct.NIL = type {}
+%Thread = type { i64 }
 
 @Numeric_vtable_int8 = internal constant %Numeric_vtable_t zeroinitializer
 @Numeric_vtable_int16 = internal constant %Numeric_vtable_t zeroinitializer
@@ -68,26 +69,36 @@ source_filename = "tests/test_db_pool.npk"
 @Display_vtable_string = internal constant %Display_vtable_t zeroinitializer
 @.str.data = private constant [40 x i8] c"FAIL: Uncaught fail() inside pool logic\00"
 @.str = private constant %struct.NpkString { ptr @.str.data, i64 39 }
-@.str.data.1 = private constant [29 x i8] c"PASS: T01 Acquire first conn\00"
-@.str.2 = private constant %struct.NpkString { ptr @.str.data.1, i64 28 }
-@.str.data.3 = private constant [29 x i8] c"FAIL: T01 Acquire first conn\00"
-@.str.4 = private constant %struct.NpkString { ptr @.str.data.3, i64 28 }
-@.str.data.5 = private constant [30 x i8] c"PASS: T02 Acquire second conn\00"
-@.str.6 = private constant %struct.NpkString { ptr @.str.data.5, i64 29 }
-@.str.data.7 = private constant [30 x i8] c"FAIL: T02 Acquire second conn\00"
-@.str.8 = private constant %struct.NpkString { ptr @.str.data.7, i64 29 }
-@.str.data.9 = private constant [29 x i8] c"PASS: T03 Release first conn\00"
-@.str.10 = private constant %struct.NpkString { ptr @.str.data.9, i64 28 }
-@.str.data.11 = private constant [29 x i8] c"FAIL: T03 Release first conn\00"
-@.str.12 = private constant %struct.NpkString { ptr @.str.data.11, i64 28 }
-@.str.data.13 = private constant [35 x i8] c"PASS: T04 Re-acquire released conn\00"
-@.str.14 = private constant %struct.NpkString { ptr @.str.data.13, i64 34 }
-@.str.data.15 = private constant [35 x i8] c"FAIL: T04 Re-acquire released conn\00"
-@.str.16 = private constant %struct.NpkString { ptr @.str.data.15, i64 34 }
-@.str.data.17 = private constant [17 x i8] c"ALL TESTS PASSED\00"
-@.str.18 = private constant %struct.NpkString { ptr @.str.data.17, i64 16 }
+@.str.data.1 = private constant [30 x i8] c"PASS: T01 Acquire first conn\00\00"
+@.str.2 = private constant %struct.NpkString { ptr @.str.data.1, i64 29 }
+@.str.data.3 = private constant [30 x i8] c"FAIL: T01 Acquire first conn\00\00"
+@.str.4 = private constant %struct.NpkString { ptr @.str.data.3, i64 29 }
+@.str.data.5 = private constant [31 x i8] c"PASS: T02 Acquire second conn\00\00"
+@.str.6 = private constant %struct.NpkString { ptr @.str.data.5, i64 30 }
+@.str.data.7 = private constant [31 x i8] c"FAIL: T02 Acquire second conn\00\00"
+@.str.8 = private constant %struct.NpkString { ptr @.str.data.7, i64 30 }
+@.str.data.9 = private constant [30 x i8] c"PASS: T03 Release first conn\00\00"
+@.str.10 = private constant %struct.NpkString { ptr @.str.data.9, i64 29 }
+@.str.data.11 = private constant [30 x i8] c"FAIL: T03 Release first conn\00\00"
+@.str.12 = private constant %struct.NpkString { ptr @.str.data.11, i64 29 }
+@.str.data.13 = private constant [36 x i8] c"PASS: T04 Re-acquire released conn\00\00"
+@.str.14 = private constant %struct.NpkString { ptr @.str.data.13, i64 35 }
+@.str.data.15 = private constant [36 x i8] c"FAIL: T04 Re-acquire released conn\00\00"
+@.str.16 = private constant %struct.NpkString { ptr @.str.data.15, i64 35 }
+@.str.data.17 = private constant [42 x i8] c"PASS: T05 Concurrent acquire and release\00\00"
+@.str.18 = private constant %struct.NpkString { ptr @.str.data.17, i64 41 }
+@.str.data.19 = private constant [18 x i8] c"ALL TESTS PASSED\00\00"
+@.str.20 = private constant %struct.NpkString { ptr @.str.data.19, i64 17 }
 
-define { %struct.NIL, ptr, i8 } @db_pool_init() {
+declare i32 @nitpick_pool_init()
+
+declare i32 @nitpick_pool_add(i32)
+
+declare i32 @nitpick_pool_acquire()
+
+declare i32 @nitpick_pool_release(i32)
+
+define linkonce_odr { %struct.NIL, ptr, i8 } @nitpick_db_pool.DbPool_init() {
 entry:
   %_ = alloca i32, align 4
   %calltmp = call i32 @nitpick_pool_init()
@@ -95,7 +106,7 @@ entry:
   ret { %struct.NIL, ptr, i8 } zeroinitializer
 }
 
-define { i32, ptr, i8 } @db_pool_add(i32 %conn) {
+define linkonce_odr { i32, ptr, i8 } @nitpick_db_pool.DbPool_add(i32 %conn) {
 entry:
   %conn.addr = alloca i32, align 4
   store i32 %conn, ptr %conn.addr, align 4
@@ -107,7 +118,7 @@ entry:
   ret { i32, ptr, i8 } %result.is_error
 }
 
-define { i32, ptr, i8 } @db_pool_acquire() {
+define linkonce_odr { i32, ptr, i8 } @nitpick_db_pool.DbPool_get_conn() {
 entry:
   %calltmp = call i32 @nitpick_pool_acquire()
   %result.val = insertvalue { i32, ptr, i8 } undef, i32 %calltmp, 0
@@ -116,7 +127,7 @@ entry:
   ret { i32, ptr, i8 } %result.is_error
 }
 
-define { i32, ptr, i8 } @db_pool_release(i32 %conn) {
+define linkonce_odr { i32, ptr, i8 } @nitpick_db_pool.DbPool_free_conn(i32 %conn) {
 entry:
   %conn.addr = alloca i32, align 4
   store i32 %conn, ptr %conn.addr, align 4
@@ -128,20 +139,101 @@ entry:
   ret { i32, ptr, i8 } %result.is_error
 }
 
-declare i32 @nitpick_pool_init()
-
-declare i32 @nitpick_pool_add(i32)
-
-declare i32 @nitpick_pool_acquire()
-
-declare i32 @nitpick_pool_release(i32)
-
-define i32 @__nitpick_db_pool_init() {
+define linkonce_odr i32 @__nitpick_db_pool_init() {
 entry:
   ret i32 0
 }
 
-define { i32, ptr, i8 } @failsafe(i32 %_err) {
+define linkonce_odr { %struct.NIL, ptr, i8 } @nitpick_thread.thread_yield() {
+entry:
+  %calltmp = call ptr @npk_shim_thread_yield()
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define linkonce_odr { %struct.NIL, ptr, i8 } @nitpick_thread.thread_sleep_ms(i64 %ms) {
+entry:
+  %ms.addr = alloca i64, align 8
+  store i64 %ms, ptr %ms.addr, align 4
+  %ms1 = load i64, ptr %ms.addr, align 4
+  %calltmp = call ptr @npk_shim_thread_sleep_ms(i64 %ms1)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define linkonce_odr { %struct.NIL, ptr, i8 } @nitpick_thread.thread_sleep_ns(i64 %ns) {
+entry:
+  %ns.addr = alloca i64, align 8
+  store i64 %ns, ptr %ns.addr, align 4
+  %ns1 = load i64, ptr %ns.addr, align 4
+  %calltmp = call ptr @npk_shim_thread_sleep_ns(i64 %ns1)
+  ret { %struct.NIL, ptr, i8 } zeroinitializer
+}
+
+define linkonce_odr { i32, ptr, i8 } @nitpick_thread.thread_hardware_concurrency() {
+entry:
+  %calltmp = call i32 @npk_shim_thread_hardware_concurrency()
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %calltmp, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define linkonce_odr { i64, ptr, i8 } @nitpick_thread.thread_current_id() {
+entry:
+  %calltmp = call i64 @npk_shim_thread_current_id()
+  %result.val = insertvalue { i64, ptr, i8 } undef, i64 %calltmp, 0
+  %result.err = insertvalue { i64, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i64, ptr, i8 } %result.err, i8 0, 2
+  ret { i64, ptr, i8 } %result.is_error
+}
+
+declare i64 @npk_shim_thread_spawn(ptr, i64)
+
+declare i32 @npk_shim_thread_join(i64)
+
+declare i32 @npk_shim_thread_detach(i64)
+
+declare ptr @npk_shim_thread_yield()
+
+declare ptr @npk_shim_thread_sleep_ms(i64)
+
+declare ptr @npk_shim_thread_sleep_ns(i64)
+
+declare i32 @npk_shim_thread_hardware_concurrency()
+
+declare i64 @npk_shim_thread_current_id()
+
+define linkonce_odr { i32, ptr, i8 } @nitpick_thread.Thread_join(%Thread %self) {
+entry:
+  %self_alloca = alloca %Thread, align 8
+  store %Thread %self, ptr %self_alloca, align 4
+  %self1 = load %Thread, ptr %self_alloca, align 4
+  %handle = extractvalue %Thread %self1, 0
+  %calltmp = call i32 @npk_shim_thread_join(i64 %handle)
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %calltmp, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define linkonce_odr { i32, ptr, i8 } @nitpick_thread.Thread_detach(%Thread %self) {
+entry:
+  %self_alloca = alloca %Thread, align 8
+  store %Thread %self, ptr %self_alloca, align 4
+  %self1 = load %Thread, ptr %self_alloca, align 4
+  %handle = extractvalue %Thread %self1, 0
+  %calltmp = call i32 @npk_shim_thread_detach(i64 %handle)
+  %result.val = insertvalue { i32, ptr, i8 } undef, i32 %calltmp, 0
+  %result.err = insertvalue { i32, ptr, i8 } %result.val, ptr null, 1
+  %result.is_error = insertvalue { i32, ptr, i8 } %result.err, i8 0, 2
+  ret { i32, ptr, i8 } %result.is_error
+}
+
+define linkonce_odr i32 @__nitpick_thread_init() {
+entry:
+  ret i32 0
+}
+
+define internal { i32, ptr, i8 } @failsafe(i32 %_err) {
 entry:
   %_err.addr = alloca i32, align 4
   store i32 %_err, ptr %_err.addr, align 4
@@ -157,25 +249,25 @@ entry:
   call void @npk_gc_init(i64 0, i64 0)
   call void @npk_args_init(i32 %0, ptr %1)
   call void @npk_streams_init()
-  %calltmp = call { %struct.NIL, ptr, i8 } @db_pool_init()
+  %calltmp = call { %struct.NIL, ptr, i8 } @nitpick_db_pool.DbPool_init()
   %raw.value = extractvalue { %struct.NIL, ptr, i8 } %calltmp, 0
   %c1 = alloca i32, align 4
-  %calltmp1 = call { i32, ptr, i8 } @db_pool_add(i32 100)
+  %calltmp1 = call { i32, ptr, i8 } @nitpick_db_pool.DbPool_add(i32 100)
   %raw.value2 = extractvalue { i32, ptr, i8 } %calltmp1, 0
   store i32 %raw.value2, ptr %c1, align 4
   %c2 = alloca i32, align 4
-  %calltmp3 = call { i32, ptr, i8 } @db_pool_add(i32 200)
+  %calltmp3 = call { i32, ptr, i8 } @nitpick_db_pool.DbPool_add(i32 200)
   %raw.value4 = extractvalue { i32, ptr, i8 } %calltmp3, 0
   store i32 %raw.value4, ptr %c2, align 4
   %c3 = alloca i32, align 4
-  %calltmp5 = call { i32, ptr, i8 } @db_pool_add(i32 300)
+  %calltmp5 = call { i32, ptr, i8 } @nitpick_db_pool.DbPool_add(i32 300)
   %raw.value6 = extractvalue { i32, ptr, i8 } %calltmp5, 0
   store i32 %raw.value6, ptr %c3, align 4
   %c17 = load i32, ptr %c1, align 4
   %c28 = load i32, ptr %c2, align 4
   %c39 = load i32, ptr %c3, align 4
   %acq1 = alloca i32, align 4
-  %calltmp10 = call { i32, ptr, i8 } @db_pool_acquire()
+  %calltmp10 = call { i32, ptr, i8 } @nitpick_db_pool.DbPool_get_conn()
   %raw.value11 = extractvalue { i32, ptr, i8 } %calltmp10, 0
   store i32 %raw.value11, ptr %acq1, align 4
   %acq112 = load i32, ptr %acq1, align 4
@@ -198,7 +290,7 @@ else:                                             ; preds = %entry
 
 ifcont:                                           ; preds = %then
   %acq2 = alloca i32, align 4
-  %calltmp17 = call { i32, ptr, i8 } @db_pool_acquire()
+  %calltmp17 = call { i32, ptr, i8 } @nitpick_db_pool.DbPool_get_conn()
   %raw.value18 = extractvalue { i32, ptr, i8 } %calltmp17, 0
   store i32 %raw.value18, ptr %acq2, align 4
   %acq219 = load i32, ptr %acq2, align 4
@@ -221,7 +313,7 @@ else26:                                           ; preds = %ifcont
 
 ifcont30:                                         ; preds = %then22
   %rel = alloca i32, align 4
-  %calltmp31 = call { i32, ptr, i8 } @db_pool_release(i32 100)
+  %calltmp31 = call { i32, ptr, i8 } @nitpick_db_pool.DbPool_free_conn(i32 100)
   %raw.value32 = extractvalue { i32, ptr, i8 } %calltmp31, 0
   store i32 %raw.value32, ptr %rel, align 4
   %rel33 = load i32, ptr %rel, align 4
@@ -244,7 +336,7 @@ else40:                                           ; preds = %ifcont30
 
 ifcont44:                                         ; preds = %then36
   %acq3 = alloca i32, align 4
-  %calltmp45 = call { i32, ptr, i8 } @db_pool_acquire()
+  %calltmp45 = call { i32, ptr, i8 } @nitpick_db_pool.DbPool_get_conn()
   %raw.value46 = extractvalue { i32, ptr, i8 } %calltmp45, 0
   store i32 %raw.value46, ptr %acq3, align 4
   %acq347 = load i32, ptr %acq3, align 4
@@ -266,9 +358,31 @@ else54:                                           ; preds = %ifcont44
   unreachable
 
 ifcont58:                                         ; preds = %then50
-  %str_struct_ffi59 = load %struct.NpkString, ptr @.str.18, align 8
-  %str_data_ffi60 = extractvalue %struct.NpkString %str_struct_ffi59, 0
-  %calltmp61 = call i32 @puts(ptr %str_data_ffi60)
+  %pool_worker = alloca { ptr, ptr }, align 8
+  %method_field = getelementptr inbounds { ptr, ptr }, ptr %pool_worker, i32 0, i32 0
+  store ptr @_funcptr_pool_worker_0, ptr %method_field, align 8
+  %env_field = getelementptr inbounds { ptr, ptr }, ptr %pool_worker, i32 0, i32 1
+  store ptr null, ptr %env_field, align 8
+  %th1 = alloca i64, align 8
+  %pool_worker59 = load { ptr, ptr }, ptr %pool_worker, align 8
+  %func_method_ptr = extractvalue { ptr, ptr } %pool_worker59, 0
+  %calltmp60 = call i64 @npk_shim_thread_spawn(ptr %func_method_ptr, i64 0)
+  store i64 %calltmp60, ptr %th1, align 4
+  %th2 = alloca i64, align 8
+  %pool_worker61 = load { ptr, ptr }, ptr %pool_worker, align 8
+  %func_method_ptr62 = extractvalue { ptr, ptr } %pool_worker61, 0
+  %calltmp63 = call i64 @npk_shim_thread_spawn(ptr %func_method_ptr62, i64 0)
+  store i64 %calltmp63, ptr %th2, align 4
+  %th164 = load i64, ptr %th1, align 4
+  %calltmp65 = call i32 @npk_shim_thread_join(i64 %th164)
+  %th266 = load i64, ptr %th2, align 4
+  %calltmp67 = call i32 @npk_shim_thread_join(i64 %th266)
+  %str_struct_ffi68 = load %struct.NpkString, ptr @.str.18, align 8
+  %str_data_ffi69 = extractvalue %struct.NpkString %str_struct_ffi68, 0
+  %calltmp70 = call i32 @puts(ptr %str_data_ffi69)
+  %str_struct_ffi71 = load %struct.NpkString, ptr @.str.20, align 8
+  %str_data_ffi72 = extractvalue %struct.NpkString %str_struct_ffi71, 0
+  %calltmp73 = call i32 @puts(ptr %str_data_ffi72)
   call void @exit(i32 0) #0
   unreachable
 }
@@ -286,7 +400,22 @@ declare void @npk_args_init(i32, ptr)
 
 declare void @npk_streams_init()
 
-define i32 @__test_db_pool_init() {
+define internal { i64, ptr, i8 } @_funcptr_pool_worker_0(ptr %env, i64 %arg) {
+entry:
+  %arg1 = alloca i64, align 8
+  store i64 %arg, ptr %arg1, align 4
+  %conn = alloca i32, align 4
+  %calltmp = call { i32, ptr, i8 } @nitpick_db_pool.DbPool_get_conn()
+  %raw.value = extractvalue { i32, ptr, i8 } %calltmp, 0
+  store i32 %raw.value, ptr %conn, align 4
+  %calltmp2 = call { %struct.NIL, ptr, i8 } @nitpick_thread.thread_sleep_ms(i64 50)
+  %conn3 = load i32, ptr %conn, align 4
+  %calltmp4 = call { i32, ptr, i8 } @nitpick_db_pool.DbPool_free_conn(i32 %conn3)
+  %raw.value5 = extractvalue { i32, ptr, i8 } %calltmp4, 0
+  ret { i64, ptr, i8 } zeroinitializer
+}
+
+define linkonce_odr i32 @__test_db_pool_init() {
 entry:
   ret i32 0
 }

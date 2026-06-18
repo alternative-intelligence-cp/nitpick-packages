@@ -1,5 +1,6 @@
 // test_nitpick_fs.npk — File write/read/append tests (C-side assertions)
 use "../src/nitpick_fs.npk".*;
+use "../../nitpick-thread/src/nitpick_thread.npk".*;
 
 extern "nitpick_fs_shim" {
     func:nitpick_fs_assert_int_eq = int32(int32:actual, int32:expected, string:msg);
@@ -23,6 +24,18 @@ func:failsafe = int32(tbb32:_err) { exit 1; };
 
 
 func:main = int32() {
-    drop(println("PASS: all tests passed"));
-    exit 0;
+    (int64)(int64):fs_worker = int64(int64:arg) {
+        drop(raw fs_write_file("thread_test.txt\0", "thread data\0"));
+        drop(thread_sleep_ms(50i64));
+        string:res = raw fs_read_file("thread_test.txt\0");
+        drop(raw fs_remove("thread_test.txt\0"));
+        pass 0i64;
+    };
+    int64:th1 = npk_shim_thread_spawn(fs_worker, 0i64);
+    int64:th2 = npk_shim_thread_spawn(fs_worker, 0i64);
+    drop(npk_shim_thread_join(th1));
+    drop(npk_shim_thread_join(th2));
+    
+    drop(println("PASS: all tests passed\0"));
+    exit 0i32;
 };

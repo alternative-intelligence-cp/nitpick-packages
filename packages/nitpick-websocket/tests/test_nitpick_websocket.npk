@@ -1,6 +1,7 @@
 // test_nitpick_websocket.npk — 12-test suite for nitpick-websocket (v0.12.2)
 extern "libc" { func:printf = int32(string:fmt); }
 use "../src/nitpick_websocket.npk".*;
+use "../../nitpick-thread/src/nitpick_thread.npk".*;
 
 int32:fail_cnt = 0i32;
 func:failsafe = int32(tbb32:err) { drop(err); exit 1i32; };
@@ -140,6 +141,39 @@ func:test_shim_functions = int32() {
     pass pc;
 };
 
+func:test_concurrency = int32() {
+    int32:pc = 0i32;
+    (int64)(int64):ws_worker = int64(int64:arg) {
+        // Thread will build a frame and sleep before unmasking it,
+        // to ensure its __thread buffer isn't overwritten by the main thread.
+        string:f_bld = raw WebSocket.build_frame(1i64, "thread_data", 11i32, 1i32);
+        drop(thread_sleep_ms(100i64));
+        string:unmask = raw WebSocket.unmask_payload(f_bld);
+        if (unmask == "thread_data") { pass 1i64; }
+        pass 0i64;
+    };
+    int64:th1 = npk_shim_thread_spawn(ws_worker, 0i64);
+    
+    drop(thread_sleep_ms(50i64));
+    
+    // Main thread builds its own frame concurrently
+    string:f_bld = raw WebSocket.build_frame(1i64, "main_data", 9i32, 1i32);
+    string:unmask = raw WebSocket.unmask_payload(f_bld);
+    
+    int32:t18 = 0i32;
+    if (unmask == "main_data") { t18 = 1i32; }
+    if (t18 == 1i32) { drop(printf("[PASS] T18 main thread ws isolated\n\0")); pc += 1i32; }
+    if (t18 == 0i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T18\n\0")); }
+    
+    int32:th_res = npk_shim_thread_join(th1);
+    int32:t19 = 0i32;
+    if (th_res == 0i32) { t19 = 1i32; }
+    if (t19 == 1i32) { drop(printf("[PASS] T19 background thread ws isolated\n\0")); pc += 1i32; }
+    if (t19 == 0i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] T19\n\0")); }
+    
+    pass pc;
+};
+
 func:main = int32() {
     int32:pass_count = 0i32;
     int32:p1 = raw test_create_handshake();
@@ -147,6 +181,7 @@ func:main = int32() {
     int32:p3 = raw test_frame_types();
     int32:p4 = raw test_close_accessors();
     int32:p5 = raw test_shim_functions();
+    int32:p6 = raw test_concurrency();
     drop(printf("DONE\n\0"));
     
     drop(printf("---\n\0"));

@@ -195,7 +195,7 @@ pub func:inp_btn_name = string(int64:code) {
 
 // ── Type wrapper ────────────────────────────────────────────────────────────
 
-Type:Input = {
+pub Type:Input = {
     func:init       = int64() { pass raw inp_create(); };
     func:set_btns   = int32(int64:h, int64:m) { pass raw inp_set_buttons(h, m); };
     func:get_btns   = string(int64:h) { pass raw inp_buttons(h); };

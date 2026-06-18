@@ -1,0 +1,250 @@
+use "nitpick_tui.npk".*;
+use "nitpick_display.npk".*;
+use "nitpick_input.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_thread.npk".*;
+use "nitpick_sync.npk".*;
+
+extern "libc" {
+    func:getchar = int32();
+    func:nigrep_push_key = void(int32:key);
+    func:nigrep_pop_key = int32();
+    func:nigrep_spawn_workers = void();
+}
+extern "npk_runtime" {
+    func:npk_shim_mutex_create = int64(int32:type);
+    func:npk_shim_mutex_lock = int32(int64:handle);
+    func:npk_shim_mutex_unlock = int32(int64:handle);
+}
+
+pub int32:g_running = 1i32;
+pub int64:g_mtx = 0i64;
+
+pub string:g_search_query = "";
+pub string:g_worker_query = "";
+pub string:g_results = "";
+pub int32:g_needs_redraw = 1i32;
+
+func:failsafe = int32(tbb32:err) {
+    drop(Tui.shutdown());
+    exit 1i32;
+};
+
+func:search_file = NIL(string:path, string:query) {
+    if (string_is_empty(query)) { pass(NIL); }
+    
+    int64:size = raw fs_file_size(path);
+    if (size > 1000000i64) { pass(NIL); } // Skip > 1MB files
+
+    string:content = raw fs_read_file(path);
+    if (string_is_empty(content)) { pass(NIL); }
+
+    int64:idx = string_index_of(content, query);
+    if (idx >= 0i64) {
+        // Find previous newline
+        string:before = string_substring(content, 0i64, idx);
+        string:before_last = raw Str.before_last(before, "\n");
+        
+        string:after = string_substring(content, idx, string_length(content));
+        string:line_suffix = raw Str.before(after, "\n");
+        
+        // Build matched string
+        string:matched = string_concat(string_concat(string_concat(path, ": "), query), line_suffix);
+        
+        int32:ign = npk_shim_mutex_lock(g_mtx);
+        if (string_length(g_results) < 8000i64) {
+            g_results = string_concat(string_concat(g_results, matched), "\n");
+            g_needs_redraw = 1i32;
+        }
+        int32:ign2 = npk_shim_mutex_unlock(g_mtx);
+    }
+    pass(NIL);
+};
+
+func:walk_dir_recursive = NIL(string:dir, int64:depth, string:query) {
+    if (depth > 5i64) { pass(NIL); }
+    if (g_running == 0i32) { pass(NIL); }
+
+    int32:changed = 0i32;
+    int32:ign = npk_shim_mutex_lock(g_mtx);
+    if (string_equals(g_search_query, query) == false) {
+        changed = 1i32;
+    }
+    int32:ign2 = npk_shim_mutex_unlock(g_mtx);
+    if (changed == 1i32) { pass(NIL); }
+    
+    string:entries = raw fs_list_dir(dir);
+    int64:count = raw Str.line_count(entries);
+    
+    int64:i = 0i64;
+    while (i < count) {
+        if (g_running == 0i32) { pass(NIL); }
+        
+        string:name = raw Str.token(entries, "\n", i);
+        if (string_is_empty(name) == false) {
+            int32:ignore = 0i32;
+            if (string_equals(name, ".git")) { ignore = 1i32; }
+            if (string_equals(name, "node_modules")) { ignore = 1i32; }
+            if (string_equals(name, "build")) { ignore = 1i32; }
+            if (string_equals(name, "shim")) { ignore = 1i32; }
+            if (string_ends_with(name, ".o")) { ignore = 1i32; }
+            if (string_ends_with(name, ".db")) { ignore = 1i32; }
+            if (string_ends_with(name, ".ll")) { ignore = 1i32; }
+            if (string_ends_with(name, ".s")) { ignore = 1i32; }
+            if (string_ends_with(name, ".abc")) { ignore = 1i32; }
+            if (string_ends_with(name, "nigrep")) { ignore = 1i32; }
+            
+            if (ignore == 0i32) {
+                string:full_path = string_concat(string_concat(dir, "/"), name);
+                if (string_equals(dir, ".")) {
+                    full_path = name;
+                }
+                
+                if (raw fs_is_dir(full_path) == 1i32) {
+                    drop(walk_dir_recursive(full_path, depth + 1i64, query));
+                } else {
+                    if (raw fs_is_file(full_path) == 1i32) {
+                        drop(search_file(full_path, query));
+                    }
+                }
+            }
+        }
+        i = i + 1i64;
+    }
+    pass(NIL);
+};
+
+pub func:nigrep_input_worker = int64(int64:arg) {
+    while (g_running == 1i32) {
+        int32:vk = getchar();
+        if (vk != -1i32) {
+            drop(nigrep_push_key(vk));
+        }
+        drop(thread_sleep_ms(5i64));
+    }
+    pass 0i64;
+};
+
+pub func:nigrep_search_worker = int64(int64:arg) {
+    while (g_running == 1i32) {
+        string:local_query = "";
+        
+        int32:ign = npk_shim_mutex_lock(g_mtx);
+        if (string_equals(g_search_query, g_worker_query) == false) {
+            g_worker_query = g_search_query;
+            local_query = g_worker_query;
+            g_results = ""; // clear results
+            g_needs_redraw = 1i32;
+        } else {
+            local_query = g_worker_query;
+        }
+        int32:ign2 = npk_shim_mutex_unlock(g_mtx);
+        
+        if (string_is_empty(local_query) == false) {
+            drop(walk_dir_recursive(".", 0i64, local_query));
+            
+            // Wait for next query change
+            int32:changed2 = 0i32;
+            while ((changed2 == 0i32) && (g_running == 1i32)) {
+                drop(thread_sleep_ms(50i64));
+                int32:ign3 = npk_shim_mutex_lock(g_mtx);
+                if (string_equals(g_search_query, local_query) == false) {
+                    changed2 = 1i32;
+                }
+                int32:ign4 = npk_shim_mutex_unlock(g_mtx);
+            }
+        } else {
+            drop(thread_sleep_ms(50i64));
+        }
+    }
+    pass(0i64);
+};
+
+func:main = int32() {
+    drop(Tui.init());
+    
+    g_mtx = npk_shim_mutex_create(0i32);
+    drop(nigrep_spawn_workers());
+    
+    while (g_running == 1i32) {
+        int32:vk = nigrep_pop_key();
+        int32:do_render = 0i32;
+        
+        if (vk != -1i32) {
+            if (vk == 113i32) { // 'q' or 'Q' (if it were 81) Wait, ctrl-q or Esc might be better? We'll use ESC (27)
+                if (string_is_empty(g_search_query)) {
+                    g_running = 0i32;
+                } else {
+                    int32:ign = npk_shim_mutex_lock(g_mtx);
+                    g_search_query = "";
+                    g_needs_redraw = 1i32;
+                    int32:ign2 = npk_shim_mutex_unlock(g_mtx);
+                }
+            } else {
+                if (vk == 27i32) { // Esc
+                    g_running = 0i32;
+                } else {
+                    if (vk == 127i32) { // Backspace
+                        int32:ign3 = npk_shim_mutex_lock(g_mtx);
+                        int64:len = string_length(g_search_query);
+                        if (len > 0i64) {
+                            g_search_query = string_substring(g_search_query, 0i64, len - 1i64);
+                            g_needs_redraw = 1i32;
+                        }
+                        int32:ign4 = npk_shim_mutex_unlock(g_mtx);
+                    } else {
+                        if ((vk >= 32i32) && (vk <= 126i32)) {
+                            int32:ign5 = npk_shim_mutex_lock(g_mtx);
+                            g_search_query = string_concat(g_search_query, string_from_char(vk));
+                            g_needs_redraw = 1i32;
+                            int32:ign6 = npk_shim_mutex_unlock(g_mtx);
+                        }
+                    }
+                }
+            }
+            do_render = 1i32;
+        }
+        
+        int32:ign7 = npk_shim_mutex_lock(g_mtx);
+        if (g_needs_redraw == 1i32) {
+            do_render = 1i32;
+            g_needs_redraw = 0i32;
+        }
+        string:safe_query = g_search_query;
+        string:safe_results = g_results;
+        int32:ign8 = npk_shim_mutex_unlock(g_mtx);
+        
+        if (do_render == 1i32) {
+            print("\x1b[2J\x1b[H\0");
+            
+            // Draw search bar
+            string:bar = string_concat("Search> ", safe_query);
+            string:padded_bar = string_pad_right(bar, 80i64, " ");
+            print("\x1b[1;1H\x1b[30;47m"); // 1,1 Black text, white bg
+            print(padded_bar);
+            
+            print("\x1b[2;1H\x1b[0m"); // Reset
+            print("--------------------------------------------------------------------------------");
+            
+            // Draw results
+            int64:count = raw Str.line_count(safe_results);
+            int64:i = 0i64;
+            int64:y = 3i64; // ANSI is 1-based, start at row 3
+            while (i < count) {
+                string:line = raw Str.token(safe_results, "\n", i);
+                if (string_is_empty(line) == false) {
+                    print("\x1b["); print(string_from_int(y)); print(";1H");
+                    print(line);
+                    y = y + 1i64;
+                }
+                i = i + 1i64;
+            }
+        } else {
+            drop(thread_sleep_ms(10i64));
+        }
+    }
+    
+    drop(Tui.shutdown());
+    exit 0i32;
+};
