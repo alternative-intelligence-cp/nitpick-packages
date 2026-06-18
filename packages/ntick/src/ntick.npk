@@ -1,0 +1,83 @@
+// ntick.npk - Terminal clock
+
+use "nitpick_datetime.npk".*;
+use "nitpick_display.npk".*;
+use "nitpick_str.npk".*;
+
+extern func:input_set_nonblocking = int32();
+extern func:input_set_blocking = int32();
+extern func:input_read_key = int32();
+extern func:usleep = int32(int32:usec);
+
+// from digits.npk
+extern func:get_digit = string(string:d, int64:line);
+extern func:get_digit_width = int64(string:d);
+
+func:main = int32() {
+    drop(input_set_nonblocking());
+    
+    int32:running = 1i32;
+    int64:last_time = 0i64;
+    
+    // Total clock width is typically 8 chars: HH:MM:SS
+    // HH = 2 * 6 = 12
+    // MM = 2 * 6 = 12
+    // SS = 2 * 6 = 12
+    // :  = 2 * 3 = 6
+    // Total = 42 width, height is 4 lines.
+    int32:clock_w = 42i32;
+    int32:clock_h = 4i32;
+    
+    // Center it roughly
+    int32:start_col = 15i32;
+    int32:start_row = 10i32;
+    
+    print("\x1b[2J\x1b[?25l\0"); // Clear screen and hide cursor
+    
+    while (running == 1i32) {
+        int64:now = raw Datetime.now();
+        if (now != last_time) {
+            last_time = now;
+            
+            string:t_str = raw Datetime.format_local(now, "%H:%M:%S\0");
+            
+            // Draw lines 0-3
+            int64:line = 0i64;
+            while (line < 4i64) {
+                print(string_concat("\x1b[\0", string_concat(string_from_int(start_row + @cast_unchecked<int32>(line)), string_concat(";\0", string_concat(string_from_int(start_col), "H\0")))));
+                
+                int64:i = 0i64;
+                while (i < 8i64) {
+                    string:ch = raw Str.char_at(t_str, i);
+                    
+                    // Coloring
+                    if (ch == ":") {
+                        print("\x1b[38;5;240m\0"); // Gray for colon
+                    } else {
+                        // Color digits cyan-ish
+                        print("\x1b[38;5;51m\0");
+                    }
+                    
+                    string:art = get_digit(ch, line);
+                    print(art);
+                    i = i + 1i64;
+                }
+                line = line + 1i64;
+            }
+            
+            // Draw subtitle
+            print(string_concat("\x1b[\0", string_concat(string_from_int(start_row + 6i32), string_concat(";\0", string_concat(string_from_int(start_col + 15i32), "H\x1b[38;5;245mNtick Time\x1b[0m\0")))));
+        }
+        
+        int32:k = input_read_key();
+        if (k == 113i32) { // q
+            running = 0i32;
+        }
+        
+        drop(usleep(50000i32)); // 50ms
+    }
+    
+    print("\x1b[2J\x1b[H\x1b[?25h\0"); // Clear, reset cursor, show cursor
+    drop(input_set_blocking());
+    exit(0i32);
+};

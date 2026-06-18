@@ -1,0 +1,39 @@
+// input.npk - Non-blocking stdin reading for Ntick
+
+extern func:read = int64(int32:fd, any*:buf, int64:count);
+extern func:usleep = int32(int32:usec);
+extern func:fcntl = int32(int32:fd, int32:cmd, int32:arg);
+extern func:malloc = any*(int64:size);
+extern func:free = void(any*:ptr);
+
+pub func:input_set_nonblocking = int32() {
+    int32:flags = fcntl(0i32, 3i32, 0i32);
+    flags = flags | 2048i32; // O_NONBLOCK
+    drop(fcntl(0i32, 4i32, flags));
+    pass 0i32;
+};
+
+pub func:input_set_blocking = int32() {
+    int32:flags = fcntl(0i32, 3i32, 0i32);
+    flags = flags & (-2049i32); // ~O_NONBLOCK
+    drop(fcntl(0i32, 4i32, flags));
+    pass 0i32;
+};
+
+// Returns 113 for 'q'
+pub func:input_read_key = int32() {
+    int8->:c = malloc(1i64) => int8->;
+    int64:r = read(0i32, c => any->, 1i64);
+    
+    if (r <= 0i64) {
+        free(c => any->);
+        pass 0i32;
+    }
+    
+    int8:first = c[0i64];
+    
+    if (first == 113i8) { free(c => any->); pass 113i32; } // 'q'
+    
+    free(c => any->);
+    pass 0i32;
+};

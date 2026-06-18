@@ -1,0 +1,90 @@
+// digits.npk - ASCII art digits for Ntick clock
+
+pub func:get_digit = string(string:d, int64:line) {
+    if (d == "0") {
+        if (line == 0i64) { pass "  __  "; }
+        if (line == 1i64) { pass " /  \\ "; }
+        if (line == 2i64) { pass "| () |"; }
+        if (line == 3i64) { pass " \\__/ "; }
+        pass "      ";
+    }
+    if (d == "1") {
+        if (line == 0i64) { pass "   _  "; }
+        if (line == 1i64) { pass " /| | "; }
+        if (line == 2i64) { pass "  | | "; }
+        if (line == 3i64) { pass "  |_| "; }
+        pass "      ";
+    }
+    if (d == "2") {
+        if (line == 0i64) { pass " ___  "; }
+        if (line == 1i64) { pass "  __) "; }
+        if (line == 2i64) { pass " / __/"; }
+        if (line == 3i64) { pass "|____|"; }
+        pass "      ";
+    }
+    if (d == "3") {
+        if (line == 0i64) { pass " ___  "; }
+        if (line == 1i64) { pass "  __) "; }
+        if (line == 2i64) { pass "  __) "; }
+        if (line == 3i64) { pass " |___/"; }
+        pass "      ";
+    }
+    if (d == "4") {
+        if (line == 0i64) { pass " _  _ "; }
+        if (line == 1i64) { pass "| || |"; }
+        if (line == 2i64) { pass "|_  _|"; }
+        if (line == 3i64) { pass "  |_| "; }
+        pass "      ";
+    }
+    if (d == "5") {
+        if (line == 0i64) { pass " ___  "; }
+        if (line == 1i64) { pass "| __> "; }
+        if (line == 2i64) { pass "  __) "; }
+        if (line == 3i64) { pass " |___/"; }
+        pass "      ";
+    }
+    if (d == "6") {
+        if (line == 0i64) { pass "  __  "; }
+        if (line == 1i64) { pass " / /  "; }
+        if (line == 2i64) { pass "| _ \\ "; }
+        if (line == 3i64) { pass " \\__/ "; }
+        pass "      ";
+    }
+    if (d == "7") {
+        if (line == 0i64) { pass " ___  "; }
+        if (line == 1i64) { pass "    / "; }
+        if (line == 2i64) { pass "   /  "; }
+        if (line == 3i64) { pass "  /_/ "; }
+        pass "      ";
+    }
+    if (d == "8") {
+        if (line == 0i64) { pass "  __  "; }
+        if (line == 1i64) { pass " |__| "; }
+        if (line == 2i64) { pass " |__| "; }
+        if (line == 3i64) { pass "  \\/  "; }
+        pass "      ";
+    }
+    if (d == "9") {
+        if (line == 0i64) { pass "  __  "; }
+        if (line == 1i64) { pass " / _ |"; }
+        if (line == 2i64) { pass " \\__ |"; }
+        if (line == 3i64) { pass "   \\/ "; }
+        pass "      ";
+    }
+    if (d == ":") {
+        if (line == 0i64) { pass "   "; }
+        if (line == 1i64) { pass " . "; }
+        if (line == 2i64) { pass "   "; }
+        if (line == 3i64) { pass " . "; }
+        pass "   ";
+    }
+    
+    // Fallback space
+    if (d == ":") { pass "   "; }
+    pass "      ";
+};
+
+pub func:get_digit_width = int64(string:d) {
+    if (d == ":") { pass 3i64; }
+    pass 6i64;
+};
