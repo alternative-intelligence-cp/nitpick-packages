@@ -1,0 +1,156 @@
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_cli.npk".*;
+
+// A simplistic fancy cat for markdown
+// Handles headers, lists, blockquotes, and basic inline formatting like bold
+
+func:print_markdown_line = NIL(string:line) {
+    int64:len = string_length(line);
+    
+    // Headers: "# Header", "## Header", etc.
+    if (string_starts_with(line, "# \0")) {
+        print("\x1b[1;36m\0"); // Bold Cyan
+        print(line);
+        print("\x1b[0m\n\0");
+        pass NIL;
+    }
+    if (string_starts_with(line, "## \0")) {
+        print("\x1b[1;34m\0"); // Bold Blue
+        print(line);
+        print("\x1b[0m\n\0");
+        pass NIL;
+    }
+    if (string_starts_with(line, "### \0")) {
+        print("\x1b[1;32m\0"); // Bold Green
+        print(line);
+        print("\x1b[0m\n\0");
+        pass NIL;
+    }
+    
+    // Blockquotes "> "
+    if (string_starts_with(line, "> \0")) {
+        print("\x1b[3;90m\0"); // Italic, Dark Gray
+        print("│ \0");
+        print(string_substring(line, 2i64, len));
+        print("\x1b[0m\n\0");
+        pass NIL;
+    }
+    
+    // Unordered lists "- " or "* "
+    if (string_starts_with(line, "- \0")) {
+        print("\x1b[1;35m•\x1b[0m \0"); // Magenta bullet
+        line = string_substring(line, 2i64, len);
+        len = string_length(line);
+    } else if (string_starts_with(line, "* \0")) {
+        print("\x1b[1;35m•\x1b[0m \0"); // Magenta bullet
+        line = string_substring(line, 2i64, len);
+        len = string_length(line);
+    }
+    
+    // Inline bold (**bold**) and inline code (`code`)
+    // Simple state machine for printing character by character
+    int64:i = 0i64;
+    int32:bold_on = 0i32;
+    int32:code_on = 0i32;
+    
+    while (i < len) {
+        string:c = string_substring(line, i, i + 1i64);
+        
+        // Bold
+        if (c == "*\0") {
+            if (i + 1i64 < len) {
+                if (string_substring(line, i + 1i64, i + 2i64) == "*\0") {
+                    if (bold_on == 1i32) {
+                        print("\x1b[22m\0"); // Turn off bold
+                        bold_on = 0i32;
+                    } else {
+                        print("\x1b[1m\0"); // Turn on bold
+                        bold_on = 1i32;
+                    }
+                    i = i + 2i64;
+                    // skip loop body manually since we advanced i
+                    // Instead of continue, we just conditionally execute rest
+                    if (i >= len) { c = ""; } // hack to skip rest
+                    else { c = string_substring(line, i, i + 1i64); }
+                }
+            }
+        }
+        
+        // Inline code
+        if (c == "`\0") {
+            if (code_on == 1i32) {
+                print("\x1b[0m\0"); // Reset (turn off code colors)
+                code_on = 0i32;
+            } else {
+                print("\x1b[48;5;236m\x1b[38;5;214m\0"); // Grey bg, Orange text
+                code_on = 1i32;
+            }
+            i = i + 1i64;
+            if (i >= len) { c = ""; }
+            else { c = string_substring(line, i, i + 1i64); }
+        }
+        
+        if (string_length(c) > 0i64) {
+            print(c);
+            i = i + 1i64;
+        }
+    }
+    
+    // Reset formatting at end of line
+    if (bold_on == 1i32) { print("\x1b[22m\0"); }
+    if (code_on == 1i32) { print("\x1b[0m\0"); }
+    print("\n\0");
+    pass NIL;
+};
+
+func:main = int32() {
+    drop(Cli.parse());
+    int64:count = raw Cli.get_positional_count();
+    if (count == 0i64) {
+        print("Usage: nmdcat <file.md>\n\0");
+        exit(1i32);
+    }
+    
+    string:file_path = raw Cli.get_positional(0i64);
+    if (raw fs_exists(file_path) == 0i32) {
+        print("File not found: \0"); print(file_path); print("\n\0");
+        exit(1i32);
+    }
+    
+    string:content = raw fs_read_file(file_path);
+    int64:lines = raw Str.token_count(content, "\n\0");
+    
+    int64:i = 0i64;
+    int32:in_code_block = 0i32;
+    
+    while (i < lines) {
+        string:line = raw Str.token(content, "\n\0", i);
+        
+        // Code blocks: ```
+        if (string_starts_with(line, "```\0")) {
+            if (in_code_block == 1i32) {
+                in_code_block = 0i32;
+                print("\x1b[0m\n\0"); // End block
+            } else {
+                in_code_block = 1i32;
+                print("\x1b[48;5;235m\x1b[38;5;111m\0"); // Dark bg, light blue text
+            }
+        } else {
+            if (in_code_block == 1i32) {
+                // Inside code block, just print it padded slightly
+                print("  \0"); print(line); print("\n\0");
+            } else {
+                raw print_markdown_line(line);
+            }
+        }
+        
+        i = i + 1i64;
+    }
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};
