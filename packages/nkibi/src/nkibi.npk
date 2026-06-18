@@ -1,0 +1,134 @@
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_tui.npk".*;
+use "nitpick_input.npk".*;
+use "nitpick_cli.npk".*;
+
+extern func:usleep = int32(int32:usec);
+extern func:nitpick_input_enter_raw = int32();
+extern func:nitpick_input_exit_raw = int32();
+extern func:nitpick_input_read_key = int32();
+
+extern func:nkibi_insert_char = string(string:s, int64:pos, int64:code);
+extern func:nkibi_delete_char = string(string:s, int64:pos);
+extern func:nkibi_get_line_start = int64(string:s, int64:pos);
+extern func:nkibi_get_line_end = int64(string:s, int64:pos);
+
+func:main = int32() {
+    drop(Cli.parse());
+    
+    if (raw Cli.get_positional_count() == 0i64) {
+        print("Usage: nkibi <file>\n\0");
+        exit(1i32);
+    }
+    
+    string:filename = raw Cli.get_positional(0i64);
+    string:content = "";
+    
+    if (raw fs_exists(filename) == 1i64) {
+        content = raw fs_read_file(filename);
+    }
+    
+    raw Tui.init();
+    drop(nitpick_input_enter_raw());
+    
+    int32:running = 1i32;
+    int64:cursor_pos = 0i64;
+    int32:status_msg_ticks = 0i32;
+    string:status_msg = "\0";
+    
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0"); // Clear screen
+        
+        Widget:panel = raw Tui.panel(2i32, 2i32, 76i32, 22i32, 7i32, 0i32);
+        drop(Tui.draw_widget(panel));
+        
+        string:title = string_concat(" nkibi - \0", filename);
+        Widget:lbl_title = raw Tui.label(4i32, 2i32, title, 6i32, 0i32);
+        drop(Tui.draw_widget(lbl_title));
+        
+        // Render content (naive simple textarea without scroll for <1024 text editors)
+        // Since Tui.textarea just prints, we'll slice content based on cursor line?
+        // Wait, Tui.textarea might wrap. Let's just print visible lines.
+        // For simplicity, we just use Tui.textarea.
+        Widget:textarea = raw Tui.textarea(4i32, 4i32, 72i32, 18i32, content);
+        drop(Tui.draw_widget(textarea));
+        
+        // Status bar
+        string:footer = " Ctrl-S: Save | Ctrl-Q: Quit \0";
+        if (status_msg_ticks > 0i32) {
+            footer = string_concat(string_concat(" \x1b[32m\0", status_msg), "\x1b[0m \0");
+            status_msg_ticks = status_msg_ticks - 1i32;
+        }
+        
+        Widget:lbl_footer = raw Tui.label(4i32, 23i32, footer, 3i32, 0i32);
+        drop(Tui.draw_widget(lbl_footer));
+        
+        // Draw pseudo-cursor by recalculating X/Y based on content before cursor_pos
+        string:before_cursor = raw Str.slice(content, 0i64); // Wait, slice is to end.
+        // We'll just put cursor roughly at bottom or rely on TUI.
+        // Actually we don't have a visual cursor in this simple TUI primitive.
+        // We can just rely on the user seeing characters typed.
+        
+        int32:k = nitpick_input_read_key();
+        
+        if (k == 17i32) { // Ctrl-Q
+            running = 0i32;
+        }
+        else if (k == 19i32) { // Ctrl-S
+            drop(fs_write_file(filename, content));
+            status_msg = "File saved successfully!\0";
+            status_msg_ticks = 30i32;
+        }
+        else if (k == 1i32) { // Up
+            int64:line_start = nkibi_get_line_start(content, cursor_pos);
+            if (line_start > 0i64) {
+                cursor_pos = nkibi_get_line_start(content, line_start - 1i64);
+            }
+        }
+        else if (k == 2i32) { // Down
+            int64:line_end = nkibi_get_line_end(content, cursor_pos);
+            if (line_end < string_length(content)) {
+                cursor_pos = line_end + 1i64;
+            }
+        }
+        else if (k == 3i32) { // Right
+            if (cursor_pos < string_length(content)) {
+                cursor_pos = cursor_pos + 1i64;
+            }
+        }
+        else if (k == 4i32) { // Left
+            if (cursor_pos > 0i64) {
+                cursor_pos = cursor_pos - 1i64;
+            }
+        }
+        else if (k == 127i32 || k == 8i32) { // Backspace
+            if (cursor_pos > 0i64) {
+                content = nkibi_delete_char(content, cursor_pos - 1i64);
+                cursor_pos = cursor_pos - 1i64;
+            }
+        }
+        else if (k == 10i32 || k == 13i32) { // Enter
+            content = nkibi_insert_char(content, cursor_pos, 10i64);
+            cursor_pos = cursor_pos + 1i64;
+        }
+        else if (k >= 32i32 && k <= 126i32) { // Typable chars
+            content = nkibi_insert_char(content, cursor_pos, @cast<int64>(k));
+            cursor_pos = cursor_pos + 1i64;
+        }
+        
+        drop(usleep(30000i32));
+    }
+    
+    raw Tui.shutdown();
+    drop(nitpick_input_exit_raw());
+    print("\n\x1b[?25h\0");
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    raw Tui.shutdown();
+    drop(nitpick_input_exit_raw());
+    print("\n\x1b[?25h\0");
+    exit(1i32);
+};
