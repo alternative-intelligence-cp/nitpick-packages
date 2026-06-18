@@ -1,0 +1,32 @@
+use "nitpick_cli.npk".*;
+
+extern func:dusage_sys_print = int64(string:path);
+
+func:main = int32() {
+    raw Cli.parse();
+    int64:count = raw Cli.get_positional_count();
+    
+    string:target = ".\0";
+    if (count == 1i64) {
+        target = raw Cli.get_positional(0i64);
+    } else {
+        if (count > 1i64) {
+            print("Usage: ndusage [target_directory]\n\0");
+            exit(1i32);
+        }
+    }
+    
+    int64:res = dusage_sys_print(target);
+    if (res != 0i64) {
+        print("Error: Could not scan directory: \0");
+        print(target);
+        print("\n\0");
+        exit(1i32);
+    }
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};
