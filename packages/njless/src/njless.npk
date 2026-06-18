@@ -1,0 +1,279 @@
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_tui.npk".*;
+use "nitpick_input.npk".*;
+use "nitpick_json.npk".*;
+use "nitpick_cli.npk".*;
+
+extern func:usleep = int32(int32:usec);
+extern func:nitpick_input_enter_raw = int32();
+extern func:nitpick_input_exit_raw = int32();
+extern func:nitpick_input_read_key = int32();
+
+// State
+string:g_items = "";
+string:g_paths = ""; // to track path of each item for expand/collapse
+int64:g_line_count = 0i64;
+int64:g_expanded_hash = 0i64;
+
+func:get_indent = string(int64:level) {
+    string:ind = "";
+    int64:i = 0i64;
+    while (i < level) {
+        ind = string_concat(ind, "  \0");
+        i = i + 1i64;
+    }
+    pass ind;
+};
+
+// Returns boolean
+func:is_expanded = int32(string:path) {
+    if (string_length(path) == 0i64) { pass 1i32; } // root always expanded
+    string:val = ahget(g_expanded_hash, path);
+    if (string_length(val) > 0i64) {
+        pass 1i32;
+    }
+    pass 0i32;
+};
+
+func:toggle_expanded = NIL(string:path) {
+    if (raw is_expanded(path) == 1i32) {
+        ahset(g_expanded_hash, path, ""); // clear
+    } else {
+        ahset(g_expanded_hash, path, "1\0");
+    }
+    pass NIL;
+};
+
+// Recursive builder
+func:build_tree = NIL(string:path, string:key_name, int64:indent, int32:is_last) {
+    string:c_path = string_concat(path, "\0");
+    int32:t = raw json_get_type(c_path);
+    
+    string:prefix = raw get_indent(indent);
+    if (string_length(key_name) > 0i64) {
+        prefix = string_concat(prefix, string_concat("\x1b[36m\0", string_concat(key_name, "\x1b[0m: \0")));
+    }
+    
+    if (t == 5i32) { // Object
+        int32:count = raw json_array_count(c_path);
+        if (count == 0i32) {
+            g_items = string_concat(g_items, string_concat(prefix, "{}\0"));
+            if (is_last == 0i32) { g_items = string_concat(g_items, ",\0"); }
+            g_items = string_concat(g_items, "|\0");
+            g_paths = string_concat(g_paths, string_concat(path, "|\0"));
+            g_line_count = g_line_count + 1i64;
+        } else {
+            if (raw is_expanded(path) == 1i32) {
+                g_items = string_concat(g_items, string_concat(prefix, "\x1b[33m{\x1b[0m\0"));
+                g_items = string_concat(g_items, "|\0");
+                g_paths = string_concat(g_paths, string_concat(path, "|\0"));
+                g_line_count = g_line_count + 1i64;
+                
+                int32:i = 0i32;
+                while (i < count) {
+                    string:child_key = raw json_object_get_key(c_path, i);
+                    string:child_path = child_key;
+                    if (string_length(path) > 0i64) {
+                        child_path = string_concat(path, string_concat(".", child_key));
+                    }
+                    
+                    int32:child_is_last = 0i32;
+                    if (i == count - 1i32) { child_is_last = 1i32; }
+                    
+                    drop(build_tree(child_path, string_concat("\"\0", string_concat(child_key, "\"\0")), indent + 1i64, child_is_last));
+                    i = i + 1i32;
+                }
+                
+                string:close_str = string_concat(raw get_indent(indent), "\x1b[33m}\x1b[0m\0");
+                if (is_last == 0i32) { close_str = string_concat(close_str, ",\0"); }
+                g_items = string_concat(g_items, string_concat(close_str, "|\0"));
+                g_paths = string_concat(g_paths, "|\0"); // no path for closing brace
+                g_line_count = g_line_count + 1i64;
+            } else {
+                string:sum = string_concat(prefix, string_concat("\x1b[33m{ \x1b[0m...\x1b[33m }\x1b[0m \x1b[90m// \0", string_concat(string_from_int(@cast<int64>(count)), " items\x1b[0m\0")));
+                if (is_last == 0i32) { sum = string_concat(sum, ",\0"); }
+                g_items = string_concat(g_items, string_concat(sum, "|\0"));
+                g_paths = string_concat(g_paths, string_concat(path, "|\0"));
+                g_line_count = g_line_count + 1i64;
+            }
+        }
+    }
+    else if (t == 4i32) { // Array
+        int32:count = raw json_array_count(c_path);
+        if (count == 0i32) {
+            g_items = string_concat(g_items, string_concat(prefix, "[]\0"));
+            if (is_last == 0i32) { g_items = string_concat(g_items, ",\0"); }
+            g_items = string_concat(g_items, "|\0");
+            g_paths = string_concat(g_paths, string_concat(path, "|\0"));
+            g_line_count = g_line_count + 1i64;
+        } else {
+            if (raw is_expanded(path) == 1i32) {
+                g_items = string_concat(g_items, string_concat(prefix, "\x1b[34m[\x1b[0m\0"));
+                g_items = string_concat(g_items, "|\0");
+                g_paths = string_concat(g_paths, string_concat(path, "|\0"));
+                g_line_count = g_line_count + 1i64;
+                
+                int32:i = 0i32;
+                while (i < count) {
+                    string:child_path = string_from_int(@cast<int64>(i));
+                    if (string_length(path) > 0i64) {
+                        child_path = string_concat(path, string_concat(".", child_path));
+                    }
+                    
+                    int32:child_is_last = 0i32;
+                    if (i == count - 1i32) { child_is_last = 1i32; }
+                    
+                    drop(build_tree(child_path, "", indent + 1i64, child_is_last));
+                    i = i + 1i32;
+                }
+                
+                string:close_str = string_concat(raw get_indent(indent), "\x1b[34m]\x1b[0m\0");
+                if (is_last == 0i32) { close_str = string_concat(close_str, ",\0"); }
+                g_items = string_concat(g_items, string_concat(close_str, "|\0"));
+                g_paths = string_concat(g_paths, "|\0");
+                g_line_count = g_line_count + 1i64;
+            } else {
+                string:sum = string_concat(prefix, string_concat("\x1b[34m[ \x1b[0m...\x1b[34m ]\x1b[0m \x1b[90m// \0", string_concat(string_from_int(@cast<int64>(count)), " items\x1b[0m\0")));
+                if (is_last == 0i32) { sum = string_concat(sum, ",\0"); }
+                g_items = string_concat(g_items, string_concat(sum, "|\0"));
+                g_paths = string_concat(g_paths, string_concat(path, "|\0"));
+                g_line_count = g_line_count + 1i64;
+            }
+        }
+    }
+    else if (t == 3i32) { // String
+        string:val = raw json_get_string(c_path);
+        string:s = string_concat(prefix, string_concat("\x1b[32m\"\0", string_concat(val, "\"\x1b[0m\0")));
+        if (is_last == 0i32) { s = string_concat(s, ",\0"); }
+        g_items = string_concat(g_items, string_concat(s, "|\0"));
+        g_paths = string_concat(g_paths, string_concat(path, "|\0"));
+        g_line_count = g_line_count + 1i64;
+    }
+    else if (t == 2i32) { // Number
+        // Nitpick json shim doesn't easily return string formatted numbers.
+        // We will fetch it as float, but we cast to int for now.
+        int64:val = raw json_get_int(c_path);
+        string:s = string_concat(prefix, string_concat("\x1b[35m\0", string_concat(string_from_int(val), "\x1b[0m\0")));
+        if (is_last == 0i32) { s = string_concat(s, ",\0"); }
+        g_items = string_concat(g_items, string_concat(s, "|\0"));
+        g_paths = string_concat(g_paths, string_concat(path, "|\0"));
+        g_line_count = g_line_count + 1i64;
+    }
+    else if (t == 1i32) { // Bool
+        int32:val = raw json_get_bool(c_path);
+        string:s = "\x1b[33mfalse\x1b[0m\0";
+        if (val == 1i32) { s = "\x1b[33mtrue\x1b[0m\0"; }
+        s = string_concat(prefix, s);
+        if (is_last == 0i32) { s = string_concat(s, ",\0"); }
+        g_items = string_concat(g_items, string_concat(s, "|\0"));
+        g_paths = string_concat(g_paths, string_concat(path, "|\0"));
+        g_line_count = g_line_count + 1i64;
+    }
+    else if (t == 0i32) { // Null
+        string:s = string_concat(prefix, "\x1b[90mnull\x1b[0m\0");
+        if (is_last == 0i32) { s = string_concat(s, ",\0"); }
+        g_items = string_concat(g_items, string_concat(s, "|\0"));
+        g_paths = string_concat(g_paths, string_concat(path, "|\0"));
+        g_line_count = g_line_count + 1i64;
+    }
+    
+    pass NIL;
+};
+
+func:rebuild_view = NIL() {
+    g_items = "";
+    g_paths = "";
+    g_line_count = 0i64;
+    drop(build_tree("", "", 0i64, 1i32));
+    pass NIL;
+};
+
+func:main = int32() {
+    drop(Cli.parse());
+    if (raw Cli.get_positional_count() == 0i64) {
+        print("Usage: njless <file.json>\n\0");
+        exit(1i32);
+    }
+    
+    string:file_path = raw Cli.get_positional(0i64);
+    string:content = raw fs_read_file(file_path);
+    if (string_length(content) == 0i64) {
+        print("Error: Could not read file or file is empty.\n\0");
+        exit(1i32);
+    }
+    
+    if (raw json_parse(content) == 0i32) {
+        print("Error parsing JSON: \0");
+        print(raw json_error());
+        print("\n\0");
+        exit(1i32);
+    }
+    
+    g_expanded_hash = ahash(1024);
+    
+    // Root is expanded by default
+    ahset(g_expanded_hash, "", "1\0");
+    drop(rebuild_view());
+    
+    drop(nitpick_input_enter_raw());
+    drop(Tui.init());
+    
+    int32:selected = 0i32;
+    int32:running = 1i32;
+    
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0");
+        
+        Widget:main_panel = raw Tui.panel(2i32, 2i32, 76i32, 22i32, 7i32, 0i32);
+        drop(Tui.draw_widget(main_panel));
+        
+        Widget:title = raw Tui.label(4i32, 2i32, string_concat(" njless: \0", file_path), 6i32, 0i32);
+        drop(Tui.draw_widget(title));
+        
+        Widget:listbox = raw Tui.listbox(4i32, 4i32, 72i32, 18i32, g_items, selected);
+        drop(Tui.draw_widget(listbox));
+        
+        Widget:help_label = raw Tui.label(4i32, 23i32, " UP/DOWN: Move  |  ENTER: Expand/Collapse  |  ESC: Quit \0", 3i32, 0i32);
+        drop(Tui.draw_widget(help_label));
+        
+        int32:k = nitpick_input_read_key();
+        if (k == 1i32) { // Up
+            if (selected > 0i32) { selected = selected - 1i32; }
+        }
+        else if (k == 2i32) { // Down
+            if (selected < @cast_unchecked<int32>(g_line_count) - 1i32) { selected = selected + 1i32; }
+        }
+        else if (k == 10i32) { // Enter (\n)
+            string:node_path = raw Str.token(g_paths, "|\0", @cast<int64>(selected));
+            if (string_length(node_path) > 0i64) {
+                drop(toggle_expanded(node_path));
+                drop(rebuild_view());
+            }
+        }
+        else if (k == 13i32) { // Enter (\r)
+            string:node_path = raw Str.token(g_paths, "|\0", @cast<int64>(selected));
+            if (string_length(node_path) > 0i64) {
+                drop(toggle_expanded(node_path));
+                drop(rebuild_view());
+            }
+        }
+        else if (k == 27i32) { // Esc
+            running = 0i32;
+        }
+        drop(usleep(30000i32));
+    }
+    
+    drop(Tui.shutdown());
+    drop(nitpick_input_exit_raw());
+    print("\n\x1b[?25h\0");
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    drop(Tui.shutdown());
+    drop(nitpick_input_exit_raw());
+    print("\n\x1b[?25h\0");
+    exit(1i32);
+};

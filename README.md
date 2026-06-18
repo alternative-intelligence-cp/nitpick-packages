@@ -79,6 +79,7 @@ Ecosystem package libraries for the [Nitpick programming language](https://githu
 | nitpick-msgpack | MessagePack binary serialization |
 | nitpick-mux | Bit-select, field insert/extract, conditional mux |
 | nitpick-mysql | MySQL client via libmysqlclient |
+| nitpick-njless | Interactive JSON viewer and explorer |
 | nitpick-nmdcat | Markdown viewer for the terminal |
 | nitpick-nn | Neural network framework built on nitpick-matrix |
 | nitpick-nkondo | Fast TUI utility to find and delete heavy project directories |
