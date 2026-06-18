@@ -1,0 +1,104 @@
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_cli.npk".*;
+
+func:safe_name = string(string:name) {
+    string:res = name;
+    res = raw Str.replace_all(res, " ", "_");
+    res = raw Str.replace_all(res, "(", "_");
+    res = raw Str.replace_all(res, ")", "_");
+    res = raw Str.replace_all(res, "[", "_");
+    res = raw Str.replace_all(res, "]", "_");
+    res = raw Str.replace_all(res, "{", "_");
+    res = raw Str.replace_all(res, "}", "_");
+    res = raw Str.replace_all(res, "!", "_");
+    res = raw Str.replace_all(res, "@", "_");
+    res = raw Str.replace_all(res, "#", "_");
+    res = raw Str.replace_all(res, "$", "_");
+    res = raw Str.replace_all(res, "%", "_");
+    res = raw Str.replace_all(res, "^", "_");
+    res = raw Str.replace_all(res, "&", "_");
+    res = raw Str.replace_all(res, "*", "_");
+    res = raw Str.replace_all(res, "+", "_");
+    res = raw Str.replace_all(res, "=", "_");
+    res = raw Str.replace_all(res, "`", "_");
+    res = raw Str.replace_all(res, "~", "_");
+    res = raw Str.replace_all(res, "'", "_");
+    res = raw Str.replace_all(res, "\"", "_");
+    res = raw Str.replace_all(res, ":", "_");
+    res = raw Str.replace_all(res, ";", "_");
+    res = raw Str.replace_all(res, "<", "_");
+    res = raw Str.replace_all(res, ">", "_");
+    res = raw Str.replace_all(res, "?", "_");
+    res = raw Str.replace_all(res, "|", "_");
+    res = raw Str.replace_all(res, "\\", "_");
+    
+    // Clean up multiple underscores
+    res = raw Str.replace_all(res, "____", "_");
+    res = raw Str.replace_all(res, "___", "_");
+    res = raw Str.replace_all(res, "__", "_");
+    pass(res);
+};
+
+func:main = int32() {
+    drop(Cli.register_flag("--help\0", "-h\0"));
+    drop(Cli.register_flag("--do\0", "-d\0"));
+    drop(Cli.parse());
+    
+    if (raw Cli.get_flag("--help\0") == 1i32) {
+        print("nnotox - no toxic names anymore\n\0");
+        print("Usage: nnotox [options] <files...>\n\0");
+        print("Options:\n\0");
+        print("  -d, --do           Do the actions (rename)\n\0");
+        print("  -h, --help         Show this help message\n\0");
+        exit(0i32);
+    }
+    
+    int64:do_rename = raw Cli.get_flag("--do\0");
+    int64:count = raw Cli.get_positional_count();
+    
+    if (count == 0i64) {
+        print("Error: No files specified.\n\0");
+        exit(1i32);
+    }
+    
+    int64:i = 0i64;
+    till (1000, 1) {
+        if (i < count) {
+            string:path = raw Cli.get_positional(i);
+            string:name = raw fs_basename(path);
+            string:dir = raw fs_dirname(path);
+            
+            string:safe = raw safe_name(name);
+            
+            if (string_equals(name, safe) == false) {
+                string:new_path = "";
+                if (string_is_empty(dir)) {
+                    new_path = safe;
+                } else {
+                    new_path = string_concat(string_concat(dir, "/"), safe);
+                }
+                
+                print(path);
+                print(" -> \0");
+                print(new_path);
+                print("\n\0");
+                
+                if (do_rename == 1i64) {
+                    int64:res = raw fs_rename(path, new_path);
+                    if (res != 1i64) {
+                        print("Failed to rename.\n\0");
+                    }
+                }
+            }
+            
+            i = i + 1i64;
+        }
+    }
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};
