@@ -1,0 +1,53 @@
+use "nitpick_cli.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_fs.npk".*;
+
+func:main = int32() {
+    drop(Cli.register_flag("--help\0", "-h\0"));
+    drop(Cli.register_option("--file\0", "-f\0", "\0"));
+    drop(Cli.register_option("--find\0", "-s\0", "\0"));
+    drop(Cli.register_option("--replace\0", "-r\0", "\0"));
+    drop(Cli.parse());
+    
+    if (raw Cli.get_flag("--help\0") == 1i32) {
+        print("nscooter - Simple find and replace tool\n\0");
+        print("Usage: nscooter -f <file> -s <find> -r <replace>\n\0");
+        print("Options:\n\0");
+        print("  -f, --file      File to modify\n\0");
+        print("  -s, --find      String to find\n\0");
+        print("  -r, --replace   String to replace with\n\0");
+        print("  -h, --help      Show this help message\n\0");
+        exit(0i32);
+    }
+    
+    string:file = raw Cli.get_option("--file\0");
+    string:find = raw Cli.get_option("--find\0");
+    string:replace = raw Cli.get_option("--replace\0");
+    
+    if (string_is_empty(file) || string_is_empty(find)) {
+        print("Error: --file and --find are required.\n\0");
+        exit(1i32);
+    }
+    
+    if (raw fs_exists(file) == 0i32) {
+        print("Error: File does not exist: \0");
+        print(file);
+        print("\n\0");
+        exit(1i32);
+    }
+    string:content = raw fs_read_file(file);
+    string:new_content = raw Str.replace_all(content, find, replace);
+    
+    int64:res = raw fs_write_file(file, new_content);
+    if (res != 1i64) {
+        print("Error: Failed to write to file.\n\0");
+        exit(1i32);
+    }
+    
+    print("Replaced successfully.\n\0");
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};
