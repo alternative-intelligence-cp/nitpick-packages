@@ -1,0 +1,34 @@
+use "nitpick_cli.npk".*;
+use "nitpick_str.npk".*;
+
+extern func:nfend_eval = string(string:expr);
+
+func:main = int32() {
+    drop(Cli.register_flag("--help\0", "-h\0"));
+    drop(Cli.parse());
+    
+    if (raw Cli.get_flag("--help\0") == 1i32) {
+        print("nfend - A terminal calculator\n\0");
+        print("Usage: nfend <expression>\n\0");
+        exit(0i32);
+    }
+    
+    int64:count = raw Cli.get_positional_count();
+    if (count != 1i64) {
+        print("Please provide a mathematical expression in quotes.\n\0");
+        print("Usage: nfend \"<expression>\"\n\0");
+        exit(1i32);
+    }
+    
+    string:expr = raw Cli.get_positional(0i64);
+    
+    string:res = nfend_eval(expr);
+    print(res);
+    print("\n\0");
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};
