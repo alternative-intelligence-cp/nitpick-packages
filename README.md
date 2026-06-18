@@ -177,3 +177,4 @@ nitpick-<name>/
 ## License
 
 AGPL-3.0 — see [LICENSE.md](LICENSE.md)
+| nitpick-nstrace | A terminal UI for dynamically exploring and filtering `strace` logs of an executed command. |

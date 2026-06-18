@@ -8,19 +8,20 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-static char req_buffer[16384];
-static char method[32];
-static char path[1024];
-static char query[1024];
-static char version[32];
-static char body_buf[8192];
-static int body_len = 0;
+static _Thread_local char req_buffer[16384];
+static _Thread_local char method[32];
+static _Thread_local char path[1024];
+static _Thread_local char query[1024];
+static _Thread_local char version[32];
+static _Thread_local char body_buf[8192];
+static _Thread_local int body_len = 0;
 
-static char header_names[64][128];
-static char header_values[64][512];
-static int header_count = 0;
+static _Thread_local char header_names[64][128];
+static _Thread_local char header_values[64][512];
+static _Thread_local int header_count = 0;
 
-static char last_error[256];
+static _Thread_local char last_error[256];
+
 
 int64_t nitpick_libc_server_listen(const char* addr, int64_t port, int64_t backlog) {
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);

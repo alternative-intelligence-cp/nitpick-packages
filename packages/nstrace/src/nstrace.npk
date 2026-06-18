@@ -1,0 +1,160 @@
+use "nitpick_display.npk".*;
+use "nitpick_tui.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_cli.npk".*;
+use "nitpick_input.npk".*;
+
+extern func:njust_system = int32(string:cmd);
+extern func:usleep = int32(int32:usec);
+extern func:nitpick_input_enter_raw = int32();
+extern func:nitpick_input_exit_raw = int32();
+extern func:nitpick_input_read_key = int32();
+
+func:main = int32() {
+    drop(Cli.parse());
+    int64:count = raw Cli.get_positional_count();
+    if (count == 0i64) {
+        print("Usage: nstrace <command>\n\0");
+        exit(1i32);
+    }
+    
+    string:cmd = "";
+    int64:i = 0i64;
+    while (i < count) {
+        if (i > 0i64) { cmd = string_concat(cmd, " \0"); }
+        cmd = string_concat(cmd, raw Cli.get_positional(i));
+        i = i + 1i64;
+    }
+    
+    print("Running: strace on \0");
+    print(cmd);
+    print("\n\0");
+    
+    // We only capture first 2000 lines of strace to keep TUI responsive
+    string:strace_cmd = string_concat(string_concat("strace \0", cmd), " 2>&1 | head -n 2000 > /tmp/nstrace_out\0");
+    drop(njust_system(strace_cmd));
+    
+    string:out = raw fs_read_file("/tmp/nstrace_out\0");
+    int64:total_lines = raw Str.token_count(out, "\n\0");
+    if (total_lines == 0i64) {
+        print("Error: No strace output recorded.\n\0");
+        exit(1i32);
+    }
+    
+    drop(nitpick_input_enter_raw());
+    drop(Tui.init());
+    
+    string:query = "";
+    int32:running = 1i32;
+    int32:selected = 0i32;
+    
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0");
+        
+        string:items = "";
+        int64:visible_count = 0i64;
+        int64:line_hash = ahash(1024);
+        
+        int64:idx = 0i64;
+        while (idx < total_lines) {
+            string:line = raw Str.token(out, "\n\0", idx);
+            if (raw Str.count(line, "(\0") > 0i64) {
+                string:syscall = raw Str.before(line, "(\0");
+                
+                int32:match = 1i32;
+                if (string_length(query) > 0i64) {
+                    if (raw Str.count(syscall, query) == 0i64) {
+                        match = 0i32;
+                    }
+                }
+                
+                if (match == 1i32) {
+                    if (visible_count > 0i64) { items = string_concat(items, "|\0"); }
+                    items = string_concat(items, syscall);
+                    ahset(line_hash, string_from_int(visible_count), line);
+                    visible_count = visible_count + 1i64;
+                }
+            }
+            idx = idx + 1i64;
+        }
+        
+        if (selected >= @cast_unchecked<int32>(visible_count)) {
+            selected = @cast_unchecked<int32>(visible_count) - 1i32;
+        }
+        if (selected < 0i32) { selected = 0i32; }
+        
+        string:sel_line = "";
+        if (visible_count > 0i64) {
+            sel_line = ahget(line_hash, string_from_int(@cast<int64>(selected)));
+        }
+        
+        Widget:panel = raw Tui.panel(2i32, 2i32, 76i32, 22i32, 7i32, 0i32);
+        drop(Tui.draw_widget(panel));
+        
+        Widget:title = raw Tui.label(4i32, 2i32, " nstrace - TUI Syscall Explorer ", 6i32, 0i32);
+        drop(Tui.draw_widget(title));
+        
+        Widget:search_lbl = raw Tui.label(4i32, 4i32, string_concat("Filter: \0", query), 3i32, 0i32);
+        drop(Tui.draw_widget(search_lbl));
+        
+        Widget:listbox = raw Tui.listbox(4i32, 6i32, 25i32, 16i32, items, selected);
+        drop(Tui.draw_widget(listbox));
+        
+        Widget:detail_panel = raw Tui.panel(31i32, 6i32, 45i32, 16i32, 7i32, 0i32);
+        drop(Tui.draw_widget(detail_panel));
+        
+        Widget:detail_title = raw Tui.label(33i32, 6i32, " Syscall Details ", 6i32, 0i32);
+        drop(Tui.draw_widget(detail_title));
+        
+        if (string_length(sel_line) > 0i64) {
+            string:sc_name = raw Str.before(sel_line, "(\0");
+            string:sc_args = raw Str.after(sel_line, "(\0");
+            sc_args = raw Str.before_last(sc_args, ")\0");
+            string:sc_ret = raw Str.after_last(sel_line, "=\0");
+            
+            Widget:lbl_name = raw Tui.label(33i32, 8i32, string_concat("Syscall: \0", sc_name), 2i32, 0i32);
+            drop(Tui.draw_widget(lbl_name));
+            
+            Widget:lbl_ret = raw Tui.label(33i32, 10i32, string_concat("Return : \0", sc_ret), 5i32, 0i32);
+            drop(Tui.draw_widget(lbl_ret));
+            
+            Widget:args_area = raw Tui.textarea(33i32, 12i32, 41i32, 8i32, sc_args);
+            drop(Tui.draw_widget(args_area));
+        }
+        
+        int32:k = nitpick_input_read_key();
+        if (k > 0i32) {
+            if (k == 27i32) { running = 0i32; } // ESC
+            else if (k == 1i32) { selected = selected - 1i32; } // UP
+            else if (k == 2i32) { selected = selected + 1i32; } // DOWN
+            else if (k == 127i32) { // Backspace
+                int64:qlen = string_length(query);
+                if (qlen > 0i64) {
+                    query = string_substring(query, 0i64, qlen - 1i64);
+                    selected = 0i32;
+                }
+            }
+            else {
+                if (k >= 32i32) {
+                    if (k <= 126i32) {
+                        string:char = string_from_char(@cast_unchecked<int8>(k));
+                        query = string_concat(query, char);
+                        selected = 0i32;
+                    }
+                }
+            }
+        }
+        drop(usleep(50000i32));
+    }
+    
+    drop(Tui.shutdown());
+    drop(nitpick_input_exit_raw());
+    
+    print("\n\x1b[?25h\0");
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};
