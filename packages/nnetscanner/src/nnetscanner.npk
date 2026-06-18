@@ -1,0 +1,62 @@
+use "nitpick_cli.npk".*;
+use "nitpick_str.npk".*;
+
+extern func:nnetscanner_scan_port = int32(string:ip, int32:port);
+extern func:nnetscanner_parse_int = int32(string:s);
+extern func:nnetscanner_print_port = void(int32:port);
+
+func:main = int32() {
+    drop(Cli.register_flag("--help\0", "-h\0"));
+    drop(Cli.register_option("--target\0", "-t\0", "127.0.0.1\0"));
+    drop(Cli.register_option("--start\0", "-s\0", "1\0"));
+    drop(Cli.register_option("--end\0", "-e\0", "1024\0"));
+    drop(Cli.parse());
+    
+    if (raw Cli.get_flag("--help\0") == 1i32) {
+        print("nnetscanner - Simple TCP port scanner\n\0");
+        print("Usage: nnetscanner [options]\n\0");
+        print("Options:\n\0");
+        print("  -t, --target <ip>   Target IP address (default: 127.0.0.1)\n\0");
+        print("  -s, --start <port>  Start port (default: 1)\n\0");
+        print("  -e, --end <port>    End port (default: 1024)\n\0");
+        print("  -h, --help          Show this help message\n\0");
+        exit(0i32);
+    }
+    
+    string:target = raw Cli.get_option("--target\0");
+    string:start_str = raw Cli.get_option("--start\0");
+    string:end_str = raw Cli.get_option("--end\0");
+    
+    int32:start_port = nnetscanner_parse_int(start_str);
+    int32:end_port = nnetscanner_parse_int(end_str);
+    
+    if (start_port < 1i32) { start_port = 1i32; }
+    if (end_port > 65535i32) { end_port = 65535i32; }
+    if (start_port > end_port) {
+        print("Error: Start port must be <= end port\n\0");
+        exit(1i32);
+    }
+    
+    print("Scanning target: \0");
+    print(target);
+    print("\n\0");
+    
+    int32:port = start_port;
+    till (65536, 1) {
+        if (port <= end_port) {
+            int32:res = nnetscanner_scan_port(target, port);
+            if (res == 1i32) {
+                nnetscanner_print_port(port);
+            }
+            port = port + 1i32;
+        }
+    }
+    
+    print("Scan complete.\n\0");
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};
