@@ -1,0 +1,27 @@
+extern func:get_os_name = string();
+extern func:get_kernel_release = string();
+extern func:get_uptime_string = string();
+extern func:get_memory_string = string();
+extern func:get_hostname_string = string();
+
+func:main = int32() {
+    string:os = get_os_name();
+    string:kernel = get_kernel_release();
+    string:uptime = get_uptime_string();
+    string:mem = get_memory_string();
+    string:host = get_hostname_string();
+
+    print("\n\0");
+    print("      \x1b[36m\\\\\\///      \x1b[35m\0"); print(host); print("\x1b[0m\n\0");
+    print("     \x1b[36m/ _  _ \\     \x1b[36mOS\x1b[0m: \0"); print(os); print("\n\0");
+    print("   \x1b[36m(| (.)(.) |)   \x1b[36mKernel\x1b[0m: \0"); print(kernel); print("\n\0");
+    print("     \x1b[36m\\  __  /     \x1b[36mUptime\x1b[0m: \0"); print(uptime); print("\n\0");
+    print("      \x1b[36m\\____/      \x1b[36mRAM\x1b[0m: \0"); print(mem); print("\n\0");
+    print("\n\0");
+
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};
