@@ -1,0 +1,44 @@
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_cli.npk".*;
+
+extern func:nmotus_generate = int32(string:len_str);
+extern func:nmotus_cleanup = int32();
+
+func:main = int32() {
+    drop(Cli.register_flag("--help\0", "-h\0"));
+    drop(Cli.register_option("--length\0", "-l\0", "16\0"));
+    drop(Cli.parse());
+    
+    if (raw Cli.get_flag("--help\0") == 1i32) {
+        print("nmotus - dead simple password generator\n\0");
+        print("Usage: nmotus [options]\n\0");
+        print("Options:\n\0");
+        print("  -l, --length <n>   Length of password (default: 16)\n\0");
+        print("  -h, --help         Show this help message\n\0");
+        exit(0i32);
+    }
+    
+    string:len_str = raw Cli.get_option("--length\0");
+    
+    drop(nmotus_generate(len_str));
+    
+    string:tmp_file = "/tmp/nmotus_pwd.txt\0";
+    
+    if (raw fs_exists(tmp_file) == 1i64) {
+        string:pwd = raw fs_read_file(tmp_file);
+        drop(nmotus_cleanup());
+        print(pwd);
+        print("\n\0");
+    } else {
+        print("Error: Failed to generate password.\n\0");
+        exit(1i32);
+    }
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    print("Fatal error in nmotus\n\0");
+    exit(1i32);
+};
