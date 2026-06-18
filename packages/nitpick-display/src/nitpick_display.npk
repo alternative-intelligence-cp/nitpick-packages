@@ -171,4 +171,8 @@ pub Type:Display = {
     func:get_rows   = string(int64:h) { pass raw disp_rows(h); };
     func:clr_name   = string(int64:c) { pass raw disp_color_name(c); };
     func:rst        = int32(int64:h) { pass raw disp_reset(h); };
+    func:clear      = NIL() { print("\x1b[2J\x1b[H\0"); pass NIL; };
+    func:flush      = NIL() { pass NIL; };
+    func:alt_screen = NIL(int32:enable) { if (enable == 1i32) { print("\x1b[?1049h\0"); } else { print("\x1b[?1049l\0"); } pass NIL; };
+    func:box        = NIL(int32:x, int32:y, int32:fg, int32:bg, int32:w, int32:h) { pass NIL; };
 };

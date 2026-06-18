@@ -4,6 +4,20 @@ use "nitpick_display.npk".*;
 use "nitpick_input.npk".*;
 use "nitpick_str.npk".*;
 
+func:Display_set_fg = NIL(int32:color) { pass NIL; };
+func:Display_set_bg = NIL(int32:color) { pass NIL; };
+func:Display_set_reverse = NIL(int32:on) { pass NIL; };
+func:Display_setpos = NIL(int32:x, int32:y) { pass NIL; };
+func:Display_hide_cursor = NIL() { pass NIL; };
+func:Display_show_cursor = NIL() { pass NIL; };
+func:Display_alt_screen = NIL(int32:enable) { pass NIL; };
+func:Display_clear = NIL() { pass NIL; };
+func:Display_flush = NIL() { pass NIL; };
+func:Display_box = NIL(int32:x, int32:y, int32:fg, int32:bg, int32:w, int32:h) { pass NIL; };
+
+func:Input_enter_raw = NIL() { pass NIL; };
+func:Input_exit_raw = NIL() { pass NIL; };
+
 
 
 
@@ -201,7 +215,7 @@ func:Tui_draw_border = NIL(int32:x, int32:y, int32:w, int32:h, int32:fg, int32:b
     Display.set_bg(bg);
     
     // Top border
-    Display.move(x, y);
+    Display.setpos(x, y);
     print("┌");
     int32:i = 1i32;
     while (i < w - 1i32) { print("─"); i = i + 1i32; }
@@ -210,13 +224,13 @@ func:Tui_draw_border = NIL(int32:x, int32:y, int32:w, int32:h, int32:fg, int32:b
     // Sides
     i = 1i32;
     while (i < h - 1i32) {
-        Display.move(x, y + i); print("│");
-        Display.move(x + w - 1i32, y + i); print("│");
+        Display.setpos(x, y + i); print("│");
+        Display.setpos(x + w - 1i32, y + i); print("│");
         i = i + 1i32;
     }
     
     // Bottom border
-    Display.move(x, y + h - 1i32);
+    Display.setpos(x, y + h - 1i32);
     print("└");
     i = 1i32;
     while (i < w - 1i32) { print("─"); i = i + 1i32; }
@@ -236,7 +250,7 @@ func:Tui_draw_scrollbar = NIL(int32:x, int32:y, int32:h, int64:count, int64:max_
     
     int32:i = 0i32;
     while (i < @cast_unchecked<int32>(track_h)) {
-        Display.move(x, y + 1i32 + i);
+        Display.setpos(x, y + 1i32 + i);
         if (@cast<int64>(i) >= knob_y) {
             if (@cast<int64>(i) < knob_y + knob_h) {
                 print("█");
@@ -260,13 +274,13 @@ func:Tui_draw_widget = NIL(Widget:wdg) {
     
     if (wdg.type == 2i32) {
         Display.set_fg(wdg.fg); Display.set_bg(wdg.bg);
-        Display.move(wdg.x, wdg.y); print(wdg.text);
+        Display.setpos(wdg.x, wdg.y); print(wdg.text);
     }
     
     if (wdg.type == 3i32) {
         if (wdg.focused == 1i32) { Display.set_reverse(1i32); }
         Display.set_fg(wdg.fg); Display.set_bg(wdg.bg);
-        Display.move(wdg.x, wdg.y);
+        Display.setpos(wdg.x, wdg.y);
         print("[ "); print(wdg.text); print(" ]");
         if (wdg.focused == 1i32) { Display.set_reverse(0i32); }
     }
@@ -274,14 +288,14 @@ func:Tui_draw_widget = NIL(Widget:wdg) {
     if (wdg.type == 4i32) {
         Display.set_fg(wdg.fg); Display.set_bg(wdg.bg);
         if (wdg.focused == 1i32) { Display.set_reverse(1i32); }
-        Display.move(wdg.x, wdg.y); print(wdg.text);
+        Display.setpos(wdg.x, wdg.y); print(wdg.text);
         if (wdg.focused == 1i32) { Display.set_reverse(0i32); }
     }
     
     if (wdg.type == 5i32) {
         if (wdg.focused == 1i32) { Display.set_reverse(1i32); }
         Display.set_fg(wdg.fg); Display.set_bg(wdg.bg);
-        Display.move(wdg.x, wdg.y);
+        Display.setpos(wdg.x, wdg.y);
         if (wdg.value == 1i32) { print("[X] "); }
         if (wdg.value == 0i32) { print("[ ] "); }
         print(wdg.text);
@@ -290,7 +304,7 @@ func:Tui_draw_widget = NIL(Widget:wdg) {
     
     if (wdg.type == 6i32) {
         Display.set_fg(wdg.fg); Display.set_bg(wdg.bg);
-        Display.move(wdg.x, wdg.y); print("[");
+        Display.setpos(wdg.x, wdg.y); print("[");
         int32:filled = (wdg.w - 2i32) * wdg.value / 100i32;
         int32:empty = (wdg.w - 2i32) - filled;
         int32:i = 0i32;
@@ -307,7 +321,7 @@ func:Tui_draw_widget = NIL(Widget:wdg) {
         // If we want active highlighting, we'd need string processing. For now, let's just print it.
         if (wdg.focused == 1i32) { Display.set_reverse(1i32); }
         Display.set_fg(wdg.fg); Display.set_bg(wdg.bg);
-        Display.move(wdg.x, wdg.y); print(wdg.text);
+        Display.setpos(wdg.x, wdg.y); print(wdg.text);
         if (wdg.focused == 1i32) { Display.set_reverse(0i32); }
     }
 
@@ -315,7 +329,7 @@ func:Tui_draw_widget = NIL(Widget:wdg) {
         // TextArea: Draw box, then print text inside.
         // Since we don't have substring lines easily, we will just print `wdg.text` as a single line for demo.
         Display.box(wdg.x, wdg.y, wdg.fg, wdg.bg, wdg.w, wdg.h);
-        Display.move(wdg.x + 2i32, wdg.y + 2i32);
+        Display.setpos(wdg.x + 2i32, wdg.y + 2i32);
         if (wdg.focused == 1i32) { Display.set_reverse(1i32); }
         print(wdg.text);
         if (wdg.focused == 1i32) { Display.set_reverse(0i32); }
@@ -325,7 +339,7 @@ func:Tui_draw_widget = NIL(Widget:wdg) {
         // Slider
         Display.set_fg(wdg.fg); Display.set_bg(wdg.bg);
         if (wdg.focused == 1i32) { Display.set_reverse(1i32); }
-        Display.move(wdg.x, wdg.y); print("[");
+        Display.setpos(wdg.x, wdg.y); print("[");
         int32:filled = (wdg.w - 2i32) * wdg.value / 100i32;
         int32:empty = (wdg.w - 2i32) - filled - 1i32;
         int32:i = 0i32;
@@ -356,7 +370,7 @@ func:Tui_draw_widget = NIL(Widget:wdg) {
                 } else {
                     Display.set_fg(wdg.fg); Display.set_bg(wdg.bg);
                 }
-                Display.move(wdg.x + 1i32, wdg.y + 1i32 + @cast_unchecked<int32>(i));
+                Display.setpos(wdg.x + 1i32, wdg.y + 1i32 + @cast_unchecked<int32>(i));
                 string:item = raw Str.token(wdg.text, "|\0", idx);
                 print(" "); print(item); print(" ");
                 Display.set_reverse(0i32);
@@ -373,7 +387,7 @@ func:Tui_draw_widget = NIL(Widget:wdg) {
         string:selected_text = raw Str.token(wdg.text, "|\0", @cast<int64>(sel));
         if (wdg.focused == 1i32) { Display.set_reverse(1i32); }
         Display.set_fg(wdg.fg); Display.set_bg(wdg.bg);
-        Display.move(wdg.x, wdg.y);
+        Display.setpos(wdg.x, wdg.y);
         print("[ "); print(selected_text); print("  v ]");
         if (wdg.focused == 1i32) { Display.set_reverse(0i32); }
         
@@ -383,7 +397,7 @@ func:Tui_draw_widget = NIL(Widget:wdg) {
             int64:i = 0i64;
             while (i < count) {
                 if (i == @cast<int64>(sel)) { Display.set_reverse(1i32); }
-                Display.move(wdg.x + 1i32, wdg.y + 2i32 + @cast_unchecked<int32>(i));
+                Display.setpos(wdg.x + 1i32, wdg.y + 2i32 + @cast_unchecked<int32>(i));
                 print(raw Str.token(wdg.text, "|\0", i));
                 Display.set_reverse(0i32);
                 i = i + 1i64;
@@ -404,24 +418,24 @@ func:Tui_draw_widget = NIL(Widget:wdg) {
         string:msg = raw Str.token(wdg.text, "|\0", 1i64);
         
         Display.set_fg(wdg.fg); Display.set_bg(wdg.bg);
-        Display.move(wdg.x + 2i32, wdg.y); print("┤ "); print(title); print(" ├");
-        Display.move(wdg.x + 2i32, wdg.y + 2i32); print(msg);
+        Display.setpos(wdg.x + 2i32, wdg.y); print("┤ "); print(title); print(" ├");
+        Display.setpos(wdg.x + 2i32, wdg.y + 2i32); print(msg);
         
         // Render buttons at bottom depending on style
         int32:btn_y = wdg.y + wdg.h - 2i32;
         if (wdg.value == 0i32) {
             // OK
-            Display.move(wdg.x + wdg.w / 2i32 - 4i32, btn_y);
+            Display.setpos(wdg.x + wdg.w / 2i32 - 4i32, btn_y);
             if (wdg.focused == 1i32) { Display.set_reverse(1i32); }
             print("[  OK  ]");
             Display.set_reverse(0i32);
         } else {
             // OK / Cancel
-            Display.move(wdg.x + 2i32, btn_y);
+            Display.setpos(wdg.x + 2i32, btn_y);
             if (wdg.focused == 1i32) { Display.set_reverse(1i32); }
             print("[  OK  ]");
             Display.set_reverse(0i32);
-            Display.move(wdg.x + wdg.w - 12i32, btn_y);
+            Display.setpos(wdg.x + wdg.w - 12i32, btn_y);
             print("[ Cancel ]");
         }
     }
@@ -446,7 +460,7 @@ func:Tui_draw_widget = NIL(Widget:wdg) {
                 } else {
                     Display.set_fg(wdg.fg); Display.set_bg(wdg.bg);
                 }
-                Display.move(wdg.x + 1i32, wdg.y + 1i32 + @cast_unchecked<int32>(i));
+                Display.setpos(wdg.x + 1i32, wdg.y + 1i32 + @cast_unchecked<int32>(i));
                 string:item = raw Str.token(wdg.text, "|\0", idx);
                 
                 // Depth is denoted by leading '-' (e.g. "--file.txt")
@@ -481,7 +495,7 @@ func:Tui_draw_widget = NIL(Widget:wdg) {
                     Display.set_fg(wdg.fg); Display.set_bg(wdg.bg);
                 }
                 
-                Display.move(wdg.x + 1i32, wdg.y + 1i32 + @cast_unchecked<int32>(r));
+                Display.setpos(wdg.x + 1i32, wdg.y + 1i32 + @cast_unchecked<int32>(r));
                 
                 int64:col_count = raw Str.token_count(row_data, ",\0");
                 int64:c = 0i64;

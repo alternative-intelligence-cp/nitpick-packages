@@ -1,0 +1,9 @@
+[project]
+name = "nscp"
+version = "1.0.0"
+
+[target.nscp]
+type = "binary"
+sources = ["src/nscp_main.npk"]
+deps = []
+flags = ["-I", "../nitpick-input/src", "-I", "../nitpick-display/src", "-I", "../nitpick-tui/src", "-I", "../nitpick-fs/src", "-I", "../nitpick-str/src", "-I", "../nitpick-ssh/src", "-L../nitpick-input/shim", "-lnitpick_input", "-L../nitpick-display/shim", "-lnitpick_display_shim", "-L../nitpick-fs/shim", "-lnitpick_fs_shim", "-L../nitpick-ssh/shim/.nitpick_make/lib", "-lnitpick_ssh_shim", "-lcrypto"]

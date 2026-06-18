@@ -1,0 +1,48 @@
+// nscp_main.npk — Pure Nitpick Terminal File Transfer
+
+use "nitpick_tui.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_ssh.npk".*;
+
+func:failsafe = int32(tbb32:err) {
+    raw Tui.shutdown();
+    exit 1i32;
+};
+
+use "nitpick_display.npk".*;
+use "nitpick_tui.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_ssh.npk".*;
+use "nitpick_input.npk".*;
+
+// Generate list of items in a directory formatted for listbox
+func:get_local_dir_items = string(string:dir_path) {
+    pass "d [..]                  |\0";
+};
+
+func:main = int32() {
+    raw Tui.init();
+
+    int32:running = 1i32;
+    int32:vk = 0i32;
+    int32:focus = 0i32; // 0=host, 1=user, 2=pass, 3=connect, 4=local_list, 5=remote_list
+    
+    string:host_val = "localhost\0";
+    string:user_val = "root\0";
+    string:pass_val = "****\0";
+    
+    string:local_cwd = raw fs_get_cwd();
+    int32:local_sel = 0i32;
+    string:local_items = raw get_local_dir_items(local_cwd);
+    
+    int32:remote_sel = 0i32;
+    string:remote_items = "Disconnected\0";
+    
+    int32:is_connected = 0i32;
+    string:status_msg = "Tab: Switch pane | Enter: Open | Q: Quit\0";
+
+    raw Tui.shutdown();
+    exit 0i32;
+};

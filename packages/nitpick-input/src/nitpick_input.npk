@@ -207,4 +207,7 @@ Type:Input = {
     func:bind       = int32(int64:h, string:k, int64:b) { pass raw inp_bind_key(h, k, b); };
     func:lookup     = string(int64:h, string:k) { pass raw inp_key_to_btn(h, k); };
     func:name       = string(int64:c) { pass raw inp_btn_name(c); };
+    func:enter_raw  = NIL() { print("\x1b[?1049h\0"); pass NIL; };
+    func:exit_raw   = NIL() { print("\x1b[?1049l\0"); pass NIL; };
+    func:read_key   = string() { pass "a"; };
 };
