@@ -34,6 +34,7 @@ Ecosystem package libraries for the [Nitpick programming language](https://githu
 | nitpick-conv | Saturating narrowing and float/int conversion |
 | nitpick-cookie | HTTP cookie parsing and Set-Cookie builder |
 | nitpick-cors | CORS header builder and origin validation |
+| nitpick-cowsay | Cowsay clone with Tux and Dragon support |
 | nitpick-cron | Cron-style task scheduling |
 | nitpick-crypto | SHA-256, MD5, HMAC hashing |
 | nitpick-csv | CSV parser and writer (RFC 4180) |
@@ -50,6 +51,7 @@ Ecosystem package libraries for the [Nitpick programming language](https://githu
 | nitpick-entangled | Coupled DecisionGradients with propagation |
 | nitpick-env | Environment variable management |
 | nitpick-fixed | Q32.32 fixed-point arithmetic |
+| nitpick-fm | Terminal File Manager — interactive TUI with selection and execution |
 | nitpick-freq | Frequency/period arithmetic |
 | nitpick-fs | Filesystem utilities |
 | nitpick-fsm | Finite state machine — dynamic transitions |
@@ -138,8 +140,16 @@ npkpkg install nitpick-test
 sudo apt install nitpick-packages
 ```
 
-### Manual
-Copy the desired package directory into your project or Nitpick's package search path.
+### Manual Build (using npkbld)
+1. Clone this repository: `git clone https://github.com/alternative-intelligence-cp/nitpick-packages.git`
+2. Navigate to the specific package directory (e.g., `cd packages/nitpick-fm`).
+3. Build the package using the Nitpick builder:
+```bash
+npkbld build .
+```
+4. Run the generated binary: `./.nitpick_make/build/bin/nitpick-fm`
+
+For standard Nitpick library modules, you can also copy the desired package directory into your project or Nitpick's package search path.
 
 ## Package Structure
 
