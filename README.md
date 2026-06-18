@@ -80,6 +80,7 @@ Ecosystem package libraries for the [Nitpick programming language](https://githu
 | nitpick-mux | Bit-select, field insert/extract, conditional mux |
 | nitpick-mysql | MySQL client via libmysqlclient |
 | nitpick-nn | Neural network framework built on nitpick-matrix |
+| nitpick-nrura | An interactive TUI scratchpad designed for building and debugging shell pipelines with live preview execution. |
 | nitpick-opengl | OpenGL 3.3 Core — shaders, buffers, 3D math |
 | nitpick-orm | SQL query builder — Postgres, MySQL, SQLite |
 | nitpick-natuin | A fuzzy-finding TUI for searching and displaying ~/.bash_history, utilizing live filtering and terminal components. |

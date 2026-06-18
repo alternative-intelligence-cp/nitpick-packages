@@ -1,0 +1,146 @@
+use "nitpick_display.npk".*;
+use "nitpick_tui.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+
+extern func:nitpick_input_enter_raw = int32();
+extern func:nitpick_input_exit_raw = int32();
+extern func:nitpick_input_read_key = int32();
+extern func:usleep = int32(int32:usec);
+
+extern func:njust_system = int32(string:cmd);
+
+func:get_pipeline_segment = string(string:cmd, int64:cursor_pos) {
+    int64:len = string_length(cmd);
+    if (cursor_pos >= len) {
+        pass cmd;
+    }
+    
+    // Find next '|' after or at cursor
+    int64:i = cursor_pos;
+    while (i < len) {
+        if (string_substring(cmd, i, i + 1i64) == "|\0") { // '|'
+            pass string_substring(cmd, 0i64, i);
+        }
+        i = i + 1i64;
+    }
+    pass cmd;
+};
+
+func:main = int32() {
+    drop(nitpick_input_enter_raw());
+    drop(Tui.init());
+    
+    string:query = "";
+    int64:cursor_pos = 0i64;
+    int32:running = 1i32;
+    string:output_str = "";
+    
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0");
+        
+        // Draw Layout
+        Widget:panel = raw Tui.panel(2i32, 2i32, 76i32, 22i32, 7i32, 0i32);
+        drop(Tui.draw_widget(panel));
+        
+        Widget:title = raw Tui.label(4i32, 2i32, " nrura - Interactive Pipeline Scratchpad ", 6i32, 0i32);
+        drop(Tui.draw_widget(title));
+        
+        Widget:cmd_label = raw Tui.label(4i32, 4i32, string_concat("$ ", query), 7i32, 0i32);
+        drop(Tui.draw_widget(cmd_label));
+        
+        // Draw separator
+        print("\x1b[5;4H\x1b[38;5;240m--------------------------------------------------------------------\x1b[0m\0");
+        
+        // Draw output text
+        Widget:output_panel = raw Tui.textarea(3i32, 6i32, 74i32, 17i32, output_str);
+        drop(Tui.draw_widget(output_panel));
+        
+        Widget:foot = raw Tui.label(2i32, 25i32, "[Enter] Execute & Exit  [Esc] Quit  [Left/Right] Move Cursor", 3i32, 0i32);
+        drop(Tui.draw_widget(foot));
+        
+        // Place the cursor correctly
+        // Cursor is at X = 4 (for label) + 2 (for "$ ") + cursor_pos, Y = 4
+        int64:cursor_x = 6i64 + cursor_pos;
+        print(string_concat("\x1b[4;", string_concat(string_from_int(cursor_x), "H\0")));
+        print("\x1b[?25h\0"); // show cursor
+        
+        int32:k = nitpick_input_read_key();
+        
+        print("\x1b[?25l\0"); // hide cursor before processing
+        
+        if (k > 0i32) {
+            int32:changed = 0i32;
+            
+            if (k == 27i32) { // ESC
+                running = 0i32;
+            }
+            else if (k == 10i32) { // ENTER
+                running = 0i32;
+            }
+            else if (k == 4i32) { // LEFT (assuming 4)
+                if (cursor_pos > 0i64) {
+                    cursor_pos = cursor_pos - 1i64;
+                    changed = 1i32;
+                }
+            }
+            else if (k == 3i32) { // RIGHT (assuming 3)
+                if (cursor_pos < string_length(query)) {
+                    cursor_pos = cursor_pos + 1i64;
+                    changed = 1i32;
+                }
+            }
+            else if (k == 127i32) { // Backspace
+                if (cursor_pos > 0i64) {
+                    string:before = string_substring(query, 0i64, cursor_pos - 1i64);
+                    string:after = string_substring(query, cursor_pos, string_length(query));
+                    query = string_concat(before, after);
+                    cursor_pos = cursor_pos - 1i64;
+                    changed = 1i32;
+                }
+            }
+            else {
+                // Check if printable ASCII
+                if (k >= 32i32) {
+                    if (k <= 126i32) {
+                        string:char = string_from_char(@cast_unchecked<int8>(k));
+                        string:before = string_substring(query, 0i64, cursor_pos);
+                        string:after = string_substring(query, cursor_pos, string_length(query));
+                        query = string_concat(string_concat(before, char), after);
+                        cursor_pos = cursor_pos + 1i64;
+                        changed = 1i32;
+                    }
+                }
+            }
+            
+            if (changed == 1i32) {
+                if (string_length(query) > 0i64) {
+                    string:seg = raw get_pipeline_segment(query, cursor_pos);
+                    string:exec_cmd = string_concat(seg, " > /tmp/nrura_out 2>&1\0");
+                    drop(njust_system(exec_cmd));
+                    output_str = raw fs_read_file("/tmp/nrura_out\0");
+                } else {
+                    output_str = "";
+                }
+            }
+        }
+        drop(usleep(20000i32));
+    }
+    
+    drop(Tui.shutdown());
+    drop(nitpick_input_exit_raw());
+    
+    print("\n\x1b[?25h\0");
+    
+    if (string_length(query) > 0i64) {
+        print("\nExecuted final command:\n\0");
+        print(query);
+        print("\n\0");
+    }
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};

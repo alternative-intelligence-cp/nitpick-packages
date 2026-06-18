@@ -1,7 +1,7 @@
 // src/nitpick_thread.npk
 
 extern "npk_runtime" {
-    pub func:npk_shim_thread_spawn = int64(int64:func_ptr, int64:arg);
+    pub func:npk_shim_thread_spawn = int64(any*:func_ptr, int64:arg);
     func:npk_shim_thread_join = int32(int64:handle);
     func:npk_shim_thread_detach = int32(int64:handle);
     func:npk_shim_thread_yield = NIL();
