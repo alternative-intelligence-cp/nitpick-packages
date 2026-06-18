@@ -1,0 +1,6 @@
+use "nitpick_str.npk".*;
+func:main = int32() {
+    int64:idx = raw string_index_of("hello", "e");
+    string:s = raw string_substring("hello", 0i64, 1i64);
+    exit 0i32;
+};

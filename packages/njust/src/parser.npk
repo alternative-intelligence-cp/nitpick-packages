@@ -1,0 +1,110 @@
+use "nitpick_str.npk".*;
+use "nitpick_fs.npk".*;
+
+pub struct:NjustData = {
+    string:targets;
+    string:deps;
+    string:first_target;
+    string:target_list;
+};
+
+pub func:njust_map_get = string(string:m, string:key) {
+    string:search = string_concat(string_concat("\x02", key), "\x01");
+    int64:idx = string_index_of(m, search);
+    if (idx < 0i64) {
+        pass "";
+    }
+    string:rest = string_substring(m, idx + string_length(search), string_length(m));
+    int64:end_idx = string_index_of(rest, "\x02");
+    if (end_idx < 0i64) {
+        pass rest;
+    }
+    pass string_substring(rest, 0i64, end_idx);
+};
+
+pub func:njust_map_set = string(string:m, string:key, string:val) {
+    string:existing = raw njust_map_get(m, key);
+    if (existing.length() > 0i64) {
+        pass m; 
+    }
+    string:entry = string_concat(string_concat(string_concat("\x02", key), "\x01"), val);
+    pass string_concat(m, entry);
+};
+
+pub func:njust_map_append = string(string:m, string:key, string:val) {
+    string:existing = raw njust_map_get(m, key);
+    string:old_entry = string_concat(string_concat(string_concat("\x02", key), "\x01"), existing);
+    string:new_val = val;
+    if (existing.length() > 0i64) {
+        new_val = string_concat(string_concat(existing, "\n"), val);
+    }
+    string:new_entry = string_concat(string_concat(string_concat("\x02", key), "\x01"), new_val);
+    pass Str.replace(m, old_entry, new_entry);
+};
+
+pub func:parse_file = NjustData(string:path) {
+    string:targets_map = "";
+    string:deps_map = "";
+    string:first = "";
+    string:t_list = "";
+    
+    string:content = raw fs_read_file(path);
+    int64:lines = raw Str.line_count(content);
+    int64:i = 0i64;
+    
+    string:current_target = "";
+    
+    while (i < lines) {
+        string:line = raw Str.token(content, "\n", i);
+        
+        int64:spaces = 0i64;
+        int64:len = line.length();
+        if (len > 0i64) {
+            string:first_char = line.substring(0i64, 1i64);
+            if (first_char.equals(" ")) {
+                spaces = 1i64;
+            } else {
+                if (first_char.equals("\t")) {
+                    spaces = 1i64;
+                }
+            }
+        }
+        
+        if (len > 0i64) {
+            if (spaces == 0i64) {
+                if (raw Str.count(line, ":") > 0i64) {
+                    string:t_part = raw Str.before(line, ":");
+                    string:d_part = string_trim(raw Str.after(line, ":"));
+                    current_target = string_trim(t_part);
+                    
+                    if (first.length() == 0i64) {
+                        first = current_target;
+                    }
+                    
+                    t_list = string_concat(t_list, string_concat(current_target, " "));
+                    if (d_part.length() > 0i64) {
+                        deps_map = raw njust_map_set(deps_map, current_target, d_part);
+                    }
+                    targets_map = raw njust_map_set(targets_map, current_target, "");
+                }
+            } else {
+                if (current_target.length() > 0i64) {
+                    string:cmd = string_trim(line);
+                    if (cmd.length() > 0i64) {
+                        targets_map = raw njust_map_append(targets_map, current_target, cmd);
+                    }
+                }
+            }
+        }
+        
+        i = i + 1i64;
+    }
+    
+    NjustData:data = NjustData{
+        targets: targets_map,
+        deps: deps_map,
+        first_target: first,
+        target_list: string_trim(t_list)
+    };
+    pass data;
+};

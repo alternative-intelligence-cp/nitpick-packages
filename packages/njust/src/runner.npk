@@ -1,0 +1,55 @@
+use "parser.npk".*;
+use "nitpick_str.npk".*;
+
+extern "system_shim" {
+    func:njust_system = int32(string:cmd);
+}
+
+func:run_target = int32(NjustData:ctx, string:target, int64:built_set) {
+    int64:is_built = raw ahget(built_set, target);
+    if (is_built != 0i64) {
+        pass 0i32;
+    }
+    ahset(built_set, target, 1i64);
+    
+    string:deps_str = raw njust_map_get(ctx.deps, target);
+    if (deps_str.length() > 0i64) {
+        int64:dep_count = raw Str.token_count(deps_str, " ");
+        int64:i = 0i64;
+        while (i < dep_count) {
+            string:dep = raw Str.token(deps_str, " ", i);
+            if (dep.length() > 0i64) {
+                int32:r = raw run_target(ctx, dep, built_set);
+                if (r != 0i32) {
+                    pass r;
+                }
+            }
+            i = i + 1i64;
+        }
+    }
+    
+    string:cmds_str = raw njust_map_get(ctx.targets, target);
+    if (cmds_str.length() > 0i64) {
+        int64:cmd_count = raw Str.token_count(cmds_str, "\n");
+        int64:j = 0i64;
+        while (j < cmd_count) {
+            string:cmd = raw Str.token(cmds_str, "\n", j);
+            if (cmd.length() > 0i64) {
+                print(string_concat(string_concat("\x1b[38;5;244m", cmd), "\x1b[0m\n"));
+                int32:res = njust_system(cmd);
+                if (res != 0i32) {
+                    pass res;
+                }
+            }
+            j = j + 1i64;
+        }
+    }
+    
+    pass 0i32;
+};
+
+pub func:execute = int32(NjustData:ctx, string:target) {
+    int64:built_set = ahash(256);
+    int32:res = raw run_target(ctx, target, built_set);
+    pass res;
+};

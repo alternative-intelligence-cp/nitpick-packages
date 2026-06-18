@@ -1,0 +1,75 @@
+use "nitpick_cli.npk".*;
+use "parser.npk".*;
+use "runner.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+
+func:main = int32() {
+    drop(Cli.register_flag("--list", "-l"));
+    drop(Cli.register_flag("--help", "-h"));
+    drop(Cli.parse());
+    
+    if (raw Cli.get_flag("--help") == 1i64) {
+        print("Usage: njust [options] [target]\n");
+        print("Options:\n");
+        print("  -l, --list    List available targets\n");
+        print("  -h, --help    Show this help message\n");
+        exit 0i32;
+    }
+    
+    if (raw fs_exists("njustfile") == 0i32) {
+        print("error: No njustfile found in current directory.\n");
+        exit 1i32;
+    }
+    
+    NjustData:data = raw parse_file("njustfile");
+    
+    if (raw Cli.get_flag("--list") == 1i64) {
+        print("Available targets:\n");
+        int64:count = raw Str.token_count(data.target_list, " ");
+        int64:i = 0i64;
+        while (i < count) {
+            string:t = raw Str.token(data.target_list, " ", i);
+            if (string_length(t) > 0i64) {
+                print(string_concat("  ", string_concat(t, "\n")));
+            }
+            i = i + 1i64;
+        }
+        exit 0i32;
+    }
+    
+    string:target = data.first_target;
+    
+    if (raw Cli.get_positional_count() > 0i64) {
+        target = raw Cli.get_positional(0i64);
+    }
+    
+    if (target.length() == 0i64) {
+        print("error: No target specified and no default target found.\n");
+        exit 1i32;
+    }
+    
+    int64:found = 0i64;
+    int64:tc = raw Str.token_count(data.target_list, " ");
+    int64:k = 0i64;
+    while (k < tc) {
+        string:t = raw Str.token(data.target_list, " ", k);
+        if (t.equals(target)) {
+            found = 1i64;
+        }
+        k = k + 1i64;
+    }
+    
+    if (found == 0i64) {
+        print(string_concat(string_concat("error: target '", target), "' not found.\n"));
+        exit 1i32;
+    }
+    
+    int32:res = raw execute(data, target);
+    if (res != 0i32) {
+        print(string_concat(string_concat("error: target '", target), "' failed.\n"));
+        exit res;
+    }
+    
+    exit 0i32;
+};

@@ -1,0 +1,11 @@
+{
+  "name": "njust",
+  "version": "1.0.0",
+  "description": "Nitpick simple command runner",
+  "main": "src/njust.npk",
+  "dependencies": {
+    "nitpick-fs": "1.0.0",
+    "nitpick-str": "1.0.0",
+    "nitpick-cli": "1.0.0"
+  }
+}

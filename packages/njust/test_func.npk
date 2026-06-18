@@ -1,0 +1,9 @@
+func:my_func = string(string:a) {
+    pass string_concat(a, " test");
+};
+
+func:main = int32() {
+    string:s = raw my_func("hello");
+    print(s);
+    exit 0i32;
+};

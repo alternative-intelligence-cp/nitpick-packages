@@ -1,0 +1,7 @@
+# njustfile test
+say_hello:
+    echo "Hello, njust!"
+
+say_goodbye:
+    echo "Goodbye, njust!"
+    exit 0
