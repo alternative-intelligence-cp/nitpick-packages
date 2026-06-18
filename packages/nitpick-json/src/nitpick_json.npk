@@ -16,6 +16,7 @@ extern "nitpick_json_shim" {
     func:nitpick_json_get_float   = float64(string:path);
     func:nitpick_json_get_bool    = int32(string:path);
     func:nitpick_json_array_count = int32(string:path);
+    func:nitpick_json_object_get_key = string(string:path, int32:index);
     
     // Builder API
     func:nitpick_json_parse_to_builder = int32(string:text);
@@ -72,6 +73,11 @@ pub func:json_get_bool = int32(string:path) {
 
 pub func:json_array_count = int32(string:path) {
     pass(nitpick_json_array_count(path));
+};
+
+pub func:json_object_get_key = string(string:path, int32:index) {
+    drop(nitpick_json_object_get_key(path, index));
+    pass(nitpick_json_last_result());
 };
 
 // ── Builder API ─────────────────────────────────────────────────────────────

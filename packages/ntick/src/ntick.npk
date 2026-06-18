@@ -3,15 +3,12 @@
 use "nitpick_datetime.npk".*;
 use "nitpick_display.npk".*;
 use "nitpick_str.npk".*;
+use "digits.npk".*;
 
 extern func:input_set_nonblocking = int32();
 extern func:input_set_blocking = int32();
 extern func:input_read_key = int32();
 extern func:usleep = int32(int32:usec);
-
-// from digits.npk
-extern func:get_digit = string(string:d, int64:line);
-extern func:get_digit_width = int64(string:d);
 
 func:main = int32() {
     drop(input_set_nonblocking());
@@ -44,7 +41,9 @@ func:main = int32() {
             // Draw lines 0-3
             int64:line = 0i64;
             while (line < 4i64) {
-                print(string_concat("\x1b[\0", string_concat(string_from_int(start_row + @cast_unchecked<int32>(line)), string_concat(";\0", string_concat(string_from_int(start_col), "H\0")))));
+                int64:r = @cast<int64>(start_row) + line;
+                int64:c = @cast<int64>(start_col);
+                print(string_concat("\x1b[", string_concat(string_from_int(r), string_concat(";", string_concat(string_from_int(c), "H\0")))));
                 
                 int64:i = 0i64;
                 while (i < 8i64) {
@@ -66,7 +65,9 @@ func:main = int32() {
             }
             
             // Draw subtitle
-            print(string_concat("\x1b[\0", string_concat(string_from_int(start_row + 6i32), string_concat(";\0", string_concat(string_from_int(start_col + 15i32), "H\x1b[38;5;245mNtick Time\x1b[0m\0")))));
+            int64:sub_r = @cast<int64>(start_row) + 6i64;
+            int64:sub_c = @cast<int64>(start_col) + 15i64;
+            print(string_concat("\x1b[", string_concat(string_from_int(sub_r), string_concat(";", string_concat(string_from_int(sub_c), "H\x1b[38;5;245mNtick Time\x1b[0m\0")))));
         }
         
         int32:k = input_read_key();

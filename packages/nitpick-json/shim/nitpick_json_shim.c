@@ -302,6 +302,23 @@ int32_t nitpick_json_array_count(const char *path) {
     return 0;
 }
 
+const char *nitpick_json_object_get_key(const char *path, int32_t index) {
+    JNode *n = find_node(path);
+    if (n && n->type == J_OBJECT && index >= 0 && index < n->v.obj.count) {
+        JNode *child = n->v.obj.items[index];
+        if (child->key) {
+            size_t len = strlen(child->key);
+            if (len >= g_last_result_cap) {
+                g_last_result_cap = len + 1;
+                g_last_result = realloc(g_last_result, g_last_result_cap);
+            }
+            strcpy(g_last_result, child->key);
+            return g_last_result;
+        }
+    }
+    return "";
+}
+
 // ── Builder API ────────────────────────────────────────────────────────────
 
 int32_t nitpick_json_create_object(void) {
