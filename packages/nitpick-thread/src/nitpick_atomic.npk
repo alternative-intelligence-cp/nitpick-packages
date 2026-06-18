@@ -1,0 +1,26 @@
+// src/nitpick_atomic.npk
+
+// Memory ordering constants for use with atomic<T> method syntax
+// Example: my_atomic.load(raw atomic_order_acquire())
+
+pub func:atomic_order_relaxed = int32() { pass 0i32; };
+pub func:atomic_order_consume = int32() { pass 1i32; };
+pub func:atomic_order_acquire = int32() { pass 2i32; };
+pub func:atomic_order_release = int32() { pass 3i32; };
+pub func:atomic_order_acq_rel = int32() { pass 4i32; };
+pub func:atomic_order_seq_cst = int32() { pass 5i32; };
+
+extern "npk_runtime" {
+    func:npk_shim_atomic_thread_fence = NIL(int32:order);
+    func:npk_shim_atomic_signal_fence = NIL(int32:order);
+}
+
+pub func:atomic_thread_fence = NIL(int32:order) {
+    drop(npk_shim_atomic_thread_fence(order));
+    pass NIL;
+};
+
+pub func:atomic_signal_fence = NIL(int32:order) {
+    drop(npk_shim_atomic_signal_fence(order));
+    pass NIL;
+};

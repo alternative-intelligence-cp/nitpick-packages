@@ -1,0 +1,18 @@
+use "nitpick_thread.npk".*;
+
+pub func:failsafe = int32(tbb32:err) { exit 1i32; };
+
+pub func:main = int32() {
+    (int64)(int64):worker = int64(int64:arg) {
+        drop(thread_sleep_ms(100i64));
+        pass arg * 2i64;
+    };
+
+    Thread:t = Thread{handle: npk_shim_thread_spawn(worker, 21i64)};
+    drop(raw t.join());
+    
+    int32:hw = raw thread_hardware_concurrency();
+    int64:id = raw thread_current_id();
+    
+    exit 0i32;
+};

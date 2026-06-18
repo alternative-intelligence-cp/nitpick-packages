@@ -1,0 +1,57 @@
+// src/nitpick_thread.npk
+
+extern "npk_runtime" {
+    pub func:npk_shim_thread_spawn = int64(int64:func_ptr, int64:arg);
+    func:npk_shim_thread_join = int32(int64:handle);
+    func:npk_shim_thread_detach = int32(int64:handle);
+    func:npk_shim_thread_yield = NIL();
+    func:npk_shim_thread_sleep_ms = NIL(int64:ms);
+    func:npk_shim_thread_sleep_ns = NIL(int64:ns);
+    func:npk_shim_thread_hardware_concurrency = int32();
+    func:npk_shim_thread_current_id = int64();
+}
+
+pub struct:Thread = {
+    int64:handle;
+};
+
+pub Type:Thread = {
+    
+    func:join = int32(Thread:self) {
+        pass npk_shim_thread_join(self.handle);
+    };
+    
+    func:detach = int32(Thread:self) {
+        pass npk_shim_thread_detach(self.handle);
+    };
+};
+
+
+
+/// Yields the current thread's timeslice to the OS scheduler.
+pub func:thread_yield = NIL() {
+    drop(npk_shim_thread_yield());
+    pass NIL;
+};
+
+/// Sleeps the current thread for `ms` milliseconds.
+pub func:thread_sleep_ms = NIL(int64:ms) {
+    drop(npk_shim_thread_sleep_ms(ms));
+    pass NIL;
+};
+
+/// Sleeps the current thread for `ns` nanoseconds.
+pub func:thread_sleep_ns = NIL(int64:ns) {
+    drop(npk_shim_thread_sleep_ns(ns));
+    pass NIL;
+};
+
+/// Returns the number of hardware concurrent threads supported by the system.
+pub func:thread_hardware_concurrency = int32() {
+    pass npk_shim_thread_hardware_concurrency();
+};
+
+/// Returns the unique identifier of the calling thread.
+pub func:thread_current_id = int64() {
+    pass npk_shim_thread_current_id();
+};

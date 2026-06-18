@@ -1,0 +1,67 @@
+// input.npk - Non-blocking stdin reading for Nyazi
+
+extern func:read = int64(int32:fd, any*:buf, int64:count);
+extern func:usleep = int32(int32:usec);
+extern func:fcntl = int32(int32:fd, int32:cmd, int32:arg);
+extern func:malloc = any*(int64:size);
+extern func:free = void(any*:ptr);
+
+pub func:input_set_nonblocking = int32() {
+    int32:flags = fcntl(0i32, 3i32, 0i32);
+    flags = flags | 2048i32; // O_NONBLOCK
+    drop(fcntl(0i32, 4i32, flags));
+    pass 0i32;
+};
+
+pub func:input_set_blocking = int32() {
+    int32:flags = fcntl(0i32, 3i32, 0i32);
+    flags = flags & (-2049i32); // ~O_NONBLOCK
+    drop(fcntl(0i32, 4i32, flags));
+    pass 0i32;
+};
+
+// Returns:
+// 0  = none
+// 1  = UP
+// 2  = DOWN
+// 3  = LEFT
+// 4  = RIGHT
+// 10 = ENTER
+// 113 = 'q'
+pub func:input_read_key = int32() {
+    int8->:c = malloc(1i64) => int8->;
+    int64:r = read(0i32, c => any->, 1i64);
+    
+    if (r <= 0i64) {
+        free(c => any->);
+        pass 0i32;
+    }
+    
+    int8:first = c[0i64];
+    
+    if (first == 113i8) { free(c => any->); pass 113i32; } // 'q'
+    if (first == 10i8) { free(c => any->); pass 10i32; }   // LF
+    if (first == 13i8) { free(c => any->); pass 10i32; }   // CR
+    
+    if (first == 27i8) {
+        // Esc sequence
+        drop(usleep(5000i32)); // wait slightly for the rest of sequence
+        int64:r2 = read(0i32, c => any->, 1i64);
+        if (r2 > 0i64) {
+            int8:second = c[0i64];
+            if (second == 91i8) { // '['
+                int64:r3 = read(0i32, c => any->, 1i64);
+                if (r3 > 0i64) {
+                    int8:third = c[0i64];
+                    if (third == 65i8) { free(c => any->); pass 1i32; } // UP
+                    if (third == 66i8) { free(c => any->); pass 2i32; } // DOWN
+                    if (third == 67i8) { free(c => any->); pass 4i32; } // RIGHT
+                    if (third == 68i8) { free(c => any->); pass 3i32; } // LEFT
+                }
+            }
+        }
+    }
+    
+    free(c => any->);
+    pass 0i32;
+};

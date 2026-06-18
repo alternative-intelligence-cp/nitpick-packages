@@ -1,0 +1,76 @@
+// src/nitpick_channel.npk
+
+extern "npk_runtime" {
+    func:npk_shim_channel_create = int64(int32:capacity);
+    func:npk_shim_channel_create_unbuffered = int64();
+    func:npk_shim_channel_create_oneshot = int64();
+    func:npk_shim_channel_send = int32(int64:handle, int64:value);
+    func:npk_shim_channel_try_send = int32(int64:handle, int64:value);
+    func:npk_shim_channel_recv = int64(int64:handle);
+    func:npk_shim_channel_try_recv = int64(int64:handle);
+    func:npk_shim_channel_count = int32(int64:handle);
+    func:npk_shim_channel_capacity = int32(int64:handle);
+    func:npk_shim_channel_get_mode = int32(int64:handle);
+    func:npk_shim_channel_close = int32(int64:handle);
+    func:npk_shim_channel_is_closed = bool(int64:handle);
+    func:npk_shim_channel_destroy = int32(int64:handle);
+}
+
+pub struct:Channel = {
+    int64:handle;
+};
+
+pub Type:Channel = {
+    
+    func:send = int32(Channel:self, int64:value) {
+        pass npk_shim_channel_send(self.handle, value);
+    };
+    
+    func:try_send = int32(Channel:self, int64:value) {
+        pass npk_shim_channel_try_send(self.handle, value);
+    };
+    
+    func:recv = int64(Channel:self) {
+        pass npk_shim_channel_recv(self.handle);
+    };
+    
+    func:try_recv = int64(Channel:self) {
+        pass npk_shim_channel_try_recv(self.handle);
+    };
+    
+    func:count = int32(Channel:self) {
+        pass npk_shim_channel_count(self.handle);
+    };
+    
+    func:capacity = int32(Channel:self) {
+        pass npk_shim_channel_capacity(self.handle);
+    };
+    
+    func:get_mode = int32(Channel:self) {
+        pass npk_shim_channel_get_mode(self.handle);
+    };
+    
+    func:close = int32(Channel:self) {
+        pass npk_shim_channel_close(self.handle);
+    };
+    
+    func:is_closed = bool(Channel:self) {
+        pass npk_shim_channel_is_closed(self.handle);
+    };
+    
+    func:destroy = int32(Channel:self) {
+        pass npk_shim_channel_destroy(self.handle);
+    };
+};
+
+pub func:channel_create = Channel(int32:capacity) {
+    pass Channel{handle: npk_shim_channel_create(capacity)};
+};
+
+pub func:channel_create_unbuffered = Channel() {
+    pass Channel{handle: npk_shim_channel_create_unbuffered()};
+};
+
+pub func:channel_create_oneshot = Channel() {
+    pass Channel{handle: npk_shim_channel_create_oneshot()};
+};

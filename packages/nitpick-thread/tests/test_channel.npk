@@ -1,0 +1,28 @@
+use "nitpick_thread.npk".*;
+use "nitpick_channel.npk".*;
+
+pub func:failsafe = int32(tbb32:err) { exit 1i32; };
+
+pub func:main = int32() {
+    Channel:ch = raw channel_create(10i32);
+    
+    (int64)(int64):sender_thread = int64(int64:arg) {
+        Channel:ch_in = Channel{handle: arg};
+        drop(raw ch_in.send(42i64));
+        drop(raw ch_in.send(100i64));
+        pass 0i64;
+    };
+    
+    Thread:t = Thread{handle: npk_shim_thread_spawn(sender_thread, ch.handle)};
+    
+    int64:v1 = raw ch.recv();
+    int64:v2 = raw ch.recv();
+    
+    drop(raw t.join());
+    drop(raw ch.destroy());
+    
+    if (v1 != 42i64) { exit 1i32; }
+    if (v2 != 100i64) { exit 1i32; }
+    
+    exit 0i32;
+};

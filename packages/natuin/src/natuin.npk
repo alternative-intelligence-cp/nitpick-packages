@@ -1,0 +1,159 @@
+use "nitpick_display.npk".*;
+use "nitpick_tui.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+
+extern func:nitpick_input_enter_raw = int32();
+extern func:nitpick_input_exit_raw = int32();
+extern func:nitpick_input_read_key = int32();
+extern func:usleep = int32(int32:usec);
+
+extern func:njust_system = int32(string:cmd);
+
+func:get_history = string(string:query) {
+    // Write the bash history filter command to a file script or execute directly
+    string:home = raw fs_absolute("~");
+    // Since ~ expansion might not work, we can rely on standard env in bash via system
+    // We execute a command that writes exactly 20 lines to /tmp/natuin_search
+    string:cmd = "";
+    if (string_length(query) == 0i64) {
+        cmd = "tail -n 20 ~/.bash_history > /tmp/natuin_search\0";
+    } else {
+        cmd = string_concat(string_concat("cat ~/.bash_history | grep -i '", query), "' | tail -n 20 > /tmp/natuin_search\0");
+    }
+    
+    int32:res = njust_system(cmd);
+    
+    // Read the results
+    string:out = raw fs_read_file("/tmp/natuin_search\0");
+    
+    // Convert newlines to pipe-delimited string for Tui.listbox
+    int64:count = raw Str.token_count(out, "\n");
+    string:entries = "";
+    
+    int64:i = 0i64;
+    while (i < count) {
+        string:line = raw Str.token(out, "\n", i);
+        if (string_length(line) > 0i64) {
+            if (string_length(entries) > 0i64) {
+                entries = string_concat(string_concat(entries, "|\0"), line);
+            } else {
+                entries = line;
+            }
+        }
+        i = i + 1i64;
+    }
+    
+    if (string_length(entries) == 0i64) {
+        pass "No history found\0";
+    }
+    pass entries;
+};
+
+func:main = int32() {
+    drop(nitpick_input_enter_raw());
+    drop(Tui.init());
+    
+    string:query = "";
+    string:entries = raw get_history(query);
+    int32:selected = 0i32;
+    int32:running = 1i32;
+    string:chosen_command = "";
+    
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0");
+        
+        int64:count = raw Str.token_count(entries, "|\0");
+        
+        // UI
+        Widget:panel = raw Tui.panel(2i32, 2i32, 76i32, 20i32, 7i32, 0i32);
+        drop(Tui.draw_widget(panel));
+        
+        Widget:title = raw Tui.label(4i32, 2i32, " Natuin - History Search ", 6i32, 0i32);
+        drop(Tui.draw_widget(title));
+        
+        Widget:search_label = raw Tui.label(4i32, 4i32, string_concat("Search: ", query), 7i32, 0i32);
+        drop(Tui.draw_widget(search_label));
+        
+        // Draw a separator
+        print("\x1b[5;4H\x1b[38;5;240m--------------------------------------------------------------------\x1b[0m\0");
+        
+        Widget:list = raw Tui.listbox(3i32, 6i32, 74i32, 15i32, entries, selected);
+        list.focused = 1i32;
+        drop(Tui.draw_widget(list));
+        
+        Widget:foot = raw Tui.label(2i32, 23i32, "[Enter] Select  [Up/Down] Navigate  [Esc/Ctrl-C] Quit", 3i32, 0i32);
+        drop(Tui.draw_widget(foot));
+        
+        // Wait for input loop
+        int32:wait = 0i32;
+        while (wait < 5i32) {
+            int32:k = nitpick_input_read_key();
+            if (k > 0i32) {
+                if (k == 27i32) { // ESC (or part of sequence, but our input_read_key returns 27 for plain esc)
+                    // we actually need to be careful with arrow keys returning 1/2/3/4 instead of escape sequence
+                    running = 0i32;
+                    wait = 5i32;
+                }
+                if (k == 3i32) { // Ctrl-C in raw mode is usually 3
+                    running = 0i32;
+                    wait = 5i32;
+                }
+                if (k == 1i32) { // UP
+                    selected = selected - 1i32;
+                    if (selected < 0i32) { selected = 0i32; }
+                    wait = 5i32;
+                }
+                if (k == 2i32) { // DOWN
+                    selected = selected + 1i32;
+                    if (selected >= @cast_unchecked<int32>(count)) {
+                        selected = @cast_unchecked<int32>(count) - 1i32;
+                    }
+                    wait = 5i32;
+                }
+                if (k == 10i32) { // ENTER
+                    chosen_command = raw Str.token(entries, "|\0", @cast<int64>(selected));
+                    running = 0i32;
+                    wait = 5i32;
+                }
+                if (k == 127i32) { // Backspace
+                    int64:qlen = string_length(query);
+                    if (qlen > 0i64) {
+                        query = string_substring(query, 0i64, qlen - 1i64);
+                        entries = raw get_history(query);
+                        selected = 0i32;
+                    }
+                    wait = 5i32;
+                }
+                // Check if printable ASCII
+                if (k >= 32i32) {
+                    if (k <= 126i32) {
+                        query = string_concat(query, string_from_char(@cast_unchecked<int8>(k)));
+                        entries = raw get_history(query);
+                        selected = 0i32;
+                        wait = 5i32;
+                    }
+                }
+            }
+            drop(usleep(50000i32));
+            wait = wait + 1i32;
+        }
+    }
+    
+    drop(Tui.shutdown());
+    drop(nitpick_input_exit_raw());
+    
+    if (string_length(chosen_command) > 0i64) {
+        print("\nSelected command:\n\0");
+        print(chosen_command);
+        print("\n\0");
+        // write to tmp file to make it easily evaluable
+        drop(raw fs_write_file("/tmp/natuin_selected\0", chosen_command));
+    }
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};

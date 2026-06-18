@@ -82,6 +82,7 @@ Ecosystem package libraries for the [Nitpick programming language](https://githu
 | nitpick-nn | Neural network framework built on nitpick-matrix |
 | nitpick-opengl | OpenGL 3.3 Core — shaders, buffers, 3D math |
 | nitpick-orm | SQL query builder — Postgres, MySQL, SQLite |
+| nitpick-natuin | A fuzzy-finding TUI for searching and displaying ~/.bash_history, utilizing live filtering and terminal components. |
 | nitpick-perlin | Perlin and Simplex procedural noise generation |
 | nitpick-plot | 2D plotting library via Raylib |
 | nitpick-postgres | PostgreSQL client via libpq |

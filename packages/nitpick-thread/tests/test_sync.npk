@@ -1,0 +1,25 @@
+use "nitpick_thread.npk".*;
+use "nitpick_sync.npk".*;
+
+pub func:failsafe = int32(tbb32:err) { exit 1i32; };
+
+pub func:main = int32() {
+    Mutex:m = raw mutex_create(0i32);
+    drop(m.lock());
+    drop(m.unlock());
+    drop(m.destroy());
+    
+    CondVar:cv = raw condvar_create();
+    drop(cv.signal());
+    drop(cv.broadcast());
+    drop(cv.destroy());
+    
+    RwLock:rw = raw rwlock_create();
+    drop(rw.wrlock());
+    drop(rw.unlock());
+    drop(rw.rdlock());
+    drop(rw.unlock());
+    drop(rw.destroy());
+    
+    exit 0i32;
+};

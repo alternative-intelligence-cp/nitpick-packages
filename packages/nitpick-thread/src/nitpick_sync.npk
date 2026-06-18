@@ -1,0 +1,117 @@
+// src/nitpick_sync.npk
+
+extern "npk_runtime" {
+    func:npk_shim_mutex_create = int64(int32:type);
+    func:npk_shim_mutex_lock = int32(int64:handle);
+    func:npk_shim_mutex_trylock = int32(int64:handle);
+    func:npk_shim_mutex_unlock = int32(int64:handle);
+    func:npk_shim_mutex_destroy = int32(int64:handle);
+
+    func:npk_shim_condvar_create = int64();
+    func:npk_shim_condvar_wait = int32(int64:cv, int64:mutex);
+    func:npk_shim_condvar_timedwait = int32(int64:cv, int64:mutex, int64:timeout_ns);
+    func:npk_shim_condvar_signal = int32(int64:cv);
+    func:npk_shim_condvar_broadcast = int32(int64:cv);
+    func:npk_shim_condvar_destroy = int32(int64:cv);
+
+    func:npk_shim_rwlock_create = int64();
+    func:npk_shim_rwlock_rdlock = int32(int64:handle);
+    func:npk_shim_rwlock_tryrdlock = int32(int64:handle);
+    func:npk_shim_rwlock_wrlock = int32(int64:handle);
+    func:npk_shim_rwlock_trywrlock = int32(int64:handle);
+    func:npk_shim_rwlock_unlock = int32(int64:handle);
+    func:npk_shim_rwlock_destroy = int32(int64:handle);
+}
+
+pub struct:Mutex = {
+    int64:handle;
+};
+
+pub Type:Mutex = {
+    
+    func:lock = int32(Mutex:self) {
+        pass npk_shim_mutex_lock(self.handle);
+    };
+    
+    func:trylock = int32(Mutex:self) {
+        pass npk_shim_mutex_trylock(self.handle);
+    };
+    
+    func:unlock = int32(Mutex:self) {
+        pass npk_shim_mutex_unlock(self.handle);
+    };
+    
+    func:destroy = int32(Mutex:self) {
+        pass npk_shim_mutex_destroy(self.handle);
+    };
+};
+
+pub func:mutex_create = Mutex(int32:type) {
+    pass Mutex{handle: npk_shim_mutex_create(type)};
+};
+
+pub struct:CondVar = {
+    int64:handle;
+};
+
+pub Type:CondVar = {
+    
+    func:wait = int32(CondVar:self, Mutex:m) {
+        pass npk_shim_condvar_wait(self.handle, m.handle);
+    };
+    
+    func:timedwait = int32(CondVar:self, Mutex:m, int64:timeout_ns) {
+        pass npk_shim_condvar_timedwait(self.handle, m.handle, timeout_ns);
+    };
+    
+    func:signal = int32(CondVar:self) {
+        pass npk_shim_condvar_signal(self.handle);
+    };
+    
+    func:broadcast = int32(CondVar:self) {
+        pass npk_shim_condvar_broadcast(self.handle);
+    };
+    
+    func:destroy = int32(CondVar:self) {
+        pass npk_shim_condvar_destroy(self.handle);
+    };
+};
+
+pub func:condvar_create = CondVar() {
+    pass CondVar{handle: npk_shim_condvar_create()};
+};
+
+pub struct:RwLock = {
+    int64:handle;
+};
+
+pub Type:RwLock = {
+    
+    func:rdlock = int32(RwLock:self) {
+        pass npk_shim_rwlock_rdlock(self.handle);
+    };
+    
+    func:tryrdlock = int32(RwLock:self) {
+        pass npk_shim_rwlock_tryrdlock(self.handle);
+    };
+    
+    func:wrlock = int32(RwLock:self) {
+        pass npk_shim_rwlock_wrlock(self.handle);
+    };
+    
+    func:trywrlock = int32(RwLock:self) {
+        pass npk_shim_rwlock_trywrlock(self.handle);
+    };
+    
+    func:unlock = int32(RwLock:self) {
+        pass npk_shim_rwlock_unlock(self.handle);
+    };
+    
+    func:destroy = int32(RwLock:self) {
+        pass npk_shim_rwlock_destroy(self.handle);
+    };
+};
+
+pub func:rwlock_create = RwLock() {
+    pass RwLock{handle: npk_shim_rwlock_create()};
+};
