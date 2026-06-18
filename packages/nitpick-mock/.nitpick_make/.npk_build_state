@@ -5,23 +5,23 @@
     "compiler_hash": ""
   },
   "targets": {
-    "nitpick-mock": {
-      "artifact_path": ".nitpick_make/build/libnitpick-mock.a",
-      "source_hash": "fnv1a:13310031327253800080",
-      "command_hash": 16808510103264059040,
-      "source_timestamp": 18446744069053397746,
-      "build_timestamp": 1781510130,
-      "build_duration_ms": 0,
-      "dependencies": [],
-      "implicit_inputs": []
-    },
     "test-nitpick-mock": {
       "artifact_path": ".nitpick_make/build/test-nitpick-mock",
       "source_hash": "fnv1a:14310566440630300538",
-      "command_hash": 4293030768403983718,
-      "source_timestamp": 18446744069052267492,
-      "build_timestamp": 1781510130,
-      "build_duration_ms": 0,
+      "command_hash": 14661747852347956807,
+      "source_timestamp": 18446744069053520563,
+      "build_timestamp": 1781749855,
+      "build_duration_ms": 118,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "nitpick-mock": {
+      "artifact_path": ".nitpick_make/build/libnitpick-mock.a",
+      "source_hash": "fnv1a:11413154419363342894",
+      "command_hash": 16808510103264059040,
+      "source_timestamp": 18446744069053637465,
+      "build_timestamp": 1781749855,
+      "build_duration_ms": 75,
       "dependencies": [],
       "implicit_inputs": []
     }

@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+import os
+import sys
+import re
+import subprocess
+import configparser
+
+def main():
+    target_dir = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else "."
+    tests_dir = os.path.join(target_dir, "tests")
+    
+    if not os.path.isdir(tests_dir):
+        print(f"Error: No 'tests' directory found in {target_dir}")
+        sys.exit(1)
+        
+    test_files = [f for f in os.listdir(tests_dir) if f.startswith("test_") and f.endswith(".npk") and f != "test_runner.npk"]
+    test_files.sort()
+    
+    if not test_files:
+        print("No test files found.")
+        sys.exit(0)
+        
+    modules = {}
+    
+    for tf in test_files:
+        path = os.path.join(tests_dir, tf)
+        with open(path, "r") as f:
+            content = f.read()
+            
+        tests = re.findall(r"func:\s*(test_[a-zA-Z0-9_]+)\s*=", content)
+        b_all = re.findall(r"func:\s*([a-zA-Z0-9_]*before_all)\s*=", content)
+        a_all = re.findall(r"func:\s*([a-zA-Z0-9_]*after_all)\s*=", content)
+        b_each = re.findall(r"func:\s*([a-zA-Z0-9_]*before_each)\s*=", content)
+        a_each = re.findall(r"func:\s*([a-zA-Z0-9_]*after_each)\s*=", content)
+        
+        if tests or b_all or a_all or b_each or a_each:
+            modules[tf] = {
+                "tests": tests,
+                "b_all": b_all[0] if b_all else None,
+                "a_all": a_all[0] if a_all else None,
+                "b_each": b_each[0] if b_each else None,
+                "a_each": a_each[0] if a_each else None
+            }
+            
+    if not modules:
+        print("No test cases found.")
+        sys.exit(0)
+        
+    runner_path = os.path.join(tests_dir, "test_runner.npk")
+    with open(runner_path, "w") as out:
+        out.write("// AUTO-GENERATED TEST RUNNER\n")
+        out.write('use "nitpick_test.npk".*;\n')
+        out.write('use "nitpick_mock.npk".*;\n')
+        for tf in modules.keys():
+            out.write(f'use "{tf}".*;\n')
+            
+        out.write("\npub func:main = int32() {\n")
+        for tf, data in modules.items():
+            mod_name = tf.replace('.npk', '')
+            out.write(f'    drop raw Test.begin("{mod_name}");\n')
+            
+            if data["b_all"]:
+                out.write(f'    drop raw {data["b_all"]}();\n')
+                
+            for t in data["tests"]:
+                if data["b_each"]:
+                    out.write(f'    drop raw {data["b_each"]}();\n')
+                out.write(f'    drop raw {t}();\n')
+                if data["a_each"]:
+                    out.write(f'    drop raw {data["a_each"]}();\n')
+                    
+            if data["a_all"]:
+                out.write(f'    drop raw {data["a_all"]}();\n')
+                
+        out.write('    int32:res = raw Test.finish();\n')
+        out.write('    exit res;\n')
+        out.write("};\n")
+        
+    total_tests = sum(len(d['tests']) for d in modules.values())
+    print(f"Generated {runner_path} with {total_tests} tests across {len(modules)} files.")
+    
+    # Check if we should run it
+    if "--run" in sys.argv or "-r" in sys.argv:
+        build_abc = os.path.join(target_dir, "build.abc")
+        if os.path.isfile(build_abc):
+            with open(build_abc, "r") as f:
+                content = f.read()
+            # Find the target name that has sources = ["tests/test_runner.npk"] or similar
+            target_match = re.search(r'\[target\.([^\]]+)\].*?sources\s*=\s*\[[^\]]*"tests/test_runner\.npk"[^\]]*\]', content, re.DOTALL)
+            if target_match:
+                target_name = target_match.group(1)
+                print(f"Building and running target '{target_name}'...")
+                res = subprocess.run(["npkbld"], cwd=target_dir)
+                if res.returncode == 0:
+                    bin_path = os.path.join(target_dir, ".nitpick_make", "build", target_name)
+                    if os.path.isfile(bin_path):
+                        subprocess.run([bin_path], cwd=target_dir)
+                    else:
+                        print(f"Warning: Built binary not found at {bin_path}")
+            else:
+                print("Could not find a target in build.abc that builds 'tests/test_runner.npk'. Please build manually.")
+        else:
+            print("No build.abc found. Please build manually.")
+
+if __name__ == "__main__":
+    main()

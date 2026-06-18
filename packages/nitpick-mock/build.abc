@@ -12,4 +12,6 @@ flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem"]
 type = "binary"
 sources = ["tests/test_nitpick_mock.npk"]
 deps = []
-flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem"]
+flags = ["-I", "src"]
+link_paths = ["../../../nitpick-libc/shim"]
+link_libraries = ["nitpick_libc_mem"]

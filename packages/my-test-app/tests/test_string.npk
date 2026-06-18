@@ -1,0 +1,18 @@
+use "nitpick_suite.npk".*;
+
+pub func:test_string_length = int32() {
+    drop raw Test.assert_eq_i32("length is 5", 5i32, 5i32);
+    pass(0i32);
+};
+
+pub func:test_string_mock = int32() {
+    int64:base = raw Mock.create();
+    drop raw Mock.call(base, 1i64);
+    
+    // verify we called mock #1 exactly 1 time
+    int32:is_ok = raw Mock.verify(base, 1i64, 1i64);
+    drop raw Test.assert("mock called exactly once", is_ok);
+    
+    drop raw Mock.destroy(base);
+    pass(0i32);
+};

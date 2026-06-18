@@ -1,0 +1,16 @@
+use "nitpick_suite.npk".*;
+
+pub func:test_math_before_all = int32() {
+    drop raw Test.skip("math setup");
+    pass(0i32);
+};
+
+pub func:test_math_addition = int32() {
+    drop raw Test.assert_eq_i64("2 + 2 = 4", 4i64, 4i64);
+    pass(0i32);
+};
+
+pub func:test_math_subtraction = int32() {
+    drop raw Test.assert_eq_i32("5 - 2 = 3", 3i32, 3i32);
+    pass(0i32);
+};

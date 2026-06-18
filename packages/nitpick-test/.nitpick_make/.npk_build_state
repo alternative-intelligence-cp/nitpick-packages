@@ -8,10 +8,10 @@
     "test-nitpick-test": {
       "artifact_path": ".nitpick_make/build/test-nitpick-test",
       "source_hash": "fnv1a:7842766097658160516",
-      "command_hash": 98303108840007723,
-      "source_timestamp": 18446744069053433535,
-      "build_timestamp": 1781545918,
-      "build_duration_ms": 218,
+      "command_hash": 14661747852347956807,
+      "source_timestamp": 18446744069053520563,
+      "build_timestamp": 1781749863,
+      "build_duration_ms": 118,
       "dependencies": [],
       "implicit_inputs": []
     },
@@ -19,9 +19,9 @@
       "artifact_path": ".nitpick_make/build/libnitpick-test.a",
       "source_hash": "fnv1a:6570835465634387306",
       "command_hash": 14695981039346656037,
-      "source_timestamp": 18446744069053433535,
-      "build_timestamp": 1781545918,
-      "build_duration_ms": 90,
+      "source_timestamp": 18446744069053520563,
+      "build_timestamp": 1781749863,
+      "build_duration_ms": 71,
       "dependencies": [],
       "implicit_inputs": []
     }

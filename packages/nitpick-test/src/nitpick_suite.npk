@@ -1,0 +1,7 @@
+// nitpick_suite.npk — Unified testing suite facade
+// Imports both the test assertion framework and the mock framework.
+
+use "nitpick_test.npk".*;
+use "nitpick_mock.npk".*;
+
+// You can now just `use "nitpick_suite.npk".*;` in your test modules.

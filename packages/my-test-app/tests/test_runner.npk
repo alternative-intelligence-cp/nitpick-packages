@@ -1,0 +1,18 @@
+// AUTO-GENERATED TEST RUNNER
+use "nitpick_test.npk".*;
+use "nitpick_mock.npk".*;
+use "test_math.npk".*;
+use "test_string.npk".*;
+
+pub func:main = int32() {
+    drop raw Test.begin("test_math");
+    drop raw test_math_before_all();
+    drop raw test_math_before_all();
+    drop raw test_math_addition();
+    drop raw test_math_subtraction();
+    drop raw Test.begin("test_string");
+    drop raw test_string_length();
+    drop raw test_string_mock();
+    int32:res = raw Test.finish();
+    exit res;
+};

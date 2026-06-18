@@ -1,0 +1,11 @@
+[project]
+name = "example-tests"
+version = "0.1.0"
+
+[target.my-test-runner]
+type = "binary"
+sources = ["tests/test_runner.npk"]
+deps = []
+flags = ["-I", "../nitpick-test/src", "-I", "../nitpick-mock/src"]
+link_paths = ["../nitpick-test/.nitpick_make/build", "../nitpick-mock/.nitpick_make/build", "../nitpick-test/shim", "../../../nitpick-libc/shim"]
+link_libraries = ["nitpick-test", "nitpick-mock", "nitpick_test_shim", "nitpick_libc_mem", "nitpick_libc_string", "nitpick_libc_io"]

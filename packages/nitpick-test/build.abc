@@ -12,4 +12,6 @@ flags = []
 type = "binary"
 sources = ["tests/test_nitpick_test.npk"]
 deps = ["nitpick-test"]
-flags = ["-I", "src", "-Lshim", "-lnitpick_test_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_string", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+flags = ["-I", "src"]
+link_paths = ["shim", "../../../nitpick-libc/shim"]
+link_libraries = ["nitpick_test_shim", "nitpick_libc_string", "nitpick_libc_mem", "nitpick_libc_io"]

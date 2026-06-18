@@ -66,7 +66,7 @@ func:mock_reset_one = int32(int64:base, int64:id) {
 
 // Verify call count matches expected.
 func:mock_verify = int32(int64:base, int64:id, int64:expected) {
-    int64:actual = mock_call_count(base, id);
+    int64:actual = raw mock_call_count(base, id);
     if (actual == expected) { pass 1i32; }
     pass 0i32;
 };
@@ -85,7 +85,7 @@ func:mock_destroy = int32(int64:base) {
 
 // ── Type wrapper ───────────────────────────────────────────────────────────────
 
-Type:Mock = {
+pub Type:Mock = {
 
     func:create = int64() {
         pass raw mock_init_storage();
