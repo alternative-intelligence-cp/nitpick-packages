@@ -20,3 +20,4 @@ packages/aria-editor/aria_editor
 # OS
 .DS_Store
 Thumbs.db
+node_modules/
