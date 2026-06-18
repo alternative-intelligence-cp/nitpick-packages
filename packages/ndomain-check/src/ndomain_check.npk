@@ -1,0 +1,37 @@
+use "nitpick_cli.npk".*;
+
+extern func:domain_sys_check = int64(string:domain);
+
+func:main = int32() {
+    raw Cli.parse();
+    int64:count = raw Cli.get_positional_count();
+    if (count != 1i64) {
+        print("Usage: ndomain-check <domain.com>\n\0");
+        exit(1i32);
+    }
+    
+    string:domain = raw Cli.get_positional(0i64);
+    
+    print("Checking domain: \0");
+    print(domain);
+    print(" ... \0");
+    
+    int64:res = domain_sys_check(domain);
+    
+    if (res == 0i64) {
+        print("Registered \x1b[31m[X]\x1b[0m\n\0");
+    } else {
+        if (res == 1i64) {
+            print("Available! \x1b[32m[O]\x1b[0m\n\0");
+        } else {
+            print("\x1b[33m[Error querying domain or invalid format]\x1b[0m\n\0");
+            exit(1i32);
+        }
+    }
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};

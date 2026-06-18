@@ -90,6 +90,7 @@ Ecosystem package libraries for the [Nitpick programming language](https://githu
 | nitpick-nneeds | Checks if binaries are installed and prints their versions |
 | nitpick-nfend | An arbitrary-precision unit-aware calculator for mathematical expressions |
 | nitpick-str-builder | High-performance C-backed string builder library |
+| nitpick-ndomain-check | Quickly check if a domain name is available via RDAP |
 | nitpick-ntere | A fast TUI directory browser (alternative to `cd + ls`) |
 | nitpick-nn | Neural network framework built on nitpick-matrix |
 | nitpick-nkondo | Fast TUI utility to find and delete heavy project directories |
