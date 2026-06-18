@@ -1,0 +1,170 @@
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_tui.npk".*;
+use "nitpick_input.npk".*;
+
+extern func:njust_system = int32(string:cmd);
+extern func:usleep = int32(int32:usec);
+extern func:nitpick_input_enter_raw = int32();
+extern func:nitpick_input_exit_raw = int32();
+extern func:nitpick_input_read_key = int32();
+
+func:main = int32() {
+    print("Scanning for heavy directories (node_modules, target, build)...\n\0");
+    
+    // Use find + du to get sizes in bytes and paths
+    string:scan_cmd = "find . -type d \\( -name \"node_modules\" -o -name \"target\" -o -name \"build\" \\) -print0 | xargs -0 du -sb 2>/dev/null > /tmp/nkondo_out\0";
+    drop(njust_system(scan_cmd));
+    
+    string:content = raw fs_read_file("/tmp/nkondo_out\0");
+    int64:lines = raw Str.token_count(content, "\n\0");
+    
+    if (lines == 0i64) {
+        print("No heavy directories found! Spark joy!\n\0");
+        exit(0i32);
+    }
+    
+    // Arrays to store sizes and paths
+    string:paths = "";
+    string:sizes = ""; // formatted string like "1.2 GB"
+    string:items = ""; // for listbox
+    
+    int64:i = 0i64;
+    while (i < lines) {
+        string:line = raw Str.token(content, "\n\0", i);
+        if (string_length(line) > 0i64) {
+            int64:tab_idx = 0i64; // find tab character manually or use token
+            string:size_str = raw Str.token(line, "\t\0", 0i64);
+            string:path = raw Str.token(line, "\t\0", 1i64);
+            
+            // rudimentary size formatting (MB)
+            int64:size_bytes = 0i64; 
+            // no string to int parser yet, so we just use the string for now, but pad it
+            // wait, we can't easily parse int in pure nitpick yet!
+            // let's just display it as "bytes", or let bash do the formatting.
+            // actually, du -sh gives human readable!
+            
+            paths = string_concat(string_concat(paths, path), "|\0");
+            items = string_concat(string_concat(string_concat(items, size_str), " B \t|\t \0"), path);
+            items = string_concat(items, "|\0");
+        }
+        i = i + 1i64;
+    }
+    
+    // Let's rescan using du -sh to get readable sizes instead!
+    string:scan_cmd_h = "find . -type d \\( -name \"node_modules\" -o -name \"target\" -o -name \"build\" \\) -print0 | xargs -0 du -sh 2>/dev/null > /tmp/nkondo_out\0";
+    drop(njust_system(scan_cmd_h));
+    content = raw fs_read_file("/tmp/nkondo_out\0");
+    lines = raw Str.token_count(content, "\n\0");
+    
+    items = "";
+    paths = "";
+    i = 0i64;
+    while (i < lines) {
+        string:line = raw Str.token(content, "\n\0", i);
+        if (string_length(line) > 0i64) {
+            string:size_str = raw Str.token(line, "\t\0", 0i64);
+            string:path = raw Str.token(line, "\t\0", 1i64);
+            
+            paths = string_concat(string_concat(paths, path), "|\0");
+            items = string_concat(string_concat(string_concat(string_concat(items, size_str), " \t|\t \0"), path), "|\0");
+        }
+        i = i + 1i64;
+    }
+
+    raw Tui.init();
+    
+    drop(nitpick_input_enter_raw());
+    int32:selected = 0i32;
+    int32:running = 1i32;
+    
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0");
+        
+        Widget:main_panel = raw Tui.panel(2i32, 2i32, 76i32, 22i32, 7i32, 0i32);
+        drop(Tui.draw_widget(main_panel));
+        
+        Widget:title = raw Tui.label(4i32, 2i32, " nkondo - Clean up space \0", 6i32, 0i32);
+        drop(Tui.draw_widget(title));
+        
+        Widget:listbox = raw Tui.listbox(4i32, 4i32, 72i32, 18i32, items, selected);
+        drop(Tui.draw_widget(listbox));
+        
+        Widget:help_label = raw Tui.label(4i32, 23i32, " UP/DOWN: Move  |  ENTER: Delete Directory  |  ESC: Quit \0", 3i32, 0i32);
+        drop(Tui.draw_widget(help_label));
+        
+        // raw Display.flush();
+        
+        int32:k = nitpick_input_read_key();
+        if (k == 1i32) { // Up
+            if (selected > 0i32) { selected = selected - 1i32; }
+        }
+        else if (k == 2i32) { // Down
+            if (selected < @cast_unchecked<int32>(lines) - 1i32) { selected = selected + 1i32; }
+        }
+        else if (k == 10i32) { // Enter (\n)
+            string:path_to_delete = raw Str.token(paths, "|\0", @cast<int64>(selected));
+            string:current_item = raw Str.token(items, "|\0", @cast<int64>(selected));
+            
+            if (string_length(path_to_delete) > 0i64) {
+                if (string_starts_with(current_item, "[DELETED]\0") == false) {
+                    string:rm_cmd = string_concat(string_concat("rm -rf \"\0", path_to_delete), "\"\0");
+                    drop(njust_system(rm_cmd));
+                    
+                    // Rebuild items string with [DELETED] prefix
+                    string:new_items = "";
+                    int64:j = 0i64;
+                    while (j < lines) {
+                        string:item = raw Str.token(items, "|\0", j);
+                        if (j == @cast<int64>(selected)) {
+                            item = string_concat("[DELETED] \0", item);
+                        }
+                        new_items = string_concat(string_concat(new_items, item), "|\0");
+                        j = j + 1i64;
+                    }
+                    items = new_items;
+                }
+            }
+        }
+        else if (k == 13i32) { // Enter (\r)
+            string:path_to_delete = raw Str.token(paths, "|\0", @cast<int64>(selected));
+            string:current_item = raw Str.token(items, "|\0", @cast<int64>(selected));
+            
+            if (string_length(path_to_delete) > 0i64) {
+                if (string_starts_with(current_item, "[DELETED]\0") == false) {
+                    string:rm_cmd = string_concat(string_concat("rm -rf \"\0", path_to_delete), "\"\0");
+                    drop(njust_system(rm_cmd));
+                    
+                    // Rebuild items string with [DELETED] prefix
+                    string:new_items = "";
+                    int64:j = 0i64;
+                    while (j < lines) {
+                        string:item = raw Str.token(items, "|\0", j);
+                        if (j == @cast<int64>(selected)) {
+                            item = string_concat("[DELETED] \0", item);
+                        }
+                        new_items = string_concat(string_concat(new_items, item), "|\0");
+                        j = j + 1i64;
+                    }
+                    items = new_items;
+                }
+            }
+        }
+        else if (k == 27i32) { // Esc
+            running = 0i32;
+        }
+        drop(usleep(30000i32));
+    }
+    
+    drop(Tui.shutdown());
+    drop(nitpick_input_exit_raw());
+    print("\n\x1b[?25h\0");
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    raw Tui.shutdown();
+    drop(nitpick_input_exit_raw());
+    print("\n\x1b[?25h\0");
+    exit(1i32);
+};

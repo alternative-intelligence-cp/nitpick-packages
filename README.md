@@ -79,8 +79,11 @@ Ecosystem package libraries for the [Nitpick programming language](https://githu
 | nitpick-msgpack | MessagePack binary serialization |
 | nitpick-mux | Bit-select, field insert/extract, conditional mux |
 | nitpick-mysql | MySQL client via libmysqlclient |
+| nitpick-nmdcat | Markdown viewer for the terminal |
 | nitpick-nn | Neural network framework built on nitpick-matrix |
+| nitpick-nkondo | Fast TUI utility to find and delete heavy project directories |
 | nitpick-nrura | An interactive TUI scratchpad designed for building and debugging shell pipelines with live preview execution. |
+| nitpick-nstrace | A terminal UI for dynamically exploring and filtering `strace` logs of an executed command. |
 | nitpick-opengl | OpenGL 3.3 Core — shaders, buffers, 3D math |
 | nitpick-orm | SQL query builder — Postgres, MySQL, SQLite |
 | nitpick-natuin | A fuzzy-finding TUI for searching and displaying ~/.bash_history, utilizing live filtering and terminal components. |
@@ -177,4 +180,3 @@ nitpick-<name>/
 ## License
 
 AGPL-3.0 — see [LICENSE.md](LICENSE.md)
-| nitpick-nstrace | A terminal UI for dynamically exploring and filtering `strace` logs of an executed command. |
