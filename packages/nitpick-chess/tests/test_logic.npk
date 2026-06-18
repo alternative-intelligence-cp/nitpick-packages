@@ -1,0 +1,50 @@
+// test_logic.npk
+extern "libc" {
+    func:chess_init = void();
+    func:chess_get_piece = int32(int32:sq);
+    func:chess_gen_moves = int32(int32:white_turn);
+    func:chess_get_move_from = int32(int32:idx);
+    func:chess_get_move_to = int32(int32:idx);
+    func:chess_apply_move = int32(int32:from_sq, int32:to_sq);
+    func:aria_libc_exit = NIL(int32:code);
+}
+
+func:failsafe = int32(tbb32:_err) { exit 1i32; };
+
+func:main = int32() {
+    int32:errors = 0i32;
+    
+    chess_init();
+    
+    // Test 1: Check initial pieces
+    int32:p0 = chess_get_piece(0i32);
+    if (p0 == 4i32) { drop(println("[PASS] T01 piece(0) == White Rook")); } else { drop(println("[FAIL] T01")); errors = errors + 1i32; }
+
+    int32:p4 = chess_get_piece(4i32);
+    if (p4 == 6i32) { drop(println("[PASS] T02 piece(4) == White King")); } else { drop(println("[FAIL] T02")); errors = errors + 1i32; }
+
+    int32:p60 = chess_get_piece(60i32);
+    if (p60 == 12i32) { drop(println("[PASS] T03 piece(60) == Black King")); } else { drop(println("[FAIL] T03")); errors = errors + 1i32; }
+
+    // Test 2: Check move generation
+    int32:moves = chess_gen_moves(1i32);
+    if (moves == 20i32) { drop(println("[PASS] T04 gen_moves(White) == 20")); } else { drop(println("[FAIL] T04")); errors = errors + 1i32; }
+    
+    // Test 3: Apply move (Pawn A2 -> A3, which is 8 -> 16)
+    int32:cap = chess_apply_move(8i32, 16i32);
+    if (cap == 0i32) { drop(println("[PASS] T05 apply_move captured nothing")); } else { drop(println("[FAIL] T05")); errors = errors + 1i32; }
+    
+    int32:p8 = chess_get_piece(8i32);
+    if (p8 == 0i32) { drop(println("[PASS] T06 piece(8) == Empty")); } else { drop(println("[FAIL] T06")); errors = errors + 1i32; }
+    
+    int32:p16 = chess_get_piece(16i32);
+    if (p16 == 1i32) { drop(println("[PASS] T07 piece(16) == White Pawn")); } else { drop(println("[FAIL] T07")); errors = errors + 1i32; }
+
+    drop(println("---"));
+    if (errors > 0i32) {
+        drop(println("FAIL: some tests failed"));
+        exit 1i32;
+    }
+    drop(println("PASS: all tests passed"));
+    exit 0i32;
+};

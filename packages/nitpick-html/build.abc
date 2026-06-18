@@ -1,0 +1,18 @@
+[project]
+name = "nitpick-html"
+version = "0.1.0"
+
+[target.nitpick-html]
+type = "library"
+sources = ["src/nitpick_html.npk"]
+deps = []
+link_paths = ["shim/.nitpick_make/lib"]
+link_libraries = ["nitpick_html_shim"]
+
+[target.test-nitpick-html]
+type = "binary"
+sources = ["tests/test_nitpick_html.npk"]
+deps = []
+flags = ["-I", "src"]
+link_paths = ["shim/.nitpick_make/lib"]
+link_libraries = ["nitpick_html_shim"]

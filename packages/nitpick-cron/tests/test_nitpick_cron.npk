@@ -1,0 +1,43 @@
+use "../src/nitpick_cron.npk".*;
+
+extern "aria_libc_mem" {
+    func:aria_libc_mem_write_i64 = void(int64:ptr, int64:offset, int64:val);
+    func:aria_libc_mem_read_i64 = int64(int64:ptr, int64:offset);
+}
+
+extern "cron_shim" {
+    func:cron_shim_time = int64();
+}
+
+pub func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    int64:c = raw Cron.create("*/15 0 1,15 * 1-5");
+    int64:next = raw Cron.next_run(c, 1672531200i64);
+    
+    drop next;
+
+    int64:daemon = raw Cron.daemon_create();
+    drop Cron.add_job(daemon, c);
+    
+    int64:executed_id = raw Cron.tick(daemon);
+    drop executed_id;
+    
+    // We can manually fake the last_run_time so it executes immediately on next tick
+    int64:jobs_ptr = aria_libc_mem_read_i64(daemon, 16i64);
+    int64:now = cron_shim_time();
+    aria_libc_mem_write_i64(jobs_ptr, 8i64, now - 864000i64); // very old
+    
+    // On the next tick, it should return 0i64 (job_id 0)
+    int64:ready_job = raw Cron.tick(daemon);
+    if (ready_job != 0i64) {
+        exit 2i32;
+    }
+    
+    drop Cron.destroy(c);
+    drop Cron.daemon_destroy(daemon);
+    exit 0i32;
+};

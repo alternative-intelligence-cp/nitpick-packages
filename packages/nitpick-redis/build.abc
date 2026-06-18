@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-redis"
+version = "0.1.0"
+
+[target.nitpick-redis]
+type = "library"
+sources = ["src/nitpick_redis.npk"]
+deps = []
+flags = ["-Lshim", "-lnitpick_redis_shim", "-lhiredis"]
+
+[target.test-nitpick-redis]
+type = "binary"
+sources = ["tests/test_nitpick_redis.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim", "-lnitpick_redis_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_mem", "-lhiredis"]

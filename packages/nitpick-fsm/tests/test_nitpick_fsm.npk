@@ -1,0 +1,51 @@
+use "../src/nitpick_fsm.npk".*;
+
+pub func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    int64:STATE_IDLE = 100i64;
+    int64:STATE_ACTIVE = 200i64;
+    
+    int64:EVENT_START = 10i64;
+    int64:EVENT_STOP = 20i64;
+    
+    int64:parent = raw FSM.create(STATE_IDLE);
+    drop FSM.add_transition(parent, STATE_IDLE, EVENT_START, STATE_ACTIVE);
+    drop FSM.add_transition(parent, STATE_ACTIVE, EVENT_STOP, STATE_IDLE);
+    
+    // Sub FSM inside STATE_ACTIVE
+    int64:SUB_STATE_1 = 201i64;
+    int64:SUB_STATE_2 = 202i64;
+    int64:EVENT_SUB_STEP = 30i64;
+    
+    int64:sub = raw FSM.create(SUB_STATE_1);
+    drop FSM.add_transition(sub, SUB_STATE_1, EVENT_SUB_STEP, SUB_STATE_2);
+    
+    drop FSM.set_sub_fsm(parent, STATE_ACTIVE, sub);
+    
+    // Idle -> Active
+    drop FSM.trigger(parent, EVENT_START);
+    if (raw FSM.get_current_state(parent) != STATE_ACTIVE) { exit 2i32; }
+    
+    // Step inside Active's sub-fsm
+    int64:res = raw FSM.trigger(parent, EVENT_SUB_STEP);
+    if (res != SUB_STATE_2) { exit 3i32; }
+    
+    if (raw FSM.get_current_state(sub) != SUB_STATE_2) { exit 4i32; }
+    if (raw FSM.get_current_state(parent) != STATE_ACTIVE) { exit 5i32; } // Parent stays
+    
+    // Active -> Idle (parent handles it)
+    drop FSM.trigger(parent, EVENT_STOP);
+    if (raw FSM.get_current_state(parent) != STATE_IDLE) { exit 6i32; }
+    
+    // Sub-step should now fail because parent is in IDLE which has no sub-fsm
+    int64:res_idle = raw FSM.trigger(parent, EVENT_SUB_STEP);
+    if (res_idle != 0i64 - 1i64) { exit 7i32; }
+    
+    drop FSM.destroy(sub);
+    drop FSM.destroy(parent);
+    exit 0i32;
+};

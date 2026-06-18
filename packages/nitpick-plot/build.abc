@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-plot"
+version = "0.1.0"
+
+[target.nitpick-plot]
+type = "library"
+sources = ["src/nitpick_plot.npk"]
+deps = []
+flags = ["-I", "../nitpick-raylib/src"]
+
+[target.test-nitpick-plot]
+type = "binary"
+sources = ["tests/test_nitpick_plot.npk"]
+deps = []
+flags = ["-I", "src", "-I", "../nitpick-raylib/src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_mem", "-L../nitpick-raylib/shim", "-lnitpick_raylib_shim", "-lraylib", "-lm", "-latomic"]

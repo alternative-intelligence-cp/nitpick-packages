@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "clang++ called from $(pwd)" >> /home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-jwt/clang_args.txt
+echo "Arguments: $@" >> /home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-jwt/clang_args.txt
+/usr/bin/clang++ "$@"

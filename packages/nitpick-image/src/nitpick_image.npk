@@ -1,0 +1,125 @@
+// nitpick-image - Basic Image Loading & Writing using stb_image
+
+extern "aria_libc_mem" {
+    func:aria_libc_mem_calloc = int64(int64:count, int64:size);
+    func:aria_libc_mem_free   = void(int64:ptr);
+    func:aria_libc_mem_read_i32 = int32(int64:ptr, int64:offset);
+    func:aria_libc_mem_write_i32 = void(int64:ptr, int64:offset, int32:val);
+    func:aria_libc_mem_read_i64 = int64(int64:ptr, int64:offset);
+    func:aria_libc_mem_write_i64 = void(int64:ptr, int64:offset, int64:val);
+}
+
+extern "image_shim" {
+    func:image_shim_load = int64(string:path, int64:out_w, int64:out_h, int64:out_c);
+    func:image_shim_free = void(int64:data_ptr);
+    func:image_shim_write_png = int32(string:path, int64:w, int64:h, int64:c, int64:data_ptr);
+    func:image_shim_write_jpg = int32(string:path, int64:w, int64:h, int64:c, int64:data_ptr);
+}
+
+pub Type:Image = {
+    func:create = int64(int64:width, int64:height) {
+        int64:handle = aria_libc_mem_calloc(1i64, 32i64);
+        int64:channels = 4i64;
+        int64:size = width * height * channels;
+        int64:data = aria_libc_mem_calloc(1i64, size);
+        
+        aria_libc_mem_write_i64(handle, 0i64, width);
+        aria_libc_mem_write_i64(handle, 8i64, height);
+        aria_libc_mem_write_i64(handle, 16i64, channels);
+        aria_libc_mem_write_i64(handle, 24i64, data);
+        
+        pass handle;
+    };
+
+    func:load_file = int64(string:path) {
+        int64:out_w = aria_libc_mem_calloc(1i64, 8i64);
+        int64:out_h = aria_libc_mem_calloc(1i64, 8i64);
+        int64:out_c = aria_libc_mem_calloc(1i64, 8i64);
+        
+        int64:data_ptr = image_shim_load(path, out_w, out_h, out_c);
+        
+        if (data_ptr == 0i64) {
+            aria_libc_mem_free(out_w);
+            aria_libc_mem_free(out_h);
+            aria_libc_mem_free(out_c);
+            pass 0i64;
+        }
+        
+        int64:handle = aria_libc_mem_calloc(1i64, 32i64);
+        aria_libc_mem_write_i64(handle, 0i64, aria_libc_mem_read_i64(out_w, 0i64));
+        aria_libc_mem_write_i64(handle, 8i64, aria_libc_mem_read_i64(out_h, 0i64));
+        aria_libc_mem_write_i64(handle, 16i64, aria_libc_mem_read_i64(out_c, 0i64));
+        aria_libc_mem_write_i64(handle, 24i64, data_ptr);
+        
+        aria_libc_mem_free(out_w);
+        aria_libc_mem_free(out_h);
+        aria_libc_mem_free(out_c);
+        
+        pass handle;
+    };
+
+    func:save_png = int32(int64:handle, string:path) {
+        int64:w = aria_libc_mem_read_i64(handle, 0i64);
+        int64:h = aria_libc_mem_read_i64(handle, 8i64);
+        int64:c = aria_libc_mem_read_i64(handle, 16i64);
+        int64:data_ptr = aria_libc_mem_read_i64(handle, 24i64);
+        
+        pass image_shim_write_png(path, w, h, c, data_ptr);
+    };
+
+    func:save_jpeg = int32(int64:handle, string:path) {
+        int64:w = aria_libc_mem_read_i64(handle, 0i64);
+        int64:h = aria_libc_mem_read_i64(handle, 8i64);
+        int64:c = aria_libc_mem_read_i64(handle, 16i64);
+        int64:data_ptr = aria_libc_mem_read_i64(handle, 24i64);
+        
+        pass image_shim_write_jpg(path, w, h, c, data_ptr);
+    };
+
+    func:set_pixel = int32(int64:handle, int64:x, int64:y, int64:r, int64:g, int64:b, int64:a) {
+        int64:w = aria_libc_mem_read_i64(handle, 0i64);
+        int64:h = aria_libc_mem_read_i64(handle, 8i64);
+        int64:c = aria_libc_mem_read_i64(handle, 16i64);
+        
+        if (x < 0i64) { pass 0i32; }
+        if (y < 0i64) { pass 0i32; }
+        if (x >= w) { pass 0i32; }
+        if (y >= h) { pass 0i32; }
+        
+        int64:data_ptr = aria_libc_mem_read_i64(handle, 24i64);
+        int64:idx = (y * w + x) * c;
+        
+        if (c == 4i64) {
+            int64:val = (a * 16777216i64) + (b * 65536i64) + (g * 256i64) + r;
+            aria_libc_mem_write_i32(data_ptr, idx, @cast_unchecked<int32>(val));
+        }
+        pass 0i32;
+    };
+
+    func:get_pixel = int64(int64:handle, int64:x, int64:y) {
+        int64:w = aria_libc_mem_read_i64(handle, 0i64);
+        int64:h = aria_libc_mem_read_i64(handle, 8i64);
+        int64:c = aria_libc_mem_read_i64(handle, 16i64);
+        
+        if (x < 0i64) { pass 0i64; }
+        if (y < 0i64) { pass 0i64; }
+        if (x >= w) { pass 0i64; }
+        if (y >= h) { pass 0i64; }
+        
+        int64:data_ptr = aria_libc_mem_read_i64(handle, 24i64);
+        int64:idx = (y * w + x) * c;
+        
+        if (c == 4i64) {
+            int32:val = aria_libc_mem_read_i32(data_ptr, idx);
+            pass @cast_unchecked<int64>(val);
+        }
+        pass 0i64;
+    };
+
+    func:destroy = int32(int64:handle) {
+        int64:data_ptr = aria_libc_mem_read_i64(handle, 24i64);
+        image_shim_free(data_ptr);
+        aria_libc_mem_free(handle);
+        pass 0i32;
+    };
+};

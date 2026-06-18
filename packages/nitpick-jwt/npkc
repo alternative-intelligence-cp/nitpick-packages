@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "npkc called from $(pwd)" >> /home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-jwt/npkc_args.txt
+echo "Arguments: $@" >> /home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-jwt/npkc_args.txt
+/home/randy/Workspace/REPOS/nitpick-build/build/npkc "$@"

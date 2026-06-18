@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-image"
+version = "0.1.0"
+
+[target.nitpick-image]
+type = "library"
+sources = ["src/nitpick_image.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_string"]
+
+[target.test-nitpick-image]
+type = "binary"
+sources = ["tests/test_nitpick_image.npk"]
+deps = ["nitpick-image"]
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_string"]

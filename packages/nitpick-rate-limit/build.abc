@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-rate-limit"
+version = "0.12.1"
+
+[target.nitpick-rate-limit]
+type = "library"
+sources = ["src/nitpick_rate_limit.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-rate-limit]
+type = "binary"
+sources = ["tests/test_nitpick_rate_limit.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io"]

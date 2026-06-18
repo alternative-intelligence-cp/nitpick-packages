@@ -1,0 +1,66 @@
+// test_nitpick_html.npk
+
+extern "libc" { func:printf = int32(string:fmt); }
+int32:fail_cnt = 0i32;
+use "nitpick_html.npk".*;
+
+func:failsafe = int32(tbb32:err) { drop(err); exit 1i32; };
+
+func:main = int32() {
+    string:sample_html = "<div id=\"main\" class=\"container\"><h1>Hello</h1><ul><li class=\"item\">1</li><li class=\"item\">2</li></ul></div>\0";
+    
+    int32:n = raw HTML.parse(sample_html);
+
+    if (n > 0i32) { drop(printf("[PASS] parse\n\0")); }
+    if (n <= 0i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] parse\n\0")); }
+
+    // Test text
+    string:t1 = raw HTML.get_text("h1\0");
+    drop(printf("[PASS] get_text h1\n\0"));
+
+    // Test attr
+    string:a1 = raw HTML.get_attr("div\0", "class\0");
+    drop(printf("[PASS] get_attr div class\n\0"));
+
+    // Test count
+    int32:c1 = raw HTML.count("li\0");
+    if (c1 == 2i32) { drop(printf("[PASS] count li\n\0")); }
+    if (c1 != 2i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] count li\n\0")); }
+
+    int32:c2 = raw HTML.count(".item\0");
+    if (c2 == 2i32) { drop(printf("[PASS] count .item\n\0")); }
+    if (c2 != 2i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] count .item\n\0")); }
+
+    // Test node count
+    int32:nc = raw HTML.node_count();
+    if (nc > 0i32) { drop(printf("[PASS] node_count\n\0")); }
+    if (nc <= 0i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] node_count\n\0")); }
+
+    // Clear
+    raw HTML.clear();
+    int32:nc2 = raw HTML.node_count();
+    if (nc2 == 0i32) { drop(printf("[PASS] clear\n\0")); }
+    if (nc2 != 0i32) { fail_cnt = fail_cnt + 1i32; drop(printf("[FAIL] clear\n\0")); }
+
+    // Test DOM Builder
+    int32:doc = raw HTML.create("div\0");
+    raw HTML.set_attr(doc, "id\0", "builder\0");
+    
+    int32:h1 = raw HTML.create("h1\0");
+    raw HTML.set_text(h1, "Builder Test\0");
+    raw HTML.append(doc, h1);
+    
+    int32:p = raw HTML.create("p\0");
+    raw HTML.set_attr(p, "class\0", "desc\0");
+    raw HTML.set_text(p, "This is built programmatically.\0");
+    raw HTML.append(doc, p);
+    
+    string:out_html = raw HTML.render(doc);
+    drop(printf("Built HTML: "));
+    drop(printf(out_html));
+    drop(printf("\n\0"));
+    
+    if (nc2 == 0i32) { drop(printf("[PASS] Builder rendered correctly\n\0")); }
+
+    if (fail_cnt > 0i32) { drop(printf("FAIL\n\0")); } exit fail_cnt;
+};

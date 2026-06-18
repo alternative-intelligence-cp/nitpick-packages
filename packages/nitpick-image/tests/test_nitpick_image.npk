@@ -1,0 +1,34 @@
+use "../src/nitpick_image.npk".*;
+
+pub func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    int64:img = raw Image.create(100i64, 100i64);
+    
+    // Set a pixel (red)
+    raw Image.set_pixel(img, 10i64, 10i64, 255i64, 0i64, 0i64, 255i64);
+    
+    // Save PNG
+    int32:res_png = raw Image.save_png(img, "test_out.png");
+    if (res_png == 0i32) { exit 2i32; }
+    
+    // Save JPG
+    int32:res_jpg = raw Image.save_jpeg(img, "test_out.jpg");
+    if (res_jpg == 0i32) { exit 3i32; }
+    
+    drop Image.destroy(img);
+    
+    // Load PNG
+    int64:loaded = raw Image.load_file("test_out.png");
+    if (loaded == 0i64) { exit 4i32; }
+    
+    // Save loaded as JPG
+    int32:res2 = raw Image.save_jpeg(loaded, "test_out_2.jpg");
+    if (res2 == 0i32) { exit 5i32; }
+    
+    drop Image.destroy(loaded);
+    exit 0i32;
+};

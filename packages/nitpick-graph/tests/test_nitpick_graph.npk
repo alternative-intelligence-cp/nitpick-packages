@@ -1,0 +1,33 @@
+use "../src/nitpick_graph.npk".*;
+
+extern "libc" {
+    func:string_equals = bool(string:a, string:b);
+    func:string_substring = string(string:s, int64:start, int64:length);
+}
+
+pub func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    int64:g = raw Graph.create();
+    
+    int64:n0 = raw Graph.add_node_spatial(g, 100i64, 0i64, 0i64);
+    int64:n1 = raw Graph.add_node_spatial(g, 200i64, 5i64, 0i64);
+    int64:n2 = raw Graph.add_node_spatial(g, 300i64, 10i64, 0i64);
+    
+    drop Graph.add_edge(g, n0, n1, 5i64);
+    drop Graph.add_edge(g, n1, n2, 5i64);
+    drop Graph.add_edge(g, n0, n2, 12i64); // direct path is worse
+    
+    int64:dist = raw Graph.astar_shortest_path(g, n0, n2);
+    if (dist != 10i64) { exit 1i32; }
+    
+    string:dot = raw Graph.export_dot(g);
+    // Simple verification
+    if (string_equals(string_substring(dot, 0i64, 11i64), "digraph G {") == false) { exit 2i32; }
+    
+    drop Graph.destroy(g);
+    exit 0i32;
+};

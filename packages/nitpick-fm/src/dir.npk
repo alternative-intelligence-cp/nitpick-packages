@@ -1,0 +1,58 @@
+// dir.npk
+use "ui.npk".*;
+
+extern func:opendir = any*(any*:name);
+extern func:readdir = any*(any*:dirp);
+extern func:closedir = int32(any*:dirp);
+extern func:chdir = int32(any*:path);
+
+extern func:getenv = any*(string:name);
+
+pub func:get_null = any->() {
+    pass(getenv("NITPICK_NULL_POINTER_HACK") => any->);
+};
+
+// Global arrays for our current directory entries
+pub int8->:g_dir_types = malloc(1i64) => int8->;
+pub int8->:g_dir_names = malloc(1i64) => int8->;
+pub int32:g_dir_count = 0i32;
+
+pub func:init_dir_buffers = int32() {
+    g_dir_types = malloc(1024i64) => int8->;
+    g_dir_names = malloc(262144i64) => int8->; // 1024 * 256
+    pass(0i32);
+};
+
+pub func:load_dir = int32(int8->:path) {
+    g_dir_count = 0i32;
+    any->:dirp = opendir(path => any->);
+    if (dirp == raw get_null()) {
+        pass(-1i32);
+    }
+    
+    int32:done = 0i32;
+    while (done == 0i32) {
+        int8->:ent = readdir(dirp) => int8->;
+        if ((ent => any->) == raw get_null()) {
+            done = 1i32;
+        } else {
+            if (g_dir_count < 1024i32) {
+                int8:d_type = ent[18i64];
+                g_dir_types[g_dir_count => int64] = d_type;
+                
+                int64:name_offset = (g_dir_count => int64) * 256i64;
+                int64:j = 0i64;
+                while (ent[19i64 + j] != 0i8) {
+                    g_dir_names[name_offset + j] = ent[19i64 + j];
+                    j = j + 1i64;
+                }
+                g_dir_names[name_offset + j] = 0i8;
+                
+                g_dir_count = g_dir_count + 1i32;
+            }
+        }
+    }
+    
+    drop(closedir(dirp));
+    pass(0i32);
+};

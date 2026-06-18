@@ -1,0 +1,49 @@
+use "nitpick_vdom.npk".*;
+
+extern "c" {
+    func:printf = int32(string:fmt);
+}
+
+pub func:main = int32() {
+    int64:div = raw Vdom.h("div");
+    raw Vdom.set_attr(div, "id", "app");
+    
+    int64:h1 = raw Vdom.h("h1");
+    int64:t1 = raw Vdom.text("Hello Virtual DOM");
+    raw Vdom.append_child(h1, t1);
+    
+    raw Vdom.append_child(div, h1);
+    
+    string:out = raw Vdom.render(div);
+    string:s1 = string_concat("Render 1:\n", out);
+    s1 = string_concat(s1, "\n\n\0");
+    drop(printf(s1));
+    
+    // Create updated tree
+    int64:div2 = raw Vdom.h("div");
+    raw Vdom.set_attr(div2, "id", "app");
+    raw Vdom.set_attr(div2, "class", "active"); // Added class
+    
+    int64:h1_2 = raw Vdom.h("h1");
+    int64:t1_2 = raw Vdom.text("Hello Updated DOM"); // Changed text
+    raw Vdom.append_child(h1_2, t1_2);
+    
+    int64:p = raw Vdom.h("p");
+    int64:t2 = raw Vdom.text("New child inserted");
+    raw Vdom.append_child(p, t2);
+    
+    raw Vdom.append_child(div2, h1_2);
+    raw Vdom.append_child(div2, p); // Added child
+    
+    string:out2 = raw Vdom.render(div2);
+    string:s2 = string_concat("Render 2:\n", out2);
+    s2 = string_concat(s2, "\n\n\0");
+    drop(printf(s2));
+    
+    drop(printf("Diff patches:\n\0"));
+    string:patches = raw Vdom.diff(div, div2);
+    drop(printf(patches));
+    drop(printf("\n\0"));
+    
+    exit 0i32;
+};

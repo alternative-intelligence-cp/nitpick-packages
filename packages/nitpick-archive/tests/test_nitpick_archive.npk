@@ -1,0 +1,41 @@
+use "../src/nitpick_archive.npk".*;
+use "../../nitpick-str/src/nitpick_str.npk".*;
+
+pub func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    // Test Tar
+    int64:tw = raw ArchiveWriter.create("test.tar");
+    drop ArchiveWriter.add_file(tw, "hello.txt", "Hello World!");
+    drop ArchiveWriter.add_file(tw, "folder/test.txt", "Some content in a folder");
+    drop ArchiveWriter.close(tw);
+    
+    int64:tr = raw ArchiveReader.open("test.tar");
+    string:tc1 = raw ArchiveReader.read_file(tr, "hello.txt");
+    string:tc2 = raw ArchiveReader.read_file(tr, "folder/test.txt");
+    drop ArchiveReader.close(tr);
+    
+    if (!string_equals(tc1, "Hello World!")) { exit 2i32; }
+    if (!string_equals(tc2, "Some content in a folder")) { exit 3i32; }
+
+    // Test Zip
+    int64:zw = raw ZipWriter.create("test.zip");
+    if (zw == 0i64) { exit 4i32; }
+    drop ZipWriter.add_file(zw, "hello.txt", "Hello Zip World!");
+    drop ZipWriter.add_file(zw, "folder/test.txt", "Some compressed content");
+    drop ZipWriter.close(zw);
+
+    int64:zr = raw ZipReader.open("test.zip");
+    if (zr == 0i64) { exit 5i32; }
+    string:zc1 = raw ZipReader.read_file(zr, "hello.txt");
+    string:zc2 = raw ZipReader.read_file(zr, "folder/test.txt");
+    drop ZipReader.close(zr);
+
+    if (!string_equals(zc1, "Hello Zip World!")) { exit 6i32; }
+    if (!string_equals(zc2, "Some compressed content")) { exit 7i32; }
+
+    exit 0i32;
+};

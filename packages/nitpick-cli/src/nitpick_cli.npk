@@ -30,7 +30,7 @@ extern "libc" { func:string_length = int64(string:s); }
 
 // ── Type wrapper ───────────────────────────────────────────────────────────────
 
-Type:Cli = {
+pub Type:Cli = {
 
     func:red = string(string:text) { pass nitpick_cli_red(text); };
     func:green = string(string:text) { pass nitpick_cli_green(text); };

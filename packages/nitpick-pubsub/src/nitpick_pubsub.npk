@@ -1,0 +1,186 @@
+// nitpick-pubsub - Event Bus
+
+extern "aria_libc_mem" {
+    func:aria_libc_mem_malloc = int64(int64:size);
+    func:aria_libc_mem_calloc = int64(int64:count, int64:size);
+    func:aria_libc_mem_free   = void(int64:ptr);
+    func:aria_libc_mem_read_i64 = int64(int64:ptr, int64:offset);
+    func:aria_libc_mem_write_i64 = void(int64:ptr, int64:offset, int64:val);
+}
+
+extern "nitpick_pubsub" {
+    func:nitpick_pubsub_dispatch = int64(int64:callback_ptr, int64:topic_id, int64:payload);
+}
+
+pub Type:EventBus = {
+    // Handle (56 bytes)
+    // [0] sub_capacity
+    // [8] sub_count
+    // [16] subs_ptr -> [topic_id, callback_ptr] (16 bytes each)
+    // [24] q_capacity
+    // [32] q_read_idx
+    // [40] q_write_idx
+    // [48] q_ptr -> [topic_id, payload] (16 bytes each)
+
+    func:create = int64() {
+        int64:handle = aria_libc_mem_calloc(1i64, 56i64);
+        pass handle;
+    };
+
+    func:resize_subs = int32(int64:handle, int64:new_cap) {
+        int64:old_cap = aria_libc_mem_read_i64(handle, 0i64);
+        if (new_cap <= old_cap) { pass 0i32; }
+        
+        int64:old_ptr = aria_libc_mem_read_i64(handle, 16i64);
+        int64:new_ptr = aria_libc_mem_calloc(new_cap, 16i64);
+        
+        int64:count = aria_libc_mem_read_i64(handle, 8i64);
+        int64:i = 0i64;
+        loop(0i64, count, 1i64) {
+            int64:t = aria_libc_mem_read_i64(old_ptr, i * 16i64);
+            int64:c = aria_libc_mem_read_i64(old_ptr, i * 16i64 + 8i64);
+            aria_libc_mem_write_i64(new_ptr, i * 16i64, t);
+            aria_libc_mem_write_i64(new_ptr, i * 16i64 + 8i64, c);
+            i += 1i64;
+        }
+        
+        if (old_cap > 0i64) {
+            aria_libc_mem_free(old_ptr);
+        }
+        
+        aria_libc_mem_write_i64(handle, 0i64, new_cap);
+        aria_libc_mem_write_i64(handle, 16i64, new_ptr);
+        pass 0i32;
+    };
+
+    func:resize_queue = int32(int64:handle, int64:new_cap) {
+        int64:old_cap = aria_libc_mem_read_i64(handle, 24i64);
+        if (new_cap <= old_cap) { pass 0i32; }
+        
+        int64:old_ptr = aria_libc_mem_read_i64(handle, 48i64);
+        int64:new_ptr = aria_libc_mem_calloc(new_cap, 16i64);
+        
+        int64:read_idx = aria_libc_mem_read_i64(handle, 32i64);
+        int64:write_idx = aria_libc_mem_read_i64(handle, 40i64);
+        
+        int64:j = 0i64;
+        while (read_idx < write_idx) {
+            int64:idx = read_idx;
+            // Handle wrap-around conceptually, but here we just copy directly 
+            // from read_idx % old_cap in a ring buffer if we had one. 
+            // For simplicity, let's just make it a linear queue that gets reset, 
+            // or just copy valid elements to front.
+            // Let's do a compacting copy.
+            
+            int64:t = aria_libc_mem_read_i64(old_ptr, idx * 16i64);
+            int64:p = aria_libc_mem_read_i64(old_ptr, idx * 16i64 + 8i64);
+            
+            aria_libc_mem_write_i64(new_ptr, j * 16i64, t);
+            aria_libc_mem_write_i64(new_ptr, j * 16i64 + 8i64, p);
+            
+            read_idx += 1i64;
+            j += 1i64;
+        }
+        
+        if (old_cap > 0i64) {
+            aria_libc_mem_free(old_ptr);
+        }
+        
+        aria_libc_mem_write_i64(handle, 24i64, new_cap);
+        aria_libc_mem_write_i64(handle, 32i64, 0i64);
+        aria_libc_mem_write_i64(handle, 40i64, j);
+        aria_libc_mem_write_i64(handle, 48i64, new_ptr);
+        pass 0i32;
+    };
+
+    func:subscribe = int32(int64:handle, int64:topic_id, int64:callback_ptr) {
+        int64:count = aria_libc_mem_read_i64(handle, 8i64);
+        int64:cap = aria_libc_mem_read_i64(handle, 0i64);
+        
+        if (count >= cap) {
+            int64:new_cap = cap * 2i64;
+            if (new_cap == 0i64) { new_cap = 16i64; }
+            drop EventBus.resize_subs(handle, new_cap);
+        }
+        
+        int64:ptr = aria_libc_mem_read_i64(handle, 16i64);
+        aria_libc_mem_write_i64(ptr, count * 16i64, topic_id);
+        aria_libc_mem_write_i64(ptr, count * 16i64 + 8i64, callback_ptr);
+        
+        aria_libc_mem_write_i64(handle, 8i64, count + 1i64);
+        pass 0i32;
+    };
+
+    func:publish = int32(int64:handle, int64:topic_id, int64:payload) {
+        int64:count = aria_libc_mem_read_i64(handle, 8i64);
+        int64:ptr = aria_libc_mem_read_i64(handle, 16i64);
+        
+        int32:dispatched = 0i32;
+        int64:i = 0i64;
+        loop(0i64, count, 1i64) {
+            int64:t = aria_libc_mem_read_i64(ptr, i * 16i64);
+            if (t == topic_id) {
+                int64:cb = aria_libc_mem_read_i64(ptr, i * 16i64 + 8i64);
+                drop nitpick_pubsub_dispatch(cb, topic_id, payload);
+                dispatched += 1i32;
+            }
+            i += 1i64;
+        }
+        pass dispatched;
+    };
+
+    func:publish_async = int32(int64:handle, int64:topic_id, int64:payload) {
+        int64:cap = aria_libc_mem_read_i64(handle, 24i64);
+        int64:write_idx = aria_libc_mem_read_i64(handle, 40i64);
+        
+        if (write_idx >= cap) {
+            int64:new_cap = cap * 2i64;
+            if (new_cap == 0i64) { new_cap = 32i64; }
+            drop EventBus.resize_queue(handle, new_cap);
+            // write_idx was updated by resize_queue
+            write_idx = aria_libc_mem_read_i64(handle, 40i64);
+        }
+        
+        int64:ptr = aria_libc_mem_read_i64(handle, 48i64);
+        aria_libc_mem_write_i64(ptr, write_idx * 16i64, topic_id);
+        aria_libc_mem_write_i64(ptr, write_idx * 16i64 + 8i64, payload);
+        
+        aria_libc_mem_write_i64(handle, 40i64, write_idx + 1i64);
+        pass 0i32;
+    };
+
+    func:tick = int32(int64:handle) {
+        int64:read_idx = aria_libc_mem_read_i64(handle, 32i64);
+        int64:write_idx = aria_libc_mem_read_i64(handle, 40i64);
+        int64:ptr = aria_libc_mem_read_i64(handle, 48i64);
+        
+        int32:total_dispatched = 0i32;
+        
+        while (read_idx < write_idx) {
+            int64:topic_id = aria_libc_mem_read_i64(ptr, read_idx * 16i64);
+            int64:payload = aria_libc_mem_read_i64(ptr, read_idx * 16i64 + 8i64);
+            
+            total_dispatched += raw EventBus.publish(handle, topic_id, payload);
+            read_idx += 1i64;
+        }
+        
+        // Reset queue to front to save space
+        aria_libc_mem_write_i64(handle, 32i64, 0i64);
+        aria_libc_mem_write_i64(handle, 40i64, 0i64);
+        
+        pass total_dispatched;
+    };
+
+    func:destroy = int32(int64:handle) {
+        int64:sub_cap = aria_libc_mem_read_i64(handle, 0i64);
+        if (sub_cap > 0i64) {
+            aria_libc_mem_free(aria_libc_mem_read_i64(handle, 16i64));
+        }
+        int64:q_cap = aria_libc_mem_read_i64(handle, 24i64);
+        if (q_cap > 0i64) {
+            aria_libc_mem_free(aria_libc_mem_read_i64(handle, 48i64));
+        }
+        aria_libc_mem_free(handle);
+        pass 0i32;
+    };
+};

@@ -1,0 +1,5 @@
+[package]
+name = "nitpick-doom"
+version = "0.1.0"
+description = "A Raylib-based 3D raycasting Doom-style demo"
+author = "Nitpick Authors"

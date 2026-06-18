@@ -1,0 +1,123 @@
+use "nitpick_server.npk".*;
+use "nitpick_router.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+
+int64:g_server_fd = -1i64;
+int64:g_client_fd = -1i64;
+string:g_static_prefix = "\0";
+string:g_static_dir = "\0";
+
+pub Type:Express = {
+    // Initialization
+    func:listen = int64(int64:port) {
+        g_server_fd = raw Server.bind_and_listen("0.0.0.0\0", port, 128i64);
+        pass g_server_fd;
+    };
+
+    // Route setup
+    func:get = int64(string:pattern, int64:handler_id) { pass raw Router.on_get(pattern, handler_id); };
+    func:post = int64(string:pattern, int64:handler_id) { pass raw Router.on_post(pattern, handler_id); };
+    func:put = int64(string:pattern, int64:handler_id) { pass raw Router.on_put(pattern, handler_id); };
+    func:del = int64(string:pattern, int64:handler_id) { pass raw Router.on_del(pattern, handler_id); };
+
+    // Static Setup
+    func:serve_static = NIL(string:prefix, string:dir) {
+        g_static_prefix = prefix;
+        g_static_dir = dir;
+        pass NIL;
+    };
+
+    // Main Polling Accept
+    func:accept = int64() {
+        if (g_client_fd >= 0i64) {
+            raw Server.close_cli(g_client_fd);
+            g_client_fd = -1i64;
+        }
+
+        g_client_fd = raw Server.accept_client(g_server_fd);
+        if (g_client_fd < 0i64) {
+            pass -1i64; // accept failed
+        }
+
+        int64:read_res = raw Server.read_req(g_client_fd);
+        if (read_res != 1i64) {
+            raw Server.close_cli(g_client_fd);
+            g_client_fd = -1i64;
+            pass -1i64;
+        }
+
+        string:path = raw Server.uri_path();
+        string:method = raw Server.method();
+        
+        // Debug
+        // We'll just assume they exist. Wait, no, we need an extern for printf here.
+        // Actually, we can just return method or path and debug inside test.
+        // Let's not do that. Let's just do static string_length checks.
+        
+        // Check static routing
+        if (string_length(g_static_prefix) > 0i64) {
+            if (string_starts_with(path, g_static_prefix)) {
+                string:rest = string_substring(path, string_length(g_static_prefix), string_length(path));
+                string:file_path = string_concat(g_static_dir, "/");
+                file_path = string_concat(file_path, rest);
+                file_path = string_concat(file_path, "\0"); // Null terminate for C
+                
+                if (raw fs_exists(file_path) == 1i32) {
+                    string:content = raw fs_read_file(file_path);
+                    string:ct = "text/plain\0";
+                    if (string_ends_with(file_path, ".html\0")) { ct = "text/html\0"; }
+                    if (string_ends_with(file_path, ".css\0")) { ct = "text/css\0"; }
+                    if (string_ends_with(file_path, ".js\0")) { ct = "application/javascript\0"; }
+                    if (string_ends_with(file_path, ".json\0")) { ct = "application/json\0"; }
+                    
+                    raw Server.send_typed(g_client_fd, 200i64, ct, content);
+                    raw Server.close_cli(g_client_fd);
+                    g_client_fd = -1i64;
+                    pass -2i64; // -2 = Handled static file
+                }
+            }
+        }
+
+        // Router match
+        int64:match = raw Router.dispatch(method, path);
+        if (match >= 0i64) {
+            pass match; // Found a route
+        }
+
+        pass -404i64; // -404 = Not found
+    };
+
+    // Request Accessors
+    func:param = string(string:name) { pass raw Router.param(name); };
+    func:body = string() { pass raw Server.body(); };
+
+    // Response Helpers
+    func:send_text = NIL(int64:code, string:text) {
+        raw Server.send_text(g_client_fd, code, text);
+        raw Server.close_cli(g_client_fd);
+        g_client_fd = -1i64;
+        pass NIL;
+    };
+
+    func:send_html = NIL(int64:code, string:html) {
+        raw Server.send_typed(g_client_fd, code, "text/html\0", html);
+        raw Server.close_cli(g_client_fd);
+        g_client_fd = -1i64;
+        pass NIL;
+    };
+
+    func:send_json = NIL(int64:code, string:json) {
+        raw Server.send_typed(g_client_fd, code, "application/json\0", json);
+        raw Server.close_cli(g_client_fd);
+        g_client_fd = -1i64;
+        pass NIL;
+    };
+    
+    func:send_404 = NIL() {
+        raw Server.send_text(g_client_fd, 404i64, "404 Not Found\0");
+        raw Server.close_cli(g_client_fd);
+        g_client_fd = -1i64;
+        pass NIL;
+    };
+};

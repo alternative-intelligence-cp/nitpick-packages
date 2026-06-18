@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-mime"
+version = "0.11.2"
+
+[target.nitpick-mime]
+type = "library"
+sources = ["src/nitpick_mime.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_string"]
+
+[target.test-nitpick-mime]
+type = "binary"
+sources = ["tests/test_nitpick_mime.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_string"]

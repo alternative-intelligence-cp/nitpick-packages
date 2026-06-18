@@ -1,0 +1,39 @@
+[project]
+name = "nitpick-raylib"
+version = "0.2.0"
+
+[target.nitpick-raylib]
+type = "library"
+sources = ["src/nitpick_raylib.npk"]
+deps = []
+flags = ["-Lshim", "-lnitpick_raylib_shim", "-lraylib", "-lm", "-lpthread", "-ldl", "-lrt", "-lX11"]
+
+[target.test-nitpick-raylib]
+type = "binary"
+sources = ["tests/test_nitpick_raylib.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim", "-lnitpick_raylib_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_mem", "-lraylib", "-lm", "-lpthread", "-ldl", "-lrt", "-lX11"]
+
+[target.test-gui]
+type = "binary"
+sources = ["tests/test_gui.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim", "-lnitpick_raylib_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_mem", "-lraylib", "-lm", "-lpthread", "-ldl", "-lrt", "-lX11"]
+
+[target.test-raylib-3d]
+type = "binary"
+sources = ["tests/test_raylib_3d.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim", "-lnitpick_raylib_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_mem", "-lraylib", "-lm", "-lpthread", "-ldl", "-lrt", "-lX11"]
+
+[target.test-raylib-camera]
+type = "binary"
+sources = ["tests/test_raylib_managed_camera.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim", "-lnitpick_raylib_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_mem", "-lraylib", "-lm", "-lpthread", "-ldl", "-lrt", "-lX11"]
+
+[target.test-texture-audio]
+type = "binary"
+sources = ["tests/test_texture_audio.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim", "-lnitpick_raylib_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io", "-lnitpick_libc_mem", "-lraylib", "-lm", "-lpthread", "-ldl", "-lrt", "-lX11"]

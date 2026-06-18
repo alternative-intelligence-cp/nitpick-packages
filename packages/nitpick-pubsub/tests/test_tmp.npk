@@ -1,0 +1,14 @@
+pub func:failsafe = int32(tbb32:err) { drop err; exit 1i32; };\n
+extern "libc" {
+    func:printf = int32(string:fmt, int64:v1);
+}
+
+func:my_cb = int64(int64:a) {
+    pass a;
+};
+
+pub func:main = int32() {
+    int64:ptr = @cast_unchecked<int64>(my_cb);
+    drop printf("ptr=%ld\n\0", ptr);
+    exit 0i32;
+}

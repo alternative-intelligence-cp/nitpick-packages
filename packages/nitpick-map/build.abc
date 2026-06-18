@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-map"
+version = "0.11.1"
+
+[target.nitpick-map]
+type = "library"
+sources = ["src/nitpick_map.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_string"]
+
+[target.test-nitpick-map]
+type = "binary"
+sources = ["tests/test_nitpick_map.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_string"]

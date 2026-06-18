@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "test-nitpick-perlin": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-perlin",
+      "source_hash": "fnv1a:8803540562661773512",
+      "command_hash": 9841484159130776778,
+      "source_timestamp": 18446744069053403537,
+      "build_timestamp": 1781515956,
+      "build_duration_ms": 162,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "nitpick-perlin": {
+      "artifact_path": ".nitpick_make/build/libnitpick-perlin.a",
+      "source_hash": "fnv1a:13000962565232302748",
+      "command_hash": 14695981039346656037,
+      "source_timestamp": 18446744069053392602,
+      "build_timestamp": 1781515955,
+      "build_duration_ms": 79,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

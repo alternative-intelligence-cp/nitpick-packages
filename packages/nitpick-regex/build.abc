@@ -1,0 +1,21 @@
+[project]
+name = "nitpick-regex"
+version = "0.2.2"
+
+[target.nitpick-regex]
+type = "library"
+sources = ["src/nitpick_regex.npk"]
+deps = []
+flags = ["-Lshim", "-lnitpick_regex_shim"]
+
+[target.test-nitpick-regex]
+type = "binary"
+sources = ["tests/test_nitpick_regex.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim", "-lnitpick_regex_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io"]
+
+[target.test-nitpick-regex-groups]
+type = "binary"
+sources = ["tests/test_nitpick_regex_groups.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim", "-lnitpick_regex_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_io"]

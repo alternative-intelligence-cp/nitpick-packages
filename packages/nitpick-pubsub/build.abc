@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-pubsub"
+version = "0.1.0"
+
+[target.nitpick-pubsub]
+type = "library"
+sources = ["src/nitpick_pubsub.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_string"]
+
+[target.test-nitpick-pubsub]
+type = "binary"
+sources = ["tests/test_nitpick_pubsub.npk"]
+deps = ["nitpick-pubsub"]
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_string"]

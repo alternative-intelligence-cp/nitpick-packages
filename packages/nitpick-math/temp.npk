@@ -1,0 +1,4 @@
+func:main = int32() {
+    float64:v = sin(0.0);
+    pass(0i32);
+};

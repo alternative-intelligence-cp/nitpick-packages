@@ -1,0 +1,12 @@
+pub func:failsafe = int32(tbb32:err) { drop err; exit 1i32; };\n
+use "../../nitpick-str/src/nitpick_str.npk".*;
+
+extern "libc" {
+    func:printf = int32(string:fmt, int64:v1);
+}
+
+pub func:main = int32() {
+    int64:tc = raw Str.token_count("5", ",");
+    drop printf("tc=%ld\n\0", tc);
+    exit 0i32;
+};

@@ -1,0 +1,237 @@
+[1/1] Building nitpick-fm...
+
+Build failed: 1 targets failed
+  Error: Failed to build nitpick-fm: [DEBUG checkCallExpr] cn='opendir' effective_cn='opendir' lookup_key='opendir'
+[DEBUG] FOUND summary for 'opendir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='raw' effective_cn='get_null' lookup_key='get_null'
+[DEBUG] FOUND summary for 'get_null': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='get_null' effective_cn='get_null' lookup_key='get_null'
+[DEBUG] FOUND summary for 'get_null': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='raw' effective_cn='get_null' lookup_key='get_null'
+[DEBUG] FOUND summary for 'get_null': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='get_null' effective_cn='get_null' lookup_key='get_null'
+[DEBUG] FOUND summary for 'get_null': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='closedir' lookup_key='closedir'
+[DEBUG] FOUND summary for 'closedir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='closedir' effective_cn='closedir' lookup_key='closedir'
+[DEBUG] FOUND summary for 'closedir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='write' lookup_key='write'
+[DEBUG] FOUND summary for 'write': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='write' effective_cn='write' lookup_key='write'
+[DEBUG] FOUND summary for 'write': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='free' effective_cn='free' lookup_key='free'
+[DEBUG] FOUND summary for 'free': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='clear_screen' lookup_key='clear_screen'
+[DEBUG] FOUND summary for 'clear_screen': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='clear_screen' effective_cn='clear_screen' lookup_key='clear_screen'
+[DEBUG] FOUND summary for 'clear_screen': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='printf' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='print_color' lookup_key='print_color'
+[DEBUG] FOUND summary for 'print_color': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='print_color' effective_cn='print_color' lookup_key='print_color'
+[DEBUG] FOUND summary for 'print_color': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='print_color' lookup_key='print_color'
+[DEBUG] FOUND summary for 'print_color': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='print_color' effective_cn='print_color' lookup_key='print_color'
+[DEBUG] FOUND summary for 'print_color': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='printf' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='print_color' lookup_key='print_color'
+[DEBUG] FOUND summary for 'print_color': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='print_color' effective_cn='print_color' lookup_key='print_color'
+[DEBUG] FOUND summary for 'print_color': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='printf' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='print_name' lookup_key='print_name'
+[DEBUG] FOUND summary for 'print_name': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='print_name' effective_cn='print_name' lookup_key='print_name'
+[DEBUG] FOUND summary for 'print_name': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='print_color' lookup_key='print_color'
+[DEBUG] FOUND summary for 'print_color': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='print_color' effective_cn='print_color' lookup_key='print_color'
+[DEBUG] FOUND summary for 'print_color': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='printf' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='init_dir_buffers' lookup_key='init_dir_buffers'
+[DEBUG] FOUND summary for 'init_dir_buffers': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='init_dir_buffers' effective_cn='init_dir_buffers' lookup_key='init_dir_buffers'
+[DEBUG] FOUND summary for 'init_dir_buffers': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='load_dir' lookup_key='load_dir'
+[DEBUG] FOUND summary for 'load_dir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='load_dir' effective_cn='load_dir' lookup_key='load_dir'
+[DEBUG] FOUND summary for 'load_dir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='set_raw_mode' lookup_key='set_raw_mode'
+[DEBUG] FOUND summary for 'set_raw_mode': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='set_raw_mode' effective_cn='set_raw_mode' lookup_key='set_raw_mode'
+[DEBUG] FOUND summary for 'set_raw_mode': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='draw_ui' lookup_key='draw_ui'
+[DEBUG] FOUND summary for 'draw_ui': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='draw_ui' effective_cn='draw_ui' lookup_key='draw_ui'
+[DEBUG] FOUND summary for 'draw_ui': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='read' effective_cn='read' lookup_key='read'
+[DEBUG] FOUND summary for 'read': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='read' lookup_key='read'
+[DEBUG] FOUND summary for 'read': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='read' effective_cn='read' lookup_key='read'
+[DEBUG] FOUND summary for 'read': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='read' lookup_key='read'
+[DEBUG] FOUND summary for 'read': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='read' effective_cn='read' lookup_key='read'
+[DEBUG] FOUND summary for 'read': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='chdir' lookup_key='chdir'
+[DEBUG] FOUND summary for 'chdir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='chdir' effective_cn='chdir' lookup_key='chdir'
+[DEBUG] FOUND summary for 'chdir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='free' effective_cn='free' lookup_key='free'
+[DEBUG] FOUND summary for 'free': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='load_dir' lookup_key='load_dir'
+[DEBUG] FOUND summary for 'load_dir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='load_dir' effective_cn='load_dir' lookup_key='load_dir'
+[DEBUG] FOUND summary for 'load_dir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='set_sane_mode' lookup_key='set_sane_mode'
+[DEBUG] FOUND summary for 'set_sane_mode': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='set_sane_mode' effective_cn='set_sane_mode' lookup_key='set_sane_mode'
+[DEBUG] FOUND summary for 'set_sane_mode': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='clear_screen' lookup_key='clear_screen'
+[DEBUG] FOUND summary for 'clear_screen': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='clear_screen' effective_cn='clear_screen' lookup_key='clear_screen'
+[DEBUG] FOUND summary for 'clear_screen': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='system' lookup_key='system'
+[DEBUG] FOUND summary for 'system': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='system' effective_cn='system' lookup_key='system'
+[DEBUG] FOUND summary for 'system': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='free' effective_cn='free' lookup_key='free'
+[DEBUG] FOUND summary for 'free': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='set_raw_mode' lookup_key='set_raw_mode'
+[DEBUG] FOUND summary for 'set_raw_mode': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='set_raw_mode' effective_cn='set_raw_mode' lookup_key='set_raw_mode'
+[DEBUG] FOUND summary for 'set_raw_mode': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='load_dir' lookup_key='load_dir'
+[DEBUG] FOUND summary for 'load_dir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='load_dir' effective_cn='load_dir' lookup_key='load_dir'
+[DEBUG] FOUND summary for 'load_dir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='chdir' lookup_key='chdir'
+[DEBUG] FOUND summary for 'chdir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='chdir' effective_cn='chdir' lookup_key='chdir'
+[DEBUG] FOUND summary for 'chdir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='free' effective_cn='free' lookup_key='free'
+[DEBUG] FOUND summary for 'free': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='load_dir' lookup_key='load_dir'
+[DEBUG] FOUND summary for 'load_dir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='load_dir' effective_cn='load_dir' lookup_key='load_dir'
+[DEBUG] FOUND summary for 'load_dir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='set_sane_mode' lookup_key='set_sane_mode'
+[DEBUG] FOUND summary for 'set_sane_mode': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='set_sane_mode' effective_cn='set_sane_mode' lookup_key='set_sane_mode'
+[DEBUG] FOUND summary for 'set_sane_mode': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='clear_screen' lookup_key='clear_screen'
+[DEBUG] FOUND summary for 'clear_screen': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='clear_screen' effective_cn='clear_screen' lookup_key='clear_screen'
+[DEBUG] FOUND summary for 'clear_screen': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='system' lookup_key='system'
+[DEBUG] FOUND summary for 'system': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='system' effective_cn='system' lookup_key='system'
+[DEBUG] FOUND summary for 'system': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='free' effective_cn='free' lookup_key='free'
+[DEBUG] FOUND summary for 'free': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='set_raw_mode' lookup_key='set_raw_mode'
+[DEBUG] FOUND summary for 'set_raw_mode': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='set_raw_mode' effective_cn='set_raw_mode' lookup_key='set_raw_mode'
+[DEBUG] FOUND summary for 'set_raw_mode': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='load_dir' lookup_key='load_dir'
+[DEBUG] FOUND summary for 'load_dir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='load_dir' effective_cn='load_dir' lookup_key='load_dir'
+[DEBUG] FOUND summary for 'load_dir': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='set_sane_mode' lookup_key='set_sane_mode'
+[DEBUG] FOUND summary for 'set_sane_mode': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='set_sane_mode' effective_cn='set_sane_mode' lookup_key='set_sane_mode'
+[DEBUG] FOUND summary for 'set_sane_mode': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='free' effective_cn='free' lookup_key='free'
+[DEBUG] FOUND summary for 'free': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='free' effective_cn='free' lookup_key='free'
+[DEBUG] FOUND summary for 'free': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='exit' effective_cn='exit' lookup_key='exit'
+[DEBUG] NO summary for 'exit'. Available keys:
+[DEBUG]   key='print_name' destroys=0
+[DEBUG]   key='fflush' destroys=0
+[DEBUG]   key='set_sane_mode' destroys=0
+[DEBUG]   key='main' destroys=0
+[DEBUG]   key='set_raw_mode' destroys=0
+[DEBUG]   key='clear_screen' destroys=0
+[DEBUG]   key='strlen' destroys=0
+[DEBUG]   key='readdir' destroys=0
+[DEBUG]   key='opendir' destroys=0
+[DEBUG]   key='get_null' destroys=0
+[DEBUG]   key='malloc' destroys=0
+[DEBUG]   key='chdir' destroys=0
+[DEBUG]   key='draw_ui' destroys=0
+[DEBUG]   key='print_color' destroys=0
+[DEBUG]   key='init_dir_buffers' destroys=0
+[DEBUG]   key='write' destroys=0
+[DEBUG]   key='getenv' destroys=0
+[DEBUG]   key='load_dir' destroys=0
+[DEBUG]   key='read' destroys=0
+[DEBUG]   key='print_str' destroys=0
+[DEBUG]   key='closedir' destroys=0
+[DEBUG]   key='system' destroys=0
+[DEBUG]   key='free' destroys=0
+[DEBUG]   key='printf' destroys=0
+[DEBUG checkCallExpr] cn='raw' effective_cn='strlen' lookup_key='strlen'
+[DEBUG] FOUND summary for 'strlen': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='strlen' effective_cn='strlen' lookup_key='strlen'
+[DEBUG] FOUND summary for 'strlen': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='write' lookup_key='write'
+[DEBUG] FOUND summary for 'write': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='write' effective_cn='write' lookup_key='write'
+[DEBUG] FOUND summary for 'write': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='printf' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='system' lookup_key='system'
+[DEBUG] FOUND summary for 'system': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='system' effective_cn='system' lookup_key='system'
+[DEBUG] FOUND summary for 'system': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='free' effective_cn='free' lookup_key='free'
+[DEBUG] FOUND summary for 'free': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='system' lookup_key='system'
+[DEBUG] FOUND summary for 'system': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='system' effective_cn='system' lookup_key='system'
+[DEBUG] FOUND summary for 'system': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='free' effective_cn='free' lookup_key='free'
+[DEBUG] FOUND summary for 'free': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='printf' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='printf' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='printf' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='printf' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='drop' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+[DEBUG checkCallExpr] cn='printf' effective_cn='printf' lookup_key='printf'
+[DEBUG] FOUND summary for 'printf': destroys=0, trans_destroys=0, attr_destroys=0
+
+Linker error: /usr/bin/ld: .nitpick_make/build/obj/nitpick-fm/main.o:(.bss+0x10): multiple definition of `g_dir_count'; .nitpick_make/build/obj/nitpick-fm/dir.o:(.bss+0x10): first defined here
+/usr/bin/ld: .nitpick_make/build/obj/nitpick-fm/main.o:(.bss+0x0): multiple definition of `g_dir_types'; .nitpick_make/build/obj/nitpick-fm/dir.o:(.bss+0x0): first defined here
+/usr/bin/ld: .nitpick_make/build/obj/nitpick-fm/main.o:(.bss+0x8): multiple definition of `g_dir_names'; .nitpick_make/build/obj/nitpick-fm/dir.o:(.bss+0x8): first defined here
+clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+

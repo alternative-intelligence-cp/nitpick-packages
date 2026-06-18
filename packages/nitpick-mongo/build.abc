@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-mongo"
+version = "0.1.0"
+
+[target.nitpick-mongo]
+type = "library"
+sources = ["src/nitpick_mongo.npk"]
+deps = []
+flags = ["-Lshim", "-lnitpick_mongo_shim", "-lmongoc-1.0", "-lbson-1.0", "-lrt"]
+
+[target.test-nitpick-mongo]
+type = "binary"
+sources = ["tests/test_nitpick_mongo.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim", "-lnitpick_mongo_shim", "-lmongoc-1.0", "-lbson-1.0", "-lrt"]

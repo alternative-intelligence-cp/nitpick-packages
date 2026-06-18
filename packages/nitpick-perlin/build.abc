@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-perlin"
+version = "0.1.0"
+
+[target.nitpick-perlin]
+type = "library"
+sources = ["src/nitpick_perlin.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-perlin]
+type = "binary"
+sources = ["tests/test_nitpick_perlin.npk"]
+deps = []
+flags = ["-I", "src", "-L.nitpick_make/build", "-Lshim", "-lnitpick-perlin", "-lnitpick_perlin_shim", "-lm", "-L../../../nitpick-libc/shim", "-lnitpick_libc_string", "-lnitpick_libc_io"]

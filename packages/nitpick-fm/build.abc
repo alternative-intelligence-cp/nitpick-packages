@@ -1,0 +1,9 @@
+[project]
+name = "nitpick-fm"
+version = "0.1.0"
+
+[target.nitpick-fm]
+type = "binary"
+sources = ["src/main.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math"]

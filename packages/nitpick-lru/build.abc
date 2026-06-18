@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-lru"
+version = "0.12.3"
+
+[target.nitpick-lru]
+type = "library"
+sources = ["src/nitpick_lru.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-lru]
+type = "binary"
+sources = ["tests/test_nitpick_lru.npk"]
+deps = []
+flags = ["-I", "src"]

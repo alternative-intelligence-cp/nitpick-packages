@@ -1,0 +1,62 @@
+// nitpick-i18n - Internationalization
+
+use "../../nitpick-str/src/nitpick_str.npk".*;
+
+extern "nitpick_i18n" {
+    func:nitpick_i18n_create = int64();
+    func:nitpick_i18n_add = void(int64:handle, string:k, string:v);
+    func:nitpick_i18n_get = string(int64:handle, string:k);
+    func:nitpick_i18n_load_dict = void(int64:handle, string:dict);
+    func:nitpick_i18n_destroy = void(int64:handle);
+}
+
+pub Type:Catalog = {
+    func:create = int64() {
+        pass nitpick_i18n_create();
+    };
+    
+    func:add_translation = int32(int64:handle, string:key, string:val) {
+        nitpick_i18n_add(handle, key, val);
+        pass 0i32;
+    };
+    
+    func:load_dict = int32(int64:handle, string:dict_str) {
+        nitpick_i18n_load_dict(handle, dict_str);
+        pass 0i32;
+    };
+    
+    func:translate = string(int64:handle, string:key) {
+        pass nitpick_i18n_get(handle, key);
+    };
+    
+    func:translate_interp = string(int64:handle, string:key, string:var_name, string:var_val) {
+        string:t = nitpick_i18n_get(handle, key);
+        string:k = string_concat(string_concat("{", var_name), "}");
+        pass raw Str.replace(t, k, var_val);
+    };
+
+    func:translate_plural = string(int64:handle, string:base_key, int64:count) {
+        string:suffix = "_other";
+        if (count == 1i64) {
+            suffix = "_one";
+        } else {
+            if (count == 0i64) {
+                // Optional _zero
+                string:kz = string_concat(base_key, "_zero");
+                string:tz = nitpick_i18n_get(handle, kz);
+                if (string_length(tz) > 0i64) {
+                    pass raw Str.replace(tz, "{count}", string_from_int(count));
+                }
+            }
+        }
+        
+        string:k = string_concat(base_key, suffix);
+        string:t = nitpick_i18n_get(handle, k);
+        pass raw Str.replace(t, "{count}", string_from_int(count));
+    };
+
+    func:destroy = int32(int64:handle) {
+        nitpick_i18n_destroy(handle);
+        pass 0i32;
+    };
+};

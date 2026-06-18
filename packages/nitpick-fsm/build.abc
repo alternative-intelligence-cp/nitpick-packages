@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-fsm"
+version = "0.1.0"
+
+[target.nitpick-fsm]
+type = "library"
+sources = ["src/nitpick_fsm.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_string"]
+
+[target.test-nitpick-fsm]
+type = "binary"
+sources = ["tests/test_nitpick_fsm.npk"]
+deps = ["nitpick-fsm"]
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_string"]

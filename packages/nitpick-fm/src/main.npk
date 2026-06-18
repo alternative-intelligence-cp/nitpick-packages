@@ -1,0 +1,175 @@
+// main.npk
+use "ui.npk".*;
+use "dir.npk".*;
+
+extern func:read = int64(int32:fd, any*:buf, int64:count);
+extern func:fflush = int32(any*:strm);
+
+pub func:print_name = int32(int32:idx) {
+    int8->:names = g_dir_names;
+    int64:offset = (idx => int64) * 256i64;
+    int64:j = 0i64;
+    while (names[offset + j] != 0i8) {
+        // print char
+        int8->:b = malloc(2i64) => int8->;
+        b[0i64] = names[offset + j];
+        b[1i64] = 0i8;
+        drop(write(1i32, b => any->, 1i64));
+        free(b => any->);
+        j = j + 1i64;
+    }
+    pass(0i32);
+};
+
+pub func:draw_ui = int32(int32:selected) {
+    drop(clear_screen());
+    drop(printf("=== Nitpick File Manager ===\n\n"));
+    
+    int8->:types = g_dir_types;
+    int32:i = 0i32;
+    while (i < g_dir_count) {
+        if (i == selected) {
+            drop(print_color(4i32)); // invert
+        }
+        
+        int8:dtype = types[i => int64];
+        if (dtype == 4i8) {
+            drop(print_color(1i32)); // cyan for dir
+            drop(printf("[DIR]  "));
+        } else {
+            drop(print_color(3i32)); // white
+            drop(printf("       "));
+        }
+        
+        drop(print_name(i));
+        
+        drop(print_color(0i32)); // reset
+        drop(printf("\n"));
+        i = i + 1i32;
+    }
+    pass(0i32);
+};
+
+func:main = int32() {
+    drop(init_dir_buffers());
+    
+    int8->:dot = malloc(2i64) => int8->;
+    dot[0i64] = 46i8; dot[1i64] = 0i8;
+    
+    drop(load_dir(dot));
+    drop(set_raw_mode());
+    
+    int32:selected = 0i32;
+    int32:running = 1i32;
+    int8->:c = malloc(1i64) => int8->;
+    
+    while (running == 1i32) {
+        drop(draw_ui(selected));
+        
+        int64:r = read(0i32, c => any->, 1i64);
+        if (r > 0i64) {
+            if (c[0i64] == 113i8) { // 'q'
+                running = 0i32;
+            } else {
+                if (c[0i64] == 27i8) { // ESC sequence for arrows
+                    drop(read(0i32, c => any->, 1i64)); // '['
+                    drop(read(0i32, c => any->, 1i64)); // 'A' or 'B'
+                    if (c[0i64] == 65i8) { // Up
+                        if (selected > 0i32) { selected = selected - 1i32; }
+                    } else {
+                        if (c[0i64] == 66i8) { // Down
+                            if (selected < g_dir_count - 1i32) { selected = selected + 1i32; }
+                        }
+                    }
+                } else {
+                    if (c[0i64] == 10i8) { // Enter (\n)
+                        int8:dtype = g_dir_types[selected => int64];
+                        if (dtype == 4i8) {
+                            // chdir and reload
+                            int8->:names = g_dir_names;
+                            int64:offset = (selected => int64) * 256i64;
+                            int8->:p = malloc(256i64) => int8->;
+                            int64:j = 0i64;
+                            while (names[offset + j] != 0i8) {
+                                p[j] = names[offset + j];
+                                j = j + 1i64;
+                            }
+                            p[j] = 0i8;
+                            drop(chdir(p => any->));
+                            free(p => any->);
+                            drop(load_dir(dot));
+                            selected = 0i32;
+                        } else {
+                            if (dtype == 8i8) {
+                                // Launch nitty
+                                drop(set_sane_mode());
+                                drop(clear_screen());
+                                
+                                int8->:cmd = malloc(256i64) => int8->;
+                                cmd[0i64] = 110i8; cmd[1i64] = 101i8; cmd[2i64] = 100i8; cmd[3i64] = 105i8; cmd[4i64] = 116i8; cmd[5i64] = 111i8; cmd[6i64] = 114i8; cmd[7i64] = 32i8;
+                                
+                                int8->:names = g_dir_names;
+                                int64:offset = (selected => int64) * 256i64;
+                                int64:j = 0i64;
+                                while (names[offset + j] != 0i8) {
+                                    cmd[8i64 + j] = names[offset + j];
+                                    j = j + 1i64;
+                                }
+                                cmd[8i64 + j] = 0i8;
+                                
+                                drop(system(cmd => any->));
+                                free(cmd => any->);
+                                
+                                drop(set_raw_mode());
+                                drop(load_dir(dot));
+                            }
+                        }
+                    } else {
+                        if (c[0i64] == 13i8) { // Enter (\r)
+                            int8:dtype = g_dir_types[selected => int64];
+                            if (dtype == 4i8) {
+                                int8->:names = g_dir_names;
+                                int64:offset = (selected => int64) * 256i64;
+                                int8->:p = malloc(256i64) => int8->;
+                                int64:j = 0i64;
+                                while (names[offset + j] != 0i8) {
+                                    p[j] = names[offset + j];
+                                    j = j + 1i64;
+                                }
+                                p[j] = 0i8;
+                                drop(chdir(p => any->));
+                                free(p => any->);
+                                drop(load_dir(dot));
+                                selected = 0i32;
+                            } else {
+                                if (dtype == 8i8) {
+                                    drop(set_sane_mode());
+                                    drop(clear_screen());
+                                    int8->:cmd = malloc(256i64) => int8->;
+                                    cmd[0i64] = 110i8; cmd[1i64] = 101i8; cmd[2i64] = 100i8; cmd[3i64] = 105i8; cmd[4i64] = 116i8; cmd[5i64] = 111i8; cmd[6i64] = 114i8; cmd[7i64] = 32i8;
+                                    int8->:names = g_dir_names;
+                                    int64:offset = (selected => int64) * 256i64;
+                                    int64:j = 0i64;
+                                    while (names[offset + j] != 0i8) {
+                                        cmd[8i64 + j] = names[offset + j];
+                                        j = j + 1i64;
+                                    }
+                                    cmd[8i64 + j] = 0i8;
+                                    drop(system(cmd => any->));
+                                    free(cmd => any->);
+                                    drop(set_raw_mode());
+                                    drop(load_dir(dot));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    drop(set_sane_mode());
+    free(c => any->);
+    free(dot => any->);
+    exit(0i32);
+};

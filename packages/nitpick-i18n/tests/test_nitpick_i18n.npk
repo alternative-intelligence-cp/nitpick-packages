@@ -1,0 +1,26 @@
+use "../src/nitpick_i18n.npk".*;
+
+pub func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    int64:cat = raw Catalog.create();
+    
+    drop Catalog.add_translation(cat, "apples_one", "I have one apple.");
+    drop Catalog.add_translation(cat, "apples_other", "I have {count} apples.");
+    drop Catalog.add_translation(cat, "apples_zero", "I have no apples.");
+    
+    string:t1 = raw Catalog.translate_plural(cat, "apples", 1i64);
+    if (!string_equals(t1, "I have one apple.")) { exit 2i32; }
+    
+    string:t2 = raw Catalog.translate_plural(cat, "apples", 3i64);
+    if (!string_equals(t2, "I have 3 apples.")) { exit 3i32; }
+    
+    string:t0 = raw Catalog.translate_plural(cat, "apples", 0i64);
+    if (!string_equals(t0, "I have no apples.")) { exit 4i32; }
+    
+    drop Catalog.destroy(cat);
+    exit 0i32;
+};

@@ -1,0 +1,85 @@
+extern "libc" {
+    func:printf = int32(string:fmt);
+    func:system = int32(string:cmd);
+}
+
+use "nitpick_express.npk".*;
+
+func:main = int32() {
+    // 1. Create a dummy static directory
+    drop(system("mkdir -p public\0"));
+    drop(system("echo 'hello static' > public/test.txt\0"));
+    
+    // 2. Setup server
+    int64:srv = raw Express.listen(9001i64);
+    if (srv < 0i64) {
+        drop(printf("Failed to bind server\n\0"));
+        exit 1i32;
+    }
+    drop(printf("Server listening on 9001\n\0"));
+    
+    // 3. Define routes (Router currently hardcodes these)
+    raw Express.serve_static("/static/", "public");
+    raw Express.get("/users/42\0", 10i64);
+    raw Express.post("/submit\0", 2i64);
+    
+    // 4. Fire CURL requests in background
+    drop(system("curl -s http://127.0.0.1:9001/users/42 > out1.txt &\0"));
+    drop(system("curl -s -X POST http://127.0.0.1:9001/submit > out2.txt &\0"));
+    drop(system("curl -s http://127.0.0.1:9001/static/test.txt > out3.txt &\0"));
+    drop(system("curl -s http://127.0.0.1:9001/not-found > out4.txt &\0"));
+    
+    int32:reqs_handled = 0i32;
+    till(4096, 1) {
+        if (reqs_handled >= 4i32) {
+            // Stop after 4 requests
+        } else {
+            int64:route_id = raw Express.accept();
+            
+            // Debug print
+            drop(printf("Route ID: "));
+            if (route_id == 1i64) { drop(printf("1\n\0")); }
+            if (route_id == 2i64) { drop(printf("2\n\0")); }
+            if (route_id == -2i64) { drop(printf("-2\n\0")); }
+            if (route_id == -404i64) { drop(printf("-404\n\0")); }
+            
+            if (route_id == 10i64) {
+                string:id = raw Express.param("id\0");
+                string:resp = string_concat("User: ", id);
+                resp = string_concat(resp, "\n\0");
+                raw Express.send_text(200i64, resp);
+                reqs_handled = reqs_handled + 1i32;
+            } else {
+                if (route_id == 2i64) {
+                    raw Express.send_json(200i64, "{\"status\": \"ok\"}\0");
+                    reqs_handled = reqs_handled + 1i32;
+                } else {
+                    if (route_id == -2i64) {
+                        // Static handled
+                        reqs_handled = reqs_handled + 1i32;
+                    } else {
+                        if (route_id == -404i64) {
+                            raw Express.send_404();
+                            reqs_handled = reqs_handled + 1i32;
+                        } else {
+                            if (route_id >= 0i64) {
+                                // unknown route
+                                raw Express.send_404();
+                                reqs_handled = reqs_handled + 1i32;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    drop(system("cat out1.txt\0")); drop(printf("\n\0"));
+    drop(system("cat out2.txt\0")); drop(printf("\n\0"));
+    drop(system("cat out3.txt\0")); drop(printf("\n\0"));
+    drop(system("cat out4.txt\0")); drop(printf("\n\0"));
+    
+    drop(system("rm -rf public out1.txt out2.txt out3.txt out4.txt\0"));
+    
+    exit 0i32;
+};

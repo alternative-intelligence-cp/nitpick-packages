@@ -1,0 +1,6 @@
+clang++ called from /home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-jwt
+Arguments: .nitpick_make/build/test-nitpick-jwt.s /home/randy/Workspace/REPOS/nitpick/build/libnitpick_runtime.a -latomic -o .nitpick_make/build/test-nitpick-jwt
+clang++ called from /home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-jwt
+Arguments: .nitpick_make/build/test-nitpick-jwt.s /home/randy/Workspace/REPOS/nitpick/build/libnitpick_runtime.a -latomic -o .nitpick_make/build/test-nitpick-jwt
+clang++ called from /home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-jwt
+Arguments: .nitpick_make/build/test-nitpick-jwt.s /home/randy/Workspace/REPOS/nitpick/build/libnitpick_runtime.a -latomic -o .nitpick_make/build/test-nitpick-jwt

@@ -1,0 +1,63 @@
+// nitpick-archive - Archiving
+
+extern "nitpick_archive" {
+    func:nitpick_tar_create_writer = int64(string:filename);
+    func:nitpick_tar_writer_add = void(int64:handle, string:name, string:content);
+    func:nitpick_tar_writer_close = void(int64:handle);
+    func:nitpick_tar_create_reader = int64(string:filename);
+    func:nitpick_tar_reader_get = string(int64:handle, string:name);
+    func:nitpick_tar_reader_close = void(int64:handle);
+
+    func:nitpick_zip_create_writer = int64(string:filename);
+    func:nitpick_zip_writer_add = void(int64:handle, string:name, string:content);
+    func:nitpick_zip_writer_close = void(int64:handle);
+    func:nitpick_zip_create_reader = int64(string:filename);
+    func:nitpick_zip_reader_get = string(int64:handle, string:name);
+    func:nitpick_zip_reader_close = void(int64:handle);
+}
+
+pub Type:ArchiveWriter = {
+    func:create = int64(string:filename) { pass nitpick_tar_create_writer(filename); };
+    func:add_file = int32(int64:handle, string:name, string:content) {
+        nitpick_tar_writer_add(handle, name, content);
+        pass 0i32;
+    };
+    func:close = int32(int64:handle) {
+        nitpick_tar_writer_close(handle);
+        pass 0i32;
+    };
+};
+
+pub Type:ArchiveReader = {
+    func:open = int64(string:filename) { pass nitpick_tar_create_reader(filename); };
+    func:read_file = string(int64:handle, string:name) {
+        pass nitpick_tar_reader_get(handle, name);
+    };
+    func:close = int32(int64:handle) {
+        nitpick_tar_reader_close(handle);
+        pass 0i32;
+    };
+};
+
+pub Type:ZipWriter = {
+    func:create = int64(string:filename) { pass nitpick_zip_create_writer(filename); };
+    func:add_file = int32(int64:handle, string:name, string:content) {
+        nitpick_zip_writer_add(handle, name, content);
+        pass 0i32;
+    };
+    func:close = int32(int64:handle) {
+        nitpick_zip_writer_close(handle);
+        pass 0i32;
+    };
+};
+
+pub Type:ZipReader = {
+    func:open = int64(string:filename) { pass nitpick_zip_create_reader(filename); };
+    func:read_file = string(int64:handle, string:name) {
+        pass nitpick_zip_reader_get(handle, name);
+    };
+    func:close = int32(int64:handle) {
+        nitpick_zip_reader_close(handle);
+        pass 0i32;
+    };
+};

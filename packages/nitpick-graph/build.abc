@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-graph"
+version = "0.1.0"
+
+[target.nitpick-graph]
+type = "library"
+sources = ["src/nitpick_graph.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_string"]
+
+[target.test-nitpick-graph]
+type = "binary"
+sources = ["tests/test_nitpick_graph.npk"]
+deps = ["nitpick-graph"]
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_string"]

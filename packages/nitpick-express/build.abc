@@ -1,0 +1,17 @@
+[project]
+name = "nitpick-express"
+version = "0.1.0"
+
+[target.nitpick-express]
+type = "library"
+sources = ["src/nitpick_express.npk"]
+deps = []
+flags = ["-I", "../nitpick-server/src", "-I", "../nitpick-router/src", "-I", "../nitpick-fs/src", "-I", "../nitpick-str/src"]
+
+[target.test-nitpick-express]
+type = "binary"
+sources = ["tests/test_nitpick_express.npk"]
+deps = []
+flags = ["-I", "src", "-I", "../nitpick-server/src", "-I", "../nitpick-router/src", "-I", "../nitpick-fs/src", "-I", "../nitpick-str/src"]
+link_paths = ["../nitpick-server/shim/.nitpick_make/lib", "../nitpick-router/shim/.nitpick_make/lib", "../nitpick-fs/shim"]
+link_libraries = ["nitpick_server", "nitpick_router", "nitpick_fs_shim"]

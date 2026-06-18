@@ -1,0 +1,93 @@
+// cowsay.npk
+
+extern func:printf = int32(string:str);
+extern func:malloc = any*(int64:size);
+extern func:free = void(any*:ptr);
+extern func:write = int64(int32:fd, any*:buf, int64:count);
+
+pub func:strlen = int32(int8->:str) {
+    int32:len = 0i32;
+    while (str[len => int64] != 0i8) {
+        len = len + 1i32;
+    }
+    pass(len);
+};
+
+pub func:cowsay_print = int32(int8->:msg, int32:animal) {
+    int32:len = raw strlen(msg);
+    int8->:out = malloc(4096i64) => int8->;
+    int32:pos = 0i32;
+    
+    out[pos => int64] = 32i8; pos = pos + 1i32; // ' '
+    
+    int32:i = 0i32;
+    while (i < len + 2i32) {
+        out[pos => int64] = 95i8; pos = pos + 1i32; // '_'
+        i = i + 1i32;
+    }
+    out[pos => int64] = 10i8; pos = pos + 1i32; // '\n'
+    out[pos => int64] = 60i8; pos = pos + 1i32; // '<'
+    out[pos => int64] = 32i8; pos = pos + 1i32; // ' '
+    
+    i = 0i32;
+    while (i < len) {
+        out[pos => int64] = msg[i => int64]; pos = pos + 1i32;
+        i = i + 1i32;
+    }
+    
+    out[pos => int64] = 32i8; pos = pos + 1i32; // ' '
+    out[pos => int64] = 62i8; pos = pos + 1i32; // '>'
+    out[pos => int64] = 10i8; pos = pos + 1i32; // '\n'
+    out[pos => int64] = 32i8; pos = pos + 1i32; // ' '
+    
+    i = 0i32;
+    while (i < len + 2i32) {
+        out[pos => int64] = 45i8; pos = pos + 1i32; // '-'
+        i = i + 1i32;
+    }
+    out[pos => int64] = 10i8; pos = pos + 1i32; // '\n'
+    
+    // Write the dynamic bubble directly to stdout
+    drop(write(1i32, out => any->, pos => int64));
+    
+    // Print the animal using printf
+    if (animal == 1i32) {
+        drop(printf("   \\\n"));
+        drop(printf("    \\\n"));
+        drop(printf("        .--.\n"));
+        drop(printf("       |o_o |\n"));
+        drop(printf("       |:_/ |\n"));
+        drop(printf("      //   \\ \\\n"));
+        drop(printf("     (|     | )\n"));
+        drop(printf("    /'\\_   _/`\\\n"));
+        drop(printf("    \\___)=(___/\n"));
+    } else {
+        if (animal == 2i32) {
+            drop(printf("      \\                    / \\  //\\\n"));
+            drop(printf("       \\    |\\___/|      /   \\//  \\\\\n"));
+            drop(printf("            /0  0  \\__  /    //  | \\ \\\n"));
+            drop(printf("           /     /  \\/_/    //   |  \\  \\\n"));
+            drop(printf("           @_^_@'/   \\/_   //    |   \\   \\\n"));
+            drop(printf("           //_^_/     \\/_ //     |    \\    \\\n"));
+            drop(printf("        ( //) |        \\///      |     \\     \\\n"));
+            drop(printf("      ( / /) _|_ /   )  //       |      \\     _\\\n"));
+            drop(printf("    ( // /) '/,_ _ _/  ( ; -.    |    _ _\\.-~        .-~~~^-.\n"));
+            drop(printf("  (( / / )) ,-{        _      `-.|.-~-.           .~         `.\n"));
+            drop(printf(" (( // / ))  '/\\      /                 ~-. _ .-~      .-~^-.  \\\n"));
+            drop(printf(" (( /// ))      `.   {            }                   /      \\  \\\n"));
+            drop(printf("  (( / ))     .----~-.\\        \\-'                 .~         \\  `. \\^-.\n"));
+            drop(printf("             ///.----..>        \\             _ -~             `.  ^-`  ^-_-\n"));
+            drop(printf("               ///-._ _ _ _ _ _ _}^ - - - - ~                     ~-- ,.-~\n"));
+            drop(printf("                                                                  /.-~\n"));
+        } else {
+            drop(printf("        \\   ^__^\n"));
+            drop(printf("         \\  (oo)\\_______\n"));
+            drop(printf("            (__)\\       )\\/\\\n"));
+            drop(printf("                ||----w |\n"));
+            drop(printf("                ||     ||\n"));
+        }
+    }
+    
+    free(out => any->);
+    pass(0i32);
+};

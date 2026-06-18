@@ -1,0 +1,195 @@
+// nitpick_vdom.npk - Virtual DOM for Nitpick
+
+use "nitpick_str.npk".*;
+
+int64[4096]:g_vnodes_is_text;
+string[4096]:g_vnodes_tag;
+int64[4096]:g_vnodes_first_child;
+int64[4096]:g_vnodes_next_sibling;
+int64[4096]:g_vnodes_first_attr;
+int64:g_vnodes_count = 0i64;
+
+string[4096]:g_vattrs_key;
+string[4096]:g_vattrs_val;
+int64[4096]:g_vattrs_next;
+int64:g_vattrs_count = 0i64;
+
+pub func:vdom_h = int64(string:tag) {
+    int64:id = g_vnodes_count;
+    g_vnodes_count = g_vnodes_count + 1i64;
+    
+    g_vnodes_is_text[id] = 0i64;
+    g_vnodes_tag[id] = tag;
+    g_vnodes_first_child[id] = -1i64;
+    g_vnodes_next_sibling[id] = -1i64;
+    g_vnodes_first_attr[id] = -1i64;
+    
+    pass id;
+};
+
+pub func:vdom_text = int64(string:content) {
+    int64:id = g_vnodes_count;
+    g_vnodes_count = g_vnodes_count + 1i64;
+    
+    g_vnodes_is_text[id] = 1i64;
+    g_vnodes_tag[id] = content;
+    g_vnodes_first_child[id] = -1i64;
+    g_vnodes_next_sibling[id] = -1i64;
+    g_vnodes_first_attr[id] = -1i64;
+    
+    pass id;
+};
+
+pub func:vdom_append_child = int64(int64:parent, int64:child) {
+    if (g_vnodes_first_child[parent] == -1i64) {
+        g_vnodes_first_child[parent] = child;
+    } else {
+        int64:curr = g_vnodes_first_child[parent];
+        while (g_vnodes_next_sibling[curr] != -1i64) {
+            curr = g_vnodes_next_sibling[curr];
+        }
+        g_vnodes_next_sibling[curr] = child;
+    }
+    pass parent;
+};
+
+pub func:vdom_set_attr = int64(int64:node, string:key, string:val) {
+    int64:attr_id = g_vattrs_count;
+    g_vattrs_count = g_vattrs_count + 1i64;
+    
+    g_vattrs_key[attr_id] = key;
+    g_vattrs_val[attr_id] = val;
+    g_vattrs_next[attr_id] = -1i64;
+    
+    if (g_vnodes_first_attr[node] == -1i64) {
+        g_vnodes_first_attr[node] = attr_id;
+    } else {
+        int64:curr = g_vnodes_first_attr[node];
+        while (g_vattrs_next[curr] != -1i64) {
+            curr = g_vattrs_next[curr];
+        }
+        g_vattrs_next[curr] = attr_id;
+    }
+    pass node;
+};
+
+pub func:vdom_render = string(int64:node) {
+    if (g_vnodes_is_text[node] == 1i64) {
+        pass g_vnodes_tag[node];
+    }
+    
+    string:res = string_concat("<", g_vnodes_tag[node]);
+    
+    int64:attr = g_vnodes_first_attr[node];
+    while (attr != -1i64) {
+        res = string_concat(res, " ");
+        res = string_concat(res, g_vattrs_key[attr]);
+        res = string_concat(res, "=\"");
+        res = string_concat(res, g_vattrs_val[attr]);
+        res = string_concat(res, "\"");
+        attr = g_vattrs_next[attr];
+    }
+    
+    res = string_concat(res, ">");
+    
+    int64:child = g_vnodes_first_child[node];
+    while (child != -1i64) {
+        string:child_res = raw vdom_render(child);
+        res = string_concat(res, child_res);
+        child = g_vnodes_next_sibling[child];
+    }
+    
+    res = string_concat(res, "</");
+    res = string_concat(res, g_vnodes_tag[node]);
+    res = string_concat(res, ">");
+    
+    pass res;
+};
+
+pub func:vdom_str_eq = int64(string:a, string:b) {
+    if (string_length(a) != string_length(b)) { pass 0i64; }
+    if (string_starts_with(a, b) == false) { pass 0i64; }
+    pass 1i64;
+};
+
+pub func:vdom_diff = string(int64:old_node, int64:new_node) {
+    if (old_node == new_node) { pass "NO_CHANGE\n"; }
+    
+    if (g_vnodes_is_text[old_node] != g_vnodes_is_text[new_node]) {
+        pass string_concat("REPLACE_NODE: ", raw vdom_render(new_node));
+    }
+    
+    if (g_vnodes_is_text[old_node] == 1i64) {
+        if (raw vdom_str_eq(g_vnodes_tag[old_node], g_vnodes_tag[new_node]) == 0i64) {
+            string:p = string_concat("UPDATE_TEXT: ", g_vnodes_tag[new_node]);
+            pass string_concat(p, "\n");
+        }
+        pass "NO_CHANGE\n";
+    }
+    
+    if (raw vdom_str_eq(g_vnodes_tag[old_node], g_vnodes_tag[new_node]) == 0i64) {
+        pass string_concat("REPLACE_NODE: ", raw vdom_render(new_node));
+    }
+    
+    string:patches = "";
+    
+    // Attributes diff (naive)
+    int64:o_attr = g_vnodes_first_attr[old_node];
+    int64:n_attr = g_vnodes_first_attr[new_node];
+    int64:attr_changed = 0i64;
+    
+    while (o_attr != -1i64) {
+        if (n_attr == -1i64) { attr_changed = 1i64; }
+        else {
+            if (raw vdom_str_eq(g_vattrs_key[o_attr], g_vattrs_key[n_attr]) == 0i64) { attr_changed = 1i64; }
+            if (raw vdom_str_eq(g_vattrs_val[o_attr], g_vattrs_val[n_attr]) == 0i64) { attr_changed = 1i64; }
+            n_attr = g_vattrs_next[n_attr];
+        }
+        o_attr = g_vattrs_next[o_attr];
+    }
+    if (n_attr != -1i64) { attr_changed = 1i64; }
+    
+    if (attr_changed == 1i64) {
+        patches = string_concat(patches, "UPDATE_ATTRS\n");
+    }
+    
+    // Children diff
+    int64:o_child = g_vnodes_first_child[old_node];
+    int64:n_child = g_vnodes_first_child[new_node];
+    
+    while (o_child != -1i64) {
+        if (n_child == -1i64) {
+            patches = string_concat(patches, "REMOVE_CHILD\n");
+        } else {
+            string:child_patch = raw vdom_diff(o_child, n_child);
+            if (child_patch != "NO_CHANGE\n") {
+                string:p = "PATCH_CHILD:\n  ";
+                p = string_concat(p, child_patch);
+                patches = string_concat(patches, p);
+            }
+            n_child = g_vnodes_next_sibling[n_child];
+        }
+        o_child = g_vnodes_next_sibling[o_child];
+    }
+    
+    while (n_child != -1i64) {
+        string:p = string_concat("INSERT_CHILD: ", g_vnodes_tag[n_child]);
+        p = string_concat(p, "\n");
+        patches = string_concat(patches, p);
+        n_child = g_vnodes_next_sibling[n_child];
+    }
+    
+    if (string_length(patches) == 0i64) {
+        pass "NO_CHANGE\n";
+    }
+    pass patches;
+};
+
+pub Type:Vdom = {
+    func:h = int64(string:tag) { pass raw vdom_h(tag); };
+    func:text = int64(string:content) { pass raw vdom_text(content); };
+    func:append_child = int64(int64:p, int64:c) { pass raw vdom_append_child(p, c); };
+    func:set_attr = int64(int64:n, string:k, string:v) { pass raw vdom_set_attr(n, k, v); };
+    func:render = string(int64:n) { string:s = raw vdom_render(n); pass s; };
+    func:diff = string(int64:o, int64:n) { string:s = raw vdom_diff(o, n); pass s; };
+};

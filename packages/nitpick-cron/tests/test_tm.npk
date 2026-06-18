@@ -1,0 +1,30 @@
+
+extern "libc" {
+    func:timegm = int64(int64:tm);
+    func:gmtime_r = int64(int64:timep, int64:result);
+    func:printf = int32(string:fmt, int64:v1, int64:v2, int64:v3, int64:v4, int64:v5, int64:v6);
+}
+extern "aria_libc_mem" {
+    func:aria_libc_mem_malloc = int64(int64:size);
+    func:aria_libc_mem_read_i32 = int32(int64:ptr, int64:offset);
+    func:aria_libc_mem_write_i64 = void(int64:ptr, int64:offset, int64:val);
+}
+
+pub func:main = int32() {
+    int64:tm = aria_libc_mem_malloc(56i64);
+    int64:timep = aria_libc_mem_malloc(8i64);
+    aria_libc_mem_write_i64(timep, 0i64, 1609459200i64); // 2021-01-01 00:00:00 UTC
+    
+    drop gmtime_r(timep, tm);
+    
+    int64:sec = raw aria_libc_mem_read_i32(tm, 0i64);
+    int64:min = raw aria_libc_mem_read_i32(tm, 4i64);
+    int64:hour = raw aria_libc_mem_read_i32(tm, 8i64);
+    int64:mday = raw aria_libc_mem_read_i32(tm, 12i64);
+    int64:mon = raw aria_libc_mem_read_i32(tm, 16i64);
+    int64:year = raw aria_libc_mem_read_i32(tm, 20i64);
+    
+    drop printf("year=%ld mon=%ld mday=%ld hour=%ld min=%ld sec=%ld\n\0", year, mon, mday, hour, min, sec);
+    
+    exit 0i32;
+};

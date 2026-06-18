@@ -1,0 +1,69 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-raylib": {
+      "artifact_path": ".nitpick_make/build/libnitpick-raylib.a",
+      "source_hash": "fnv1a:6717553394948237224",
+      "command_hash": 3897399539792347408,
+      "source_timestamp": 18446744069053404827,
+      "build_timestamp": 1781517264,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-texture-audio": {
+      "artifact_path": ".nitpick_make/build/test-texture-audio",
+      "source_hash": "fnv1a:5178392322162360035",
+      "command_hash": 8198549472472283069,
+      "source_timestamp": 18446744069053404827,
+      "build_timestamp": 1781517264,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-raylib-camera": {
+      "artifact_path": ".nitpick_make/build/test-raylib-camera",
+      "source_hash": "fnv1a:11716731348375654612",
+      "command_hash": 8198549472472283069,
+      "source_timestamp": 18446744069053404827,
+      "build_timestamp": 1781517264,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-raylib-3d": {
+      "artifact_path": ".nitpick_make/build/test-raylib-3d",
+      "source_hash": "fnv1a:10416308069887873559",
+      "command_hash": 8198549472472283069,
+      "source_timestamp": 18446744069053404827,
+      "build_timestamp": 1781517264,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-gui": {
+      "artifact_path": ".nitpick_make/build/test-gui",
+      "source_hash": "fnv1a:7565938079358640100",
+      "command_hash": 8198549472472283069,
+      "source_timestamp": 18446744069053404827,
+      "build_timestamp": 1781517264,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-nitpick-raylib": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-raylib",
+      "source_hash": "fnv1a:14937601346150999778",
+      "command_hash": 8198549472472283069,
+      "source_timestamp": 18446744069053404827,
+      "build_timestamp": 1781517264,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

@@ -1,0 +1,502 @@
+// nitpick-graph - Graph Data Structures & Algorithms
+
+use "../../nitpick-str/src/nitpick_str.npk".*;
+
+extern "aria_libc_mem" {
+    func:aria_libc_mem_malloc = int64(int64:size);
+    func:aria_libc_mem_calloc = int64(int64:count, int64:size);
+    func:aria_libc_mem_free   = void(int64:ptr);
+    func:aria_libc_mem_read_i64 = int64(int64:ptr, int64:offset);
+    func:aria_libc_mem_write_i64 = void(int64:ptr, int64:offset, int64:val);
+}
+
+pub Type:Graph = {
+    // Directed graph by default, but provides `add_undirected_edge`
+    // Handle (64 bytes):
+    // [0] node_capacity
+    // [8] node_count
+    // [16] node_ids_ptr (int64[])
+    // [24] edge_counts_ptr (int64[])
+    // [32] edge_caps_ptr (int64[])
+    // [40] edge_lists_ptr (int64[] of pointers to 16-byte edge entries: [target_idx, weight])
+    // [48] node_x_ptr (int64[])
+    // [56] node_y_ptr (int64[])
+
+    func:create = int64() {
+        int64:handle = aria_libc_mem_calloc(1i64, 64i64);
+        pass handle;
+    };
+
+    func:resize_nodes = int32(int64:handle, int64:new_cap) {
+        int64:old_cap = aria_libc_mem_read_i64(handle, 0i64);
+        if (new_cap <= old_cap) { pass 0i32; }
+        
+        int64:ids_ptr = aria_libc_mem_read_i64(handle, 16i64);
+        int64:counts_ptr = aria_libc_mem_read_i64(handle, 24i64);
+        int64:caps_ptr = aria_libc_mem_read_i64(handle, 32i64);
+        int64:lists_ptr = aria_libc_mem_read_i64(handle, 40i64);
+        int64:x_ptr = aria_libc_mem_read_i64(handle, 48i64);
+        int64:y_ptr = aria_libc_mem_read_i64(handle, 56i64);
+        
+        int64:new_ids = aria_libc_mem_calloc(new_cap, 8i64);
+        int64:new_counts = aria_libc_mem_calloc(new_cap, 8i64);
+        int64:new_caps = aria_libc_mem_calloc(new_cap, 8i64);
+        int64:new_lists = aria_libc_mem_calloc(new_cap, 8i64);
+        int64:new_x = aria_libc_mem_calloc(new_cap, 8i64);
+        int64:new_y = aria_libc_mem_calloc(new_cap, 8i64);
+        
+        int64:count = aria_libc_mem_read_i64(handle, 8i64);
+        int64:i = 0i64;
+        loop(0i64, count, 1i64) {
+            aria_libc_mem_write_i64(new_ids, i * 8i64, aria_libc_mem_read_i64(ids_ptr, i * 8i64));
+            aria_libc_mem_write_i64(new_counts, i * 8i64, aria_libc_mem_read_i64(counts_ptr, i * 8i64));
+            aria_libc_mem_write_i64(new_caps, i * 8i64, aria_libc_mem_read_i64(caps_ptr, i * 8i64));
+            aria_libc_mem_write_i64(new_lists, i * 8i64, aria_libc_mem_read_i64(lists_ptr, i * 8i64));
+            aria_libc_mem_write_i64(new_x, i * 8i64, aria_libc_mem_read_i64(x_ptr, i * 8i64));
+            aria_libc_mem_write_i64(new_y, i * 8i64, aria_libc_mem_read_i64(y_ptr, i * 8i64));
+            i += 1i64;
+        }
+        
+        if (old_cap > 0i64) {
+            aria_libc_mem_free(ids_ptr);
+            aria_libc_mem_free(counts_ptr);
+            aria_libc_mem_free(caps_ptr);
+            aria_libc_mem_free(lists_ptr);
+            aria_libc_mem_free(x_ptr);
+            aria_libc_mem_free(y_ptr);
+        }
+        
+        aria_libc_mem_write_i64(handle, 0i64, new_cap);
+        aria_libc_mem_write_i64(handle, 16i64, new_ids);
+        aria_libc_mem_write_i64(handle, 24i64, new_counts);
+        aria_libc_mem_write_i64(handle, 32i64, new_caps);
+        aria_libc_mem_write_i64(handle, 40i64, new_lists);
+        aria_libc_mem_write_i64(handle, 48i64, new_x);
+        aria_libc_mem_write_i64(handle, 56i64, new_y);
+        pass 0i32;
+    };
+
+    func:resize_edges = int32(int64:handle, int64:node_idx, int64:new_cap) {
+        int64:caps_ptr = aria_libc_mem_read_i64(handle, 32i64);
+        int64:lists_ptr = aria_libc_mem_read_i64(handle, 40i64);
+        
+        int64:old_cap = aria_libc_mem_read_i64(caps_ptr, node_idx * 8i64);
+        if (new_cap <= old_cap) { pass 0i32; }
+        
+        int64:old_list = aria_libc_mem_read_i64(lists_ptr, node_idx * 8i64);
+        int64:new_list = aria_libc_mem_calloc(new_cap, 16i64);
+        
+        int64:counts_ptr = aria_libc_mem_read_i64(handle, 24i64);
+        int64:count = aria_libc_mem_read_i64(counts_ptr, node_idx * 8i64);
+        
+        int64:i = 0i64;
+        loop(0i64, count, 1i64) {
+            int64:t = aria_libc_mem_read_i64(old_list, i * 16i64);
+            int64:w = aria_libc_mem_read_i64(old_list, i * 16i64 + 8i64);
+            aria_libc_mem_write_i64(new_list, i * 16i64, t);
+            aria_libc_mem_write_i64(new_list, i * 16i64 + 8i64, w);
+            i += 1i64;
+        }
+        
+        if (old_cap > 0i64) {
+            aria_libc_mem_free(old_list);
+        }
+        
+        aria_libc_mem_write_i64(caps_ptr, node_idx * 8i64, new_cap);
+        aria_libc_mem_write_i64(lists_ptr, node_idx * 8i64, new_list);
+        pass 0i32;
+    };
+
+    func:add_node_spatial = int32(int64:handle, int64:node_id, int64:x, int64:y) {
+        int64:count = aria_libc_mem_read_i64(handle, 8i64);
+        int64:cap = aria_libc_mem_read_i64(handle, 0i64);
+        if (count >= cap) {
+            int64:new_cap = cap * 2i64;
+            if (new_cap == 0i64) { new_cap = 16i64; }
+            drop Graph.resize_nodes(handle, new_cap);
+        }
+        
+        int64:ids_ptr = aria_libc_mem_read_i64(handle, 16i64);
+        int64:x_ptr = aria_libc_mem_read_i64(handle, 48i64);
+        int64:y_ptr = aria_libc_mem_read_i64(handle, 56i64);
+        aria_libc_mem_write_i64(ids_ptr, count * 8i64, node_id);
+        aria_libc_mem_write_i64(x_ptr, count * 8i64, x);
+        aria_libc_mem_write_i64(y_ptr, count * 8i64, y);
+        
+        aria_libc_mem_write_i64(handle, 8i64, count + 1i64);
+        pass @cast_unchecked<int32>(count);
+    };
+
+    func:add_node = int32(int64:handle, int64:node_id) {
+        pass raw Graph.add_node_spatial(handle, node_id, 0i64, 0i64);
+    };
+
+    func:add_edge = int32(int64:handle, int64:from_idx, int64:to_idx, int64:weight) {
+        int64:counts_ptr = aria_libc_mem_read_i64(handle, 24i64);
+        int64:caps_ptr = aria_libc_mem_read_i64(handle, 32i64);
+        
+        int64:count = aria_libc_mem_read_i64(counts_ptr, from_idx * 8i64);
+        int64:cap = aria_libc_mem_read_i64(caps_ptr, from_idx * 8i64);
+        
+        if (count >= cap) {
+            int64:new_cap = cap * 2i64;
+            if (new_cap == 0i64) { new_cap = 4i64; }
+            drop Graph.resize_edges(handle, from_idx, new_cap);
+        }
+        
+        int64:lists_ptr = aria_libc_mem_read_i64(handle, 40i64);
+        int64:list = aria_libc_mem_read_i64(lists_ptr, from_idx * 8i64);
+        
+        aria_libc_mem_write_i64(list, count * 16i64, to_idx);
+        aria_libc_mem_write_i64(list, count * 16i64 + 8i64, weight);
+        
+        aria_libc_mem_write_i64(counts_ptr, from_idx * 8i64, count + 1i64);
+        pass 0i32;
+    };
+
+    func:add_undirected_edge = int32(int64:handle, int64:u, int64:v, int64:weight) {
+        drop Graph.add_edge(handle, u, v, weight);
+        drop Graph.add_edge(handle, v, u, weight);
+        pass 0i32;
+    };
+
+    func:get_node_count = int64(int64:handle) {
+        pass aria_libc_mem_read_i64(handle, 8i64);
+    };
+
+    func:get_node_id = int64(int64:handle, int64:idx) {
+        int64:ids_ptr = aria_libc_mem_read_i64(handle, 16i64);
+        pass aria_libc_mem_read_i64(ids_ptr, idx * 8i64);
+    };
+
+    func:get_node_x = int64(int64:handle, int64:idx) {
+        int64:x_ptr = aria_libc_mem_read_i64(handle, 48i64);
+        pass aria_libc_mem_read_i64(x_ptr, idx * 8i64);
+    };
+
+    func:get_node_y = int64(int64:handle, int64:idx) {
+        int64:y_ptr = aria_libc_mem_read_i64(handle, 56i64);
+        pass aria_libc_mem_read_i64(y_ptr, idx * 8i64);
+    };
+
+    func:get_edge_count = int64(int64:handle, int64:node_idx) {
+        int64:counts_ptr = aria_libc_mem_read_i64(handle, 24i64);
+        pass aria_libc_mem_read_i64(counts_ptr, node_idx * 8i64);
+    };
+
+    func:get_edge_target = int64(int64:handle, int64:node_idx, int64:edge_idx) {
+        int64:lists_ptr = aria_libc_mem_read_i64(handle, 40i64);
+        int64:list = aria_libc_mem_read_i64(lists_ptr, node_idx * 8i64);
+        pass aria_libc_mem_read_i64(list, edge_idx * 16i64);
+    };
+
+    func:get_edge_weight = int64(int64:handle, int64:node_idx, int64:edge_idx) {
+        int64:lists_ptr = aria_libc_mem_read_i64(handle, 40i64);
+        int64:list = aria_libc_mem_read_i64(lists_ptr, node_idx * 8i64);
+        pass aria_libc_mem_read_i64(list, edge_idx * 16i64 + 8i64);
+    };
+
+    func:export_dot = string(int64:handle) {
+        string:res = "digraph G {\n";
+        int64:node_count = aria_libc_mem_read_i64(handle, 8i64);
+        
+        int64:i = 0i64;
+        loop(0i64, node_count, 1i64) {
+            int64:id = raw Graph.get_node_id(handle, i);
+            int64:x = raw Graph.get_node_x(handle, i);
+            int64:y = raw Graph.get_node_y(handle, i);
+            
+            string:ni = string_from_int(id);
+            string:xs = string_from_int(x);
+            string:ys = string_from_int(y);
+            
+            res = string_concat(res, "  ");
+            res = string_concat(res, ni);
+            res = string_concat(res, " [pos=\"");
+            res = string_concat(res, xs);
+            res = string_concat(res, ",");
+            res = string_concat(res, ys);
+            res = string_concat(res, "!\"];\n");
+            
+            int64:e_count = raw Graph.get_edge_count(handle, i);
+            int64:j = 0i64;
+            loop(0i64, e_count, 1i64) {
+                int64:t = raw Graph.get_edge_target(handle, i, j);
+                int64:w = raw Graph.get_edge_weight(handle, i, j);
+                int64:tid = raw Graph.get_node_id(handle, t);
+                
+                string:tsi = string_from_int(tid);
+                string:ws = string_from_int(w);
+                
+                res = string_concat(res, "  ");
+                res = string_concat(res, ni);
+                res = string_concat(res, " -> ");
+                res = string_concat(res, tsi);
+                res = string_concat(res, " [label=\"");
+                res = string_concat(res, ws);
+                res = string_concat(res, "\"];\n");
+                
+                j += 1i64;
+            }
+            i += 1i64;
+        }
+        res = string_concat(res, "}\n");
+        pass res;
+    };
+
+    func:astar_shortest_path = int64(int64:handle, int64:start_idx, int64:end_idx) {
+        int64:INF = 999999i64;
+        int64:node_count = aria_libc_mem_read_i64(handle, 8i64);
+        int64:dist = aria_libc_mem_calloc(node_count, 8i64);
+        int64:visited = aria_libc_mem_calloc(node_count, 8i64);
+        
+        int64:i = 0i64;
+        loop(0i64, node_count, 1i64) {
+            aria_libc_mem_write_i64(dist, i * 8i64, INF);
+            i += 1i64;
+        }
+        aria_libc_mem_write_i64(dist, start_idx * 8i64, 0i64);
+        
+        int64:end_x = raw Graph.get_node_x(handle, end_idx);
+        int64:end_y = raw Graph.get_node_y(handle, end_idx);
+        
+        i = 0i64;
+        loop(0i64, node_count, 1i64) {
+            int64:u = 0i64 - 1i64;
+            int64:min_f = INF;
+            int64:j = 0i64;
+            loop(0i64, node_count, 1i64) {
+                int64:v = aria_libc_mem_read_i64(visited, j * 8i64);
+                if (v == 0i64) {
+                    int64:d = aria_libc_mem_read_i64(dist, j * 8i64);
+                    if (d < INF) {
+                        int64:x = raw Graph.get_node_x(handle, j);
+                        int64:y = raw Graph.get_node_y(handle, j);
+                        int64:dx = x - end_x;
+                        if (dx < 0i64) { dx = 0i64 - dx; }
+                        int64:dy = y - end_y;
+                        if (dy < 0i64) { dy = 0i64 - dy; }
+                        int64:h = dx + dy; // Manhattan distance heuristic
+                        
+                        int64:f = d + h;
+                        if (f < min_f) {
+                            min_f = f;
+                            u = j;
+                        }
+                    }
+                }
+                j += 1i64;
+            }
+            
+            if (u == 0i64 - 1i64) {
+                aria_libc_mem_free(dist);
+                aria_libc_mem_free(visited);
+                pass 0i64 - 1i64; 
+            }
+            if (u == end_idx) { 
+                int64:ans = aria_libc_mem_read_i64(dist, end_idx * 8i64);
+                aria_libc_mem_free(dist);
+                aria_libc_mem_free(visited);
+                pass ans; 
+            }
+            
+            aria_libc_mem_write_i64(visited, u * 8i64, 1i64);
+            
+            int64:edge_count = raw Graph.get_edge_count(handle, u);
+            int64:e = 0i64;
+            loop(0i64, edge_count, 1i64) {
+                int64:v_idx = raw Graph.get_edge_target(handle, u, e);
+                int64:w = raw Graph.get_edge_weight(handle, u, e);
+                
+                int64:alt = aria_libc_mem_read_i64(dist, u * 8i64) + w;
+                int64:curr_d = aria_libc_mem_read_i64(dist, v_idx * 8i64);
+                if (alt < curr_d) {
+                    aria_libc_mem_write_i64(dist, v_idx * 8i64, alt);
+                }
+                e += 1i64;
+            }
+        }
+        
+        int64:ans = aria_libc_mem_read_i64(dist, end_idx * 8i64);
+        aria_libc_mem_free(dist);
+        aria_libc_mem_free(visited);
+        
+        if (ans >= 999999i64) { pass 0i64 - 1i64; }
+        pass ans;
+    };
+
+    func:dfs_reachable_count = int64(int64:handle, int64:start_idx) {
+        int64:node_count = aria_libc_mem_read_i64(handle, 8i64);
+        int64:visited = aria_libc_mem_calloc(node_count, 8i64);
+        int64:stack = aria_libc_mem_calloc(node_count, 8i64);
+        int64:sp = 0i64;
+        
+        aria_libc_mem_write_i64(stack, sp * 8i64, start_idx);
+        sp += 1i64;
+        
+        int64:reachable = 0i64;
+        
+        while (sp > 0i64) {
+            sp = sp - 1i64;
+            int64:curr = aria_libc_mem_read_i64(stack, sp * 8i64);
+            
+            int64:v = aria_libc_mem_read_i64(visited, curr * 8i64);
+            if (v == 0i64) {
+                aria_libc_mem_write_i64(visited, curr * 8i64, 1i64);
+                reachable += 1i64;
+                
+                int64:edge_count = raw Graph.get_edge_count(handle, curr);
+                int64:i = 0i64;
+                loop(0i64, edge_count, 1i64) {
+                    int64:target = raw Graph.get_edge_target(handle, curr, i);
+                    int64:tv = aria_libc_mem_read_i64(visited, target * 8i64);
+                    if (tv == 0i64) {
+                        aria_libc_mem_write_i64(stack, sp * 8i64, target);
+                        sp += 1i64;
+                    }
+                    i += 1i64;
+                }
+            }
+        }
+        
+        aria_libc_mem_free(visited);
+        aria_libc_mem_free(stack);
+        pass reachable;
+    };
+
+    func:dijkstra_shortest_path = int64(int64:handle, int64:start_idx, int64:end_idx) {
+        int64:INF = 999999i64;
+        int64:node_count = aria_libc_mem_read_i64(handle, 8i64);
+        int64:dist = aria_libc_mem_calloc(node_count, 8i64);
+        int64:visited = aria_libc_mem_calloc(node_count, 8i64);
+        
+        int64:i = 0i64;
+        loop(0i64, node_count, 1i64) {
+            aria_libc_mem_write_i64(dist, i * 8i64, INF);
+            i += 1i64;
+        }
+        aria_libc_mem_write_i64(dist, start_idx * 8i64, 0i64);
+        
+        i = 0i64;
+        loop(0i64, node_count, 1i64) {
+            // Find min dist
+            int64:u = 0i64 - 1i64;
+            int64:min_d = INF;
+            int64:j = 0i64;
+            loop(0i64, node_count, 1i64) {
+                int64:v = aria_libc_mem_read_i64(visited, j * 8i64);
+                if (v == 0i64) {
+                    int64:d = aria_libc_mem_read_i64(dist, j * 8i64);
+                    if (d < min_d) {
+                        min_d = d;
+                        u = j;
+                    }
+                }
+                j += 1i64;
+            }
+            
+            if (u == 0i64 - 1i64) {
+                aria_libc_mem_free(dist);
+                aria_libc_mem_free(visited);
+                pass 0i64 - 1i64; 
+            }
+            if (u == end_idx) { 
+                int64:ans = aria_libc_mem_read_i64(dist, end_idx * 8i64);
+                aria_libc_mem_free(dist);
+                aria_libc_mem_free(visited);
+                pass ans; 
+            }
+            
+            aria_libc_mem_write_i64(visited, u * 8i64, 1i64);
+            
+            int64:edge_count = raw Graph.get_edge_count(handle, u);
+            int64:e = 0i64;
+            loop(0i64, edge_count, 1i64) {
+                int64:v_idx = raw Graph.get_edge_target(handle, u, e);
+                int64:w = raw Graph.get_edge_weight(handle, u, e);
+                
+                int64:alt = min_d + w;
+                int64:curr_d = aria_libc_mem_read_i64(dist, v_idx * 8i64);
+                if (alt < curr_d) {
+                    aria_libc_mem_write_i64(dist, v_idx * 8i64, alt);
+                }
+                e += 1i64;
+            }
+        }
+        
+        int64:ans = aria_libc_mem_read_i64(dist, end_idx * 8i64);
+        aria_libc_mem_free(dist);
+        aria_libc_mem_free(visited);
+        
+        if (ans >= 999999i64) { pass 0i64 - 1i64; }
+        pass ans;
+    };
+
+    func:bfs_reachable_count = int64(int64:handle, int64:start_idx) {
+        int64:node_count = aria_libc_mem_read_i64(handle, 8i64);
+        int64:visited = aria_libc_mem_calloc(node_count, 8i64);
+        int64:queue = aria_libc_mem_calloc(node_count, 8i64);
+        int64:q_head = 0i64;
+        int64:q_tail = 0i64;
+        
+        aria_libc_mem_write_i64(queue, q_tail * 8i64, start_idx);
+        q_tail += 1i64;
+        aria_libc_mem_write_i64(visited, start_idx * 8i64, 1i64);
+        
+        int64:reachable = 0i64;
+        
+        while (q_head < q_tail) {
+            int64:curr = aria_libc_mem_read_i64(queue, q_head * 8i64);
+            q_head += 1i64;
+            reachable += 1i64;
+            
+            int64:edge_count = raw Graph.get_edge_count(handle, curr);
+            int64:i = 0i64;
+            loop(0i64, edge_count, 1i64) {
+                int64:target = raw Graph.get_edge_target(handle, curr, i);
+                int64:v = aria_libc_mem_read_i64(visited, target * 8i64);
+                if (v == 0i64) {
+                    aria_libc_mem_write_i64(visited, target * 8i64, 1i64);
+                    aria_libc_mem_write_i64(queue, q_tail * 8i64, target);
+                    q_tail += 1i64;
+                }
+                i += 1i64;
+            }
+        }
+        
+        aria_libc_mem_free(visited);
+        aria_libc_mem_free(queue);
+        pass reachable;
+    };
+
+    func:destroy = int32(int64:handle) {
+        int64:cap = aria_libc_mem_read_i64(handle, 0i64);
+        if (cap > 0i64) {
+            int64:ids_ptr = aria_libc_mem_read_i64(handle, 16i64);
+            int64:counts_ptr = aria_libc_mem_read_i64(handle, 24i64);
+            int64:caps_ptr = aria_libc_mem_read_i64(handle, 32i64);
+            int64:lists_ptr = aria_libc_mem_read_i64(handle, 40i64);
+            int64:x_ptr = aria_libc_mem_read_i64(handle, 48i64);
+            int64:y_ptr = aria_libc_mem_read_i64(handle, 56i64);
+            
+            int64:node_count = aria_libc_mem_read_i64(handle, 8i64);
+            int64:i = 0i64;
+            loop(0i64, node_count, 1i64) {
+                int64:list = aria_libc_mem_read_i64(lists_ptr, i * 8i64);
+                if (list != 0i64) {
+                    aria_libc_mem_free(list);
+                }
+                i += 1i64;
+            }
+            
+            aria_libc_mem_free(ids_ptr);
+            aria_libc_mem_free(counts_ptr);
+            aria_libc_mem_free(caps_ptr);
+            aria_libc_mem_free(lists_ptr);
+            aria_libc_mem_free(x_ptr);
+            aria_libc_mem_free(y_ptr);
+        }
+        aria_libc_mem_free(handle);
+        pass 0i32;
+    };
+};

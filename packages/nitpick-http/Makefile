@@ -9,8 +9,8 @@ libnitpick_http_shim.a: nitpick_http_shim.o
 	ar rcs $@ $^
 
 build: libnitpick_http_shim.a
-	npkbld build nitpick-http
-	npkbld build test-nitpick-http
+	npkpkg build nitpick-http
+	npkpkg build test-nitpick-http
 
 clean:
 	rm -f *.o *.a out.ll

@@ -1,0 +1,79 @@
+// nitpick_html.npk — Lightweight HTML parsing and querying for Nitpick
+
+extern "nitpick_html_shim" {
+    func:nitpick_html_parse      = int32(string:html);
+    func:nitpick_html_get_text   = string(string:selector);
+    func:nitpick_html_get_attr   = string(string:selector, string:attr_name);
+    func:nitpick_html_count      = int32(string:selector);
+    func:nitpick_html_node_count = int32();
+    func:nitpick_html_clear      = NIL();
+    func:nitpick_html_create_node = int32(string:tag);
+    func:nitpick_html_set_attr    = NIL(int32:node_idx, string:key, string:val);
+    func:nitpick_html_set_text    = NIL(int32:node_idx, string:text);
+    func:nitpick_html_append_child= NIL(int32:parent_idx, int32:child_idx);
+    func:nitpick_html_render      = string(int32:node_idx);
+}
+
+pub Type:HTML = {
+    // Parses raw HTML string and returns number of nodes successfully parsed.
+    func:parse = int32(string:html) { 
+        pass(nitpick_html_parse(html)); 
+    };
+    
+    // Returns the text content of the first element matching the given selector.
+    // Supports tags ("div"), IDs ("#my-id"), and classes (".my-class").
+    func:get_text = string(string:selector) { 
+        pass(nitpick_html_get_text(selector)); 
+    };
+    
+    // Returns the value of a specific attribute on the first element matching the selector.
+    func:get_attr = string(string:selector, string:attr_name) { 
+        pass(nitpick_html_get_attr(selector, attr_name)); 
+    };
+    
+    // Returns the number of elements matching the selector.
+    func:count = int32(string:selector) { 
+        pass(nitpick_html_count(selector)); 
+    };
+    
+    // Returns the total number of HTML nodes in memory.
+    func:node_count = int32() { 
+        pass(nitpick_html_node_count()); 
+    };
+    
+    // Clears the parsed HTML from memory.
+    func:clear = NIL() { 
+        nitpick_html_clear(); 
+        pass NIL; 
+    };
+
+    // --- DOM BUILDER API ---
+
+    // Creates a new HTML node with the specified tag and returns its internal index.
+    func:create = int32(string:tag) {
+        pass(nitpick_html_create_node(tag));
+    };
+
+    // Sets an attribute on the specified node.
+    func:set_attr = NIL(int32:node_idx, string:key, string:val) {
+        nitpick_html_set_attr(node_idx, key, val);
+        pass NIL;
+    };
+
+    // Sets the text content of the specified node.
+    func:set_text = NIL(int32:node_idx, string:text) {
+        nitpick_html_set_text(node_idx, text);
+        pass NIL;
+    };
+
+    // Appends a child node to a parent node.
+    func:append = NIL(int32:parent_idx, int32:child_idx) {
+        nitpick_html_append_child(parent_idx, child_idx);
+        pass NIL;
+    };
+
+    // Recursively renders a node and its children into an HTML string.
+    func:render = string(int32:node_idx) {
+        pass(nitpick_html_render(node_idx));
+    };
+};

@@ -1,0 +1,61 @@
+// test_nitpick_mongo.npk
+use "../src/nitpick_mongo.npk".*;
+
+extern "libc" {
+    func:puts = int32(string:msg);
+    func:printf = int32(string:fmt, int32:v);
+    func:aria_libc_exit = NIL(int32:code);
+}
+
+func:failsafe = int32(tbb32:err) {
+    drop(puts("FAILSAFE TRIGGERED!"));
+    exit 1i32;
+};
+
+func:main = int32() {
+    int32:fail_cnt = 0i32;
+
+    drop(puts("nitpick-mongo -- LIB-1"));
+    drop(puts("====================="));
+
+    NIL:_2 = raw Mongo.init();
+    
+    // Test connection (may fail if no local mongo)
+    int32:conn = raw Mongo.connect("mongodb://localhost:27017\0");
+    if (conn >= 0i32) {
+        drop(puts("[PASS] connect"));
+        
+        int32:ins = raw Mongo.insert(conn, "testdb\0", "testcol\0", "{\"name\": \"Alice\", \"age\": 30}\0");
+        if (ins >= 0i32) { drop(puts("[PASS] insert")); }
+        if (ins < 0i32) { drop(puts("[FAIL] insert")); fail_cnt = fail_cnt + 1i32; }
+        
+        int32:cursor = raw Mongo.find(conn, "testdb\0", "testcol\0", "{\"name\": \"Alice\"}\0", "\0");
+        if (cursor >= 0i32) {
+            drop(puts("[PASS] find"));
+            string:doc = raw Mongo.cursor_next(cursor);
+            drop(raw Mongo.cursor_close(cursor));
+        }
+        if (cursor < 0i32) { drop(puts("[FAIL] find")); fail_cnt = fail_cnt + 1i32; }
+        
+        int32:del = raw Mongo.delete(conn, "testdb\0", "testcol\0", "{\"name\": \"Alice\"}\0");
+        if (del >= 0i32) { drop(puts("[PASS] delete")); }
+        if (del < 0i32) { drop(puts("[FAIL] delete")); fail_cnt = fail_cnt + 1i32; }
+        
+        drop(raw Mongo.disconnect(conn));
+    }
+    if (conn < 0i32) {
+        // If there's no mongodb instance running, let's not fail the whole CI, but count as skipped.
+        drop(puts("[SKIP] no local mongodb"));
+    }
+
+    NIL:_10 = raw Mongo.cleanup();
+    
+    drop(puts("---"));
+    if (fail_cnt > 0i32) {
+        drop(puts("TEST FAILED"));
+        exit 1i32;
+    }
+    
+    drop(puts("ALL TESTS PASSED"));
+    exit 0i32;
+};

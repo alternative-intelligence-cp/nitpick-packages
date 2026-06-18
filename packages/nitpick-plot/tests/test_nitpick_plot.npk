@@ -1,0 +1,51 @@
+// test_nitpick_plot.npk
+use "nitpick_plot.npk".*;
+
+extern "libc" { 
+    func:nitpick_libc_exit = NIL(int32:code); 
+    func:printf = int32(string:fmt);
+}
+
+int64:fail_cnt = 0i64;
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+func:assert_eq = int32(int32:actual, int32:expected, string:test_name) {
+    if (actual != expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i32);
+};
+
+func:main = int32() {
+    PlotCtx:p = raw Plot.create(800i32, 600i32, "Nitpick Plot Demo\0");
+    
+    int32:x = raw Plot.map_x(p, 0.5f64);
+    int32:y = raw Plot.map_y(p, 0.5f64);
+    
+    // Middle of 800x600 with margins (L:60, R:30, T:40, B:40)
+    // Width range = 800 - 60 - 30 = 710
+    // X = 60 + 0.5 * 710 = 60 + 355 = 415
+    // Height range = 600 - 40 - 40 = 520
+    // Y = 600 - 40 - (0.5 * 520) = 560 - 260 = 300
+    
+    drop assert_eq(x, 415i32, "T01 coordinate mapping X");
+    drop assert_eq(y, 300i32, "T02 coordinate mapping Y");
+    
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+    
+    drop(printf("SUCCESS: All tests passed.\n\0"));
+    exit 0i32;
+};

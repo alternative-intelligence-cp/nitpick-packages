@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-mysql"
+version = "0.2.3"
+
+[target.nitpick-mysql]
+type = "library"
+sources = ["src/nitpick_mysql.npk"]
+deps = []
+flags = ["-Lshim", "-lnitpick_mysql_shim", "-lmysqlclient"]
+
+[target.test-nitpick-mysql]
+type = "binary"
+sources = ["tests/test_nitpick_mysql.npk"]
+deps = []
+flags = ["-I", "src", "-Lshim", "-lnitpick_mysql_shim", "-lmysqlclient"]

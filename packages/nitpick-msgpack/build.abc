@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-msgpack"
+version = "0.11.2"
+
+[target.nitpick-msgpack]
+type = "library"
+sources = ["src/nitpick_msgpack.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_string"]
+
+[target.test-nitpick-msgpack]
+type = "binary"
+sources = ["tests/test_nitpick_msgpack.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_string"]

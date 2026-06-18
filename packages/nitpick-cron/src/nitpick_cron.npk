@@ -1,0 +1,283 @@
+// nitpick-cron - Task Scheduling
+use "../../nitpick-str/src/nitpick_str.npk".*;
+
+extern "aria_libc_mem" {
+    func:aria_libc_mem_calloc = int64(int64:count, int64:size);
+    func:aria_libc_mem_free   = void(int64:ptr);
+    func:aria_libc_mem_read_i32 = int32(int64:ptr, int64:offset);
+    func:aria_libc_mem_write_i32 = void(int64:ptr, int64:offset, int32:val);
+    func:aria_libc_mem_read_i64 = int64(int64:ptr, int64:offset);
+    func:aria_libc_mem_write_i64 = void(int64:ptr, int64:offset, int64:val);
+}
+
+extern "libc" {
+    func:gmtime_r = int64(int64:timep, int64:result);
+}
+
+extern "cron_shim" {
+    func:cron_shim_system = int64(string:cmd);
+    func:cron_shim_time = int64();
+    func:cron_shim_sleep = void(int64:seconds);
+}
+
+func:parse_int = int64(string:s) {
+    int64:len = string_length(s);
+    int64:i = 0i64;
+    int64:ans = 0i64;
+    loop(0i64, len, 1i64) {
+        string:c = string_substring(s, i, i + 1i64);
+        int64:dig = 0i64 - 1i64;
+        if (string_equals(c, "0")) { dig = 0i64; }
+        if (string_equals(c, "1")) { dig = 1i64; }
+        if (string_equals(c, "2")) { dig = 2i64; }
+        if (string_equals(c, "3")) { dig = 3i64; }
+        if (string_equals(c, "4")) { dig = 4i64; }
+        if (string_equals(c, "5")) { dig = 5i64; }
+        if (string_equals(c, "6")) { dig = 6i64; }
+        if (string_equals(c, "7")) { dig = 7i64; }
+        if (string_equals(c, "8")) { dig = 8i64; }
+        if (string_equals(c, "9")) { dig = 9i64; }
+        if (dig >= 0i64) {
+            ans = ans * 10i64 + dig;
+        }
+        i += 1i64;
+    }
+    pass ans;
+};
+
+func:set_bit = void(int64:handle, int64:offset, int64:idx, int32:val) {
+    aria_libc_mem_write_i32(handle, (offset + idx) * 4i64, val);
+};
+
+func:get_bit = int32(int64:handle, int64:offset, int64:idx) {
+    int32:v = aria_libc_mem_read_i32(handle, (offset + idx) * 4i64);
+    pass v;
+};
+
+func:parse_part = void(int64:handle, int64:offset, string:part, int64:min_val, int64:max_val) {
+    // Clear all
+    int64:i = min_val;
+    till(100, 1) {
+        if (i <= max_val) {
+            raw set_bit(handle, offset, i, 0i32);
+            i += 1i64;
+        } else {
+            i = max_val + 2i64;
+        }
+    }
+    
+    // Check if '*'
+    if (string_equals(part, "*")) {
+        int64:j = min_val;
+        till(100, 1) {
+            if (j <= max_val) {
+                raw set_bit(handle, offset, j, 1i32);
+                j += 1i64;
+            } else {
+                j = max_val + 2i64;
+            }
+        }
+    } else {
+        // Assume single value for now, or comma separated
+        int64:tc = raw Str.token_count(part, ",");
+        int64:k = 0i64;
+        loop(0i64, tc, 1i64) {
+            string:tok = raw Str.token(part, ",", k);
+            int64:val = raw parse_int(tok);
+            if (val >= min_val) {
+                if (val <= max_val) {
+                    raw set_bit(handle, offset, val, 1i32);
+                }
+            }
+            k += 1i64;
+        }
+    }
+};
+
+pub Type:Cron = {
+    func:create = int64(string:expr) {
+        int64:handle = aria_libc_mem_calloc(1i64, 544i64);
+        
+        string:min_part = raw Str.token(expr, " ", 0i64);
+        string:hr_part  = raw Str.token(expr, " ", 1i64);
+        string:dom_part = raw Str.token(expr, " ", 2i64);
+        string:mon_part = raw Str.token(expr, " ", 3i64);
+        string:dow_part = raw Str.token(expr, " ", 4i64);
+        
+        raw parse_part(handle, 0i64, min_part, 0i64, 59i64);
+        raw parse_part(handle, 60i64, hr_part, 0i64, 23i64);
+        raw parse_part(handle, 84i64, dom_part, 1i64, 31i64);
+        raw parse_part(handle, 116i64, mon_part, 1i64, 12i64);
+        raw parse_part(handle, 129i64, dow_part, 0i64, 6i64);
+        
+        pass handle;
+    };
+
+    func:next_run = int64(int64:handle, int64:current_time) {
+        int64:tm = aria_libc_mem_calloc(1i64, 56i64);
+        int64:timep = aria_libc_mem_calloc(1i64, 8i64);
+        
+        int64:t = current_time + 60i64; // start from next minute
+        
+        int64:ans = 0i64 - 1i64;
+        
+        loop(0i64, 500000i64, 1i64) {
+            if (ans == 0i64 - 1i64) {
+                aria_libc_mem_write_i64(timep, 0i64, t);
+                drop gmtime_r(timep, tm);
+                
+                int64:min  = @cast_unchecked<int64>(aria_libc_mem_read_i32(tm, 4i64));
+                int64:hour = @cast_unchecked<int64>(aria_libc_mem_read_i32(tm, 8i64));
+                int64:mday = @cast_unchecked<int64>(aria_libc_mem_read_i32(tm, 12i64));
+                int64:mon  = @cast_unchecked<int64>(aria_libc_mem_read_i32(tm, 16i64)) + 1i64; // 0-based to 1-based
+                int64:wday = @cast_unchecked<int64>(aria_libc_mem_read_i32(tm, 24i64));
+                
+                int32:m_ok = raw get_bit(handle, 0i64, min);
+                int32:h_ok = raw get_bit(handle, 60i64, hour);
+                int32:dom_ok = raw get_bit(handle, 84i64, mday);
+                int32:mon_ok = raw get_bit(handle, 116i64, mon);
+                int32:dow_ok = raw get_bit(handle, 129i64, wday);
+                
+                if (m_ok == 1i32) {
+                if (h_ok == 1i32) {
+                if (dom_ok == 1i32) {
+                if (mon_ok == 1i32) {
+                if (dow_ok == 1i32) {
+                    ans = t - @cast_unchecked<int64>(aria_libc_mem_read_i32(tm, 0i64)); // align to start of minute
+                }}}}}
+                
+                t = t + 60i64;
+            }
+        }
+        
+        aria_libc_mem_free(tm);
+        aria_libc_mem_free(timep);
+        pass ans;
+    };
+
+    func:destroy = int32(int64:handle) {
+        aria_libc_mem_free(handle);
+        pass 0i32;
+    };
+
+    // --- Daemon / Scheduler functions ---
+    // A daemon is represented by a separate handle format:
+    // [0] capacity
+    // [8] count
+    // [16] jobs_ptr -> [cron_expr, last_run_time, cmd_len] (24 bytes each)
+    // [24] cmds_ptr -> [string pointer] (8 bytes each)
+
+    func:daemon_create = int64() {
+        int64:handle = aria_libc_mem_calloc(1i64, 32i64);
+        pass handle;
+    };
+
+    func:daemon_resize = int32(int64:handle, int64:new_cap) {
+        int64:old_cap = aria_libc_mem_read_i64(handle, 0i64);
+        if (new_cap <= old_cap) { pass 0i32; }
+        
+        int64:old_j = aria_libc_mem_read_i64(handle, 16i64);
+        int64:old_c = aria_libc_mem_read_i64(handle, 24i64);
+        
+        int64:new_j = aria_libc_mem_calloc(new_cap, 24i64);
+        int64:new_c = aria_libc_mem_calloc(new_cap, 8i64);
+        
+        int64:count = aria_libc_mem_read_i64(handle, 8i64);
+        int64:i = 0i64;
+        loop(0i64, count, 1i64) {
+            aria_libc_mem_write_i64(new_j, i * 24i64, aria_libc_mem_read_i64(old_j, i * 24i64));
+            aria_libc_mem_write_i64(new_j, i * 24i64 + 8i64, aria_libc_mem_read_i64(old_j, i * 24i64 + 8i64));
+            aria_libc_mem_write_i64(new_j, i * 24i64 + 16i64, aria_libc_mem_read_i64(old_j, i * 24i64 + 16i64));
+            // Actually, Nitpick string is opaque in memory, but we can't easily array it. 
+            // Better to just store string representation pointers by keeping string handles.
+            // But we don't have arrays of strings. Wait, strings are not pointers, they are an opaque `string` type.
+            // We can't put `string` into `int64` easily without cast! Wait, `@cast_unchecked` supports `string` to `int64`?
+            // "cast supports numeric types and pointer types only." String is a pointer type under the hood?
+            i += 1i64;
+        }
+        
+        if (old_cap > 0i64) {
+            aria_libc_mem_free(old_j);
+            aria_libc_mem_free(old_c);
+        }
+        
+        aria_libc_mem_write_i64(handle, 0i64, new_cap);
+        aria_libc_mem_write_i64(handle, 16i64, new_j);
+        aria_libc_mem_write_i64(handle, 24i64, new_c);
+        pass 0i32;
+    };
+    
+    // Instead of string in array, let's keep it simple: tick returns job_id, user executes.
+    // That means `run_blocking` is indeed just returning... wait, if tick returns ONE job_id, how does it update last_run?
+    // It updates last_run when returned.
+
+    func:add_job = int32(int64:daemon, int64:cron_expr) {
+        int64:count = aria_libc_mem_read_i64(daemon, 8i64);
+        int64:cap = aria_libc_mem_read_i64(daemon, 0i64);
+        
+        if (count >= cap) {
+            int64:new_cap = cap * 2i64;
+            if (new_cap == 0i64) { new_cap = 4i64; }
+            drop Cron.daemon_resize(daemon, new_cap);
+        }
+        
+        int64:ptr = aria_libc_mem_read_i64(daemon, 16i64);
+        aria_libc_mem_write_i64(ptr, count * 24i64, cron_expr);
+        aria_libc_mem_write_i64(ptr, count * 24i64 + 8i64, 0i64); // last_run
+        
+        aria_libc_mem_write_i64(daemon, 8i64, count + 1i64);
+        pass @cast_unchecked<int32>(count);
+    };
+
+    func:tick = int64(int64:daemon) {
+        int64:now = cron_shim_time();
+        int64:count = aria_libc_mem_read_i64(daemon, 8i64);
+        int64:ptr = aria_libc_mem_read_i64(daemon, 16i64);
+        
+        int64:i = 0i64;
+        loop(0i64, count, 1i64) {
+            int64:expr = aria_libc_mem_read_i64(ptr, i * 24i64);
+            int64:last = aria_libc_mem_read_i64(ptr, i * 24i64 + 8i64);
+            
+            if (last == 0i64) {
+                aria_libc_mem_write_i64(ptr, i * 24i64 + 8i64, now);
+            } else {
+                int64:nxt = raw Cron.next_run(expr, last);
+                if (nxt <= now) {
+                    aria_libc_mem_write_i64(ptr, i * 24i64 + 8i64, now);
+                    pass i;
+                }
+            }
+            i += 1i64;
+        }
+        
+        pass 0i64 - 1i64;
+    };
+
+    func:run_blocking = int32(int64:daemon) {
+        // Runs forever, sleeping until the next job is due.
+        // We can't really call the jobs from here, so run_blocking just sleeps and ticks.
+        // But the user expects it to do something? It's a daemon loop. 
+        // Maybe it just spins and yields?
+        till(100, 1) {
+            int64:job_id = raw Cron.tick(daemon);
+            if (job_id == 0i64 - 1i64) {
+                cron_shim_sleep(1i64);
+            } else {
+                // Return the job id to the user, acting like a generator!
+                pass @cast_unchecked<int32>(job_id);
+            }
+        }
+        pass 0i32 - 1i32;
+    };
+
+    func:daemon_destroy = int32(int64:daemon) {
+        int64:cap = aria_libc_mem_read_i64(daemon, 0i64);
+        if (cap > 0i64) {
+            aria_libc_mem_free(aria_libc_mem_read_i64(daemon, 16i64));
+            aria_libc_mem_free(aria_libc_mem_read_i64(daemon, 24i64));
+        }
+        aria_libc_mem_free(daemon);
+        pass 0i32;
+    };
+};

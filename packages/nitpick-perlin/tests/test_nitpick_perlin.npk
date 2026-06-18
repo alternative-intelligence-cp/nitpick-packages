@@ -1,0 +1,52 @@
+// test_nitpick_perlin.npk
+use "nitpick_perlin.npk".*;
+
+extern "libc" {
+    func:printf = int32(string:fmt);
+}
+
+int64:fail_cnt = 0i64;
+
+func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+func:assert_neq = int32(flt64:actual, flt64:not_expected, string:test_name) {
+    if (actual == not_expected) {
+        fail_cnt += 1i64;
+        drop(printf("[FAIL] \0"));
+        drop(printf(test_name));
+        drop(printf(" (values match but should not)\n\0"));
+    } else {
+        drop(printf("[PASS] \0"));
+        drop(printf(test_name));
+        drop(printf("\n\0"));
+    }
+    pass(0i32);
+};
+
+func:main = int32() {
+    drop(printf("Testing nitpick-perlin...\n\0"));
+
+    drop Perlin.set_seed(42i32);
+
+    flt64:val1 = raw Perlin.perlin_2d(0.5f64, 0.5f64);
+    flt64:val2 = raw Perlin.perlin_3d(0.5f64, 0.5f64, 0.5f64);
+    flt64:val3 = raw Perlin.simplex_2d(0.5f64, 0.5f64);
+
+    drop(printf("Perlin / Simplex generated!\n\0"));
+
+    // Ensure they return different values at different coordinates
+    flt64:val4 = raw Perlin.perlin_2d(1.5f64, 0.5f64);
+    
+    drop assert_neq(val4, val1, "Perlin 2D returns distinct values for different coords");
+
+    if (fail_cnt > 0i64) {
+        drop(printf("SOME TESTS FAILED\n\0"));
+        exit 1i32;
+    }
+
+    drop(printf("SUCCESS: All tests passed.\n\0"));
+    exit 0i32;
+};

@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-opengl": {
+      "artifact_path": ".nitpick_make/build/libnitpick-opengl.a",
+      "source_hash": "fnv1a:16035194880911758733",
+      "command_hash": 15200352247185640617,
+      "source_timestamp": 18446744069053391705,
+      "build_timestamp": 1781511045,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-nitpick-opengl": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-opengl",
+      "source_hash": "fnv1a:9324548433538150550",
+      "command_hash": 5537230698997773413,
+      "source_timestamp": 18446744069053398566,
+      "build_timestamp": 1781511045,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "test-nitpick-regex-groups": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-regex-groups",
+      "source_hash": "fnv1a:3940091654485235572",
+      "command_hash": 7192609895709055604,
+      "source_timestamp": 18446744069053406761,
+      "build_timestamp": 1781519159,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-nitpick-regex": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-regex",
+      "source_hash": "fnv1a:13238751596533622439",
+      "command_hash": 7192609895709055604,
+      "source_timestamp": 18446744069053406761,
+      "build_timestamp": 1781519159,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "nitpick-regex": {
+      "artifact_path": ".nitpick_make/build/libnitpick-regex.a",
+      "source_hash": "fnv1a:15496868482558852457",
+      "command_hash": 7430173647217057002,
+      "source_timestamp": 18446744069052264473,
+      "build_timestamp": 1781519158,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

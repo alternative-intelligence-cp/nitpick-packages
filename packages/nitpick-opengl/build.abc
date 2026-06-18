@@ -1,0 +1,16 @@
+[project]
+name = "nitpick-opengl"
+version = "0.1.0"
+
+[target.nitpick-opengl]
+type = "library"
+sources = ["src/nitpick_opengl.npk"]
+deps = []
+flags = ["-Lshim", "-lnitpick_opengl_shim", "-lSDL2", "-lGL", "-ldl", "-lm"]
+
+[target.test-nitpick-opengl]
+type = "binary"
+sources = ["tests/test_nitpick_opengl.npk"]
+deps = []
+flags = ["-I", "src", "-L.nitpick_make/build", "-lnitpick-opengl", "-Lshim", "-lnitpick_opengl_shim", "-lSDL2", "-lGL", "-ldl", "-lm"]
+

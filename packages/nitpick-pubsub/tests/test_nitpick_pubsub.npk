@@ -1,0 +1,37 @@
+use "../src/nitpick_pubsub.npk".*;
+
+pub func:failsafe = int32(tbb32:err) {
+    drop err;
+    exit 1i32;
+};
+
+pub func:main = int32() {
+    int64:bus = raw EventBus.create();
+    
+    int64:TOPIC_A = 101i64;
+    int64:TOPIC_B = 102i64;
+    
+    // We can use 0x123 as a dummy callback pointer for the shim
+    drop EventBus.subscribe(bus, TOPIC_A, 0x123i64);
+    drop EventBus.subscribe(bus, TOPIC_A, 0x456i64);
+    drop EventBus.subscribe(bus, TOPIC_B, 0x789i64);
+    
+    // Sync publish
+    int32:dispatched = raw EventBus.publish(bus, TOPIC_A, 42i64);
+    if (dispatched != 2i32) { exit 2i32; }
+    
+    // Async publish
+    drop EventBus.publish_async(bus, TOPIC_A, 43i64);
+    drop EventBus.publish_async(bus, TOPIC_B, 99i64);
+    
+    // Tick
+    int32:async_disp = raw EventBus.tick(bus);
+    if (async_disp != 3i32) { exit 3i32; }
+    
+    // Ensure queue is empty now
+    int32:empty_disp = raw EventBus.tick(bus);
+    if (empty_disp != 0i32) { exit 4i32; }
+    
+    drop EventBus.destroy(bus);
+    exit 0i32;
+};

@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-nn"
+version = "0.1.0"
+
+[target.nitpick-nn]
+type = "library"
+sources = ["src/nitpick_nn.npk"]
+deps = []
+flags = ["-I", "../nitpick-matrix/src", "-I", "../nitpick-math/src"]
+
+[target.test-nn]
+type = "binary"
+sources = ["tests/test_nn.npk"]
+deps = []
+flags = ["-I", "src", "-I", "../nitpick-matrix/src", "-I", "../nitpick-math/src", "-L.nitpick_make/build", "-lnitpick-nn", "-L../nitpick-matrix/.nitpick_make/build", "-lnitpick-matrix", "-L../nitpick-math/.nitpick_make/build", "-lnitpick-math", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_math", "-lm"]

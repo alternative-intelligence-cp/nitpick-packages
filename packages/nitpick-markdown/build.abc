@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-markdown"
+version = "0.1.0"
+
+[target.nitpick-markdown]
+type = "library"
+sources = ["src/nitpick_markdown.npk"]
+deps = []
+flags = ["-I", "../nitpick-str/src"]
+
+[target.test-nitpick-markdown]
+type = "binary"
+sources = ["tests/test_markdown.npk"]
+deps = []
+flags = ["-I", "src", "-I", "../nitpick-str/src"]

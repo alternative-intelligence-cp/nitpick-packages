@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-log"
+version = "0.2.2"
+
+[target.nitpick-log]
+type = "library"
+sources = ["src/nitpick_log.npk"]
+deps = []
+flags = ["-I", "../nitpick-cli/src", "-L.", "-lnitpick_log_shim"]
+
+[target.test-nitpick-log]
+type = "binary"
+sources = ["tests/test_nitpick_log.npk"]
+deps = []
+flags = ["-I", "src", "-I", "../nitpick-cli/src", "-L.", "-lnitpick_log_shim", "-L../nitpick-cli", "-lnitpick_cli_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]

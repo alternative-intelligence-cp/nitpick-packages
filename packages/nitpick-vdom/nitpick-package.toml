@@ -1,0 +1,4 @@
+[package]
+name = "nitpick-vdom"
+version = "0.1.0"
+description = "Virtual DOM implementation for Nitpick"

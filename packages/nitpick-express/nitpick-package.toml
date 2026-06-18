@@ -1,0 +1,4 @@
+[package]
+name = "nitpick-express"
+version = "0.1.0"
+description = "High-level web framework for Nitpick"

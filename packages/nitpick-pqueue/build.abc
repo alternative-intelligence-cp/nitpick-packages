@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-pqueue"
+version = "0.11.1"
+
+[target.nitpick-pqueue]
+type = "library"
+sources = ["src/nitpick_pqueue.npk"]
+deps = []
+flags = []
+
+[target.test-nitpick-pqueue]
+type = "binary"
+sources = ["tests/test_nitpick_pqueue.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]

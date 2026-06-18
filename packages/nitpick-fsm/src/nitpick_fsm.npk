@@ -1,0 +1,218 @@
+// nitpick-fsm - Finite State Machines
+
+extern "aria_libc_mem" {
+    func:aria_libc_mem_malloc = int64(int64:size);
+    func:aria_libc_mem_calloc = int64(int64:count, int64:size);
+    func:aria_libc_mem_free   = void(int64:ptr);
+    func:aria_libc_mem_read_i64 = int64(int64:ptr, int64:offset);
+    func:aria_libc_mem_write_i64 = void(int64:ptr, int64:offset, int64:val);
+}
+
+pub Type:FSM = {
+    // Handle (64 bytes):
+    // [0] capacity (of transition array)
+    // [8] count (of transitions)
+    // [16] current_state (int64)
+    // [24] transitions_ptr (int64[] array of 24-byte entries: [from_state, event, to_state])
+    // [32] sub_fsm_count
+    // [40] sub_fsm_capacity
+    // [48] sub_fsm_states_ptr (int64[])
+    // [56] sub_fsm_handles_ptr (int64[])
+
+    func:create = int64(int64:initial_state) {
+        int64:handle = aria_libc_mem_calloc(1i64, 64i64);
+        aria_libc_mem_write_i64(handle, 16i64, initial_state);
+        pass handle;
+    };
+
+    func:resize = int32(int64:handle, int64:new_cap) {
+        int64:old_cap = aria_libc_mem_read_i64(handle, 0i64);
+        if (new_cap <= old_cap) { pass 0i32; }
+        
+        int64:old_ptr = aria_libc_mem_read_i64(handle, 24i64);
+        int64:new_ptr = aria_libc_mem_calloc(new_cap, 24i64);
+        
+        int64:count = aria_libc_mem_read_i64(handle, 8i64);
+        int64:i = 0i64;
+        loop(0i64, count, 1i64) {
+            int64:from_s = aria_libc_mem_read_i64(old_ptr, i * 24i64);
+            int64:ev = aria_libc_mem_read_i64(old_ptr, i * 24i64 + 8i64);
+            int64:to_s = aria_libc_mem_read_i64(old_ptr, i * 24i64 + 16i64);
+            
+            aria_libc_mem_write_i64(new_ptr, i * 24i64, from_s);
+            aria_libc_mem_write_i64(new_ptr, i * 24i64 + 8i64, ev);
+            aria_libc_mem_write_i64(new_ptr, i * 24i64 + 16i64, to_s);
+            i += 1i64;
+        }
+        
+        if (old_cap > 0i64) {
+            aria_libc_mem_free(old_ptr);
+        }
+        
+        aria_libc_mem_write_i64(handle, 0i64, new_cap);
+        aria_libc_mem_write_i64(handle, 24i64, new_ptr);
+        pass 0i32;
+    };
+
+    func:resize_subs = int32(int64:handle, int64:new_cap) {
+        int64:old_cap = aria_libc_mem_read_i64(handle, 40i64);
+        if (new_cap <= old_cap) { pass 0i32; }
+        
+        int64:old_s = aria_libc_mem_read_i64(handle, 48i64);
+        int64:old_h = aria_libc_mem_read_i64(handle, 56i64);
+        int64:new_s = aria_libc_mem_calloc(new_cap, 8i64);
+        int64:new_h = aria_libc_mem_calloc(new_cap, 8i64);
+        
+        int64:count = aria_libc_mem_read_i64(handle, 32i64);
+        int64:i = 0i64;
+        loop(0i64, count, 1i64) {
+            aria_libc_mem_write_i64(new_s, i * 8i64, aria_libc_mem_read_i64(old_s, i * 8i64));
+            aria_libc_mem_write_i64(new_h, i * 8i64, aria_libc_mem_read_i64(old_h, i * 8i64));
+            i += 1i64;
+        }
+        
+        if (old_cap > 0i64) {
+            aria_libc_mem_free(old_s);
+            aria_libc_mem_free(old_h);
+        }
+        
+        aria_libc_mem_write_i64(handle, 40i64, new_cap);
+        aria_libc_mem_write_i64(handle, 48i64, new_s);
+        aria_libc_mem_write_i64(handle, 56i64, new_h);
+        pass 0i32;
+    };
+
+    func:add_transition = int32(int64:handle, int64:from_state, int64:event, int64:to_state) {
+        int64:count = aria_libc_mem_read_i64(handle, 8i64);
+        int64:cap = aria_libc_mem_read_i64(handle, 0i64);
+        
+        if (count >= cap) {
+            int64:new_cap = cap * 2i64;
+            if (new_cap == 0i64) { new_cap = 8i64; }
+            drop FSM.resize(handle, new_cap);
+        }
+        
+        int64:ptr = aria_libc_mem_read_i64(handle, 24i64);
+        int64:offset = count * 24i64;
+        aria_libc_mem_write_i64(ptr, offset, from_state);
+        aria_libc_mem_write_i64(ptr, offset + 8i64, event);
+        aria_libc_mem_write_i64(ptr, offset + 16i64, to_state);
+        
+        aria_libc_mem_write_i64(handle, 8i64, count + 1i64);
+        pass 0i32;
+    };
+
+    func:set_sub_fsm = int32(int64:handle, int64:state_id, int64:sub_fsm_handle) {
+        int64:count = aria_libc_mem_read_i64(handle, 32i64);
+        int64:cap = aria_libc_mem_read_i64(handle, 40i64);
+        
+        if (count >= cap) {
+            int64:new_cap = cap * 2i64;
+            if (new_cap == 0i64) { new_cap = 4i64; }
+            drop FSM.resize_subs(handle, new_cap);
+        }
+        
+        int64:s_ptr = aria_libc_mem_read_i64(handle, 48i64);
+        int64:h_ptr = aria_libc_mem_read_i64(handle, 56i64);
+        
+        aria_libc_mem_write_i64(s_ptr, count * 8i64, state_id);
+        aria_libc_mem_write_i64(h_ptr, count * 8i64, sub_fsm_handle);
+        
+        aria_libc_mem_write_i64(handle, 32i64, count + 1i64);
+        pass 0i32;
+    };
+
+    func:get_current_state = int64(int64:handle) {
+        pass aria_libc_mem_read_i64(handle, 16i64);
+    };
+
+    func:can_trigger = int32(int64:handle, int64:event) {
+        int64:curr = aria_libc_mem_read_i64(handle, 16i64);
+        int64:count = aria_libc_mem_read_i64(handle, 8i64);
+        int64:ptr = aria_libc_mem_read_i64(handle, 24i64);
+        
+        int64:i = 0i64;
+        loop(0i64, count, 1i64) {
+            int64:offset = i * 24i64;
+            int64:fs = aria_libc_mem_read_i64(ptr, offset);
+            int64:ev = aria_libc_mem_read_i64(ptr, offset + 8i64);
+            if (fs == curr) {
+                if (ev == event) {
+                    pass 1i32;
+                }
+            }
+            i += 1i64;
+        }
+        
+        // Check sub-FSM
+        int64:s_count = aria_libc_mem_read_i64(handle, 32i64);
+        int64:s_ptr = aria_libc_mem_read_i64(handle, 48i64);
+        int64:h_ptr = aria_libc_mem_read_i64(handle, 56i64);
+        i = 0i64;
+        loop(0i64, s_count, 1i64) {
+            if (aria_libc_mem_read_i64(s_ptr, i * 8i64) == curr) {
+                int64:sub_h = aria_libc_mem_read_i64(h_ptr, i * 8i64);
+                if (raw FSM.can_trigger(sub_h, event) == 1i32) {
+                    pass 1i32;
+                }
+            }
+            i += 1i64;
+        }
+        
+        pass 0i32;
+    };
+
+    func:trigger = int64(int64:handle, int64:event) {
+        int64:curr = aria_libc_mem_read_i64(handle, 16i64);
+        int64:count = aria_libc_mem_read_i64(handle, 8i64);
+        int64:ptr = aria_libc_mem_read_i64(handle, 24i64);
+        
+        int64:i = 0i64;
+        loop(0i64, count, 1i64) {
+            int64:offset = i * 24i64;
+            int64:fs = aria_libc_mem_read_i64(ptr, offset);
+            int64:ev = aria_libc_mem_read_i64(ptr, offset + 8i64);
+            if (fs == curr) {
+                if (ev == event) {
+                    int64:ts = aria_libc_mem_read_i64(ptr, offset + 16i64);
+                    aria_libc_mem_write_i64(handle, 16i64, ts);
+                    pass ts;
+                }
+            }
+            i += 1i64;
+        }
+        
+        // Try cascading to sub-FSM
+        int64:s_count = aria_libc_mem_read_i64(handle, 32i64);
+        int64:s_ptr = aria_libc_mem_read_i64(handle, 48i64);
+        int64:h_ptr = aria_libc_mem_read_i64(handle, 56i64);
+        i = 0i64;
+        loop(0i64, s_count, 1i64) {
+            if (aria_libc_mem_read_i64(s_ptr, i * 8i64) == curr) {
+                int64:sub_h = aria_libc_mem_read_i64(h_ptr, i * 8i64);
+                int64:sub_res = raw FSM.trigger(sub_h, event);
+                if (sub_res != 0i64 - 1i64) {
+                    pass sub_res; // We return the new sub-state but the parent stays in current
+                }
+            }
+            i += 1i64;
+        }
+        
+        pass 0i64 - 1i64;
+    };
+
+    func:destroy = int32(int64:handle) {
+        int64:cap = aria_libc_mem_read_i64(handle, 0i64);
+        if (cap > 0i64) {
+            int64:ptr = aria_libc_mem_read_i64(handle, 24i64);
+            aria_libc_mem_free(ptr);
+        }
+        int64:s_cap = aria_libc_mem_read_i64(handle, 40i64);
+        if (s_cap > 0i64) {
+            aria_libc_mem_free(aria_libc_mem_read_i64(handle, 48i64));
+            aria_libc_mem_free(aria_libc_mem_read_i64(handle, 56i64));
+        }
+        aria_libc_mem_free(handle);
+        pass 0i32;
+    };
+};

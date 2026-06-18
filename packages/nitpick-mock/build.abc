@@ -1,0 +1,15 @@
+[project]
+name = "nitpick-mock"
+version = "0.11.2"
+
+[target.nitpick-mock]
+type = "library"
+sources = ["src/nitpick_mock.npk"]
+deps = []
+flags = ["-L../../../nitpick-libc/shim", "-lnitpick_libc_mem"]
+
+[target.test-nitpick-mock]
+type = "binary"
+sources = ["tests/test_nitpick_mock.npk"]
+deps = []
+flags = ["-I", "src", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem"]

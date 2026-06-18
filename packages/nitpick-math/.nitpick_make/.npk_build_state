@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-math": {
+      "artifact_path": ".nitpick_make/build/libnitpick-math.a",
+      "source_hash": "fnv1a:6691885485029915606",
+      "command_hash": 5460901038041898420,
+      "source_timestamp": 18446744069052264540,
+      "build_timestamp": 1781510055,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-nitpick-math": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-math",
+      "source_hash": "fnv1a:3501918584310355917",
+      "command_hash": 2631893897383278650,
+      "source_timestamp": 18446744069052267492,
+      "build_timestamp": 1781510055,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

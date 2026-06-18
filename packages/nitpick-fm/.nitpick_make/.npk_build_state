@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-fm": {
+      "artifact_path": ".nitpick_make/build/nitpick-fm",
+      "source_hash": "fnv1a:4011963764713573748",
+      "command_hash": 4897778570242620798,
+      "source_timestamp": 18446744069053631239,
+      "build_timestamp": 1781743666,
+      "build_duration_ms": 139,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

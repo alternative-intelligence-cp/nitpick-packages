@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-express": {
+      "artifact_path": ".nitpick_make/build/libnitpick-express.a",
+      "source_hash": "fnv1a:8145162293874984329",
+      "command_hash": 668771937070806719,
+      "source_timestamp": 18446744069053629870,
+      "build_timestamp": 1781742278,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-nitpick-express": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-express",
+      "source_hash": "fnv1a:17464361275060594381",
+      "command_hash": 7219652179272046265,
+      "source_timestamp": 18446744069053629895,
+      "build_timestamp": 1781742278,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

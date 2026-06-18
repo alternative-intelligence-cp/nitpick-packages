@@ -10,7 +10,7 @@ pub func:md_parse_inline = string(string:s) {
     
     till(4096, 1) {
         if (i < len) {
-            string:ch = raw str_char_at(s, i);
+            string:ch = raw Str_char_at(s, i);
             string:ch2 = "";
             if (i + 1i64 < len) {
                 ch2 = string_substring(s, i, i + 2i64);
@@ -64,7 +64,7 @@ pub func:md_parse_inline = string(string:s) {
                             if (next_idx >= 0i64) {
                                 int64:after_bracket = i + 1i64 + next_idx + 1i64;
                                 if (after_bracket < len) {
-                                    string:ch_after = raw str_char_at(s, after_bracket);
+                                    string:ch_after = raw Str_char_at(s, after_bracket);
                                     if (string_equals(ch_after, "(")) {
                                         int64:paren_idx = string_index_of(string_substring(s, after_bracket + 1i64, len), ")");
                                         if (paren_idx >= 0i64) {
@@ -112,12 +112,12 @@ pub func:md_parse_inline = string(string:s) {
 // Parses a full block of markdown into HTML
 pub func:md_to_html = string(string:md) {
     string:out = "";
-    int64:num_lines = raw str_line_count(md);
+    int64:num_lines = raw Str_line_count(md);
     int64:i = 0i64;
     int32:in_list = 0i32;
     
     while (i < num_lines) {
-        string:line = raw str_token(md, "\n", i);
+        string:line = raw Str_token(md, "\n", i);
         string:trim_line = string_trim(line);
         
         if (string_is_empty(trim_line)) {
@@ -128,21 +128,21 @@ pub func:md_to_html = string(string:md) {
         } else {
             if (string_starts_with(trim_line, "# ")) {
                 if (in_list == 1i32) { out = string_concat(out, "</ul>\n"); in_list = 0i32; }
-                string:inner = raw str_remove_prefix(trim_line, "# ");
+                string:inner = raw Str_remove_prefix(trim_line, "# ");
                 out = string_concat(out, "<h1>");
                 out = string_concat(out, raw md_parse_inline(inner));
                 out = string_concat(out, "</h1>\n");
             } else {
                 if (string_starts_with(trim_line, "## ")) {
                     if (in_list == 1i32) { out = string_concat(out, "</ul>\n"); in_list = 0i32; }
-                    string:inner = raw str_remove_prefix(trim_line, "## ");
+                    string:inner = raw Str_remove_prefix(trim_line, "## ");
                     out = string_concat(out, "<h2>");
                     out = string_concat(out, raw md_parse_inline(inner));
                     out = string_concat(out, "</h2>\n");
                 } else {
                     if (string_starts_with(trim_line, "### ")) {
                         if (in_list == 1i32) { out = string_concat(out, "</ul>\n"); in_list = 0i32; }
-                        string:inner = raw str_remove_prefix(trim_line, "### ");
+                        string:inner = raw Str_remove_prefix(trim_line, "### ");
                         out = string_concat(out, "<h3>");
                         out = string_concat(out, raw md_parse_inline(inner));
                         out = string_concat(out, "</h3>\n");
@@ -152,7 +152,7 @@ pub func:md_to_html = string(string:md) {
                                 out = string_concat(out, "<ul>\n");
                                 in_list = 1i32;
                             }
-                            string:inner = raw str_remove_prefix(trim_line, "- ");
+                            string:inner = raw Str_remove_prefix(trim_line, "- ");
                             out = string_concat(out, "  <li>");
                             out = string_concat(out, raw md_parse_inline(inner));
                             out = string_concat(out, "</li>\n");

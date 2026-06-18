@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-mysql": {
+      "artifact_path": ".nitpick_make/build/libnitpick-mysql.a",
+      "source_hash": "fnv1a:14242180127199422799",
+      "command_hash": 13539455013480439628,
+      "source_timestamp": 18446744069053398045,
+      "build_timestamp": 1781510466,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-nitpick-mysql": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-mysql",
+      "source_hash": "fnv1a:3607339601337853470",
+      "command_hash": 14602938902019309430,
+      "source_timestamp": 18446744069053398136,
+      "build_timestamp": 1781510520,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

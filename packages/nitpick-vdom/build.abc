@@ -1,0 +1,19 @@
+[project]
+name = "nitpick-vdom"
+version = "0.1.0"
+
+[target.nitpick-vdom]
+type = "library"
+sources = ["src/nitpick_vdom.npk"]
+deps = []
+flags = ["-I", "src", "-I", "../nitpick-str/src"]
+link_libraries = []
+link_paths = []
+
+[target.test-nitpick-vdom]
+type = "binary"
+sources = ["tests/test_nitpick_vdom.npk"]
+deps = ["nitpick-vdom"]
+flags = ["-I", "src", "-I", "../nitpick-str/src"]
+link_libraries = []
+link_paths = []

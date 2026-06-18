@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "toolchain": {
+    "compiler_version": "/home/randy/Workspace/REPOS/nitpick/build/nitpickc",
+    "compiler_hash": ""
+  },
+  "targets": {
+    "nitpick-pqueue": {
+      "artifact_path": ".nitpick_make/build/libnitpick-pqueue.a",
+      "source_hash": "fnv1a:15135128560838697062",
+      "command_hash": 14695981039346656037,
+      "source_timestamp": 18446744069053404364,
+      "build_timestamp": 1781516768,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    },
+    "test-nitpick-pqueue": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-pqueue",
+      "source_hash": "fnv1a:11744516965424668925",
+      "command_hash": 10176336046507727734,
+      "source_timestamp": 18446744069053404364,
+      "build_timestamp": 1781516768,
+      "build_duration_ms": 0,
+      "dependencies": [],
+      "implicit_inputs": []
+    }
+  }
+}

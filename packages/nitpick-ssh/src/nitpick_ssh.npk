@@ -406,8 +406,10 @@ func:ssh_kexinit_build = int64(int64:session) {
     buf = raw ssh_encode_name_list(buf, "aes256-ctr,aes128-ctr");
     buf = raw ssh_encode_name_list(buf, "hmac-sha2-256");
     buf = raw ssh_encode_name_list(buf, "hmac-sha2-256");
-    buf = raw ssh_encode_name_list(buf, "none");
-    buf = raw ssh_encode_name_list(buf, "none");
+    // v0.8.7: advertise zlib compression (both directions)
+    string:comp_list = raw ssh_compression_algorithms();
+    buf = raw ssh_encode_name_list(buf, comp_list);
+    buf = raw ssh_encode_name_list(buf, comp_list);
     buf = raw ssh_encode_name_list(buf, "");
     buf = raw ssh_encode_name_list(buf, "");
 
@@ -477,10 +479,14 @@ func:ssh_kexinit_parse = int32(int64:session, int64:payload_buf) {
     ahset(session, "_server_mac_s2c", mac_s2c);
     off = off + 4i64 + slen6;
 
-    // compression_algorithms (skip, we only support none)
+    // compression_algorithms_client_to_server — v0.8.7: parse and store
     int64:slen7 = raw ssh_decode_string_len(payload_buf, off);
+    string:comp_c2s = raw ssh_decode_string_data(payload_buf, off);
+    ahset(session, "_server_comp_c2s", comp_c2s);
     off = off + 4i64 + slen7;
     int64:slen8 = raw ssh_decode_string_len(payload_buf, off);
+    string:comp_s2c = raw ssh_decode_string_data(payload_buf, off);
+    ahset(session, "_server_comp_s2c", comp_s2c);
     off = off + 4i64 + slen8;
 
     // languages (skip)
@@ -547,6 +553,29 @@ func:ssh_kex_negotiate = int32(int64:session) {
     if (string_contains(server_mac_s2c, "hmac-sha2-256")) { has_mac2 = 1i32; }
     if (has_mac2 == 0i32) { result_ok = 0i32; }
     if (has_mac2 == 1i32) { ahset(session, "_neg_mac_s2c", "hmac-sha2-256"); }
+
+    // v0.8.7: Compression negotiation
+    // Prefer zlib@openssh.com (delayed), fall back to none.
+    string:server_comp_c2s = ahget(session, "_server_comp_c2s");
+    string:chosen_comp = "none";
+    if (string_contains(server_comp_c2s, "zlib@openssh.com")) {
+        chosen_comp = "zlib@openssh.com";
+    }
+    if (chosen_comp == "none") {
+        if (string_contains(server_comp_c2s, "zlib")) {
+            chosen_comp = "zlib";
+        }
+    }
+    ahset(session, "_neg_comp", chosen_comp);
+    // _compression_active flips to 1 after auth for zlib@openssh.com,
+    // or immediately after NEWKEYS for plain zlib.
+    if (chosen_comp == "zlib") {
+        ahset(session, "_compression_active", "1");
+    }
+    if (chosen_comp != "zlib") {
+        ahset(session, "_compression_active", "0");
+    }
+    drop(raw ssh_compression_set(session, chosen_comp));
 
     pass result_ok;
 };
@@ -2646,6 +2675,21 @@ func:ssh_compression_enabled = int32(int64:session) {
 // Set compression algorithm after negotiation.
 func:ssh_compression_set = NIL(int64:session, string:algo) {
     ahset(session, "_compression", algo);
+    pass(NIL);
+};
+
+// Get the negotiated compression algorithm name ("none", "zlib", "zlib@openssh.com").
+func:ssh_compression_get = string(int64:session) {
+    string:comp = ahget(session, "_compression");
+    pass comp;
+};
+
+// Returns 1 if compression is currently active (data flow is compressed), 0 otherwise.
+// For plain "zlib": active after NEWKEYS. For "zlib@openssh.com": active after auth.
+func:ssh_compression_is_active = int32(int64:session) {
+    string:active = ahget(session, "_compression_active");
+    if (string_contains(active, "1")) { pass 1i32; }
+    pass 0i32;
 };
 
 // ── Interactive Shell (RFC 4254 §6.2, §6.5) ─────────────────────────────────
@@ -2957,6 +3001,8 @@ Type:SSH = {
     func:compression_algos   = string()                                        { pass raw ssh_compression_algorithms(); };
     func:compression_enabled = int32(int64:s)                                  { pass raw ssh_compression_enabled(s); };
     func:compression_set     = NIL(int64:s, string:a)                          { raw ssh_compression_set(s, a); };
+    func:compression_get     = string(int64:s)                                 { pass raw ssh_compression_get(s); };     // v0.8.7
+    func:compression_active  = int32(int64:s)                                  { pass raw ssh_compression_is_active(s); }; // v0.8.7
 
     // Interactive Shell
     func:pty_request         = int64(int64:ch, string:t, int32:c, int32:r)     { pass raw ssh_pty_request(ch, t, c, r); };
