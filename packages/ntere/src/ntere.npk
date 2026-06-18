@@ -1,0 +1,131 @@
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_tui.npk".*;
+use "nitpick_input.npk".*;
+
+extern func:usleep = int32(int32:usec);
+extern func:nitpick_input_enter_raw = int32();
+extern func:nitpick_input_exit_raw = int32();
+extern func:nitpick_input_read_key = int32();
+
+func:main = int32() {
+    string:curr_dir = raw fs_get_cwd();
+    string:items = "";
+    int32:selected = 0i32;
+    int64:lines = 0i64;
+    
+    string:raw_list = raw fs_list_dir(curr_dir);
+    if (string_length(raw_list) > 0i64) {
+        items = string_concat("..|\0", raw Str.replace_all(raw_list, "\n\0", "|\0"));
+    } else {
+        items = "..|\0";
+    }
+    lines = raw Str.count(items, "|\0") + 1i64;
+    selected = 0i32;
+    
+    raw Tui.init();
+    drop(nitpick_input_enter_raw());
+    
+    int32:running = 1i32;
+    string:final_output = "";
+    
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0");
+        
+        Widget:panel = raw Tui.panel(2i32, 2i32, 50i32, 20i32, 7i32, 0i32);
+        drop(Tui.draw_widget(panel));
+        
+        string:title = string_concat(" ntere - \0", curr_dir);
+        if (string_length(title) > 46i64) {
+            title = string_concat("...", raw Str.slice(title, string_length(title) - 43i64));
+        }
+        Widget:lbl_title = raw Tui.label(4i32, 2i32, title, 6i32, 0i32);
+        drop(Tui.draw_widget(lbl_title));
+        
+        if (string_length(items) > 0i64) {
+            Widget:listbox = raw Tui.listbox(4i32, 4i32, 46i32, 16i32, items, selected);
+            drop(Tui.draw_widget(listbox));
+        } else {
+            Widget:lbl_empty = raw Tui.label(4i32, 4i32, "(empty directory)\0", 7i32, 0i32);
+            drop(Tui.draw_widget(lbl_empty));
+        }
+        
+        string:footer = " \x1b[36mEnter\x1b[0m: cd \x1b[36mEsc\x1b[0m: quit \x1b[36mLeft/Right\x1b[0m: nav \0";
+        Widget:lbl_footer = raw Tui.label(4i32, 21i32, footer, 3i32, 0i32);
+        drop(Tui.draw_widget(lbl_footer));
+        
+        int32:k = nitpick_input_read_key();
+        
+        if (k == 27i32 || k == 113i32) { // Esc or 'q'
+            running = 0i32;
+        }
+        else if (k == 1i32) { // Up
+            if (selected > 0i32) { selected = selected - 1i32; }
+        }
+        else if (k == 2i32) { // Down
+            if (selected < @cast_unchecked<int32>(lines) - 1i32) { selected = selected + 1i32; }
+        }
+        else if (k == 4i32) { // Left
+            curr_dir = raw fs_absolute(string_concat(curr_dir, "/..\0"));
+            string:raw_list2 = raw fs_list_dir(curr_dir);
+            if (string_length(raw_list2) > 0i64) {
+                items = string_concat("..|\0", raw Str.replace_all(raw_list2, "\n\0", "|\0"));
+            } else {
+                items = "..|\0";
+            }
+            lines = raw Str.count(items, "|\0") + 1i64;
+            selected = 0i32;
+        }
+        else if (k == 3i32) { // Right
+            if (string_length(items) > 0i64) {
+                string:selected_item = raw Str.token(items, "|\0", @cast<int64>(selected));
+                string:next_dir = string_concat(curr_dir, string_concat("/\0", selected_item));
+                if (raw fs_is_dir(next_dir) == 1i64) {
+                    curr_dir = raw fs_absolute(next_dir);
+                    string:raw_list3 = raw fs_list_dir(curr_dir);
+                    if (string_length(raw_list3) > 0i64) {
+                        items = string_concat("..|\0", raw Str.replace_all(raw_list3, "\n\0", "|\0"));
+                    } else {
+                        items = "..|\0";
+                    }
+                    lines = raw Str.count(items, "|\0") + 1i64;
+                    selected = 0i32;
+                }
+            }
+        }
+        else if (k == 10i32 || k == 13i32) { // Enter
+            if (string_length(items) > 0i64) {
+                string:selected_item = raw Str.token(items, "|\0", @cast<int64>(selected));
+                string:next_dir = string_concat(curr_dir, string_concat("/\0", selected_item));
+                if (raw fs_is_dir(next_dir) == 1i64) {
+                    final_output = next_dir;
+                } else {
+                    final_output = curr_dir;
+                }
+            } else {
+                final_output = curr_dir;
+            }
+            running = 0i32;
+        }
+        
+        drop(usleep(30000i32));
+    }
+    
+    raw Tui.shutdown();
+    drop(nitpick_input_exit_raw());
+    print("\n\x1b[?25h\0"); // Show cursor
+    
+    if (string_length(final_output) > 0i64) {
+        print(final_output);
+        print("\n\0");
+    }
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    raw Tui.shutdown();
+    drop(nitpick_input_exit_raw());
+    print("\n\x1b[?25h\0");
+    exit(1i32);
+};

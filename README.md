@@ -83,6 +83,7 @@ Ecosystem package libraries for the [Nitpick programming language](https://githu
 | nitpick-nmdcat | Markdown viewer for the terminal |
 | nitpick-ndog | A simple command-line DNS client |
 | nitpick-nkibi | A simple, lightweight terminal text editor |
+| nitpick-ntere | A fast TUI directory browser (alternative to `cd + ls`) |
 | nitpick-nn | Neural network framework built on nitpick-matrix |
 | nitpick-nkondo | Fast TUI utility to find and delete heavy project directories |
 | nitpick-nrura | An interactive TUI scratchpad designed for building and debugging shell pipelines with live preview execution. |
