@@ -92,6 +92,7 @@ Ecosystem package libraries for the [Nitpick programming language](https://githu
 | nitpick-str-builder | High-performance C-backed string builder library |
 | nitpick-ndomain-check | Quickly check if a domain name is available via RDAP |
 | nitpick-nzeitfetch | Instantaneous system information fetcher |
+| nitpick-nhexyl | A command-line hex viewer for inspecting binary files |
 | nitpick-ntere | A fast TUI directory browser (alternative to `cd + ls`) |
 | nitpick-nn | Neural network framework built on nitpick-matrix |
 | nitpick-nkondo | Fast TUI utility to find and delete heavy project directories |
