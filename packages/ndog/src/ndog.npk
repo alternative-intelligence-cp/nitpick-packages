@@ -1,0 +1,88 @@
+use "nitpick_str.npk".*;
+use "nitpick_cli.npk".*;
+use "nitpick_dns.npk".*;
+
+func:main = int32() {
+    drop(Cli.register_flag("--reverse\0", "-r\0"));
+    drop(Cli.register_flag("--all\0", "-a\0"));
+    drop(Cli.register_flag("--help\0", "-h\0"));
+    
+    drop(Cli.parse());
+    
+    if (raw Cli.get_flag("--help\0") == 1i64) {
+        print("Usage: ndog [OPTIONS] <domain or ip>\n\n\0");
+        print("Options:\n\0");
+        print("  -r, --reverse   Perform a reverse DNS lookup on an IP address\n\0");
+        print("  -a, --all       Resolve all IP addresses for a domain\n\0");
+        print("  -h, --help      Show this help message\n\0");
+        exit(0i32);
+    }
+    
+    if (raw Cli.get_positional_count() == 0i64) {
+        print("Error: Target domain or IP address required.\n\0");
+        print("Usage: ndog <target>\n\0");
+        exit(1i32);
+    }
+    
+    string:target = raw Cli.get_positional(0i64);
+    
+    if (raw Cli.get_flag("--reverse\0") == 1i64) {
+        print("\x1b[36mQuerying reverse DNS for:\x1b[0m \0");
+        print(target);
+        print("\n\n\0");
+        
+        string:c_target = string_concat(target, "\0");
+        string:res = raw Dns.reverse(c_target);
+        
+        if (string_length(res) == 0i64) {
+            print("\x1b[31mError:\x1b[0m Could not resolve PTR record.\n\0");
+            exit(1i32);
+        }
+        
+        print("\x1b[32mPTR\x1b[0m\t\0");
+        print(res);
+        print("\n\0");
+    } else {
+        print("\x1b[36mQuerying DNS for:\x1b[0m \0");
+        print(target);
+        print("\n\n\0");
+        
+        string:c_target = string_concat(target, "\0");
+        
+        if (raw Cli.get_flag("--all\0") == 1i64) {
+            string:res = raw Dns.resolve_all(c_target);
+            if (string_length(res) == 0i64) {
+                print("\x1b[31mError:\x1b[0m Could not resolve domain.\n\0");
+                exit(1i32);
+            }
+            
+            int64:count = raw Str.token_count(res, "|\0");
+            int64:i = 0i64;
+            while (i < count) {
+                string:ip = raw Str.token(res, "|\0", i);
+                if (string_length(ip) > 0i64) {
+                    print("\x1b[32mA/AAAA\x1b[0m\t\0");
+                    print(ip);
+                    print("\n\0");
+                }
+                i = i + 1i64;
+            }
+        } else {
+            string:res = raw Dns.resolve(c_target);
+            if (string_length(res) == 0i64) {
+                print("\x1b[31mError:\x1b[0m Could not resolve domain.\n\0");
+                exit(1i32);
+            }
+            print("\x1b[32mA/AAAA\x1b[0m\t\0");
+            print(res);
+            print("\n\0");
+        }
+    }
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    print("\n\x1b[31mProcess terminated unexpectedly.\x1b[0m\n\0");
+    exit(1i32);
+};
