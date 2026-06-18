@@ -84,6 +84,7 @@ Ecosystem package libraries for the [Nitpick programming language](https://githu
 | nitpick-nn | Neural network framework built on nitpick-matrix |
 | nitpick-nkondo | Fast TUI utility to find and delete heavy project directories |
 | nitpick-nrura | An interactive TUI scratchpad designed for building and debugging shell pipelines with live preview execution. |
+| nitpick-nregname | A terminal-based interactive mass file renamer with real-time preview |
 | nitpick-nstrace | A terminal UI for dynamically exploring and filtering `strace` logs of an executed command. |
 | nitpick-opengl | OpenGL 3.3 Core — shaders, buffers, 3D math |
 | nitpick-orm | SQL query builder — Postgres, MySQL, SQLite |

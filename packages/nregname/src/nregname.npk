@@ -1,0 +1,229 @@
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_tui.npk".*;
+use "nitpick_input.npk".*;
+use "nitpick_cli.npk".*;
+
+extern func:usleep = int32(int32:usec);
+extern func:nitpick_input_enter_raw = int32();
+extern func:nitpick_input_exit_raw = int32();
+extern func:nitpick_input_read_key = int32();
+
+string:g_search = "";
+string:g_replace = "";
+string:g_dir_files = "";
+int64:g_file_count = 0i64;
+
+func:load_files = NIL(string:dir) {
+    g_dir_files = raw fs_list_dir(dir);
+    g_file_count = raw Str.token_count(g_dir_files, "|\0");
+    pass NIL;
+};
+
+func:get_preview_list = string() {
+    string:list = "";
+    int64:i = 0i64;
+    while (i < g_file_count) {
+        string:fname = raw Str.token(g_dir_files, "|\0", i);
+        if (string_length(fname) > 0i64) {
+            string:new_name = fname;
+            if (string_length(g_search) > 0i64) {
+                new_name = raw Str.replace_all(fname, g_search, g_replace);
+            }
+            if (string_equals(fname, new_name) == true) {
+                list = string_concat(list, string_concat(fname, "|\0"));
+            } else {
+                list = string_concat(list, string_concat(fname, string_concat(" \x1b[33m->\x1b[0m \x1b[32m\0", string_concat(new_name, "\x1b[0m|\0"))));
+            }
+        }
+        i = i + 1i64;
+    }
+    pass list;
+};
+
+func:apply_rename = NIL(string:dir) {
+    int64:i = 0i64;
+    while (i < g_file_count) {
+        string:fname = raw Str.token(g_dir_files, "|\0", i);
+        if (string_length(fname) > 0i64) {
+            string:new_name = fname;
+            if (string_length(g_search) > 0i64) {
+                new_name = raw Str.replace_all(fname, g_search, g_replace);
+            }
+            if (string_equals(fname, new_name) == false) {
+                string:old_path = string_concat(dir, string_concat("/\0", fname));
+                string:new_path = string_concat(dir, string_concat("/\0", new_name));
+                drop(fs_rename(old_path, new_path));
+            }
+        }
+        i = i + 1i64;
+    }
+    pass NIL;
+};
+
+func:main = int32() {
+    drop(Cli.parse());
+    string:target_dir = ".\0";
+    if (raw Cli.get_positional_count() > 0i64) {
+        target_dir = raw Cli.get_positional(0i64);
+    }
+    
+    drop(load_files(target_dir));
+    
+    drop(nitpick_input_enter_raw());
+    drop(Tui.init());
+    
+    int32:running = 1i32;
+    int32:focus = 0i32; // 0=Search, 1=Replace, 2=Apply, 3=Quit
+    
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0");
+        
+        Widget:main_panel = raw Tui.panel(2i32, 2i32, 76i32, 22i32, 7i32, 0i32);
+        drop(Tui.draw_widget(main_panel));
+        
+        Widget:title = raw Tui.label(4i32, 2i32, string_concat(" nregname: \0", target_dir), 6i32, 0i32);
+        drop(Tui.draw_widget(title));
+        
+        string:s_color = " \0"; if (focus == 0i32) { s_color = "\x1b[44m \0"; }
+        string:r_color = " \0"; if (focus == 1i32) { r_color = "\x1b[44m \0"; }
+        string:a_color = " \0"; if (focus == 2i32) { a_color = "\x1b[44m \0"; }
+        string:q_color = " \0"; if (focus == 3i32) { q_color = "\x1b[44m \0"; }
+        
+        Widget:lbl_search = raw Tui.label(4i32, 4i32, string_concat(s_color, "Search:  \x1b[0m\0"), 7i32, 0i32);
+        drop(Tui.draw_widget(lbl_search));
+        
+        string:s_disp = string_concat(g_search, "_\0"); if (focus != 0i32) { s_disp = g_search; }
+        if (string_length(s_disp) == 0i64) { s_disp = " \0"; }
+        Widget:inp_search = raw Tui.input(14i32, 4i32, 60i32, s_disp);
+        drop(Tui.draw_widget(inp_search));
+        
+        Widget:lbl_replace = raw Tui.label(4i32, 6i32, string_concat(r_color, "Replace: \x1b[0m\0"), 7i32, 0i32);
+        drop(Tui.draw_widget(lbl_replace));
+        
+        string:r_disp = string_concat(g_replace, "_\0"); if (focus != 1i32) { r_disp = g_replace; }
+        if (string_length(r_disp) == 0i64) { r_disp = " \0"; }
+        Widget:inp_replace = raw Tui.input(14i32, 6i32, 60i32, r_disp);
+        drop(Tui.draw_widget(inp_replace));
+        
+        Widget:btn_apply = raw Tui.button(4i32, 8i32, 11i32, string_concat(a_color, "[ Apply ]\x1b[0m\0"));
+        drop(Tui.draw_widget(btn_apply));
+        
+        Widget:btn_quit = raw Tui.button(16i32, 8i32, 10i32, string_concat(q_color, "[ Quit ]\x1b[0m\0"));
+        drop(Tui.draw_widget(btn_quit));
+        
+        string:preview = raw get_preview_list();
+        Widget:listbox = raw Tui.listbox(4i32, 10i32, 72i32, 12i32, preview, 0i32);
+        drop(Tui.draw_widget(listbox));
+        
+        Widget:help = raw Tui.label(4i32, 23i32, " UP/DOWN: Select | TAB: Next | ENTER: Activate ", 3i32, 0i32);
+        drop(Tui.draw_widget(help));
+        
+        int32:k = nitpick_input_read_key();
+        
+        if (k == 9i32) { // Tab
+            focus = focus + 1i32;
+            if (focus > 3i32) { focus = 0i32; }
+        }
+        else if (k == 1i32) { // Up
+            if (focus > 0i32) { focus = focus - 1i32; }
+        }
+        else if (k == 2i32) { // Down
+            if (focus < 3i32) { focus = focus + 1i32; }
+        }
+        else if (k == 10i32) { // Enter (\n)
+            if (focus == 2i32) {
+                drop(apply_rename(target_dir));
+                drop(load_files(target_dir));
+            } else if (focus == 3i32) {
+                running = 0i32;
+            }
+        }
+        else if (k == 13i32) { // Enter (\r)
+            if (focus == 2i32) {
+                drop(apply_rename(target_dir));
+                drop(load_files(target_dir));
+            } else if (focus == 3i32) {
+                running = 0i32;
+            }
+        }
+        else if (k == 27i32) { // Esc
+            running = 0i32;
+        }
+        else if (k == 127i32) { // Backspace
+            if (focus == 0i32) {
+                int64:l = string_length(g_search);
+                if (l > 0i64) {
+                    string:ns = "";
+                    int64:i = 0i64;
+                    while (i < l - 1i64) {
+                        ns = string_concat(ns, raw Str.char_at(g_search, i));
+                        i = i + 1i64;
+                    }
+                    g_search = ns;
+                }
+            } else if (focus == 1i32) {
+                int64:l = string_length(g_replace);
+                if (l > 0i64) {
+                    string:ns = "";
+                    int64:i = 0i64;
+                    while (i < l - 1i64) {
+                        ns = string_concat(ns, raw Str.char_at(g_replace, i));
+                        i = i + 1i64;
+                    }
+                    g_replace = ns;
+                }
+            }
+        }
+        else if (k == 8i32) { // Backspace (alt)
+            if (focus == 0i32) {
+                int64:l = string_length(g_search);
+                if (l > 0i64) {
+                    string:ns = "";
+                    int64:i = 0i64;
+                    while (i < l - 1i64) {
+                        ns = string_concat(ns, raw Str.char_at(g_search, i));
+                        i = i + 1i64;
+                    }
+                    g_search = ns;
+                }
+            } else if (focus == 1i32) {
+                int64:l = string_length(g_replace);
+                if (l > 0i64) {
+                    string:ns = "";
+                    int64:i = 0i64;
+                    while (i < l - 1i64) {
+                        ns = string_concat(ns, raw Str.char_at(g_replace, i));
+                        i = i + 1i64;
+                    }
+                    g_replace = ns;
+                }
+            }
+        }
+        else if (k >= 32i32) {
+            if (k <= 126i32) {
+                string:ch = string_from_char(@cast<int8>(k));
+                if (focus == 0i32) {
+                    g_search = string_concat(g_search, ch);
+                } else if (focus == 1i32) {
+                    g_replace = string_concat(g_replace, ch);
+                }
+            }
+        }
+        
+        drop(usleep(30000i32));
+    }
+    
+    drop(Tui.shutdown());
+    drop(nitpick_input_exit_raw());
+    print("\n\x1b[?25h\0");
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    drop(Tui.shutdown());
+    drop(nitpick_input_exit_raw());
+    print("\n\x1b[?25h\0");
+    exit(1i32);
+};
