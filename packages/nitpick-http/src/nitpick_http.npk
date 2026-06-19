@@ -27,21 +27,21 @@ extern "nitpick_http_shim" {
 
     // response accessors
     func:nitpick_http_status           = int32();
-    func:nitpick_http_response_body    = string();
+    func:nitpick_http_response_body    = int64();
     func:nitpick_http_response_length  = int32();
-    func:nitpick_http_response_headers = string();
-    func:nitpick_http_error            = string();
+    func:nitpick_http_response_headers = int64();
+    func:nitpick_http_error            = int64();
 
     // Ollama streaming
     func:nitpick_http_enable_ollama_stream = void(int32:enable);
-    func:nitpick_http_get_ollama_content = string();
-    func:nitpick_http_get_ollama_tool = string();
-    func:nitpick_http_get_ollama_arg = string();
+    func:nitpick_http_get_ollama_content = int64();
+    func:nitpick_http_get_ollama_tool = int64();
+    func:nitpick_http_get_ollama_arg = int64();
     func:nitpick_http_get_ollama_conf = int32();
 
     // URL encoding
-    func:nitpick_http_url_encode = string(string:str);
-    func:nitpick_http_last_result = string();
+    func:nitpick_http_url_encode = int64(string:str);
+    func:nitpick_http_last_result = int64();
 }
 
 // ── public API: init / cleanup ──────────────────────────────────────
@@ -57,7 +57,7 @@ pub func:http_cleanup = NIL() {
 };
 
 pub func:http_last_result = string() {
-    pass(nitpick_http_last_result());
+    pass string_from_cstr(nitpick_http_last_result());
 };
 
 pub func:http_enable_ollama_stream = NIL(int32:enable) {
@@ -66,15 +66,15 @@ pub func:http_enable_ollama_stream = NIL(int32:enable) {
 };
 
 pub func:http_get_ollama_content = string() {
-    pass(nitpick_http_get_ollama_content());
+    pass string_from_cstr(nitpick_http_get_ollama_content());
 };
 
 pub func:http_get_ollama_tool = string() {
-    pass(nitpick_http_get_ollama_tool());
+    pass string_from_cstr(nitpick_http_get_ollama_tool());
 };
 
 pub func:http_get_ollama_arg = string() {
-    pass(nitpick_http_get_ollama_arg());
+    pass string_from_cstr(nitpick_http_get_ollama_arg());
 };
 
 pub func:http_get_ollama_conf = int32() {
@@ -148,8 +148,7 @@ pub func:http_status = int32() {
 };
 
 pub func:http_body = string() {
-    string:r = nitpick_http_response_body();
-    pass(r);
+    pass string_from_cstr(nitpick_http_response_body());
 };
 
 pub func:http_body_length = int32() {
@@ -158,19 +157,16 @@ pub func:http_body_length = int32() {
 };
 
 pub func:http_response_headers = string() {
-    string:r = nitpick_http_response_headers();
-    pass(r);
+    pass string_from_cstr(nitpick_http_response_headers());
 };
 
 pub func:http_error = string() {
-    string:r = nitpick_http_error();
-    pass(r);
+    pass string_from_cstr(nitpick_http_error());
 };
 
 // ── public API: utilities ───────────────────────────────────────────
 
 pub func:http_url_encode = string(string:str) {
     drop(nitpick_http_url_encode(str));
-    string:r = nitpick_http_last_result();
-    pass(r);
+    pass string_from_cstr(nitpick_http_last_result());
 };
