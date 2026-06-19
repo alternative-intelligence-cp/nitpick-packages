@@ -50,3 +50,51 @@ pub func:fs_extension     = string(string:path)              { drop(nitpick_fs_e
 pub func:fs_basename      = string(string:path)              { drop(nitpick_fs_basename(path)); pass(nitpick_fs_last_result()); };
 pub func:fs_dirname       = string(string:path)              { drop(nitpick_fs_dirname(path)); pass(nitpick_fs_last_result()); };
 pub func:fs_cleanup       = NIL()                            { nitpick_fs_cleanup(); pass(NIL); };
+
+// v0.15.0: Recursively remove a directory and all its contents.
+// Returns 1 on success (or if path does not exist), 0 on first failure.
+// Uses fs_list_dir which returns newline-separated entry names.
+pub func:fs_rmdir_recursive = int32(string:path) {
+    // If it's a regular file, delete it directly
+    int32:is_f = raw fs_is_file(path);
+    if (is_f == 1i32) { pass(raw fs_remove(path)); }
+
+    // If the path doesn't exist at all, treat as success
+    int32:ex = raw fs_exists(path);
+    if (ex == 0i32) { pass(1i32); }
+
+    // Must be a directory -- list its contents (newline-separated entry names)
+    string:listing = raw fs_list_dir(path);
+    int64:llen     = string_length(listing);
+
+    int64:start = 0i64;
+    int64:i     = 0i64;
+    int32:ok_val    = 1i32;
+
+    while (i <= llen) {
+        int32:at_end = 0i32;
+        int32:at_nl  = 0i32;
+        if (i == llen) { at_end = 1i32; }
+        if (i < llen) {
+            string:ch = string_substring(listing, i, i + 1i64);
+            if (ch == "\n") { at_nl = 1i32; }
+        }
+
+        if (at_end == 1i32 || at_nl == 1i32) {
+            if (i > start) {
+                string:entry = string_substring(listing, start, i);
+                if (entry != "." && entry != "..") {
+                    string:child = string_concat(path, string_concat("/", entry));
+                    int32:rc = raw fs_rmdir_recursive(child);
+                    if (rc == 0i32) { ok_val = 0i32; }
+                }
+            }
+            start = i + 1i64;
+        }
+        i = i + 1i64;
+    }
+
+    if (ok_val == 0i32) { pass(0i32); }
+    pass(raw fs_rmdir(path));
+};
+
