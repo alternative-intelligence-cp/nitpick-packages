@@ -3,6 +3,13 @@ use "nitpick_toml.npk".*;
 extern "libc" { func:printf = int32(string:fmt); }
 extern "libc" { func:nitpick_libc_exit = NIL(int32:code); }
 
+extern "C" { func:_exit = void(int32:code); }
+
+pub func:proc_exit = NIL(int32:code) {
+    _exit(code);
+    pass(NIL);
+};
+
 int64:fail_cnt = 0i64;
 
 func:failsafe = int32(tbb32:err) { exit(1i32); };
@@ -10,13 +17,9 @@ func:failsafe = int32(tbb32:err) { exit(1i32); };
 func:assert_eq_i32 = int64(int32:actual, int32:expected, string:test_name) {
     if (actual != expected) {
         fail_cnt += 1i64;
-        drop(printf("[FAIL] \0"));
-        drop(printf(test_name));
-        drop(printf("\n\0"));
+        println(string_concat("[FAIL] ", test_name));
     } else {
-        drop(printf("[PASS] \0"));
-        drop(printf(test_name));
-        drop(printf("\n\0"));
+        println(string_concat("[PASS] ", test_name));
     }
     pass(0i64);
 };
@@ -24,25 +27,21 @@ func:assert_eq_i32 = int64(int32:actual, int32:expected, string:test_name) {
 func:assert_eq_i64 = int64(int64:actual, int64:expected, string:test_name) {
     if (actual != expected) {
         fail_cnt += 1i64;
-        drop(printf("[FAIL] \0"));
-        drop(printf(test_name));
-        drop(printf("\n\0"));
+        println(string_concat("[FAIL] ", test_name));
     } else {
-        drop(printf("[PASS] \0"));
-        drop(printf(test_name));
-        drop(printf("\n\0"));
+        println(string_concat("[PASS] ", test_name));
     }
     pass(0i64);
 };
 
 func:main = int32() {
-    drop(printf("--- nitpick-toml tests ---\n\0"));
+    println("--- nitpick-toml tests ---");
     // Parse a TOML document
     int32:n = raw Toml.parse("title = \"TOML Test\"\nversion = 42\ndebug = true\npi = 3.14\n\n[server]\nhost = \"localhost\"\nport = 8080\n\n[database]\nname = \"mydb\"\nenabled = false\n");
 
     // T01: parse succeeds, returns entry count
-    if (n > 0i32) { drop(printf("[PASS] T01 parse returns count\n\0")); }
-    if (n <= 0i32) { fail_cnt += 1i64; drop(printf("[FAIL] T01 parse returns count\n\0")); }
+    if (n > 0i32) { println("[PASS] T01 parse returns count"); }
+    if (n <= 0i32) { fail_cnt += 1i64; println("[FAIL] T01 parse returns count"); }
 
     // T02: string value
     int32:h1 = raw Toml.has_key("title");
@@ -74,8 +73,8 @@ func:main = int32() {
 
     // T09: count
     int32:c = raw Toml.count();
-    if (c > 7i32) { drop(printf("[PASS] T09 count\n\0")); }
-    if (c <= 7i32) { fail_cnt += 1i64; drop(printf("[FAIL] T09 count\n\0")); }
+    if (c > 7i32) { println("[PASS] T09 count"); }
+    if (c <= 7i32) { fail_cnt += 1i64; println("[FAIL] T09 count"); }
 
     // T10: clear
     NIL:ign = raw Toml.clear();
@@ -83,9 +82,9 @@ func:main = int32() {
     drop raw assert_eq_i32(c2, 0i32, "T10 clear");
 
     if (fail_cnt > 0i64) {
-        drop(printf("SOME TESTS FAILED\n\0"));
+        println("SOME TESTS FAILED");
         exit 1i32;
     }
-    drop(printf("--- ALL TESTS PASSED ---\n\0"));
-    exit(0i32);
+    println("--- ALL TESTS PASSED ---");
+    exit 0i32;
 };

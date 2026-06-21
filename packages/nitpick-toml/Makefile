@@ -3,7 +3,6 @@
 all: build
 
 build:
-	$(MAKE) -C shim
 	../../../nitpick-build/build/npkbld build nitpick-toml
 
 test: build
@@ -11,5 +10,4 @@ test: build
 	.nitpick_make/build/test-nitpick-toml
 
 clean:
-	$(MAKE) -C shim clean
 	rm -rf .nitpick_make

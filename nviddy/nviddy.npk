@@ -1,0 +1,122 @@
+// nviddy - A modern watch command (viddy clone)
+use "io.npk".*;
+use "process.npk".*;
+use "string.npk".*;
+use "string_convert.npk".*;
+
+extern "nitpick_libc" {
+    func:usleep = int32(int32:usec);
+}
+
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_malloc = int64(int64:size);
+    func:nitpick_libc_mem_free = void(int64:ptr);
+    func:nitpick_libc_mem_read_i64 = int64(int64:ptr, int64:offset);
+}
+
+func:get_time_string = string() {
+    int64:tv = nitpick_libc_mem_malloc(16i64);
+    int64:tz = 0i64;
+    _ = sys!!!(96i64, tv, tz); // gettimeofday
+    
+    int64:sec = nitpick_libc_mem_read_i64(tv, 0i64);
+    nitpick_libc_mem_free(tv);
+    
+    // Very basic time string since we don't have full strftime
+    int64:hours = (sec / 3600i64) % 24i64;
+    int64:minutes = (sec / 60i64) % 60i64;
+    int64:seconds = sec % 60i64;
+    
+    string:h_s = raw int64_toString(hours);
+    string:m_s = raw int64_toString(minutes);
+    string:s_s = raw int64_toString(seconds);
+    
+    if (string_length(h_s) == 1i64) { h_s = string_concat("0", h_s); }
+    if (string_length(m_s) == 1i64) { m_s = string_concat("0", m_s); }
+    if (string_length(s_s) == 1i64) { s_s = string_concat("0", s_s); }
+    
+    string:res = string_concat(h_s, ":");
+    res = string_concat(res, m_s);
+    res = string_concat(res, ":");
+    res = string_concat(res, s_s);
+    
+    // add UTC tag
+    res = string_concat(res, " UTC");
+    
+    pass res;
+};
+
+func:main = int32() {
+    string:cmd = raw Process.getenv("NVIDDY_CMD");
+    if (cmd == "") {
+        cmd = "ls -la";
+    }
+    
+    string:interval_str = raw Process.getenv("NVIDDY_INTERVAL");
+    int32:interval = 2i32;
+    if (interval_str != "") {
+        int64:val = raw str_to_int(interval_str);
+        if (val > 0i64) {
+            interval = @cast_unchecked<int32>(val);
+        }
+    }
+    
+    string:tmpfile = ".nviddy.tmp";
+    string:exec_cmd = string_concat(cmd, " > ");
+    exec_cmd = string_concat(exec_cmd, tmpfile);
+    exec_cmd = string_concat(exec_cmd, " 2>&1");
+    
+    string:esc = string_from_char(27i32);
+    string:clear = string_concat(esc, "[2J");
+    string:home = string_concat(esc, "[H");
+    string:reverse = string_concat(esc, "[7m");
+    string:reset = string_concat(esc, "[0m");
+    
+    while (true) {
+        // Run command
+        _ = raw Process.system(exec_cmd);
+        
+        // Print UI
+        print(clear);
+        print(home);
+        
+        // Header
+        print(reverse);
+        print(" Every ");
+        print(int64_toString(@cast_unchecked<int64>(interval)));
+        print(".0s: ");
+        print(cmd);
+        print("   ");
+        print(raw get_time_string());
+        print(reset);
+        println("");
+        println("");
+        
+        // Print output
+        FileStream:f = raw FileStream.open(tmpfile, "r");
+        if (f.handle != 0i64) {
+            while (true) {
+                string:line = raw f.readLine();
+                int8:eof = raw f.eof();
+                
+                if (line != "") {
+                    print(line);
+                }
+                
+                if (eof == 1i8) {
+                    break;
+                }
+            }
+            _ = f.close();
+        }
+        
+        // Sleep
+        _ = usleep(interval * 1000000i32);
+    }
+    
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1;
+};

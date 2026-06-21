@@ -1,0 +1,239 @@
+// ntypioca.npk - Terminal Typing Speed Tester
+use "stdlib/io.npk".*;
+use "stdlib/sys.npk".*;
+use "stdlib/process.npk".*;
+use "stdlib/string.npk".*;
+use "stdlib/string_convert.npk".*;
+use "../../packages/nitpick-term/src/nitpick_term.npk".*;
+
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_write_byte = void(int64:ptr, int64:offset, int32:val);
+}
+
+func:write_str = int64(int64:buf, int64:idx, string:s) {
+    int64:len = string_length(s);
+    int64:i = 0i64;
+    while (i < len) {
+        drop nitpick_libc_mem_write_byte(buf, idx + i, @cast<int32>(raw str_byte_at(s, i)));
+        i = i + 1i64;
+    }
+    pass idx + len;
+};
+
+func:sys_time = int64() {
+    int64:t = sys!!!(201i32, 0i64);
+    pass t;
+};
+
+int64:seed = 123456789i64;
+func:rand = int64() {
+    seed = (seed * 1103515245i64 + 12345i64) % 2147483648i64;
+    pass seed;
+};
+
+func:get_word = string(int64:idx) {
+    int64:i = idx % 20i64;
+    if (i == 0i64) { pass "time"; }
+    if (i == 1i64) { pass "year"; }
+    if (i == 2i64) { pass "people"; }
+    if (i == 3i64) { pass "way"; }
+    if (i == 4i64) { pass "day"; }
+    if (i == 5i64) { pass "thing"; }
+    if (i == 6i64) { pass "life"; }
+    if (i == 7i64) { pass "world"; }
+    if (i == 8i64) { pass "school"; }
+    if (i == 9i64) { pass "family"; }
+    if (i == 10i64) { pass "student"; }
+    if (i == 11i64) { pass "group"; }
+    if (i == 12i64) { pass "country"; }
+    if (i == 13i64) { pass "problem"; }
+    if (i == 14i64) { pass "hand"; }
+    if (i == 15i64) { pass "part"; }
+    if (i == 16i64) { pass "place"; }
+    if (i == 17i64) { pass "case"; }
+    if (i == 18i64) { pass "week"; }
+    if (i == 19i64) { pass "system"; }
+    pass "word";
+};
+
+func:main = int32() {
+    drop Term.init();
+    drop Term.alt_screen(1i32);
+    drop Term.hide_cursor();
+    
+    seed = raw sys_time();
+
+    string:target = "";
+    int64:w = 0i64;
+    while (w < 80i64) {
+        target = string_concat(target, get_word(rand()));
+        if (w < 79i64) { target = string_concat(target, " "); }
+        w = w + 1i64;
+    }
+
+    int64:frame_buf = sys(MMAP, 0i64, 524288i64, 3i64, 34i64, -1i64, 0i64) ? 0i64;
+    if (frame_buf <= 0i64) { exit 1; }
+
+    string:input_str = "";
+    int64:start_time = 0i64;
+    int32:running = 1i32;
+    int64:test_duration = 60i64;
+
+    while (running == 1i32) {
+        int64:now = raw sys_time();
+        int64:elapsed = 0i64;
+        if (start_time > 0i64) {
+            elapsed = now - start_time;
+        }
+        int64:remaining = test_duration - elapsed;
+        if (start_time == 0i64) { remaining = test_duration; }
+        
+        if (start_time > 0i64) {
+            if (remaining <= 0i64) {
+                running = 0i32; // Time's up!
+            }
+        }
+        
+        int64:idx = 0i64;
+        idx = raw write_str(frame_buf, idx, "\x1b[2J\x1b[H");
+        idx = raw write_str(frame_buf, idx, "\x1b[7m NTYPIOCA \x1b[0m  Time: ");
+        idx = raw write_str(frame_buf, idx, string_from_int(remaining));
+        idx = raw write_str(frame_buf, idx, "s \r\n\r\n");
+
+        int64:i = 0i64;
+        int64:len = string_length(target);
+        int64:in_len = string_length(input_str);
+        
+        // Auto scroll to current line
+        int64:start_idx = 0i64;
+        if (in_len > 120i64) {
+            start_idx = (in_len / 60i64 - 1i64) * 60i64;
+        }
+
+        i = start_idx;
+        int64:end_idx = start_idx + 180i64; // show 3 lines
+        if (end_idx > len) { end_idx = len; }
+
+        while (i < end_idx) {
+            string:tc = string_substring(target, i, i+1i64);
+            if (i < in_len) {
+                string:ic = string_substring(input_str, i, i+1i64);
+                if (ic == tc) {
+                    idx = raw write_str(frame_buf, idx, "\x1b[32m"); // Green
+                    idx = raw write_str(frame_buf, idx, tc);
+                } else {
+                    idx = raw write_str(frame_buf, idx, "\x1b[31m"); // Red
+                    if (tc == " ") {
+                        idx = raw write_str(frame_buf, idx, "_");
+                    } else {
+                        idx = raw write_str(frame_buf, idx, tc);
+                    }
+                }
+            } else if (i == in_len) {
+                idx = raw write_str(frame_buf, idx, "\x1b[7m"); // cursor
+                idx = raw write_str(frame_buf, idx, tc);
+            } else {
+                idx = raw write_str(frame_buf, idx, "\x1b[90m"); // Gray
+                idx = raw write_str(frame_buf, idx, tc);
+            }
+            idx = raw write_str(frame_buf, idx, "\x1b[0m");
+            
+            i = i + 1i64;
+            if (i % 60i64 == 0i64) {
+                idx = raw write_str(frame_buf, idx, "\r\n");
+            }
+        }
+
+        idx = raw write_str(frame_buf, idx, "\r\n\r\n(Press Esc to quit early)");
+        drop sys(WRITE, 1i64, frame_buf, idx);
+        
+        if (running == 0i32) { break; }
+
+        int32:key = -1i32;
+        while (key == -1i32) {
+            key = raw Term.read_key();
+            if (key == -1i32) {
+                // If the test has started, we should update the timer regularly
+                // so we don't wait forever for a key. Break out to redraw and check time.
+                if (start_time > 0i64) {
+                    if (raw sys_time() - start_time >= test_duration) {
+                        break;
+                    }
+                }
+                drop Term.sleep(100i32);
+            }
+        }
+        
+        if (start_time == 0i64) {
+            if (key != -1i32) {
+                if (key != 27i32) { // don't start on Esc
+                    start_time = raw sys_time();
+                }
+            }
+        }
+        
+        if (key == 27i32) { // Esc
+            running = 0i32;
+        }
+        
+        if (key == 127i32) { // Backspace
+            if (in_len > 0i64) {
+                input_str = string_substring(input_str, 0i64, in_len - 1i64);
+            }
+        }
+        
+        if (key >= 32i32) {
+            if (key <= 126i32) {
+                if (in_len < len) {
+                    input_str = string_concat(input_str, raw char_toString(key));
+                } else {
+                    running = 0i32; // Reached end of text
+                }
+            }
+        }
+    }
+
+    drop sys(MUNMAP, frame_buf, 524288i64);
+
+    drop Term.show_cursor();
+    drop Term.alt_screen(0i32);
+    drop Term.restore();
+
+    // Calculate WPM
+    int64:in_len = string_length(input_str);
+    int64:correct = 0i64;
+    int64:i = 0i64;
+    while (i < in_len) {
+        string:ic = string_substring(input_str, i, i+1i64);
+        string:tc = string_substring(target, i, i+1i64);
+        if (ic == tc) { correct = correct + 1i64; }
+        i = i + 1i64;
+    }
+    
+    int64:elapsed = raw sys_time() - start_time;
+    if (elapsed == 0i64) { elapsed = 1i64; } // avoid div zero
+    
+    int64:wpm = (correct / 5i64) * 60i64 / elapsed;
+    int64:acc = 0i64;
+    if (in_len > 0i64) {
+        acc = (correct * 100i64) / in_len;
+    }
+
+    println("----- NTYPIOCA Results -----");
+    string:r = "WPM:      ";
+    r = string_concat(r, string_from_int(wpm));
+    println(r);
+    
+    string:a = "Accuracy: ";
+    a = string_concat(a, string_from_int(acc));
+    a = string_concat(a, "%");
+    println(a);
+    
+    println("----------------------------");
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    drop Term.restore();
+    exit 1;
+};

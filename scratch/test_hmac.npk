@@ -1,0 +1,12 @@
+use "io.npk".*;
+use "string.npk".*;
+extern "nitpick_crypto_shim" {
+    func:nitpick_crypto_hmac_sha256 = string(string:key, string:data);
+}
+
+func:main = int32() {
+    string:mac = nitpick_crypto_hmac_sha256("my_password", "0");
+    println(mac);
+    exit 0;
+};
+func:failsafe = int32(tbb32:err) { exit 1; };

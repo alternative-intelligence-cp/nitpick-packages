@@ -1,0 +1,9 @@
+{
+    "name": "nitpick-dust",
+    "version": "0.1.0",
+    "type": "executable",
+    "main": "src/nitpick_dust.npk",
+    "dependencies": {
+        "nitpick-libc": "../nitpick-libc"
+    }
+}

@@ -1,0 +1,144 @@
+// nbat - A cat clone with wings
+use "stdlib/io.npk".*;
+use "stdlib/string_convert.npk".*;
+use "stdlib/string.npk".*;
+
+extern "libc" {
+    func:fopen  = int64(string:path, string:mode);
+    func:fgetc  = int32(int64:fp);
+    func:fclose = int32(int64:fp);
+}
+
+func:args_load = string() {
+    int64:fp = fopen("/proc/self/cmdline", "r");
+    if (fp == 0i64) { pass("|"); }
+    string:result  = "|";
+    string:current = "";
+    int32:c = fgetc(fp);
+    while (c >= 0i32) {
+        if (c == 0i32) {
+            if (string_length(current) > 0i64) {
+                result  = string_concat(result, string_concat(current, "|"));
+                current = "";
+            }
+        }
+        if (c > 0i32) {
+            current = string_concat(current, string_from_char(@cast_unchecked<int8>(c)));
+        }
+        c = fgetc(fp);
+    }
+    if (string_length(current) > 0i64) {
+        result = string_concat(result, string_concat(current, "|"));
+    }
+    drop(fclose(fp));
+    pass(result);
+};
+
+func:args_count = int32(string:args) {
+    int64:len = string_length(args);
+    int32:count = 0i32;
+    int64:i = 0i64;
+    while (i < len) {
+        if (string_equals(string_substring(args, i, i + 1i64), "|")) {
+            count = count + 1i32;
+        }
+        i = i + 1i64;
+    }
+    pass count - 1i32;
+};
+
+func:args_at = string(string:args, int32:index) {
+    int64:len = string_length(args);
+    int32:count = 0i32;
+    int64:i = 0i64;
+    int64:start = -1i64;
+    while (i < len) {
+        if (string_equals(string_substring(args, i, i + 1i64), "|")) {
+            if (start >= 0i64) {
+                if (count == index) {
+                    pass string_substring(args, start, i);
+                }
+            }
+            start = i + 1i64;
+            count = count + 1i32;
+        }
+        i = i + 1i64;
+    }
+    pass "";
+};
+
+func:process_file = int32(string:filename) {
+    println("");
+    print("───────┬────────────────────────────────────────────────── [ ");
+    print(filename);
+    println(" ]");
+    
+    FileStream:f = raw FileStream.open(filename, "r");
+    if (f.handle == 0i64) {
+        println("       │ File not found!");
+        println("───────┴──────────────────────────────────────────────────\n");
+        pass 1i32;
+    }
+    
+    int32:line_num = 1i32;
+    while (true) {
+        string:line = raw f.readLine();
+        int8:eof = raw f.eof();
+        
+        if (line != "") {
+            if (line_num < 10i32) { print("   "); }
+            else if (line_num < 100i32) { print("  "); }
+            else if (line_num < 1000i32) { print(" "); }
+            
+            print(int64_toString(@cast_unchecked<int64>(line_num)));
+            print("   │ ");
+            
+            // Colorize if it's a comment
+            if (string_length(line) >= 2i64) {
+                if (string_equals(string_substring(line, 0i64, 2i64), "//")) {
+                    print("\x1b[90m"); // Gray color
+                }
+            }
+            
+            print(line);
+            print("\x1b[0m"); // Reset color
+            
+            line_num = line_num + 1i32;
+        }
+        
+        if (eof == 1i8) {
+            break;
+        }
+    }
+    
+    _ = f.close();
+    println("───────┴──────────────────────────────────────────────────\n");
+    pass 0i32;
+};
+
+func:main = int32() {
+    string:args = raw args_load();
+    int32:arg_count = raw args_count(args);
+    
+    int32:i = 1i32;
+    int32:has_files = 0i32;
+    
+    while (i <= arg_count) {
+        string:arg = raw args_at(args, i);
+        if (string_length(arg) > 0i64) {
+            has_files = 1i32;
+            drop process_file(arg);
+        }
+        i = i + 1i32;
+    }
+    
+    if (has_files == 0i32) {
+        println("Usage: nbat <file1> <file2> ...");
+    }
+    
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1;
+};

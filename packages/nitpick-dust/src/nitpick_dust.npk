@@ -1,0 +1,161 @@
+use "../../nitpick-cli/src/nitpick_cli.npk".*;
+use "../../../../nitpick-libc/src/_constants.npk".*;
+use "../../../../nitpick-libc/src/_fs_readdir.npk".*;
+use "../../../../nitpick-libc/src/_stat.npk".*;
+
+extern func:npk_arena_write_i64 = NIL(any*:arena, int64:node_idx, int64:offset, int64:val);
+extern func:npk_arena_read_i64 = int64(any*:arena, int64:node_idx, int64:offset);
+extern func:npk_arena_write_str = NIL(any*:arena, int64:node_idx, int64:offset, string:str);
+extern func:npk_arena_read_str = string(any*:arena, int64:node_idx, int64:offset);
+
+extern func:npk_links_write = NIL(any*:links, int64:link_idx, int64:val);
+extern func:npk_links_read = int64(any*:links, int64:link_idx);
+
+extern func:npk_print_size = NIL(int64:size);
+extern func:npk_print_node = NIL(string:name, int64:depth);
+extern func:npk_print_scanning = NIL(string:target);
+
+// ---------------------------------------------------------
+// DirNode Memory Layout (40 bytes):
+// offset 0: size (int64)
+// offset 8: name_str (string, 16 bytes)
+// offset 24: num_children (int64)
+// offset 32: link_idx (int64 index into links arena)
+// ---------------------------------------------------------
+
+func:dust_copy_string = string(string:s) {
+    pass string_concat(s, "");
+};
+
+func:dust_new_node = int64(any->:arena, any->:state, string:name, int64:size) {
+    int64:idx = npk_arena_read_i64(state, 0i64, 0i64);
+    drop(npk_arena_write_i64(state, 0i64, 0i64, idx + 1i64));
+    
+    any->:a = arena;
+    drop(npk_arena_write_i64(a, idx, 0i64, size));
+    
+    string:name_buf = raw dust_copy_string(name);
+    drop(npk_arena_write_str(a, idx, 8i64, name_buf));
+    
+    drop(npk_arena_write_i64(a, idx, 24i64, 0i64));
+    drop(npk_arena_write_i64(a, idx, 32i64, 0i64));
+    
+    pass idx;
+};
+
+func:dust_push_child = NIL(any->:arena, any->:links, any->:state, int64:parent_idx, int64:child_idx) {
+    any->:a = arena;
+    any->:l = links;
+    
+    int64:num = npk_arena_read_i64(a, parent_idx, 24i64);
+    int64:start_link = npk_arena_read_i64(a, parent_idx, 32i64);
+    
+    if (num == 0i64) {
+        int64:l_idx = npk_arena_read_i64(state, 0i64, 8i64); // next_link_idx is at state offset 8
+        start_link = l_idx;
+        drop(npk_arena_write_i64(a, parent_idx, 32i64, start_link));
+    }
+    
+    int64:l_idx = npk_arena_read_i64(state, 0i64, 8i64);
+    drop(npk_arena_write_i64(state, 0i64, 8i64, l_idx + 1i64));
+    
+    drop(npk_links_write(l, l_idx, child_idx));
+    drop(npk_arena_write_i64(a, parent_idx, 24i64, num + 1i64));
+};
+
+func:dust_build_tree = int64(any->:arena, any->:links, any->:state, string:path, string:name) {
+    int64:dh = raw libc_opendir(path);
+    if (dh == 0i64) {
+        int64:sz = raw libc_stat_size(path);
+        pass raw dust_new_node(arena, state, name, sz);
+    }
+    
+    int64:node_idx = raw dust_new_node(arena, state, name, 0i64);
+    int64:total = 0i64;
+    int64:n = raw libc_readdir_count(dh);
+    
+    int64:i = 0i64;
+    loop(0i64, n, 1i64) {
+        string:cname = raw libc_readdir_name(dh, i);
+        int64:dtype = raw libc_readdir_type(dh, i);
+        
+        if (!string_equals(cname, ".") && !string_equals(cname, "..")) {
+            string:cpath = string_concat(path, "/");
+            cpath = string_concat(cpath, cname);
+            
+            if (dtype == 4i64) { // DIR
+                int64:child_idx = raw dust_build_tree(arena, links, state, cpath, cname);
+                int64:csz = npk_arena_read_i64(arena, child_idx, 0i64);
+                total += csz;
+                drop(dust_push_child(arena, links, state, node_idx, child_idx));
+            } else {
+                int64:sz = raw libc_stat_size(cpath);
+                total += sz;
+                int64:child_idx = raw dust_new_node(arena, state, cname, sz);
+                drop(dust_push_child(arena, links, state, node_idx, child_idx));
+            }
+        }
+        i += 1i64;
+    }
+    drop(libc_closedir(dh));
+    
+    int64:self_sz = raw libc_stat_size(path);
+    total += self_sz;
+    
+    drop(npk_arena_write_i64(arena, node_idx, 0i64, total));
+    pass node_idx;
+};
+
+func:dust_print_tree = NIL(any->:arena, any->:links, int64:node_idx, int64:depth) {
+    any->:a = arena;
+    any->:l = links;
+    
+    int64:size = npk_arena_read_i64(a, node_idx, 0i64);
+    string:name = npk_arena_read_str(a, node_idx, 8i64);
+    int64:num = npk_arena_read_i64(a, node_idx, 24i64);
+    int64:start_link = npk_arena_read_i64(a, node_idx, 32i64);
+    
+    drop(npk_print_size(size));
+    drop(npk_print_node(name, depth));
+    
+    int64:i = 0i64;
+    loop(0i64, num, 1i64) {
+        int64:child_idx = npk_links_read(l, start_link + i);
+        drop(dust_print_tree(arena, links, child_idx, depth + 1i64));
+        i += 1i64;
+    }
+};
+
+func:main = int32() {
+    drop(Cli.parse());
+    int64:count = raw Cli.get_positional_count();
+    
+    string:target = ".";
+    if (count == 1i64) {
+        target = raw Cli.get_positional(0i64);
+    }
+    
+    drop(npk_print_scanning(target));
+    
+    wild int8->:arena = alloc(100000i64 * 40i64);
+    defer { free(arena); }
+    
+    wild int8->:links = alloc(100000i64 * 8i64);
+    defer { free(links); }
+    
+    wild int8->:state = alloc(16i64); // [next_node_idx, next_link_idx]
+    defer { free(state); }
+    
+    drop(npk_arena_write_i64(state => any->, 0i64, 0i64, 0i64));
+    drop(npk_arena_write_i64(state => any->, 0i64, 8i64, 0i64));
+    
+    int64:root_idx = raw dust_build_tree(arena => any->, links => any->, state => any->, target, target);
+    drop(dust_print_tree(arena => any->, links => any->, root_idx, 0i64));
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    drop(npk_print_scanning("Failsafe triggered!"));
+    exit(1i32);
+};

@@ -1,0 +1,93 @@
+// nage - a simple, modern file encryption tool (age clone)
+use "stdlib/io.npk".*;
+use "stdlib/process.npk".*;
+use "stdlib/string_convert.npk".*;
+use "stdlib/string.npk".*;
+use "../packages/nitpick-crypto/src/nitpick_crypto.npk".*;
+
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_malloc     = int64(int64:size);
+    func:nitpick_libc_mem_free       = void(int64:ptr);
+    func:nitpick_libc_mem_write_byte = void(int64:ptr, int64:offset, int32:val);
+    func:nitpick_libc_mem_read_byte  = int32(int64:ptr, int64:offset);
+}
+
+extern "my_xor" {
+    func:my_custom_xor = int32(int32:a, int32:b);
+}
+
+func:main = int32() {
+    string:passphrase = raw Process.getenv("NAGE_PASS");
+    if (string_length(passphrase) == 0i64) {
+        println("Error: NAGE_PASS environment variable is required.");
+        exit 1;
+    }
+
+    string:in_file = raw Process.getenv("NAGE_IN");
+    if (string_length(in_file) == 0i64) {
+        println("Error: NAGE_IN environment variable is required.");
+        exit 1;
+    }
+
+    string:out_file = raw Process.getenv("NAGE_OUT");
+    if (string_length(out_file) == 0i64) {
+        println("Error: NAGE_OUT environment variable is required.");
+        exit 1;
+    }
+
+    int64:fd_in = sys!!!(2i64, in_file, 0i64, 0i64); // open read
+    if (fd_in < 0i64) {
+        println("Error: Could not open input file");
+        exit 1;
+    }
+
+    int64:fd_out = sys!!!(2i64, out_file, 65i64, 420i64); // open write, create (64) + write-only (1) = 65, mode 0644
+    if (fd_out < 0i64) {
+        println("Error: Could not open output file");
+        exit 1;
+    }
+
+    string:root_key = raw Crypto.sha256(passphrase);
+    
+    int64:buf = nitpick_libc_mem_malloc(1024i64);
+    int64:counter = 0i64;
+
+    while (true) {
+        int64:bytes_read = sys!!!(0i64, fd_in, buf, 1024i64); // read
+        if (bytes_read <= 0i64) { break; }
+
+        string:counter_str = raw int64_toString(counter);
+        string:keystream = raw Crypto.hmac_sha256(root_key, counter_str);
+        int64:ks_len = string_length(keystream);
+
+        int64:i = 0i64;
+        while (i < bytes_read) {
+            int64:ks_idx = i % ks_len;
+            int64:ks_byte_64 = raw str_byte_at(keystream, ks_idx);
+            int32:ks_byte = @cast<int32>(ks_byte_64);
+            int32:in_byte = nitpick_libc_mem_read_byte(buf, i);
+            int32:out_byte = my_custom_xor(in_byte, ks_byte);
+            nitpick_libc_mem_write_byte(buf, i, out_byte);
+            i = i + 1i64;
+        }
+
+        int64:bytes_written = sys!!!(1i64, fd_out, buf, bytes_read); // write
+        if (bytes_written != bytes_read) {
+            println("Error: Write failed");
+            exit 1;
+        }
+        counter = counter + 1i64;
+    }
+
+    drop sys!!!(3i64, fd_in); // close
+    drop sys!!!(3i64, fd_out); // close
+    drop nitpick_libc_mem_free(buf);
+    
+    println("Encryption/Decryption complete.");
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    println("Fatal error occurred");
+    exit 1;
+};

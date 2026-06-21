@@ -1,0 +1,64 @@
+use "nitpick_cli.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_fs.npk".*;
+use "_proc_fork.npk".*;
+
+func:main = int32() {
+    raw Cli.parse();
+    int64:count = raw Cli.get_positional_count();
+    
+    if (count == 0i64) {
+        print("Usage: ntracexec <cmd> [args...]\n\0");
+        exit 1i32;
+    }
+    
+    string:cmd = "strace -f -e trace=execve -o /tmp/ntracexec_out.txt ";
+    int64:i = 0i64;
+    till(100, 1) {
+        if (i >= count) { } else {
+            string:arg = raw Cli.get_positional(i);
+            cmd = string_concat(cmd, "'");
+            cmd = string_concat(cmd, arg);
+            cmd = string_concat(cmd, "' ");
+            i = i + 1i64;
+        }
+    }
+    
+    cmd = string_concat(cmd, "\0");
+    
+    int64:status = raw libc_system(cmd);
+    
+    int32:exists = raw fs_exists("/tmp/ntracexec_out.txt\0");
+    if (exists != 1i32) {
+        print("Error: Trace file not found.\n\0");
+        exit 1i32;
+    }
+    
+    string:content = raw fs_read_file("/tmp/ntracexec_out.txt\0");
+    int64:lines = raw Str.line_count(content);
+    int64:l = 0i64;
+    till(4096, 1) {
+        if (l >= lines) { } else {
+            string:line = raw Str.token(content, "\n", l);
+            if (string_contains(line, "execve(")) {
+                if (string_contains(line, "[")) {
+                    string:exec_str = raw Str.between(line, "execve(\"", "\"");
+                    string:args_str = raw Str.between(line, "[", "]");
+                    
+                    print("\x1b[1;35m[EXEC]\x1b[0m \0");
+                    print("\x1b[1;36m\0"); print(exec_str); print("\x1b[0m \0");
+                    print("\x1b[33m[\0"); print(args_str); print("]\x1b[0m\n\0");
+                } else {}
+            } else {}
+            l = l + 1i64;
+        }
+    }
+    
+    raw fs_remove("/tmp/ntracexec_out.txt\0");
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    raw fs_remove("/tmp/ntracexec_out.txt\0");
+    exit 1i32;
+};

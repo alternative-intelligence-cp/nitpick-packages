@@ -1,0 +1,54 @@
+use "string.npk".*;
+use "string_convert.npk".*;
+
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_malloc     = int64(int64:size);
+    func:nitpick_libc_mem_free       = void(int64:ptr);
+    func:nitpick_libc_mem_write_byte = void(int64:ptr, int64:offset, int32:val);
+    func:nitpick_libc_mem_read_i64   = int64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_i64  = void(int64:ptr, int64:offset, int64:val);
+}
+
+func:hex_char_to_val = int32(int32:c) {
+    if (c >= 48i32 && c <= 57i32) { pass c - 48i32; } // 0-9
+    if (c >= 97i32 && c <= 102i32) { pass c - 97i32 + 10i32; } // a-f
+    if (c >= 65i32 && c <= 70i32) { pass c - 65i32 + 10i32; } // A-F
+    pass 0i32;
+};
+
+func:hex_string_to_bytes = void(string:hex, int64:out_buf) {
+    int64:i = 0i64;
+    while (i < 32i64) {
+        int64:c1_64 = raw str_byte_at(hex, i * 2i64);
+        int64:c2_64 = raw str_byte_at(hex, i * 2i64 + 1i64);
+        int32:c1 = @cast_unchecked<int32>(c1_64);
+        int32:c2 = @cast_unchecked<int32>(c2_64);
+        int32:v1 = raw hex_char_to_val(c1);
+        int32:v2 = raw hex_char_to_val(c2);
+        int32:b = (v1 * 16i32) + v2;
+        drop nitpick_libc_mem_write_byte(out_buf, i, b);
+        i = i + 1i64;
+    }
+    pass void;
+};
+
+func:main = int32() {
+    int64:buf = nitpick_libc_mem_malloc(32i64);
+    
+    // Test hex string "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20"
+    string:hex = "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20";
+    raw hex_string_to_bytes(hex, buf);
+    
+    // Check first 8 bytes as int64. Endianness means 0x0807060504030201
+    int64:val = nitpick_libc_mem_read_i64(buf, 0i64);
+    println(raw int64_toString(val)); // Prints decimal of 0x0807060504030201
+    
+    // XOR test
+    int64:x = val ^ 255i64;
+    println(raw int64_toString(x));
+    
+    nitpick_libc_mem_free(buf);
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) { exit 1; };

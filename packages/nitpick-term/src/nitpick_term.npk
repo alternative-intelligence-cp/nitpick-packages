@@ -1,0 +1,123 @@
+// nitpick_term.npk - Terminal raw mode and UI shim
+use "stdlib/string.npk".*;
+use "stdlib/string_convert.npk".*;
+
+extern "nitpick_term_shim" {
+    func:nitpick_term_init = void();
+    func:nitpick_term_restore = void();
+    func:nitpick_term_read_key = int32();
+    func:nitpick_term_write = void(string:s, int32:len);
+    func:nitpick_term_sleep_ms = void(int32:ms);
+    func:nitpick_term_get_cols = int32();
+    func:nitpick_term_get_rows = int32();
+}
+
+func:Term_init = NIL() {
+    drop nitpick_term_init();
+    pass NIL;
+};
+
+func:Term_restore = NIL() {
+    drop nitpick_term_restore();
+    pass NIL;
+};
+
+func:Term_read_key = int32() {
+    int32:k = nitpick_term_read_key();
+    pass k;
+};
+
+func:Term_print = NIL(string:s) {
+    drop nitpick_term_write(s, @cast<int32>(string_length(s)));
+    pass NIL;
+};
+
+func:Term_sleep = NIL(int32:ms) {
+    drop nitpick_term_sleep_ms(ms);
+    pass NIL;
+};
+
+func:Term_get_cols = int32() {
+    pass nitpick_term_get_cols();
+};
+
+func:Term_get_rows = int32() {
+    pass nitpick_term_get_rows();
+};
+
+func:Term_alt_screen = NIL(int32:enable) {
+    if (enable == 1i32) {
+        drop Term_print("\x1b[?1049h");
+    } else {
+        drop Term_print("\x1b[?1049l");
+    }
+    pass NIL;
+};
+
+func:Term_hide_cursor = NIL() {
+    drop Term_print("\x1b[?25l");
+    pass NIL;
+};
+
+func:Term_show_cursor = NIL() {
+    drop Term_print("\x1b[?25h");
+    pass NIL;
+};
+
+func:Term_clear = NIL() {
+    drop Term_print("\x1b[2J\x1b[H");
+    pass NIL;
+};
+
+func:Term_setpos = NIL(int32:x, int32:y) {
+    // \x1b[y;xH
+    string:s = "\x1b[";
+    s = string_concat(s, string_from_int(@cast<int64>(y)));
+    s = string_concat(s, ";");
+    s = string_concat(s, string_from_int(@cast<int64>(x)));
+    s = string_concat(s, "H");
+    drop Term_print(s);
+    pass NIL;
+};
+
+func:Term_set_color = NIL(int32:fg, int32:bg) {
+    string:s = "\x1b[3";
+    s = string_concat(s, string_from_int(@cast<int64>(fg)));
+    s = string_concat(s, ";4");
+    s = string_concat(s, string_from_int(@cast<int64>(bg)));
+    s = string_concat(s, "m");
+    drop Term_print(s);
+    pass NIL;
+};
+
+func:Term_reset_color = NIL() {
+    drop Term_print("\x1b[0m");
+    pass NIL;
+};
+
+func:Term_set_reverse = NIL(int32:enable) {
+    if (enable == 1i32) {
+        drop Term_print("\x1b[7m");
+    } else {
+        drop Term_print("\x1b[27m");
+    }
+    pass NIL;
+};
+
+pub Type:Term = {
+    func:init = NIL() { drop raw Term_init(); pass NIL; };
+    func:restore = NIL() { drop raw Term_restore(); pass NIL; };
+    func:read_key = int32() { pass raw Term_read_key(); };
+    func:print = NIL(string:s) { drop raw Term_print(s); pass NIL; };
+    func:sleep = NIL(int32:ms) { drop raw Term_sleep(ms); pass NIL; };
+    func:alt_screen = NIL(int32:en) { drop raw Term_alt_screen(en); pass NIL; };
+    func:hide_cursor = NIL() { drop raw Term_hide_cursor(); pass NIL; };
+    func:show_cursor = NIL() { drop raw Term_show_cursor(); pass NIL; };
+    func:clear = NIL() { drop raw Term_clear(); pass NIL; };
+    func:setpos = NIL(int32:x, int32:y) { drop raw Term_setpos(x, y); pass NIL; };
+    func:set_color = NIL(int32:fg, int32:bg) { drop raw Term_set_color(fg, bg); pass NIL; };
+    func:reset_color = NIL() { drop raw Term_reset_color(); pass NIL; };
+    func:set_reverse = NIL(int32:en) { drop raw Term_set_reverse(en); pass NIL; };
+    func:get_cols = int32() { pass raw Term_get_cols(); };
+    func:get_rows = int32() { pass raw Term_get_rows(); };
+};

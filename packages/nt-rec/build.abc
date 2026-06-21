@@ -1,0 +1,34 @@
+[project]
+name = "nt-rec"
+version = "0.1.0"
+
+[target.nt-rec]
+type = "binary"
+sources = ["src/main.npk"]
+deps = [
+    "nitpick-cli",
+    "nitpick-fs",
+    "nitpick-str",
+    "nitpick-term",
+    "nitpick-display"
+]
+flags = [
+    "-I", "src",
+    "-I", "../nitpick-cli/src",
+    "-I", "../nitpick-fs/src",
+    "-I", "../nitpick-str/src",
+    "-I", "../nitpick-term/src",
+    "-I", "../nitpick-display/src"
+]
+link_libraries = [
+    "cli_args", 
+    "nitpick_fs_shim",
+    "nitpick_term_shim",
+    "nitpick_display_shim"
+]
+link_paths = [
+    "../nitpick-cli",
+    "../nitpick-fs/shim",
+    "../nitpick-term/shim",
+    "../nitpick-display/shim"
+]

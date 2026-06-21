@@ -1,0 +1,7 @@
+[ ] [Local] Initialize ntatuin repo
+[ ] [Obsidian] Finish the weekly review
+[x] [Todoist] Pay electricity bill
+[ ] [GitHub] Review Pull Request #42
+[ ] [CalDav] Dentist appointment preparation
+[ ] [Local] Check off all subagents
+[ ] [Local] Validate ntatuin TUI

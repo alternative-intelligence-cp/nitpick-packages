@@ -117,3 +117,18 @@ int32_t nitpick_compress_roundtrip(const char *data, int32_t data_len) {
 const char *nitpick_compress_version(void) {
     return zlibVersion();
 }
+
+/* ---- pointer wrappers for nouch allocator ---- */
+#include <unistd.h>
+int32_t nitpick_compress_gzip_ptr(void* data, int32_t len) {
+    return nitpick_compress_gzip((const char*)data, len);
+}
+int32_t nitpick_compress_gunzip_ptr(void* data, int32_t len) {
+    return nitpick_compress_gunzip((const char*)data, len);
+}
+void* nitpick_compress_get_result_ptr(void) {
+    return (void*)nitpick_compress_get_result();
+}
+ssize_t write_ptr(int fd, int64_t buf, size_t count) {
+    return write(fd, (const void*)buf, count);
+}

@@ -1,0 +1,58 @@
+use "nitpick_cli.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_fs.npk".*;
+
+use "_identity.npk".*;
+use "_proc_fork.npk".*;
+
+func:main = int32() {
+    raw Cli.parse();
+
+    int64:count = raw Cli.get_positional_count();
+    if (count < 1i64) {
+        print("Usage: ndoas <command> [args...]\n\0");
+        exit 1i32;
+    }
+
+    string:conf_path = "ndoas.conf\0";
+    int32:exists = raw fs_exists(conf_path);
+    if (exists != 1i32) {
+        print("doas: ndoas.conf not found. Access denied.\n\0");
+        exit 1i32;
+    }
+    
+    string:conf_data = raw fs_read_file(conf_path);
+    bool:has_permit = string_contains(conf_data, "permit");
+    
+    if (has_permit) {} else {
+        print("doas: Operation not permitted.\n\0");
+        exit 1i32;
+    }
+
+    int64:ret = raw libc_setuid(0i64);
+    
+    string:cmd = "";
+    int64:i = 0i64;
+    till(100, 1) {
+        if (i >= count) {
+            // skip
+        } else {
+            string:arg = raw Cli.get_positional(i);
+            if (i == 0i64) {
+                cmd = arg;
+            } else {
+                cmd = string_concat(cmd, " ");
+                cmd = string_concat(cmd, arg);
+            }
+            i = i + 1i64;
+        }
+    }
+    
+    int64:status = raw libc_system(cmd);
+    
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

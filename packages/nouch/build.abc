@@ -1,0 +1,11 @@
+[package]
+name = "nouch"
+version = "0.1.0"
+description = "Painless compression and decompression CLI"
+
+[dependencies]
+nitpick-libc = "0.1.0"
+nitpick-compress = "0.1.0"
+nitpick-cli = "0.1.0"
+nitpick-fs = "0.1.0"
+nitpick-str = "0.1.0"

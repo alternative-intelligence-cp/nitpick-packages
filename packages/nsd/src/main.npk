@@ -1,0 +1,46 @@
+use "nitpick_cli.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_fs.npk".*;
+
+func:main = int32() {
+    raw Cli.register_flag("--dry-run\0", "-d\0");
+    raw Cli.parse();
+
+    int64:count = raw Cli.get_positional_count();
+    if (count < 3i64) {
+        print("Usage: nsd <find> <replace> <file_path> [--dry-run|-d]\n\0");
+        exit 1i32;
+    }
+
+    string:find_str = raw Cli.get_positional(0i64);
+    string:replace_str = raw Cli.get_positional(1i64);
+    string:file_path = raw Cli.get_positional(2i64);
+    int64:dry_run = raw Cli.get_flag("--dry-run\0");
+
+    string:fp_null = string_concat(file_path, "\0");
+
+    int32:exists = raw fs_exists(fp_null);
+    if (exists != 1i32) {
+        print("Error: File not found -> \0"); print(file_path); print("\n\0");
+        exit 1i32;
+    }
+
+    string:content = raw fs_read_file(fp_null);
+    string:new_content = raw Str.replace_all(content, find_str, replace_str);
+
+    if (dry_run == 1i64) {
+        print("[DRY RUN] Output for: \0"); print(file_path); print("\n\0");
+        print("----------------------------------------\n\0");
+        print(new_content);
+        print("\n----------------------------------------\n\0");
+    } else {
+        raw fs_write_file(fp_null, new_content);
+        print("Replaced all occurrences in \0"); print(file_path); print("\n\0");
+    }
+
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

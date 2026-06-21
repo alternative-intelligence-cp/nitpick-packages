@@ -1,0 +1,76 @@
+use "nitpick_tui.npk".*;
+use "nitpick_display.npk".*;
+use "nitpick_input.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+
+extern func:nitpick_input_read_key = int32();
+extern func:usleep = int32(int32:usec);
+
+func:failsafe = int32(tbb32:err) {
+    raw Tui.shutdown();
+    exit 1i32;
+};
+
+func:main = int32() {
+    raw Tui.init();
+    
+    // Read tasks from local file
+    string:file_content = raw fs_read_file("tasks.txt");
+    if (string_is_empty(file_content)) {
+        file_content = "[Local] Finish project porting|[Obsidian] Review PRs|[Todoist] Buy groceries|[GitHub] Fix bug #123\0";
+    }
+    
+    string:listbox_items = raw Str.replace_all(file_content, "\n\0", "|\0");
+    
+    int64:task_count = raw Str.token_count(listbox_items, "|\0");
+    int32:selected = 0i32;
+    
+    int32:running = 1i32;
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0"); // Clear screen and move cursor to home
+        
+        Widget:banner = raw Tui.panel(0i32, 0i32, 80i32, 3i32, 6i32, 0i32);
+        raw Tui.draw_widget(banner);
+        Widget:title = raw Tui.label(2i32, 1i32, " ┳┳┓┏┓┏┳┓┳┳┳┓  Tasks Aggregator ", 6i32, 0i32);
+        raw Tui.draw_widget(title);
+        
+        Widget:providers = raw Tui.listbox(0i32, 3i32, 20i32, 20i32, "All Providers|Local|Obsidian|Todoist|GitHub|CalDav\0", 0i32);
+        raw Tui.draw_widget(providers);
+        
+        Widget:task_list = raw Tui.listbox(20i32, 3i32, 60i32, 20i32, listbox_items, selected);
+        task_list.focused = 1i32; // Highlight the active panel
+        raw Tui.draw_widget(task_list);
+        
+        Widget:hint = raw Tui.label(2i32, 23i32, " Up/Down: Navigate | q: Quit | Enter: Toggle Task ", 7i32, 4i32);
+        raw Tui.draw_widget(hint);
+        
+        int32:k = nitpick_input_read_key();
+        
+        if (k == 113i32) { // 'q'
+            running = 0i32;
+        }
+        if (k == 258i32) { // KEY_DOWN
+            selected = selected + 1i32;
+            if (@cast<int64>(selected) >= task_count) {
+                selected = @cast_unchecked<int32>(task_count) - 1i32;
+            }
+        }
+        if (k == 259i32) { // KEY_UP
+            selected = selected - 1i32;
+            if (selected < 0i32) {
+                selected = 0i32;
+            }
+        }
+        
+        // Enter key to toggle task (mock)
+        if (k == 10i32) {
+            // In a real app we'd toggle the checkmark. For now it's just a visual UI demo.
+        }
+        
+        int32:slp = usleep(50000i32);
+    }
+    
+    raw Tui.shutdown();
+    exit 0i32;
+};

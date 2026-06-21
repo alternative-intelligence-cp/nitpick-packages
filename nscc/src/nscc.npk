@@ -1,0 +1,186 @@
+// nscc.npk - Nitpick Simple Code Counter
+use "stdlib/io.npk".*;
+use "stdlib/sys.npk".*;
+use "stdlib/process.npk".*;
+use "stdlib/string.npk".*;
+use "stdlib/string_convert.npk".*;
+
+extern "nscc_shim" {
+    func:nscc_get_file_count = int32(string:root_path);
+    func:nscc_get_file = string(int32:idx);
+}
+
+func:get_ext = string(string:path) {
+    int64:len = string_length(path);
+    int64:i = len - 1i64;
+    while (i >= 0i64) {
+        if (raw str_byte_at(path, i) == 46i64) { // '.'
+            pass string_substring(path, i, len);
+        }
+        i = i - 1i64;
+    }
+    pass "";
+};
+
+func:is_blank = bool(string:line) {
+    int64:len = string_length(line);
+    int64:i = 0i64;
+    while (i < len) {
+        int64:ch = raw str_byte_at(line, i);
+        if (ch != 32i64) { if (ch != 9i64) { if (ch != 10i64) { if (ch != 13i64) {
+            pass false;
+        }}}}
+        i = i + 1i64;
+    }
+    pass true;
+};
+
+func:main = int32() {
+    string:root = raw Process.getenv("NSCC_PATH");
+    if (root == "") {
+        root = ".";
+    }
+
+    int32:count = nscc_get_file_count(root);
+    
+    int32:npk_f = 0i32; int64:npk_l = 0i64; int64:npk_b = 0i64; int64:npk_c = 0i64;
+    int32:c_f = 0i32; int64:c_l = 0i64; int64:c_b = 0i64; int64:c_c = 0i64;
+    int32:md_f = 0i32; int64:md_l = 0i64; int64:md_b = 0i64; int64:md_c = 0i64;
+    int32:sh_f = 0i32; int64:sh_l = 0i64; int64:sh_b = 0i64; int64:sh_c = 0i64;
+    int32:go_f = 0i32; int64:go_l = 0i64; int64:go_b = 0i64; int64:go_c = 0i64;
+    int32:rs_f = 0i32; int64:rs_l = 0i64; int64:rs_b = 0i64; int64:rs_c = 0i64;
+    int32:py_f = 0i32; int64:py_l = 0i64; int64:py_b = 0i64; int64:py_c = 0i64;
+    int32:js_f = 0i32; int64:js_l = 0i64; int64:js_b = 0i64; int64:js_c = 0i64;
+    int32:oth_f = 0i32; int64:oth_l = 0i64; int64:oth_b = 0i64; int64:oth_c = 0i64;
+
+    int32:i = 0i32;
+    while (i < count) {
+        string:path = nscc_get_file(i);
+        string:ext = raw get_ext(path);
+        
+        int32:lang = 0i32; // 0=Oth, 1=NPK, 2=C, 3=MD, 4=SH, 5=Go, 6=Rs, 7=Py, 8=JS
+        if (ext == ".npk") { lang = 1i32; npk_f = npk_f + 1i32; }
+        else if (ext == ".c") { lang = 2i32; c_f = c_f + 1i32; }
+        else if (ext == ".h") { lang = 2i32; c_f = c_f + 1i32; }
+        else if (ext == ".cpp") { lang = 2i32; c_f = c_f + 1i32; }
+        else if (ext == ".hpp") { lang = 2i32; c_f = c_f + 1i32; }
+        else if (ext == ".md") { lang = 3i32; md_f = md_f + 1i32; }
+        else if (ext == ".sh") { lang = 4i32; sh_f = sh_f + 1i32; }
+        else if (ext == ".go") { lang = 5i32; go_f = go_f + 1i32; }
+        else if (ext == ".rs") { lang = 6i32; rs_f = rs_f + 1i32; }
+        else if (ext == ".py") { lang = 7i32; py_f = py_f + 1i32; }
+        else if (ext == ".js") { lang = 8i32; js_f = js_f + 1i32; }
+        else if (ext == ".ts") { lang = 8i32; js_f = js_f + 1i32; }
+        else if (ext == ".jsx") { lang = 8i32; js_f = js_f + 1i32; }
+        else if (ext == ".tsx") { lang = 8i32; js_f = js_f + 1i32; }
+        else { oth_f = oth_f + 1i32; }
+        
+        FileStream:f = raw FileStream.open(path, "r");
+        if (f.handle != 0i64) {
+            while (true) {
+                string:line = raw f.readLine();
+                int8:eof = raw f.eof();
+                
+                if (line != "") {
+                    bool:blank = raw is_blank(line);
+                    
+                    if (lang == 1i32) { npk_l = npk_l + 1i64; if (blank == true) { npk_b = npk_b + 1i64; } else { npk_c = npk_c + 1i64; } }
+                    else if (lang == 2i32) { c_l = c_l + 1i64; if (blank == true) { c_b = c_b + 1i64; } else { c_c = c_c + 1i64; } }
+                    else if (lang == 3i32) { md_l = md_l + 1i64; if (blank == true) { md_b = md_b + 1i64; } else { md_c = md_c + 1i64; } }
+                    else if (lang == 4i32) { sh_l = sh_l + 1i64; if (blank == true) { sh_b = sh_b + 1i64; } else { sh_c = sh_c + 1i64; } }
+                    else if (lang == 5i32) { go_l = go_l + 1i64; if (blank == true) { go_b = go_b + 1i64; } else { go_c = go_c + 1i64; } }
+                    else if (lang == 6i32) { rs_l = rs_l + 1i64; if (blank == true) { rs_b = rs_b + 1i64; } else { rs_c = rs_c + 1i64; } }
+                    else if (lang == 7i32) { py_l = py_l + 1i64; if (blank == true) { py_b = py_b + 1i64; } else { py_c = py_c + 1i64; } }
+                    else if (lang == 8i32) { js_l = js_l + 1i64; if (blank == true) { js_b = js_b + 1i64; } else { js_c = js_c + 1i64; } }
+                    else { oth_l = oth_l + 1i64; if (blank == true) { oth_b = oth_b + 1i64; } else { oth_c = oth_c + 1i64; } }
+                }
+                
+                if (eof == 1i8) { break; }
+            }
+            drop f.close();
+        }
+        
+        i = i + 1i32;
+    }
+    
+    println("-------------------------------------------------------");
+    println("Language     Files       Lines       Blank       Code  ");
+    println("-------------------------------------------------------");
+    
+    func:print_row = NIL(string:name, int32:f, int64:l, int64:b, int64:c) {
+        if (f > 0i32) {
+            string:s = name;
+            while (string_length(s) < 13i64) { s = string_concat(s, " "); }
+            
+            string:sf = string_from_int(@cast<int64>(f));
+            while (string_length(sf) < 12i64) { sf = string_concat(sf, " "); }
+            s = string_concat(s, sf);
+            
+            string:sl = string_from_int(l);
+            while (string_length(sl) < 12i64) { sl = string_concat(sl, " "); }
+            s = string_concat(s, sl);
+            
+            string:sb = string_from_int(b);
+            while (string_length(sb) < 12i64) { sb = string_concat(sb, " "); }
+            s = string_concat(s, sb);
+            
+            string:sc = string_from_int(c);
+            s = string_concat(s, sc);
+            
+            println(s);
+        }
+        pass NIL;
+    };
+    
+    int32:p_npk = 0i32;
+    int32:p_c = 0i32;
+    int32:p_md = 0i32;
+    int32:p_sh = 0i32;
+    int32:p_go = 0i32;
+    int32:p_rs = 0i32;
+    int32:p_py = 0i32;
+    int32:p_js = 0i32;
+    int32:p_oth = 0i32;
+    
+    int32:printed = 0i32;
+    while (printed < 9i32) {
+        int32:best_l = -1i32;
+        int64:max_c = -1i64;
+        
+        if (p_npk == 0i32) { if (npk_c > max_c) { max_c = npk_c; best_l = 1i32; } }
+        if (p_c == 0i32) { if (c_c > max_c) { max_c = c_c; best_l = 2i32; } }
+        if (p_md == 0i32) { if (md_c > max_c) { max_c = md_c; best_l = 3i32; } }
+        if (p_sh == 0i32) { if (sh_c > max_c) { max_c = sh_c; best_l = 4i32; } }
+        if (p_go == 0i32) { if (go_c > max_c) { max_c = go_c; best_l = 5i32; } }
+        if (p_rs == 0i32) { if (rs_c > max_c) { max_c = rs_c; best_l = 6i32; } }
+        if (p_py == 0i32) { if (py_c > max_c) { max_c = py_c; best_l = 7i32; } }
+        if (p_js == 0i32) { if (js_c > max_c) { max_c = js_c; best_l = 8i32; } }
+        if (p_oth == 0i32) { if (oth_c > max_c) { max_c = oth_c; best_l = 9i32; } }
+        
+        if (best_l == 1i32) { drop print_row("Nitpick", npk_f, npk_l, npk_b, npk_c); p_npk = 1i32; }
+        if (best_l == 2i32) { drop print_row("C/C++", c_f, c_l, c_b, c_c); p_c = 1i32; }
+        if (best_l == 3i32) { drop print_row("Markdown", md_f, md_l, md_b, md_c); p_md = 1i32; }
+        if (best_l == 4i32) { drop print_row("Shell", sh_f, sh_l, sh_b, sh_c); p_sh = 1i32; }
+        if (best_l == 5i32) { drop print_row("Go", go_f, go_l, go_b, go_c); p_go = 1i32; }
+        if (best_l == 6i32) { drop print_row("Rust", rs_f, rs_l, rs_b, rs_c); p_rs = 1i32; }
+        if (best_l == 7i32) { drop print_row("Python", py_f, py_l, py_b, py_c); p_py = 1i32; }
+        if (best_l == 8i32) { drop print_row("TS/JS", js_f, js_l, js_b, js_c); p_js = 1i32; }
+        if (best_l == 9i32) { drop print_row("Other", oth_f, oth_l, oth_b, oth_c); p_oth = 1i32; }
+        
+        printed = printed + 1i32;
+    }
+    
+    println("-------------------------------------------------------");
+    int32:tot_f = npk_f + c_f + md_f + sh_f + go_f + rs_f + py_f + js_f + oth_f;
+    int64:tot_l = npk_l + c_l + md_l + sh_l + go_l + rs_l + py_l + js_l + oth_l;
+    int64:tot_b = npk_b + c_b + md_b + sh_b + go_b + rs_b + py_b + js_b + oth_b;
+    int64:tot_c = npk_c + c_c + md_c + sh_c + go_c + rs_c + py_c + js_c + oth_c;
+    drop print_row("Total", tot_f, tot_l, tot_b, tot_c);
+    println("-------------------------------------------------------");
+
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1;
+};

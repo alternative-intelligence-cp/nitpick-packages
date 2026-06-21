@@ -1,0 +1,6 @@
+2023-10-27 INFO  System booted successfully
+2023-10-27 DEBUG Initializing HTTP listener on :8080
+2023-10-27 INFO  GET /index.html 200 OK
+2023-10-27 WARN  Deprecated API accessed
+2023-10-27 ERROR Connection refused to database
+2023-10-27 POST /api/login 403 Forbidden

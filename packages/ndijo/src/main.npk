@@ -1,0 +1,198 @@
+use "nitpick_str.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_display.npk".*;
+use "nitpick_tui.npk".*;
+use "nitpick_input.npk".*;
+use "nitpick_fs.npk".*;
+
+extern func:usleep = int32(int32:usec);
+extern func:nitpick_input_read_key = int32();
+
+func:build_listbox = string(string:content) {
+    int64:num = raw Str.line_count(content);
+    string:listbox = "";
+    int64:i = 0i64;
+    int64:added = 0i64;
+    
+    till(100, 1) {
+        if (i >= num) {
+            // done
+        } else {
+            string:line = raw Str.token(content, "\n", i);
+            if (string_is_empty(string_trim(line))) {
+                // skip empty line
+            } else {
+                string:name = raw Str.before(line, ":");
+                string:stats = raw Str.after(line, ":");
+                
+                string:disp = "";
+                int64:num_stats = raw Str.token_count(stats, ",");
+                int64:j = 0i64;
+                till(30, 1) {
+                    if (j >= num_stats) {
+                        // done
+                    } else {
+                        string:st = raw Str.token(stats, ",", j);
+                        if (string_equals(st, "1")) {
+                            disp = string_concat(disp, "[x] ");
+                        } else {
+                            disp = string_concat(disp, "[ ] ");
+                        }
+                        j = j + 1i64;
+                    }
+                }
+                disp = string_concat(disp, name);
+                
+                if (added == 0i64) {
+                    listbox = disp;
+                } else {
+                    listbox = string_concat(listbox, string_concat("|", disp));
+                }
+                added = added + 1i64;
+            }
+            i = i + 1i64;
+        }
+    }
+    pass(listbox);
+};
+
+func:main = int32() {
+    string:file_path = "habits.txt\0";
+    int32:exists = raw fs_exists(file_path);
+    if (exists != 1i32) {
+        print("Error: habits.txt not found in current directory.\n\0");
+        exit 1i32;
+    }
+
+    string:content = raw fs_read_file(file_path);
+    string:listbox_items = raw build_listbox(content);
+    
+    int64:num_habits = 0i64;
+    int64:c = 0i64;
+    int64:num_lines = raw Str.line_count(content);
+    till(100, 1) {
+        if (c >= num_lines) { } else {
+            string:l = raw Str.token(content, "\n", c);
+            if (string_is_empty(string_trim(l))) { } else {
+                num_habits = num_habits + 1i64;
+            }
+            c = c + 1i64;
+        }
+    }
+
+    raw Tui.init();
+    
+    int32:selected = 0i32;
+    int32:running = 1i32;
+    
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0");
+        
+        Widget:banner = raw Tui.panel(0i32, 0i32, 60i32, 3i32, 6i32, 0i32);
+        raw Tui.draw_widget(banner);
+        
+        Widget:wtitle = raw Tui.label(2i32, 1i32, "  ndijo  |  Terminal Habit Tracker  \0", 6i32, 0i32);
+        raw Tui.draw_widget(wtitle);
+        
+        Widget:entries_list = raw Tui.listbox(0i32, 3i32, 60i32, 20i32, listbox_items, selected);
+        entries_list.focused = 1i32;
+        raw Tui.draw_widget(entries_list);
+        
+        Widget:hint = raw Tui.label(2i32, 24i32, " Up/Down: Navigate | Enter: Toggle Today | q: Quit \0", 7i32, 4i32);
+        raw Tui.draw_widget(hint);
+        
+        int32:k = nitpick_input_read_key();
+        
+        if (k == 113i32) { running = 0i32; } // q
+        else if (k == 27i32) { running = 0i32; } // ESC
+        else if (k == 258i32) { selected = selected + 1i32; }
+        else if (k == 259i32) { selected = selected - 1i32; }
+        else if (k == 2i32) { selected = selected + 1i32; } // fallback DOWN
+        else if (k == 1i32) { selected = selected - 1i32; } // fallback UP
+        else if (k == 10i32) { // ENTER
+            // toggle logic
+            int64:sel_idx = @cast<int64>(selected);
+            // find the sel_idx-th non-empty line
+            int64:real_i = 0i64;
+            int64:found_idx = 0i64;
+            string:old_line = "";
+            till(100, 1) {
+                if (real_i >= num_lines) { } else {
+                    string:l = raw Str.token(content, "\n", real_i);
+                    if (string_is_empty(string_trim(l))) { } else {
+                        if (found_idx == sel_idx) {
+                            old_line = l;
+                        } else {}
+                        found_idx = found_idx + 1i64;
+                    }
+                    real_i = real_i + 1i64;
+                }
+            }
+            
+            if (string_is_empty(old_line)) { } else {
+                int64:olen = string_length(old_line);
+                string:last_char = raw Str.char_at(old_line, olen - 1i64);
+                string:base = string_substring(old_line, 0i64, olen - 1i64);
+                string:new_line = old_line;
+                
+                if (string_equals(last_char, "0")) {
+                    new_line = string_concat(base, "1");
+                } else if (string_equals(last_char, "1")) {
+                    new_line = string_concat(base, "0");
+                } else {}
+                
+                content = raw Str.replace(content, old_line, new_line);
+                raw fs_write_file(file_path, string_concat(content, "\0"));
+                listbox_items = raw build_listbox(content);
+            }
+        }
+        else if (k == 13i32) { // CR
+            // same as 10i32, we can duplicate the block.
+            int64:sel_idx = @cast<int64>(selected);
+            int64:real_i = 0i64;
+            int64:found_idx = 0i64;
+            string:old_line = "";
+            till(100, 1) {
+                if (real_i >= num_lines) { } else {
+                    string:l = raw Str.token(content, "\n", real_i);
+                    if (string_is_empty(string_trim(l))) { } else {
+                        if (found_idx == sel_idx) {
+                            old_line = l;
+                        } else {}
+                        found_idx = found_idx + 1i64;
+                    }
+                    real_i = real_i + 1i64;
+                }
+            }
+            if (string_is_empty(old_line)) { } else {
+                int64:olen = string_length(old_line);
+                string:last_char = raw Str.char_at(old_line, olen - 1i64);
+                string:base = string_substring(old_line, 0i64, olen - 1i64);
+                string:new_line = old_line;
+                if (string_equals(last_char, "0")) {
+                    new_line = string_concat(base, "1");
+                } else if (string_equals(last_char, "1")) {
+                    new_line = string_concat(base, "0");
+                } else {}
+                content = raw Str.replace(content, old_line, new_line);
+                raw fs_write_file(file_path, string_concat(content, "\0"));
+                listbox_items = raw build_listbox(content);
+            }
+        }
+        else {}
+        
+        int32:max_sel = @cast_unchecked<int32>(num_habits) - 1i32;
+        if (selected < 0i32) { selected = 0i32; }
+        if (selected > max_sel) { selected = max_sel; }
+        
+        int32:slp = usleep(50000i32);
+    }
+    
+    raw Tui.shutdown();
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    raw Tui.shutdown();
+    exit 1i32;
+};

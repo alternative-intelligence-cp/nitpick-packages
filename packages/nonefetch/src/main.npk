@@ -1,0 +1,110 @@
+use "nitpick_str.npk".*;
+use "nitpick_fs.npk".*;
+
+func:print_int_helper = NIL(int64:n) {
+    if (n == 0i64) {
+        pass NIL;
+    } else {
+        int64:div = n / 10i64;
+        int64:rem = n - (div * 10i64);
+        raw print_int_helper(div);
+        
+        if (rem == 0i64) { print("0\0"); } else {
+        if (rem == 1i64) { print("1\0"); } else {
+        if (rem == 2i64) { print("2\0"); } else {
+        if (rem == 3i64) { print("3\0"); } else {
+        if (rem == 4i64) { print("4\0"); } else {
+        if (rem == 5i64) { print("5\0"); } else {
+        if (rem == 6i64) { print("6\0"); } else {
+        if (rem == 7i64) { print("7\0"); } else {
+        if (rem == 8i64) { print("8\0"); } else {
+        if (rem == 9i64) { print("9\0"); } else {
+        }}}}}}}}}}
+        pass NIL;
+    }
+};
+
+func:print_int = NIL(int64:n) {
+    if (n == 0i64) {
+        print("0\0");
+    } else {
+        raw print_int_helper(n);
+    }
+    pass NIL;
+};
+
+func:scan_dir = int64(string:dir_path) {
+    int64:total_loc = 0i64;
+    
+    string:dir_path_null = string_concat(dir_path, "\0");
+    string:items = raw fs_list_dir(dir_path_null);
+    int64:num = raw Str.token_count(items, "\n");
+    int64:i = 0i64;
+    
+    till(256, 1) {
+        if (i >= num) {
+            // skip
+        } else {
+            string:item = raw Str.token(items, "\n", i);
+            if (string_is_empty(item)) {
+                // skip
+            } else {
+                string:full_path = string_concat(dir_path, string_concat("/", item));
+                string:full_path_null = string_concat(full_path, "\0");
+                
+                int32:isdir = raw fs_is_dir(full_path_null);
+                if (isdir == 1i32) {
+                    if (string_equals(item, ".git")) { } else {
+                    if (string_equals(item, "build")) { } else {
+                    if (string_equals(item, "shim")) { } else {
+                        int64:sub = raw scan_dir(full_path);
+                        total_loc = total_loc + sub;
+                    }}}
+                } else {
+                    bool:is_npk = string_ends_with(item, ".npk");
+                    bool:is_c = string_ends_with(item, ".c");
+                    bool:is_h = string_ends_with(item, ".h");
+                    if (is_npk) {
+                        string:content = raw fs_read_file(full_path_null);
+                        int64:loc = raw Str.line_count(content);
+                        total_loc = total_loc + loc;
+                    } else {
+                    if (is_c) {
+                        string:content = raw fs_read_file(full_path_null);
+                        int64:loc = raw Str.line_count(content);
+                        total_loc = total_loc + loc;
+                    } else {
+                    if (is_h) {
+                        string:content = raw fs_read_file(full_path_null);
+                        int64:loc = raw Str.line_count(content);
+                        total_loc = total_loc + loc;
+                    }}}
+                }
+            }
+            i = i + 1i64;
+        }
+    }
+    pass(total_loc);
+};
+
+func:main = int32() {
+    string:cwd = raw fs_get_cwd();
+    string:cwd_null = string_concat(cwd, "\0");
+    string:proj_name = raw fs_basename(cwd_null);
+    
+    int64:loc = raw scan_dir(cwd);
+    
+    print("\n\0");
+    print("      * * *            \0"); print(proj_name); print("\n\0");
+    print("    *       *          -------------------\n\0");
+    print("   *         *         Language:  Nitpick, C\n\0");
+    print("    *       *          Files:     .npk, .c, .h\n\0");
+    print("      * * *            LOC:       \0"); raw print_int(loc); print("\n\0");
+    print("\n\0");
+    
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

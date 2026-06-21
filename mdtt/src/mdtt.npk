@@ -1,0 +1,228 @@
+// mdtt.npk - Markdown Table TUI Editor
+use "stdlib/io.npk".*;
+use "stdlib/sys.npk".*;
+use "stdlib/process.npk".*;
+use "stdlib/string.npk".*;
+use "stdlib/string_convert.npk".*;
+use "../../packages/nitpick-term/src/nitpick_term.npk".*;
+
+extern "mdtt_shim" {
+    func:mdtt_set_grid_size = void(int32:r, int32:c);
+    func:mdtt_get_rows = int32();
+    func:mdtt_get_cols = int32();
+    func:mdtt_set_cell = void(int32:r, int32:c, string:val);
+    func:mdtt_get_cell = string(int32:r, int32:c);
+}
+
+func:parse_row = NIL(int32:r, string:line) {
+    int64:len = string_length(line);
+    int64:i = 0i64;
+    int32:c = 0i32;
+    string:cell = "";
+    bool:in_cell = false;
+    
+    while (i < len) {
+        int32:ch = @cast<int32>(raw str_byte_at(line, i));
+        if (ch == 124i32) { // '|'
+            if (in_cell == true) {
+                drop mdtt_set_cell(r, c, cell);
+                c = c + 1i32;
+                cell = "";
+            } else {
+                in_cell = true;
+            }
+        } else {
+            if (in_cell == true) {
+                cell = string_concat(cell, raw char_toString(ch));
+            }
+        }
+        i = i + 1i64;
+    }
+    pass NIL;
+};
+
+func:main = int32() {
+    string:file_path = raw Process.getenv("MDTT_FILE");
+    if (file_path == "") {
+        println("Usage: MDTT_FILE=\"table.md\" ./mdtt");
+        exit 1;
+    }
+
+    FileStream:f = raw FileStream.open(file_path, "r");
+    if (f.handle == 0i64) {
+        // new file, empty grid
+        drop mdtt_set_grid_size(5i32, 5i32);
+        drop mdtt_set_cell(0i32, 0i32, " Header 1 ");
+        drop mdtt_set_cell(0i32, 1i32, " Header 2 ");
+        drop mdtt_set_cell(0i32, 2i32, " Header 3 ");
+        drop mdtt_set_cell(1i32, 0i32, "---");
+        drop mdtt_set_cell(1i32, 1i32, "---");
+        drop mdtt_set_cell(1i32, 2i32, "---");
+    } else {
+        int32:r = 0i32;
+        
+        while (true) {
+            string:line = raw f.readLine();
+            int8:eof = raw f.eof();
+            
+            if (line != "") {
+                if (string_contains(line, "|") == true) {
+                    drop raw parse_row(r, line);
+                    r = r + 1i32;
+                }
+            }
+            if (eof == 1i8) { break; }
+        }
+        drop f.close();
+        drop mdtt_set_grid_size(r, 5i32); // Hardcode 5 cols max
+    }
+    
+    drop Term.init();
+    drop Term.alt_screen(1i32);
+    drop Term.hide_cursor();
+    
+    int32:rows = mdtt_get_rows();
+    int32:cols = 5i32;
+    
+    int32:sel_r = 0i32;
+    int32:sel_c = 0i32;
+    int32:running = 1i32;
+    
+    string:status = "Arrows to move, Enter to edit, Ctrl+S to save, Esc to quit.";
+    
+    while (running == 1i32) {
+        string:frame = "\x1b[2J\x1b[H";
+        frame = string_concat(frame, "\x1b[7m MDTT \x1b[0m ");
+        frame = string_concat(frame, file_path);
+        frame = string_concat(frame, " | ");
+        frame = string_concat(frame, status);
+        frame = string_concat(frame, "\r\n\r\n");
+        
+        int32:ir = 0i32;
+        while (ir < rows) {
+            frame = string_concat(frame, "|");
+            int32:ic = 0i32;
+            while (ic < cols) {
+                string:val = mdtt_get_cell(ir, ic);
+                if (ir == sel_r) {
+                    if (ic == sel_c) {
+                        frame = string_concat(frame, "\x1b[7m"); // Reverse
+                    }
+                }
+                
+                int64:vl = string_length(val);
+                int64:pad = 15i64 - vl;
+                if (pad < 0i64) { pad = 0i64; }
+                frame = string_concat(frame, val);
+                
+                int64:p = 0i64;
+                while (p < pad) {
+                    frame = string_concat(frame, " ");
+                    p = p + 1i64;
+                }
+                
+                if (ir == sel_r) {
+                    if (ic == sel_c) {
+                        frame = string_concat(frame, "\x1b[0m"); // Reset
+                    }
+                }
+                
+                frame = string_concat(frame, "|");
+                ic = ic + 1i32;
+            }
+            frame = string_concat(frame, "\r\n");
+            ir = ir + 1i32;
+        }
+        
+        drop Term.print(frame);
+        
+        status = "Arrows to move, Enter to edit, Ctrl+S to save, Esc to quit.";
+        
+        int32:key = -1i32;
+        while (key == -1i32) {
+            key = raw Term.read_key();
+            if (key == -1i32) {
+                drop Term.sleep(10i32);
+            }
+        }
+        
+        if (key == 27i32) { // Esc
+            int32:next_key = raw Term.read_key();
+            if (next_key == 91i32) {
+                int32:arrow = raw Term.read_key();
+                if (arrow == 65i32) { if (sel_r > 0i32) { sel_r = sel_r - 1i32; } }
+                if (arrow == 66i32) { if (sel_r + 1i32 < rows) { sel_r = sel_r + 1i32; } }
+                if (arrow == 67i32) { if (sel_c + 1i32 < cols) { sel_c = sel_c + 1i32; } }
+                if (arrow == 68i32) { if (sel_c > 0i32) { sel_c = sel_c - 1i32; } }
+            } else {
+                running = 0i32;
+            }
+        }
+        
+        if (key == 19i32) { // Ctrl+S
+            FileStream:fw = raw FileStream.open(file_path, "w");
+            int32:wr = 0i32;
+            while (wr < rows) {
+                string:line = "|";
+                int32:wc = 0i32;
+                while (wc < cols) {
+                    line = string_concat(line, mdtt_get_cell(wr, wc));
+                    line = string_concat(line, "|");
+                    wc = wc + 1i32;
+                }
+                line = string_concat(line, "\n");
+                drop raw fw.write(line);
+                wr = wr + 1i32;
+            }
+            drop fw.close();
+            status = "\x1b[32mSaved table!\x1b[0m";
+        }
+        
+        if (key == 13i32) { // Enter (Edit mode)
+            string:edit_val = mdtt_get_cell(sel_r, sel_c);
+            int32:editing = 1i32;
+            while (editing == 1i32) {
+                string:p = "\x1b[2J\x1b[H\x1b[33mEDIT CELL: \x1b[0m";
+                p = string_concat(p, edit_val);
+                p = string_concat(p, "_\r\n(Press Enter to finish, Esc to cancel)");
+                drop Term.print(p);
+                
+                int32:ek = -1i32;
+                while (ek == -1i32) {
+                    ek = raw Term.read_key();
+                    if (ek == -1i32) { drop Term.sleep(10i32); }
+                }
+                
+                if (ek == 13i32) {
+                    editing = 0i32;
+                    drop mdtt_set_cell(sel_r, sel_c, edit_val);
+                }
+                if (ek == 27i32) {
+                    editing = 0i32; // Cancel
+                }
+                if (ek == 127i32) { // Backspace
+                    int64:el = string_length(edit_val);
+                    if (el > 0i64) {
+                        edit_val = string_substring(edit_val, 0i64, el - 1i64);
+                    }
+                }
+                if (ek >= 32i32) {
+                    if (ek <= 126i32) {
+                        edit_val = string_concat(edit_val, raw char_toString(ek));
+                    }
+                }
+            }
+        }
+    }
+    
+    drop Term.show_cursor();
+    drop Term.alt_screen(0i32);
+    drop Term.restore();
+    
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    drop Term.restore();
+    exit 1;
+};

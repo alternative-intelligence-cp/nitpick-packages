@@ -2,6 +2,11 @@
 use "nitpick_cli.npk".*;
 
 extern "libc" { func:string_length = int64(string:s); }
+extern "nitpick_cli_shim" {
+    func:nitpick_cli_bright_green = string(string:text);
+    func:nitpick_cli_cyan = string(string:text);
+    func:nitpick_cli_gray = string(string:text);
+}
 
 func:_args_token = string(string:args, int32:n) {
     int64:len = string_length(args);

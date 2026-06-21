@@ -253,6 +253,30 @@ static const char *to_hex_stream(const uint8_t *data, size_t len) {
     return hex_result_stream;
 }
 
+/* ========== HMAC-SHA1 ========== */
+
+static void hmac_sha1(const uint8_t *key, size_t klen, const uint8_t *msg, size_t mlen, uint8_t out[20]) {
+    uint8_t kpad[64];
+    if (klen > 64) {
+        sha1_hash(key, klen, kpad);
+        klen = 20;
+        memset(kpad + 20, 0, 44);
+    } else {
+        memcpy(kpad, key, klen);
+        memset(kpad + klen, 0, 64 - klen);
+    }
+
+    uint8_t ipad[64 + 4096];
+    uint8_t opad[64 + 20];
+    for (int i = 0; i < 64; i++) {
+        ipad[i] = kpad[i] ^ 0x36;
+        opad[i] = kpad[i] ^ 0x5c;
+    }
+    memcpy(ipad + 64, msg, mlen);
+    sha1_hash(ipad, 64 + mlen, opad + 64);
+    sha1_hash(opad, 64 + 20, out);
+}
+
 /* ========== Public API — one-shot ========== */
 
 const char *nitpick_crypto_sha1(const char *data) {
@@ -271,6 +295,39 @@ const char *nitpick_crypto_md5(const char *data) {
     uint8_t hash[16];
     md5_hash((const uint8_t *)data, strlen(data), hash);
     return to_hex(hash, 16);
+}
+
+const char *nitpick_crypto_hmac_sha1(const char *key, const char *data) {
+    uint8_t hash[20];
+    hmac_sha1((const uint8_t *)key, strlen(key), (const uint8_t *)data, strlen(data), hash);
+    return to_hex(hash, 20);
+}
+
+static uint8_t hex_char_val_c(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return 0;
+}
+
+static void hex_to_bytes(const char *hex, uint8_t *out, size_t out_len) {
+    for (size_t i = 0; i < out_len; i++) {
+        out[i] = (hex_char_val_c(hex[i*2]) << 4) | hex_char_val_c(hex[i*2+1]);
+    }
+}
+
+const char *nitpick_crypto_hmac_sha1_hex(const char *key_hex, const char *data_hex) {
+    size_t klen = strlen(key_hex) / 2;
+    size_t dlen = strlen(data_hex) / 2;
+    uint8_t kbuf[4096];
+    uint8_t dbuf[4096];
+    if (klen > 4096) klen = 4096;
+    if (dlen > 4096) dlen = 4096;
+    hex_to_bytes(key_hex, kbuf, klen);
+    hex_to_bytes(data_hex, dbuf, dlen);
+    uint8_t hash[20];
+    hmac_sha1(kbuf, klen, dbuf, dlen, hash);
+    return to_hex(hash, 20);
 }
 
 const char *nitpick_crypto_hmac_sha256(const char *key, const char *data) {
@@ -493,6 +550,159 @@ const char *nitpick_crypto_sha256_finalize(int64_t ctx_ptr) {
 }
 
 int32_t nitpick_crypto_sha256_free(int64_t ctx_ptr) {
+    void *p = (void *)(uintptr_t)ctx_ptr;
+    if (!p) return -1;
+    free(p); return 0;
+}
+
+/* ========== BLAKE2b Implementation ========== */
+
+static const uint64_t blake2b_IV[8] = {
+    0x6a09e667f3bcc908ULL, 0xbb67ae8584caa73bULL,
+    0x3c6ef372fe94f82bULL, 0xa54ff53a5f1d36f1ULL,
+    0x510e527fade682d1ULL, 0x9b05688c2b3e6c1fULL,
+    0x1f83d9abfb41bd6bULL, 0x5be0cd19137e2179ULL
+};
+
+static const uint8_t blake2b_sigma[12][16] = {
+    {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 },
+    { 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 },
+    { 11,  8, 12,  0,  5,  2, 15, 13, 10, 14,  3,  6,  7,  1,  9,  4 },
+    {  7,  9,  3,  1, 13, 12, 11, 14,  2,  6,  5, 10,  4,  0, 15,  8 },
+    {  9,  0,  5,  7,  2,  4, 10, 15, 14,  1, 11, 12,  6,  8,  3, 13 },
+    {  2, 12,  6, 10,  0, 11,  8,  3,  4, 13,  7,  5, 15, 14,  1,  9 },
+    { 12,  5,  1, 15, 14, 13,  4, 10,  0,  7,  6,  3,  9,  2,  8, 11 },
+    { 13, 11,  7, 14, 12,  1,  3,  9,  5,  0, 15,  4,  8,  6,  2, 10 },
+    {  6, 15, 14,  9, 11,  3,  0,  8, 12,  2, 13,  7,  1,  4, 10,  5 },
+    { 10,  2,  8,  4,  7,  6,  1,  5, 15, 11,  9, 14,  3, 12, 13,  0 },
+    {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 },
+    { 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 }
+};
+
+static inline uint64_t blake2b_rotr64(uint64_t w, unsigned c) {
+    return (w >> c) | (w << (64 - c));
+}
+
+static inline uint64_t blake2b_load64(const void *src) {
+    uint64_t w;
+    memcpy(&w, src, sizeof(w));
+    return w;
+}
+
+static inline void blake2b_store64(void *dst, uint64_t w) {
+    memcpy(dst, &w, sizeof(w));
+}
+
+#define BLAKE2B_G(r, i, a, b, c, d) do { \
+    a = a + b + m[blake2b_sigma[r][2*i+0]]; \
+    d = blake2b_rotr64(d ^ a, 32); \
+    c = c + d; \
+    b = blake2b_rotr64(b ^ c, 24); \
+    a = a + b + m[blake2b_sigma[r][2*i+1]]; \
+    d = blake2b_rotr64(d ^ a, 16); \
+    c = c + d; \
+    b = blake2b_rotr64(b ^ c, 63); \
+} while(0)
+
+#define BLAKE2B_ROUND(r) do { \
+    BLAKE2B_G(r, 0, v[ 0], v[ 4], v[ 8], v[12]); \
+    BLAKE2B_G(r, 1, v[ 1], v[ 5], v[ 9], v[13]); \
+    BLAKE2B_G(r, 2, v[ 2], v[ 6], v[10], v[14]); \
+    BLAKE2B_G(r, 3, v[ 3], v[ 7], v[11], v[15]); \
+    BLAKE2B_G(r, 4, v[ 0], v[ 5], v[10], v[15]); \
+    BLAKE2B_G(r, 5, v[ 1], v[ 6], v[11], v[12]); \
+    BLAKE2B_G(r, 6, v[ 2], v[ 7], v[ 8], v[13]); \
+    BLAKE2B_G(r, 7, v[ 3], v[ 4], v[ 9], v[14]); \
+} while(0)
+
+static void blake2b_compress(uint64_t h[8], const uint8_t block[128], uint64_t t0, uint64_t t1, uint64_t f0, uint64_t f1) {
+    uint64_t v[16];
+    uint64_t m[16];
+    for (int i = 0; i < 8; i++) {
+        v[i] = h[i];
+        v[i + 8] = blake2b_IV[i];
+    }
+    v[12] ^= t0;
+    v[13] ^= t1;
+    v[14] ^= f0;
+    v[15] ^= f1;
+    for (int i = 0; i < 16; ++i) {
+        m[i] = blake2b_load64(block + i * sizeof(m[i]));
+    }
+    for (int r = 0; r < 12; r++) {
+        BLAKE2B_ROUND(r);
+    }
+    for (int i = 0; i < 8; i++) {
+        h[i] = h[i] ^ v[i] ^ v[i + 8];
+    }
+}
+
+typedef struct {
+    uint64_t h[8];
+    uint8_t buf[128];
+    uint64_t t[2];
+    uint64_t f[2];
+    size_t buflen;
+    size_t outlen;
+} BLAKE2bCtx;
+
+int64_t nitpick_crypto_blake2b_init(int32_t outlen) {
+    if (outlen <= 0 || outlen > 64) outlen = 64;
+    BLAKE2bCtx *ctx = (BLAKE2bCtx *)calloc(1, sizeof(BLAKE2bCtx));
+    if (!ctx) return 0;
+    ctx->outlen = outlen;
+    for (int i = 0; i < 8; i++) {
+        ctx->h[i] = blake2b_IV[i];
+    }
+    ctx->h[0] ^= 0x01010000 ^ outlen; // hash_size = outlen, key_length = 0, fanout = 1, depth = 1
+    return (int64_t)(uintptr_t)ctx;
+}
+
+int32_t nitpick_crypto_blake2b_update(int64_t ctx_ptr, int64_t buf_ptr, int64_t length) {
+    BLAKE2bCtx *ctx = (BLAKE2bCtx *)(uintptr_t)ctx_ptr;
+    const uint8_t *in = (const uint8_t *)(uintptr_t)buf_ptr;
+    size_t inlen = (size_t)length;
+    if (!ctx || !in || inlen == 0) return -1;
+    while (inlen > 0) {
+        size_t left = 128 - ctx->buflen;
+        size_t fill = (inlen < left) ? inlen : left;
+        memcpy(ctx->buf + ctx->buflen, in, fill);
+        ctx->buflen += fill;
+        in += fill;
+        inlen -= fill;
+        if (ctx->buflen == 128) {
+            ctx->t[0] += 128;
+            if (ctx->t[0] < 128) {
+                ctx->t[1]++;
+            }
+            if (inlen > 0) {
+                blake2b_compress(ctx->h, ctx->buf, ctx->t[0], ctx->t[1], ctx->f[0], ctx->f[1]);
+                ctx->buflen = 0;
+            }
+        }
+    }
+    return 0;
+}
+
+const char *nitpick_crypto_blake2b_finalize(int64_t ctx_ptr) {
+    BLAKE2bCtx *ctx = (BLAKE2bCtx *)(uintptr_t)ctx_ptr;
+    if (!ctx) return "";
+    ctx->t[0] += ctx->buflen;
+    if (ctx->t[0] < ctx->buflen) {
+        ctx->t[1]++;
+    }
+    ctx->f[0] = ~(uint64_t)0; // Set last block flag
+    memset(ctx->buf + ctx->buflen, 0, 128 - ctx->buflen);
+    blake2b_compress(ctx->h, ctx->buf, ctx->t[0], ctx->t[1], ctx->f[0], ctx->f[1]);
+
+    uint8_t out[64];
+    for (int i = 0; i < 8; ++i) {
+        blake2b_store64(out + sizeof(ctx->h[i]) * i, ctx->h[i]);
+    }
+    return to_hex_stream(out, ctx->outlen);
+}
+
+int32_t nitpick_crypto_blake2b_free(int64_t ctx_ptr) {
     void *p = (void *)(uintptr_t)ctx_ptr;
     if (!p) return -1;
     free(p); return 0;

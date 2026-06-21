@@ -1,0 +1,138 @@
+// neoss.npk - Socket Stats Dashboard
+use "stdlib/io.npk".*;
+use "stdlib/sys.npk".*;
+use "stdlib/process.npk".*;
+use "stdlib/string.npk".*;
+use "stdlib/string_convert.npk".*;
+use "../../packages/nitpick-term/src/nitpick_term.npk".*;
+
+extern "neoss_shim" {
+    func:neoss_fetch_sockets = void();
+    func:neoss_get_count = int32();
+    func:neoss_get_line = string(int32:idx);
+}
+
+func:get_word = string(string:line, int32:idx) {
+    int64:len = string_length(line);
+    int64:i = 0i64;
+    int32:word_idx = 0i32;
+    string:res = "";
+    
+    while (i < len) {
+        int64:c = raw str_byte_at(line, i);
+        if (c == 32i64) {
+            if (string_length(res) > 0i64) {
+                if (word_idx == idx) { pass res; }
+                word_idx = word_idx + 1i32;
+                res = "";
+            }
+        } else {
+            res = string_concat(res, raw char_toString(@cast<int32>(c)));
+        }
+        i = i + 1i64;
+    }
+    
+    if (word_idx == idx) { pass res; }
+    pass "";
+};
+
+func:pad_right = string(string:s, int64:width) {
+    string:res = s;
+    int64:len = string_length(s);
+    while (len < width) {
+        res = string_concat(res, " ");
+        len = len + 1i64;
+    }
+    pass res;
+};
+
+func:main = int32() {
+    drop Term.init();
+    drop Term.alt_screen(1i32);
+    drop Term.hide_cursor();
+    
+    int32:cols = raw Term.get_cols();
+    int32:rows = raw Term.get_rows();
+    
+    int32:running = 1i32;
+    int32:ticks = 0i32;
+    
+    while (running == 1i32) {
+        if (ticks % 10i32 == 0i32) { // Refresh every 1s
+            drop neoss_fetch_sockets();
+        }
+        
+        string:frame = "\x1b[H\x1b[2J";
+        
+        frame = string_concat(frame, "\x1b[1;36m  NEOSS - Network Socket Statistics Dashboard\x1b[0m\r\n");
+        frame = string_concat(frame, "\x1b[90m  =======================================================================\x1b[0m\r\n");
+        
+        string:h_proto = raw pad_right("Proto", 8i64);
+        string:h_state = raw pad_right("State", 15i64);
+        string:h_local = raw pad_right("Local Address", 25i64);
+        string:h_peer  = raw pad_right("Peer Address", 25i64);
+        
+        frame = string_concat(frame, "  \x1b[1m");
+        frame = string_concat(frame, h_proto); frame = string_concat(frame, h_state);
+        frame = string_concat(frame, h_local); frame = string_concat(frame, h_peer);
+        frame = string_concat(frame, "\x1b[0m\r\n");
+        
+        int32:count = neoss_get_count();
+        int32:i = 0i32;
+        int32:max_disp = rows - 5i32;
+        if (count < max_disp) { max_disp = count; }
+        
+        while (i < max_disp) {
+            string:line = neoss_get_line(i);
+            string:proto = raw get_word(line, 0i32);
+            string:state = raw get_word(line, 1i32);
+            string:local = raw get_word(line, 4i32);
+            string:peer  = raw get_word(line, 5i32);
+            
+            if (proto != "") {
+                string:color = "\x1b[0m"; // default
+                if (state == "ESTAB") { color = "\x1b[32m"; }
+                if (state == "LISTEN") { color = "\x1b[34m"; }
+                if (state == "TIME-WAIT") { color = "\x1b[90m"; }
+                if (state == "CLOSE-WAIT") { color = "\x1b[33m"; }
+                if (state == "UNCONN") { color = "\x1b[35m"; }
+                
+                string:d_proto = raw pad_right(proto, 8i64);
+                string:d_state = raw pad_right(state, 15i64);
+                string:d_local = raw pad_right(local, 25i64);
+                string:d_peer  = raw pad_right(peer, 25i64);
+                
+                frame = string_concat(frame, "  ");
+                frame = string_concat(frame, d_proto);
+                frame = string_concat(frame, color);
+                frame = string_concat(frame, d_state);
+                frame = string_concat(frame, "\x1b[0m");
+                frame = string_concat(frame, d_local);
+                frame = string_concat(frame, d_peer);
+                frame = string_concat(frame, "\r\n");
+            }
+            i = i + 1i32;
+        }
+        
+        drop Term.print(frame);
+        
+        int32:key = raw Term.read_key();
+        if (key == 113i32) { running = 0i32; } // q
+        if (key == 27i32) { running = 0i32; }  // esc
+        if (key == 3i32) { running = 0i32; }   // ctrl+c
+        
+        drop Term.sleep(100i32);
+        ticks = ticks + 1i32;
+    }
+    
+    drop Term.show_cursor();
+    drop Term.alt_screen(0i32);
+    drop Term.restore();
+    
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    drop Term.restore();
+    exit 1;
+};

@@ -1,0 +1,18 @@
+[target.nmpv]
+type = "executable"
+src = ["src/main.npk"]
+include_dirs = [
+    "src",
+    "../nitpick-cli/src",
+    "../nitpick-str/src",
+    "../nitpick-fs/src"
+]
+libs = [
+    "cli_shim.o",
+    "cli_args.o",
+    "../nitpick-fs/shim/libnitpick_fs_shim.a",
+    "../../../nitpick-libc/shim/libnitpick_libc_string.a",
+    "../../../nitpick-libc/shim/libnitpick_libc_mem.a",
+    "../../../nitpick-libc/shim/libnitpick_libc_io.a",
+    "../../../nitpick-libc/shim/libnitpick_libc_process.a"
+]

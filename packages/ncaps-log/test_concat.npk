@@ -1,0 +1,15 @@
+extern func:string_concat = string(string:a, string:b);
+extern func:string_length = int64(string:s);
+
+func:main = int32() {
+    string:s1 = "[Entry] \0";
+    string:s2 = "Test\0";
+    string:c = string_concat(s1, s2);
+    print(c);
+    print("\n\0");
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

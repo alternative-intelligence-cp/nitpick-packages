@@ -1,0 +1,17 @@
+// nitpick_unix_server.npk
+
+use "../../nitpick-unix-socket/src/nitpick_unix_socket.npk".*;
+use "../../nitpick-thread/src/nitpick_thread.npk".*;
+
+pub Type:UnixServer = {
+    func:listen = NIL(string:path, (int64)(int64):handler) {
+        int64:server_fd = raw UnixSocket.server(path);
+        
+        while (1i32 == 1i32) {
+            int64:client_fd = raw UnixSocket.accept(server_fd);
+            drop(npk_shim_thread_spawn(handler, client_fd));
+        }
+        
+        pass NIL;
+    };
+};

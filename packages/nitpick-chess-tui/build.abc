@@ -1,0 +1,8 @@
+[package]
+name = "nitpick-chess-tui"
+version = "0.1.0"
+description = "A terminal UI for the Nitpick Chess game"
+
+[dependencies]
+nitpick-libc = "0.1.0"
+nitpick-console = "0.1.0"

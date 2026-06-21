@@ -1,0 +1,45 @@
+// test_unix_server.npk
+
+use "../../nitpick-unix-socket/src/nitpick_unix_socket.npk".*;
+use "../src/nitpick_unix_server.npk".*;
+use "../../nitpick-thread/src/nitpick_thread.npk".*;
+use "../../nitpick-test/src/nitpick_test.npk".*;
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+func:main = int32() {
+    drop(UnixSocket.unlink("/tmp/nitpick_test.sock"));
+
+    (int64)(int64):server_thread = int64(int64:arg) {
+        (int64)(int64):my_handler = int64(int64:client_fd) {
+            string:data = raw UnixSocket.recv(client_fd, 1024i64);
+            if (string_equals(data, "ping")) {
+                drop(raw UnixSocket.send(client_fd, "pong"));
+            }
+            drop(UnixSocket.close(client_fd));
+            pass 0i64;
+        };
+        
+        drop(UnixServer.listen("/tmp/nitpick_test.sock", my_handler));
+        pass 0i64;
+    };
+
+    // Spawn server
+    int64:srv_th = npk_shim_thread_spawn(server_thread, 0i64);
+    drop(thread_sleep_ms(100i64)); // give server time to bind
+
+    // Client connects
+    int64:client_fd = raw UnixSocket.client("/tmp/nitpick_test.sock");
+    drop(raw UnixSocket.send(client_fd, "ping"));
+
+    string:resp = raw UnixSocket.recv(client_fd, 1024i64);
+    drop(Test.assert_eq_str("Server responds correctly\0", resp, "pong"));
+
+    drop(UnixSocket.close(client_fd));
+
+    drop(npk_shim_thread_detach(srv_th));
+    
+    exit 0i32;
+};

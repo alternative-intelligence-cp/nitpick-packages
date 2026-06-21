@@ -11,6 +11,13 @@ extern "libc" {
     func:nigrep_push_key = void(int32:key);
     func:nigrep_pop_key = int32();
     func:nigrep_spawn_workers = void();
+    
+    // Task Queue C functions
+    func:nigrep_push_task = void(string:path);
+    func:nigrep_pop_task = string();
+    func:nigrep_set_tasks_done = void(int32:done);
+    func:nigrep_clear_tasks = void();
+    func:nigrep_free_task = void(string:task);
 }
 extern "npk_runtime" {
     func:npk_shim_mutex_create = int64(int32:type);
@@ -105,7 +112,8 @@ func:walk_dir_recursive = NIL(string:dir, int64:depth, string:query) {
                     drop(walk_dir_recursive(full_path, depth + 1i64, query));
                 } else {
                     if (raw fs_is_file(full_path) == 1i32) {
-                        drop(search_file(full_path, query));
+                        // Multithread: push to task queue instead of searching here
+                        nigrep_push_task(full_path);
                     }
                 }
             }
@@ -126,7 +134,7 @@ pub func:nigrep_input_worker = int64(int64:arg) {
     pass 0i64;
 };
 
-pub func:nigrep_search_worker = int64(int64:arg) {
+pub func:nigrep_walker_worker = int64(int64:arg) {
     while (g_running == 1i32) {
         string:local_query = "";
         
@@ -142,7 +150,10 @@ pub func:nigrep_search_worker = int64(int64:arg) {
         int32:ign2 = npk_shim_mutex_unlock(g_mtx);
         
         if (string_is_empty(local_query) == false) {
+            nigrep_clear_tasks();
+            nigrep_set_tasks_done(0i32);
             drop(walk_dir_recursive(".", 0i64, local_query));
+            nigrep_set_tasks_done(1i32);
             
             // Wait for next query change
             int32:changed2 = 0i32;
@@ -156,6 +167,28 @@ pub func:nigrep_search_worker = int64(int64:arg) {
             }
         } else {
             drop(thread_sleep_ms(50i64));
+        }
+    }
+    pass(0i64);
+};
+
+pub func:nigrep_search_worker = int64(int64:arg) {
+    while (g_running == 1i32) {
+        string:task = nigrep_pop_task();
+        if (string_is_empty(task) == false) {
+            // Check if query is still the same before doing work
+            string:local_query = "";
+            int32:ign = npk_shim_mutex_lock(g_mtx);
+            local_query = g_worker_query;
+            int32:ign2 = npk_shim_mutex_unlock(g_mtx);
+            
+            if (string_is_empty(local_query) == false) {
+                drop(search_file(task, local_query));
+            }
+            nigrep_free_task(task);
+        } else {
+            // Task queue returned empty/null, sleep shortly
+            drop(thread_sleep_ms(10i64));
         }
     }
     pass(0i64);

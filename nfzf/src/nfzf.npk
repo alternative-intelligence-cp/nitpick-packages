@@ -1,0 +1,217 @@
+// nfzf.npk - Nitpick Fuzzy Finder
+use "stdlib/io.npk".*;
+use "stdlib/sys.npk".*;
+use "stdlib/string.npk".*;
+use "stdlib/string_convert.npk".*;
+
+extern "libc" {
+    func:npk_mem_write_byte = int64(int64:ptr, int64:offset, int64:val);
+}
+
+extern "nfzf_shim" {
+    func:nfzf_tty_init = void();
+    func:nfzf_tty_restore = void();
+    func:nfzf_tty_read_key = int32();
+    func:nfzf_tty_write = void(string:s, int32:len);
+    func:nfzf_tty_sleep_10ms = void();
+    
+    func:nfzf_read_stdin = void();
+    func:nfzf_get_line_count = int32();
+    func:nfzf_get_line = string(int32:i);
+}
+
+func:tty_print = NIL(string:s) {
+    drop nfzf_tty_write(s, @cast<int32>(string_length(s)));
+    pass NIL;
+};
+
+func:fuzzy_match = int32(string:line, string:query) {
+    int64:llen = string_length(line);
+    int64:qlen = string_length(query);
+    if (qlen == 0i64) { pass 1i32; }
+    if (llen < qlen) { pass 0i32; }
+    
+    int64:i = 0i64;
+    int64:j = 0i64;
+    while (i < llen) {
+        if (j == qlen) { pass 1i32; }
+        int64:lc = raw str_byte_at(line, i);
+        int64:qc = raw str_byte_at(query, j);
+        
+        // Case insensitive match
+        if (lc >= 65i64) { if (lc <= 90i64) { lc = lc + 32i64; } }
+        if (qc >= 65i64) { if (qc <= 90i64) { qc = qc + 32i64; } }
+        
+        if (lc == qc) {
+            j = j + 1i64;
+        }
+        i = i + 1i64;
+    }
+    if (j == qlen) { pass 1i32; }
+    pass 0i32;
+};
+
+// Writes raw string to buffer
+func:write_str = int64(int64:buf, int64:idx, string:s) {
+    int64:len = string_length(s);
+    int64:i = 0i64;
+    while (i < len) {
+        drop npk_mem_write_byte(buf, idx + i, raw str_byte_at(s, i));
+        i = i + 1i64;
+    }
+    pass idx + len;
+};
+
+func:highlight_match_buf = int64(int64:buf, int64:idx, string:line, string:query) {
+    int64:llen = string_length(line);
+    int64:qlen = string_length(query);
+    if (qlen == 0i64) { pass raw write_str(buf, idx, line); }
+    
+    int64:i = 0i64;
+    int64:j = 0i64;
+    
+    while (i < llen) {
+        int64:lc = raw str_byte_at(line, i);
+        int32:matched = 0i32;
+        
+        if (j < qlen) {
+            int64:qc = raw str_byte_at(query, j);
+            int64:lc_norm = lc;
+            int64:qc_norm = qc;
+            if (lc_norm >= 65i64) { if (lc_norm <= 90i64) { lc_norm = lc_norm + 32i64; } }
+            if (qc_norm >= 65i64) { if (qc_norm <= 90i64) { qc_norm = qc_norm + 32i64; } }
+            if (lc_norm == qc_norm) {
+                matched = 1i32;
+                j = j + 1i64;
+            }
+        }
+        
+        if (matched == 1i32) {
+            idx = raw write_str(buf, idx, "\x1b[32m");
+            drop npk_mem_write_byte(buf, idx, lc); idx = idx + 1i64;
+            idx = raw write_str(buf, idx, "\x1b[0m"); // Reset
+        } else {
+            drop npk_mem_write_byte(buf, idx, lc); idx = idx + 1i64;
+        }
+        
+        i = i + 1i64;
+    }
+    pass idx;
+};
+
+func:main = int32() {
+    drop nfzf_read_stdin();
+    
+    int32:count_32 = nfzf_get_line_count();
+    int64:list_count = @cast<int64>(count_32);
+
+    if (list_count == 0i64) {
+        println("Error: no input provided.");
+        exit 1;
+    }
+
+    drop nfzf_tty_init();
+    drop tty_print("\x1b[?1049h\x1b[?25l");
+
+    int64:frame_buf = sys(MMAP, 0i64, 1048576i64, 3i64, 34i64, -1i64, 0i64) ? 0i64;
+    if (frame_buf <= 0i64) { exit 1; }
+
+    string:query = "";
+    int64:selected_idx = 0i64;
+    string:final_selection = "";
+
+    int32:running = 1i32;
+    while (running == 1i32) {
+        int64:idx = 0i64;
+        
+        idx = raw write_str(frame_buf, idx, "\x1b[2J\x1b[H> ");
+        idx = raw write_str(frame_buf, idx, query);
+        idx = raw write_str(frame_buf, idx, "\r\n");
+
+        int64:match_count = 0i64;
+        int64:i = 0i64;
+        while (i < list_count) {
+            string:line = nfzf_get_line(@cast<int32>(i));
+            if (raw fuzzy_match(line, query) == 1i32) {
+                if (match_count == selected_idx) {
+                    idx = raw write_str(frame_buf, idx, "\x1b[7m> ");
+                    idx = raw highlight_match_buf(frame_buf, idx, line, query);
+                    idx = raw write_str(frame_buf, idx, "\x1b[0m\r\n");
+                    final_selection = line;
+                } else {
+                    if (match_count < 20i64) {
+                        idx = raw write_str(frame_buf, idx, "  ");
+                        idx = raw highlight_match_buf(frame_buf, idx, line, query);
+                        idx = raw write_str(frame_buf, idx, "\r\n");
+                    }
+                }
+                match_count = match_count + 1i64;
+            }
+            i = i + 1i64;
+        }
+
+        if (match_count == 0i64) {
+            final_selection = "";
+        }
+        
+        if (selected_idx >= match_count) {
+            if (match_count > 0i64) {
+                selected_idx = match_count - 1i64;
+            } else {
+                selected_idx = 0i64;
+            }
+        }
+
+        drop sys(WRITE, 1i64, frame_buf, idx);
+
+        int32:key = -1i32;
+        while (key == -1i32) {
+            key = nfzf_tty_read_key();
+            if (key == -1i32) {
+                drop nfzf_tty_sleep_10ms();
+            }
+        }
+
+        if (key == 13i32) { running = 0i32; }
+        if (key == 27i32) {
+            int32:next_key = nfzf_tty_read_key();
+            if (next_key == 91i32) {
+                int32:arrow = nfzf_tty_read_key();
+                if (arrow == 65i32) { if (selected_idx > 0i64) { selected_idx = selected_idx - 1i64; } }
+                if (arrow == 66i32) { selected_idx = selected_idx + 1i64; }
+            } else {
+                final_selection = "";
+                running = 0i32;
+            }
+        }
+        if (key == 127i32) {
+            int64:ql = string_length(query);
+            if (ql > 0i64) {
+                query = string_substring(query, 0i64, ql - 1i64);
+                selected_idx = 0i64;
+            }
+        }
+        if (key >= 32i32) {
+            if (key < 127i32) {
+                query = string_concat(query, raw char_toString(key));
+                selected_idx = 0i64;
+            }
+        }
+    }
+
+    drop tty_print("\x1b[?25h\x1b[?1049l");
+    drop nfzf_tty_restore();
+
+    drop sys(MUNMAP, frame_buf, 1048576i64);
+
+    if (string_length(final_selection) > 0i64) {
+        println(final_selection);
+    }
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    drop nfzf_tty_restore();
+    println("Fatal error");
+    exit 1;
+};

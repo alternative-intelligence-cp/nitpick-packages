@@ -1,0 +1,33 @@
+use "nitpick_http.npk".*;
+use "nitpick_str.npk".*;
+
+func:main = int32() {
+    drop(http_init());
+    
+    print("Fetching top stories...\n\0");
+    int32:res = raw http_get("https://hacker-news.firebaseio.com/v0/topstories.json\0");
+    if (res == 0i32) {
+        print("Failed to fetch. Error: \0");
+        print(raw http_error());
+        print("\n\0");
+        exit 1i32;
+    }
+    
+    string:body = raw http_body();
+    print(body);
+    print("\n\0");
+    
+    string:inner = raw Str.between(body, "[", "]");
+    string:id1 = raw Str.token(inner, ",", 0i64);
+    string:id2 = raw Str.token(inner, ",", 1i64);
+    
+    print("ID1: \0"); print(id1); print("\n\0");
+    print("ID2: \0"); print(id2); print("\n\0");
+    
+    drop(http_cleanup());
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

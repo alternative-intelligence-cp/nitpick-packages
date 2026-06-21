@@ -1,0 +1,123 @@
+// nhas.npk - Tool Presence Checker
+use "stdlib/io.npk".*;
+use "stdlib/sys.npk".*;
+use "stdlib/process.npk".*;
+use "stdlib/string.npk".*;
+use "stdlib/string_convert.npk".*;
+
+extern "nhas_shim" {
+    func:nhas_is_installed = int32(string:tool);
+    func:nhas_get_version = string(string:tool);
+}
+
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_getenv = string(string:name);
+}
+
+func:get_tool_at = string(string:tools, int64:start_idx) {
+    int64:len = string_length(tools);
+    int64:i = start_idx;
+    string:res = "";
+    while (i < len) {
+        int64:c = raw str_byte_at(tools, i);
+        if (c == 32i64) {
+            if (string_length(res) > 0i64) { break; }
+        } else {
+            res = string_concat(res, raw char_toString(@cast<int32>(c)));
+        }
+        i = i + 1i64;
+    }
+    pass res;
+};
+
+func:print_pad = NIL(string:s, int64:width) {
+    int64:len = string_length(s);
+    while (len < width) {
+        drop print(" ");
+        len = len + 1i64;
+    }
+    drop print(s);
+    pass NIL;
+};
+
+func:check_tool = NIL(string:tool) {
+    int32:installed = nhas_is_installed(tool);
+    
+    if (installed == 1i32) {
+        string:ver = nhas_get_version(tool);
+        
+        // Green checkmark
+        drop print("\x1b[32m[ \xe2\x9c\x94 ]\x1b[0m ");
+        
+        // Tool name padded
+        string:t = string_concat(tool, ":");
+        drop print_pad(t, 15i64);
+        drop print("  ");
+        
+        // Version
+        println(ver);
+    } else {
+        // Red X
+        drop print("\x1b[31m[ \xe2\x9c\x98 ]\x1b[0m ");
+        
+        string:t = string_concat(tool, ":");
+        drop print_pad(t, 15i64);
+        drop print("  ");
+        
+        println("\x1b[90mNot Installed\x1b[0m");
+    }
+    
+    pass NIL;
+};
+
+func:main = int32() {
+    string:tools_env = raw Process.getenv("NHAS_TOOLS");
+    
+    if (tools_env == "") {
+        println("");
+        println("\x1b[1mnhas\x1b[0m - Tool Presence Checker");
+        println("Usage: NHAS_TOOLS=\"git node python3\" ./nhas");
+        println("Checking default tools...");
+        println("");
+        
+        string:t1 = "git"; drop check_tool(t1);
+        string:t2 = "node"; drop check_tool(t2);
+        string:t3 = "python3"; drop check_tool(t3);
+        string:t4 = "docker"; drop check_tool(t4);
+        string:t5 = "curl"; drop check_tool(t5);
+        string:t6 = "npkc"; drop check_tool(t6);
+        string:t7 = "fake_tool"; drop check_tool(t7);
+        println("");
+        exit 0;
+    }
+    
+    println("");
+    
+    int64:idx = 0i64;
+    int64:len = string_length(tools_env);
+    
+    while (idx < len) {
+        string:tool = raw get_tool_at(tools_env, idx);
+        if (tool != "") {
+            drop check_tool(tool);
+            // advance idx
+            int64:tlen = string_length(tool);
+            int64:adv = 0i64;
+            while (adv < len - idx) {
+                if (raw get_tool_at(tools_env, idx + adv) == tool) { break; }
+                adv = adv + 1i64;
+            }
+            idx = idx + adv + tlen;
+        } else {
+            idx = len;
+        }
+    }
+    
+    println("");
+    
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1;
+};

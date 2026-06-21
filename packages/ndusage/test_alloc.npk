@@ -1,0 +1,17 @@
+extern func:npk_mem_write_int64 = int64(wild any*:ptr, int64:offset, int64:val);
+extern func:npk_mem_read_int64 = int64(wild any*:ptr, int64:offset);
+
+func:main = int32() {
+    wild int8->:ptr = alloc(32i64);
+    drop(npk_mem_write_int64(ptr, 0i64, 100i64));
+    int64:val = npk_mem_read_int64(ptr, 0i64);
+    if (val != 100i64) {
+        exit(1i32);
+    }
+    drop(dalloc(ptr));
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};

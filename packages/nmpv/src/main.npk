@@ -1,0 +1,33 @@
+use "nitpick_cli.npk".*;
+use "nitpick_str.npk".*;
+
+extern "c" {
+    func:system = int32(string:cmd);
+}
+
+func:main = int32() {
+    raw Cli.parse();
+    int64:count = raw Cli.get_positional_count();
+    
+    if (count == 0i64) {
+        print("Usage: nmpv <media_file>\n\0");
+        exit 1i32;
+    }
+    
+    string:file = raw Cli.get_positional(0i64);
+    
+    // Construct command: mpv --vo=tct "file"
+    string:cmd = string_concat("mpv --vo=tct \"", string_concat(file, "\"\0"));
+    
+    print("Launching terminal media player: \0");
+    print(cmd);
+    print("\n\0");
+    
+    int32:res = system(cmd);
+    
+    exit res;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

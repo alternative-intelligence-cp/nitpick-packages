@@ -1,0 +1,210 @@
+// npatat.npk - Terminal Presentation Tool
+use "stdlib/io.npk".*;
+use "stdlib/sys.npk".*;
+use "stdlib/process.npk".*;
+use "stdlib/string.npk".*;
+use "stdlib/string_convert.npk".*;
+use "../../packages/nitpick-term/src/nitpick_term.npk".*;
+
+extern "libc" {
+    func:npk_mem_write_byte = int64(int64:ptr, int64:offset, int64:val);
+}
+
+extern "npatat_shim" {
+    func:npatat_load = int32(string:file);
+    func:npatat_get_slide = string(int32:idx);
+}
+
+func:write_str = int64(int64:buf, int64:idx, string:s) {
+    int64:len = string_length(s);
+    int64:i = 0i64;
+    while (i < len) {
+        drop npk_mem_write_byte(buf, idx + i, @cast<int32>(raw str_byte_at(s, i)));
+        i = i + 1i64;
+    }
+    pass idx + len;
+};
+
+func:print_slide = NIL(int64:frame_buf, string:slide) {
+    int64:len = string_length(slide);
+    
+    // First pass: Calculate num_lines and max_line_len
+    int32:num_lines = 1i32;
+    int32:max_line_len = 0i32;
+    int32:curr_line_len = 0i32;
+    int64:j = 0i64;
+    while (j < len) {
+        int64:c = raw str_byte_at(slide, j);
+        if (c == 10i64) {
+            if (curr_line_len > max_line_len) { max_line_len = curr_line_len; }
+            curr_line_len = 0i32;
+            num_lines = num_lines + 1i32;
+        } else {
+            curr_line_len = curr_line_len + 1i32;
+        }
+        j = j + 1i64;
+    }
+    if (curr_line_len > max_line_len) { max_line_len = curr_line_len; }
+    
+    int32:term_cols = raw Term.get_cols();
+    int32:term_rows = raw Term.get_rows();
+    
+    int32:pad_y = (term_rows - num_lines) / 2i32;
+    if (pad_y < 0i32) { pad_y = 0i32; }
+    
+    int32:pad_x = (term_cols - max_line_len) / 2i32;
+    if (pad_x < 0i32) { pad_x = 0i32; }
+    
+    int64:idx = 0i64;
+    idx = raw write_str(frame_buf, idx, "\x1b[2J\x1b[H\r\n");
+
+    int32:py = 0i32;
+    while (py < pad_y) {
+        idx = raw write_str(frame_buf, idx, "\r\n");
+        py = py + 1i32;
+    }
+    
+    int64:i = 0i64;
+    int32:is_header = 0i32;
+    int32:is_bullet = 0i32;
+    int32:start_of_line = 1i32;
+    
+    int32:px = 0i32;
+    while (px < pad_x) {
+        idx = raw write_str(frame_buf, idx, " ");
+        px = px + 1i32;
+    }
+    
+    while (i < len) {
+        int64:ch = raw str_byte_at(slide, i);
+        
+        if (start_of_line == 1i32) {
+            if (ch == 35i64) { // '#'
+                is_header = 1i32;
+                idx = raw write_str(frame_buf, idx, "\x1b[1;36m"); // Bold Cyan
+            }
+            if (ch == 45i64) { // '-'
+                is_bullet = 1i32;
+                idx = raw write_str(frame_buf, idx, "\x1b[1;33m"); // Bold Yellow
+            }
+            if (ch == 42i64) { // '*'
+                is_bullet = 1i32;
+                idx = raw write_str(frame_buf, idx, "\x1b[1;33m"); // Bold Yellow
+            }
+            start_of_line = 0i32;
+        }
+        
+        if (ch == 10i64) { // '\n'
+            if (is_header == 1i32) { idx = raw write_str(frame_buf, idx, "\x1b[0m"); }
+            if (is_bullet == 1i32) { idx = raw write_str(frame_buf, idx, "\x1b[0m"); }
+            idx = raw write_str(frame_buf, idx, "\r\n");
+            
+            px = 0i32;
+            while (px < pad_x) {
+                idx = raw write_str(frame_buf, idx, " ");
+                px = px + 1i32;
+            }
+            
+            is_header = 0i32;
+            is_bullet = 0i32;
+            start_of_line = 1i32;
+        } else {
+            drop npk_mem_write_byte(frame_buf, idx, ch);
+            idx = idx + 1i64;
+        }
+        
+        i = i + 1i64;
+    }
+    
+    if (is_header == 1i32) { idx = raw write_str(frame_buf, idx, "\x1b[0m"); }
+    if (is_bullet == 1i32) { idx = raw write_str(frame_buf, idx, "\x1b[0m"); }
+    
+    drop sys(WRITE, 1i64, frame_buf, idx);
+    pass NIL;
+};
+
+func:main = int32() {
+    string:file_path = raw Process.getenv("NPATAT_FILE");
+    if (file_path == "") {
+        println("Usage: NPATAT_FILE=\"presentation.md\" ./npatat");
+        exit 1;
+    }
+
+    int32:slide_count = npatat_load(file_path);
+    if (slide_count <= 0i32) {
+        println("Error loading file or no slides found.");
+        exit 1;
+    }
+    
+    drop Term.init();
+    drop Term.alt_screen(1i32);
+    drop Term.hide_cursor();
+
+    int64:frame_buf = sys(MMAP, 0i64, 524288i64, 3i64, 34i64, -1i64, 0i64) ? 0i64;
+    if (frame_buf <= 0i64) { exit 1; }
+    
+    int32:idx = 0i32;
+    int32:running = 1i32;
+    
+    while (running == 1i32) {
+        string:slide = npatat_get_slide(idx);
+        drop print_slide(frame_buf, slide);
+        
+        // Progress bar at the bottom
+        int64:bot_idx = 0i64;
+        bot_idx = raw write_str(frame_buf, bot_idx, "\x1b[H\x1b[999B\r\x1b[7m [ ");
+        bot_idx = raw write_str(frame_buf, bot_idx, string_from_int(@cast<int64>(idx + 1i32)));
+        bot_idx = raw write_str(frame_buf, bot_idx, " / ");
+        bot_idx = raw write_str(frame_buf, bot_idx, string_from_int(@cast<int64>(slide_count)));
+        bot_idx = raw write_str(frame_buf, bot_idx, " ] \x1b[0m ");
+        bot_idx = raw write_str(frame_buf, bot_idx, file_path);
+        
+        drop sys(WRITE, 1i64, frame_buf, bot_idx);
+        
+        int32:key = -1i32;
+        while (key == -1i32) {
+            key = raw Term.read_key();
+            if (key == -1i32) { drop Term.sleep(10i32); }
+        }
+        
+        if (key == 113i32) { // 'q'
+            running = 0i32;
+        }
+        if (key == 27i32) { // Esc
+            int32:next_key = raw Term.read_key();
+            if (next_key == 91i32) {
+                int32:arrow = raw Term.read_key();
+                if (arrow == 67i32) { // Right
+                    if (idx + 1i32 < slide_count) { idx = idx + 1i32; }
+                }
+                if (arrow == 68i32) { // Left
+                    if (idx > 0i32) { idx = idx - 1i32; }
+                }
+            } else {
+                running = 0i32;
+            }
+        }
+        if (key == 32i32) { // Space
+            if (idx + 1i32 < slide_count) { idx = idx + 1i32; }
+        }
+        if (key == 108i32) { // 'l'
+            if (idx + 1i32 < slide_count) { idx = idx + 1i32; }
+        }
+        if (key == 104i32) { // 'h'
+            if (idx > 0i32) { idx = idx - 1i32; }
+        }
+    }
+    
+    drop sys(MUNMAP, frame_buf, 524288i64);
+
+    drop Term.show_cursor();
+    drop Term.alt_screen(0i32);
+    drop Term.restore();
+    
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    drop Term.restore();
+    exit 1;
+};

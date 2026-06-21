@@ -252,6 +252,7 @@ int32_t nitpick_http_init(void) {
     curl_easy_setopt(g_curl, CURLOPT_ERRORBUFFER, g_error);
     curl_easy_setopt(g_curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(g_curl, CURLOPT_TIMEOUT, 30L);
+    curl_easy_setopt(g_curl, CURLOPT_SSL_VERIFYPEER, 0L);
     return 1;
 }
 

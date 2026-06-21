@@ -1,0 +1,15 @@
+extern "libc" {
+    func:fopen = int64(string:filename, string:mode);
+    func:fwrite = int64(string:ptr, int64:size, int64:nmemb, int64:f);
+    func:fclose = int32(int64:f);
+}
+
+pub func:write_bin = int32(string:path, string:data, int64:len) {
+    int64:f = fopen(path, "wb\0");
+    if (f == 0i64) {
+        pass 0i32;
+    }
+    drop(fwrite(data, 1i64, len, f));
+    drop(fclose(f));
+    pass 1i32;
+};

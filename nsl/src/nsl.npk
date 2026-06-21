@@ -1,0 +1,130 @@
+// nsl.npk - Terminal Steam Locomotive Animation
+use "stdlib/io.npk".*;
+use "stdlib/sys.npk".*;
+use "stdlib/process.npk".*;
+use "stdlib/string.npk".*;
+use "stdlib/string_convert.npk".*;
+use "../../packages/nitpick-term/src/nitpick_term.npk".*;
+
+extern "libc" {
+    func:npk_mem_write_byte = int64(int64:ptr, int64:offset, int64:val);
+}
+
+func:write_str = int64(int64:buf, int64:idx, string:s) {
+    int64:len = string_length(s);
+    int64:i = 0i64;
+    while (i < len) {
+        drop npk_mem_write_byte(buf, idx + i, @cast<int32>(raw str_byte_at(s, i)));
+        i = i + 1i64;
+    }
+    pass idx + len;
+};
+
+func:get_train = string(int32:i) {
+    if (i == 0i32) { pass "      ====        ________                ___________ "; }
+    if (i == 1i32) { pass "  _D _|  |_______/        \\__I_I_____===__|_________| "; }
+    if (i == 2i32) { pass "   |(_)---  |   H\\________/ |   |        =|___ ___|   "; }
+    if (i == 3i32) { pass "   /     |  |   H  |  |     |   |         ||_| |_||   "; }
+    if (i == 4i32) { pass "  |      |  |   H  |__--------------------| [___] |   "; }
+    if (i == 5i32) { pass "  | ________|___H__/__|_____/[][]~\\_______|       |   "; }
+    if (i == 6i32) { pass "  |/ |   |-----------I_____I [][] []  D   |=======|__ "; }
+    if (i == 7i32) { pass "__/ =| o |=-~\\  /~\\  /~\\  /~\\ ____Y___________|__|\\__ "; }
+    if (i == 8i32) { pass " |/-=|___|=    || || || || || |_____/~\\___/          |"; }
+    if (i == 9i32) { pass "  \\_/      \\_O=====O=====O=====O /_\\_/ \\_/           "; }
+    pass "";
+};
+
+func:write_train_line = int64(int64:buf, int64:idx, int32:line_idx, int32:x_offset, int32:term_cols) {
+    int64:write_idx = idx;
+    
+    int32:i = 0i32;
+    int32:written = 0i32;
+    while (i < x_offset) {
+        if (written < term_cols) {
+            drop npk_mem_write_byte(buf, write_idx, 32i64); // ' '
+            write_idx = write_idx + 1i64;
+            written = written + 1i32;
+        }
+        i = i + 1i32;
+    }
+    
+    string:line = raw get_train(line_idx);
+    int32:len = @cast<int32>(string_length(line));
+    int32:read_idx = 0i32;
+    if (x_offset < 0i32) {
+        read_idx = 0i32 - x_offset;
+    }
+    
+    while (read_idx < len) {
+        if (written < term_cols) {
+            drop npk_mem_write_byte(buf, write_idx, @cast<int32>(raw str_byte_at(line, @cast<int64>(read_idx))));
+            write_idx = write_idx + 1i64;
+            written = written + 1i32;
+        }
+        read_idx = read_idx + 1i32;
+    }
+    
+    pass write_idx;
+};
+
+func:main = int32() {
+    drop Term.init();
+    drop Term.alt_screen(1i32);
+    drop Term.hide_cursor();
+    
+    int32:cols = raw Term.get_cols();
+    int32:rows = raw Term.get_rows();
+    
+    int64:frame_buf = sys(MMAP, 0i64, 524288i64, 3i64, 34i64, -1i64, 0i64) ? 0i64;
+    if (frame_buf <= 0i64) { exit 1; }
+
+    int32:x = cols;
+    int32:running = 1i32;
+    
+    while (running == 1i32) {
+        int64:idx = 0i64;
+        idx = raw write_str(frame_buf, idx, "\x1b[H"); // Cursor to top-left
+        
+        int32:y = 0i32;
+        int32:start_y = (rows / 2i32) - 5i32;
+        
+        while (y < rows) {
+            if (y >= start_y) {
+                if (y < start_y + 10i32) {
+                    idx = raw write_str(frame_buf, idx, "\x1b[K"); // Clear line
+                    idx = raw write_train_line(frame_buf, idx, y - start_y, x, cols);
+                } else {
+                    idx = raw write_str(frame_buf, idx, "\x1b[K");
+                }
+            } else {
+                idx = raw write_str(frame_buf, idx, "\x1b[K");
+            }
+            if (y < rows - 1i32) {
+                idx = raw write_str(frame_buf, idx, "\r\n");
+            }
+            y = y + 1i32;
+        }
+        
+        drop sys(WRITE, 1i64, frame_buf, idx);
+        
+        x = x - 2i32; // Move left by 2 cols per frame for speed
+        if (x < -54i32) { 
+            running = 0i32;
+        }
+        
+        drop Term.sleep(40i32); // ~25 FPS
+    }
+    
+    drop sys(MUNMAP, frame_buf, 524288i64);
+
+    drop Term.show_cursor();
+    drop Term.alt_screen(0i32);
+    drop Term.restore();
+    
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    drop Term.restore();
+    exit 1;
+};

@@ -1,0 +1,12 @@
+func:my_handler = void(int64:fd) {
+    pass(NIL);
+};
+
+func:spawn_wrapper = void(any->:handler) {
+    pass(NIL);
+};
+
+func:main = int32() {
+    drop(spawn_wrapper(my_handler));
+    exit 0i32;
+};

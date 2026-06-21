@@ -3252,6 +3252,7 @@ pub Type:SSH = {
     func:compression_algorithms = string() { pass raw ssh_compression_algorithms(); };
     func:compression_enabled = int32(int64:session) { pass raw ssh_compression_enabled(session); };
     func:compression_set = NIL(int64:session, string:algo) { pass raw ssh_compression_set(session, algo); };
+    func:compression_get = string(int64:session) { pass raw ssh_compression_get(session); };
     func:shell_request = int64(int64:channel_id) { pass raw ssh_shell_request(channel_id); };
     func:window_change = int64(int64:channel_id, int32:cols, int32:rows) { pass raw ssh_window_change(channel_id, cols, rows); };
     func:config_create = int64() { pass raw ssh_config_create(); };

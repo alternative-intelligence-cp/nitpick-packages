@@ -1,0 +1,103 @@
+use "nitpick_tui.npk".*;
+use "nitpick_input.npk".*;
+use "nitpick_http.npk".*;
+use "nitpick_str.npk".*;
+
+extern "c" {
+    func:usleep = int32(int32:usec);
+}
+extern func:nitpick_input_read_key = int32();
+
+func:main = int32() {
+    drop(http_init());
+    
+    string:listbox_items = "";
+    int64:entry_count = 0i64;
+    
+    // Fetch stories
+    int32:res = raw http_get("https://hacker-news.firebaseio.com/v0/topstories.json\0");
+    if (res == 1i32) { // Success
+        string:body = raw http_body();
+        string:inner = raw Str.between(body, "[", "]");
+        
+        // Fetch top 15
+        int64:i = 0i64;
+        while (i < 15i64) {
+            string:id = raw Str.token(inner, ",", i);
+            if (string_length(id) > 0i64) {
+                string:url = string_concat("https://hacker-news.firebaseio.com/v0/item/", string_concat(id, ".json\0"));
+                int32:item_res = raw http_get(url);
+                if (item_res == 1i32) {
+                    string:item_body = raw http_body();
+                    string:title = raw Str.between(item_body, "\"title\":\"", "\"");
+                    string:by = raw Str.between(item_body, "\"by\":\"", "\"");
+                    string:score = raw Str.between(item_body, "\"score\":", ",");
+                    
+                    if (string_length(title) == 0i64) { title = "Untitled"; }
+                    if (string_length(score) == 0i64) { score = "0"; }
+                    if (string_length(by) == 0i64) { by = "unknown"; }
+                    
+                    string:entry = string_concat(score, string_concat(" pts | ", string_concat(title, string_concat(" (by ", string_concat(by, ")")))));
+                    
+                    if (string_length(listbox_items) == 0i64) {
+                        listbox_items = entry;
+                    } else {
+                        listbox_items = string_concat(listbox_items, string_concat("|\0", entry));
+                    }
+                    entry_count = entry_count + 1i64;
+                }
+            }
+            i = i + 1i64;
+        }
+    } else {
+        listbox_items = "Failed to fetch Hacker News";
+        entry_count = 1i64;
+    }
+    
+    raw Tui.init();
+    
+    int32:selected = 0i32;
+    int32:running = 1i32;
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0");
+        
+        Widget:banner = raw Tui.panel(0i32, 0i32, 80i32, 3i32, 6i32, 0i32);
+        raw Tui.draw_widget(banner);
+        
+        Widget:title = raw Tui.label(2i32, 1i32, "  Hacker News Top Stories  ", 6i32, 0i32);
+        raw Tui.draw_widget(title);
+        
+        Widget:entries_list = raw Tui.listbox(0i32, 3i32, 80i32, 20i32, listbox_items, selected);
+        entries_list.focused = 1i32;
+        raw Tui.draw_widget(entries_list);
+        
+        Widget:hint = raw Tui.label(2i32, 23i32, " Up/Down: Navigate | q/ESC: Quit ", 7i32, 4i32);
+        raw Tui.draw_widget(hint);
+        
+        int32:k = nitpick_input_read_key();
+        
+        if (k == 113i32) { running = 0i32; } // q
+        else if (k == 27i32) { running = 0i32; } // ESC
+        else if (k == 258i32) { selected = selected + 1i32; }
+        else if (k == 259i32) { selected = selected - 1i32; }
+        else if (k == 2i32) { selected = selected + 1i32; } // fallback DOWN
+        else if (k == 1i32) { selected = selected - 1i32; } // fallback UP
+        
+        if (selected < 0i32) { selected = 0i32; }
+        if (@cast<int64>(selected) >= entry_count) { 
+            selected = @cast_unchecked<int32>(entry_count) - 1i32; 
+        }
+        if (selected < 0i32) { selected = 0i32; } // safe-guard against negative count
+        
+        int32:slp = usleep(50000i32); // 20fps max
+    }
+    
+    raw Tui.shutdown();
+    drop(http_cleanup());
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    raw Tui.shutdown();
+    exit 1i32;
+};

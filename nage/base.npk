@@ -1,0 +1,21 @@
+use "stdlib/process.npk".*;
+use "stdlib/string_convert.npk".*;
+use "stdlib/string.npk".*;
+
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_alloc      = int64(int64:size);
+    func:nitpick_libc_mem_free       = void(int64:ptr);
+    func:nitpick_libc_mem_write_byte = void(int64:ptr, int64:offset, int32:val);
+    func:nitpick_libc_mem_read_byte  = int32(int64:ptr, int64:offset);
+}
+
+extern "my_xor" {
+    func:my_custom_xor = int32(int32:a, int32:b);
+}
+
+extern "nitpick_crypto_shim" {
+    func:nitpick_crypto_hmac_sha256 = string(string:key, string:data);
+    func:nitpick_crypto_sha256 = string(string:data);
+}
+
+func:main = int32() {

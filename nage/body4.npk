@@ -1,0 +1,10 @@
+    while (true) {
+        int64:bytes_read = sys!!!(0i64, fd_in, buf, 1024i64);
+        if (bytes_read <= 0i64) { break; }
+        
+        int64:i = 0i64;
+        while (i < bytes_read) {
+            i = i + 1i64;
+        }
+        int64:bytes_written = sys!!!(1i64, fd_out, buf, bytes_read);
+    }

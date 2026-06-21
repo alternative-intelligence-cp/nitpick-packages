@@ -1,0 +1,62 @@
+use "nitpick_cli.npk".*;
+use "nitpick_http.npk".*;
+use "nitpick_str.npk".*;
+
+func:main = int32() {
+    raw Cli.parse();
+    int64:count = raw Cli.get_positional_count();
+    
+    string:city = "";
+    if (count > 0i64) {
+        city = raw Cli.get_positional(0i64);
+    }
+    
+    drop(http_init());
+    
+    string:url = string_concat("http://wttr.in/", string_concat(city, "?format=j1\0"));
+    print("Fetching weather...\n\0");
+    
+    int32:res = raw http_get(url);
+    if (res != 1i32) {
+        print("Failed to connect to weather service.\n\0");
+        exit 1i32;
+    }
+    
+    string:body = raw http_body();
+    
+    // Parse JSON
+    string:current = raw Str.between(body, "\"current_condition\": [", "]");
+    if (string_length(current) == 0i64) {
+        print("Could not parse weather data.\n\0");
+        exit 1i32;
+    }
+    
+    string:temp_c = raw Str.between(current, "\"temp_C\": \"", "\"");
+    string:temp_f = raw Str.between(current, "\"temp_F\": \"", "\"");
+    string:humidity = raw Str.between(current, "\"humidity\": \"", "\"");
+    
+    string:desc_block = raw Str.between(body, "\"weatherDesc\": [", "]");
+    string:desc = raw Str.between(desc_block, "\"value\": \"", "\"");
+    
+    print("\n\0");
+    print("  *~* Starlit Weather *~*\n\0");
+    print("  -----------------------\n\0");
+    print("  Location: \0");
+    if (string_length(city) == 0i64) {
+        print("Auto (IP)\n\0");
+    } else {
+        print(city);
+        print("\n\0");
+    }
+    print("  Condition: \0"); print(desc); print("\n\0");
+    print("  Temp: \0"); print(temp_c); print(" C / \0"); print(temp_f); print(" F\n\0");
+    print("  Humidity: \0"); print(humidity); print("%\n\0");
+    print("  -----------------------\n\n\0");
+    
+    drop(http_cleanup());
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

@@ -1,0 +1,34 @@
+[project]
+name = "nnomino"
+version = "0.1.0"
+
+[target.nnomino]
+type = "binary"
+sources = ["src/main.npk"]
+deps = [
+    "nitpick-cli",
+    "nitpick-fs",
+    "nitpick-regex",
+    "nitpick-str",
+    "nitpick-display"
+]
+flags = [
+    "-I", "src",
+    "-I", "../nitpick-cli/src",
+    "-I", "../nitpick-fs/src",
+    "-I", "../nitpick-regex/src",
+    "-I", "../nitpick-str/src",
+    "-I", "../nitpick-display/src"
+]
+link_libraries = [
+    "cli_args", 
+    "nitpick_fs_shim",
+    "nitpick_regex_shim",
+    "nitpick_display_shim"
+]
+link_paths = [
+    "../nitpick-cli",
+    "../nitpick-fs/shim",
+    "../nitpick-regex/shim",
+    "../nitpick-display/shim"
+]

@@ -179,3 +179,23 @@ Type:Bitset = {
     func:difference = int32(int64:a, int64:b) { pass raw bitset_difference(a, b); };
     func:equals = int32(int64:a, int64:b) { pass raw bitset_equals(a, b); };
 };
+
+// ── pub func: exports (for use via wildcard import) ─────────────────────────
+// These wrappers make the private func: implementations available to importers.
+// Import pattern: use "nitpick_bitset.npk".*;  then call bitset_create() etc.
+
+pub func:bitset_create     = int64(int64:nbits)              { pass(raw bitset_create(nbits)); };
+pub func:bitset_destroy    = int32(int64:bs)                 { pass(raw bitset_destroy(bs)); };
+pub func:bitset_set        = int32(int64:bs, int64:idx)      { pass(raw bitset_set(bs, idx)); };
+pub func:bitset_clear      = int32(int64:bs, int64:idx)      { pass(raw bitset_clear(bs, idx)); };
+pub func:bitset_test       = int32(int64:bs, int64:idx)      { pass(raw bitset_test(bs, idx)); };
+pub func:bitset_toggle     = int32(int64:bs, int64:idx)      { pass(raw bitset_toggle(bs, idx)); };
+pub func:bitset_count      = int32(int64:bs)                 { pass(raw bitset_count(bs)); };
+pub func:bitset_size       = int64(int64:bs)                 { pass(raw bitset_size(bs)); };
+pub func:bitset_is_empty   = int32(int64:bs)                 { pass(raw bitset_is_empty(bs)); };
+pub func:bitset_union      = int32(int64:a, int64:b)         { pass(raw bitset_union(a, b)); };
+pub func:bitset_intersect  = int32(int64:a, int64:b)         { pass(raw bitset_intersect(a, b)); };
+pub func:bitset_complement = int32(int64:bs)                 { pass(raw bitset_complement(bs)); };
+pub func:bitset_difference = int32(int64:a, int64:b)         { pass(raw bitset_difference(a, b)); };
+pub func:bitset_equals     = int32(int64:a, int64:b)         { pass(raw bitset_equals(a, b)); };
+

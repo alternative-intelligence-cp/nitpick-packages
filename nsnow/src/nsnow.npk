@@ -1,0 +1,153 @@
+// nsnow.npk - Terminal Snow Machine
+use "stdlib/io.npk".*;
+use "stdlib/sys.npk".*;
+use "stdlib/process.npk".*;
+use "stdlib/string.npk".*;
+use "stdlib/string_convert.npk".*;
+use "../../packages/nitpick-term/src/nitpick_term.npk".*;
+
+extern "libc" {
+    func:npk_mem_write_byte = int64(int64:ptr, int64:offset, int64:val);
+}
+
+extern "nsnow_shim" {
+    func:nsnow_init = void(int32:cols, int32:rows, int32:num_flakes);
+    func:nsnow_tick = void();
+    func:nsnow_get_x = int32(int32:idx);
+    func:nsnow_get_y = int32(int32:idx);
+    func:nsnow_get_char = int32(int32:idx);
+}
+
+func:write_CSI_2J = int64(int64:buf, int64:idx) {
+    drop npk_mem_write_byte(buf, idx, 27i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 91i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 50i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 74i64); idx = idx + 1i64;
+    pass idx;
+};
+
+func:write_CSI_0m = int64(int64:buf, int64:idx) {
+    drop npk_mem_write_byte(buf, idx, 27i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 91i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 48i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 109i64); idx = idx + 1i64;
+    pass idx;
+};
+
+func:write_CSI_1_37m = int64(int64:buf, int64:idx) {
+    drop npk_mem_write_byte(buf, idx, 27i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 91i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 49i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 59i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 51i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 55i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 109i64); idx = idx + 1i64;
+    pass idx;
+};
+
+func:write_CSI_H_start = int64(int64:buf, int64:idx) {
+    drop npk_mem_write_byte(buf, idx, 27i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 91i64); idx = idx + 1i64;
+    pass idx;
+};
+
+func:write_int = int64(int64:buf, int64:idx, int32:val) {
+    if (val <= 0i32) {
+        drop npk_mem_write_byte(buf, idx, 48i64);
+        pass idx + 1i64;
+    }
+    
+    int32:temp = val;
+    int32:digits = 0i32;
+    int32:pow = 1i32;
+    while (temp > 0i32) {
+        digits = digits + 1i32;
+        if (digits > 1i32) { pow = pow * 10i32; }
+        temp = temp / 10i32;
+    }
+    
+    int64:i = idx;
+    temp = val;
+    while (pow > 0i32) {
+        int32:d = temp / pow;
+        drop npk_mem_write_byte(buf, i, @cast<int64>(d) + 48i64);
+        i = i + 1i64;
+        temp = temp - (d * pow);
+        pow = pow / 10i32;
+    }
+    pass i;
+};
+
+func:main = int32() {
+    drop Term.init();
+    drop Term.alt_screen(1i32);
+    drop Term.hide_cursor();
+    
+    int32:cols = raw Term.get_cols();
+    int32:rows = raw Term.get_rows();
+    
+    int32:num_flakes = (cols * rows) / 30i32;
+    if (num_flakes > 500i32) { num_flakes = 500i32; }
+    
+    drop nsnow_init(cols, rows, num_flakes);
+    
+    int64:frame_buf = sys(MMAP, 0i64, 524288i64, 3i64, 34i64, -1i64, 0i64) ? 0i64;
+    if (frame_buf <= 0i64) { exit 1; }
+    
+    int32:running = 1i32;
+    
+    while (running == 1i32) {
+        drop nsnow_tick();
+        
+        int64:idx = 0i64;
+        idx = raw write_CSI_2J(frame_buf, idx);
+        
+        int32:i = 0i32;
+        while (i < num_flakes) {
+            int32:x = nsnow_get_x(i);
+            int32:y = nsnow_get_y(i);
+            int32:ch = nsnow_get_char(i);
+            
+            if (y >= 0i32) {
+                if (y < rows) {
+                    if (x >= 0i32) {
+                        if (x < cols) {
+                            idx = raw write_CSI_H_start(frame_buf, idx);
+                            idx = raw write_int(frame_buf, idx, y + 1i32);
+                            drop npk_mem_write_byte(frame_buf, idx, 59i64); idx = idx + 1i64; // ';'
+                            idx = raw write_int(frame_buf, idx, x + 1i32);
+                            drop npk_mem_write_byte(frame_buf, idx, 72i64); idx = idx + 1i64; // 'H'
+                            
+                            idx = raw write_CSI_1_37m(frame_buf, idx);
+                            drop npk_mem_write_byte(frame_buf, idx, @cast_unchecked<int64>(ch)); idx = idx + 1i64;
+                        }
+                    }
+                }
+            }
+            i = i + 1i32;
+        }
+        
+        idx = raw write_CSI_0m(frame_buf, idx);
+        drop sys(WRITE, 1i64, frame_buf, idx);
+        
+        int32:key = raw Term.read_key();
+        if (key == 113i32) { running = 0i32; } // q
+        if (key == 27i32) { running = 0i32; }  // esc
+        if (key == 3i32) { running = 0i32; }   // ctrl+c
+        
+        drop Term.sleep(30i32); // ~33 FPS
+    }
+    
+    drop sys(MUNMAP, frame_buf, 524288i64);
+    
+    drop Term.show_cursor();
+    drop Term.alt_screen(0i32);
+    drop Term.restore();
+    
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    drop Term.restore();
+    exit 1;
+};

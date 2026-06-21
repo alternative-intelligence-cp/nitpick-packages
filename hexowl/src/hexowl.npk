@@ -1,0 +1,280 @@
+// hexowl.npk - Terminal Hex Editor
+use "stdlib/io.npk".*;
+use "stdlib/sys.npk".*;
+use "stdlib/process.npk".*;
+use "stdlib/string.npk".*;
+use "stdlib/string_convert.npk".*;
+use "../../packages/nitpick-term/src/nitpick_term.npk".*;
+
+extern "hexowl_shim" {
+    func:hexowl_load_file = int64(string:path, int64:out_size_ptr);
+    func:hexowl_save_file = int32(string:path, int64:buf, int32:size);
+    func:hexowl_read_int32 = int32(int64:ptr);
+}
+
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_malloc = int64(int64:size);
+    func:nitpick_libc_mem_free = void(int64:ptr);
+    func:nitpick_libc_mem_read_byte = int32(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_byte = void(int64:ptr, int64:offset, int32:val);
+}
+
+func:to_hex_char_val = int64(int32:val) {
+    if (val < 10i32) { pass @cast<int64>(val + 48i32); }
+    pass @cast<int64>(val + 55i32);
+};
+
+func:write_str = int64(int64:buf, int64:idx, string:s) {
+    int64:len = string_length(s);
+    int64:i = 0i64;
+    while (i < len) {
+        drop nitpick_libc_mem_write_byte(buf, idx + i, @cast<int32>(raw str_byte_at(s, i)));
+        i = i + 1i64;
+    }
+    pass idx + len;
+};
+
+func:write_hex_byte = int64(int64:buf, int64:idx, int32:val) {
+    int64:h1 = raw to_hex_char_val((val / 16i32) % 16i32);
+    int64:h2 = raw to_hex_char_val(val % 16i32);
+    drop nitpick_libc_mem_write_byte(buf, idx, @cast<int32>(h1));
+    drop nitpick_libc_mem_write_byte(buf, idx + 1i64, @cast<int32>(h2));
+    pass idx + 2i64;
+};
+
+func:write_hex_nibble_1 = int64(int64:buf, int64:idx, int32:val) {
+    int64:h1 = raw to_hex_char_val((val / 16i32) % 16i32);
+    drop nitpick_libc_mem_write_byte(buf, idx, @cast<int32>(h1));
+    pass idx + 1i64;
+};
+
+func:write_hex_nibble_2 = int64(int64:buf, int64:idx, int32:val) {
+    int64:h2 = raw to_hex_char_val(val % 16i32);
+    drop nitpick_libc_mem_write_byte(buf, idx, @cast<int32>(h2));
+    pass idx + 1i64;
+};
+
+func:write_hex_8 = int64(int64:buf, int64:idx, int64:val) {
+    int64:shift = 268435456i64; // 16^7
+    int64:i = 0i64;
+    while (i < 8i64) {
+        int32:nibble = @cast<int32>((val / shift) % 16i64);
+        int64:hc = raw to_hex_char_val(nibble);
+        drop nitpick_libc_mem_write_byte(buf, idx + i, @cast<int32>(hc));
+        shift = shift / 16i64;
+        i = i + 1i64;
+    }
+    pass idx + 8i64;
+};
+
+func:main = int32() {
+    string:file_path = raw Process.getenv("HEXOWL_FILE");
+    if (file_path == "") {
+        println("Usage: HEXOWL_FILE=\"target.bin\" ./hexowl");
+        exit 1;
+    }
+
+    int64:size_ptr = nitpick_libc_mem_malloc(8i64);
+    int64:file_buf = hexowl_load_file(file_path, size_ptr);
+    
+    if (file_buf == 0i64) {
+        println("Error: Failed to open file.");
+        exit 1;
+    }
+    
+    int32:file_size = hexowl_read_int32(size_ptr);
+    drop nitpick_libc_mem_free(size_ptr);
+    
+    if (file_size <= 0i32) {
+        println("File is empty or failed to read size.");
+        exit 1;
+    }
+    
+    int64:sz = @cast<int64>(file_size);
+
+    drop Term.init();
+    drop Term.alt_screen(1i32);
+    drop Term.hide_cursor();
+
+    int64:frame_buf = sys(MMAP, 0i64, 1048576i64, 3i64, 34i64, -1i64, 0i64) ? 0i64;
+    if (frame_buf <= 0i64) { exit 1; }
+
+    int64:cursor_idx = 0i64;
+    int32:nibble_idx = 0i32;
+    int64:scroll_y = 0i64;
+    int64:rows_vis = 20i64;
+
+    int32:running = 1i32;
+    string:status_msg = "Ready. Ctrl+S to Save, Esc to Quit.";
+
+    while (running == 1i32) {
+        int64:idx = 0i64;
+        idx = raw write_str(frame_buf, idx, "\x1b[2J\x1b[H"); // Clear screen
+        
+        idx = raw write_str(frame_buf, idx, "\x1b[7m HEXOWL \x1b[0m ");
+        idx = raw write_str(frame_buf, idx, file_path);
+        idx = raw write_str(frame_buf, idx, " | ");
+        idx = raw write_str(frame_buf, idx, status_msg);
+        idx = raw write_str(frame_buf, idx, "\r\n\r\n");
+        
+        if (cursor_idx < scroll_y * 16i64) {
+            scroll_y = cursor_idx / 16i64;
+        }
+        if (cursor_idx >= (scroll_y + rows_vis) * 16i64) {
+            scroll_y = (cursor_idx / 16i64) - rows_vis + 1i64;
+        }
+        
+        int64:r = 0i64;
+        while (r < rows_vis) {
+            int64:row_start = (scroll_y + r) * 16i64;
+            if (row_start < sz) {
+                idx = raw write_str(frame_buf, idx, "\x1b[36m"); // Cyan offset
+                idx = raw write_hex_8(frame_buf, idx, row_start);
+                idx = raw write_str(frame_buf, idx, "\x1b[0m: ");
+                
+                int64:ascii_idx = idx + 48i64; // Reserve space for 16 hex bytes + spaces (16*3 = 48)
+                idx = raw write_str(frame_buf, ascii_idx, " | ");
+                ascii_idx = ascii_idx + 3i64;
+                
+                int64:c = 0i64;
+                int64:hex_cursor = idx; // Where we start writing hex
+                while (c < 16i64) {
+                    int64:fi = row_start + c;
+                    if (fi < sz) {
+                        int32:b = nitpick_libc_mem_read_byte(file_buf, fi);
+                        
+                        if (fi == cursor_idx) {
+                            if (nibble_idx == 0i32) {
+                                hex_cursor = raw write_str(frame_buf, hex_cursor, "\x1b[7m");
+                                hex_cursor = raw write_hex_nibble_1(frame_buf, hex_cursor, b);
+                                hex_cursor = raw write_str(frame_buf, hex_cursor, "\x1b[0m");
+                                hex_cursor = raw write_hex_nibble_2(frame_buf, hex_cursor, b);
+                            } else {
+                                hex_cursor = raw write_hex_nibble_1(frame_buf, hex_cursor, b);
+                                hex_cursor = raw write_str(frame_buf, hex_cursor, "\x1b[7m");
+                                hex_cursor = raw write_hex_nibble_2(frame_buf, hex_cursor, b);
+                                hex_cursor = raw write_str(frame_buf, hex_cursor, "\x1b[0m");
+                            }
+                        } else {
+                            hex_cursor = raw write_hex_byte(frame_buf, hex_cursor, b);
+                        }
+                        
+                        if (b >= 32i32) {
+                            if (b <= 126i32) {
+                                drop nitpick_libc_mem_write_byte(frame_buf, ascii_idx, b);
+                            } else {
+                                drop nitpick_libc_mem_write_byte(frame_buf, ascii_idx, 46i32); // '.'
+                            }
+                        } else {
+                            drop nitpick_libc_mem_write_byte(frame_buf, ascii_idx, 46i32); // '.'
+                        }
+                    } else {
+                        hex_cursor = raw write_str(frame_buf, hex_cursor, "  ");
+                        drop nitpick_libc_mem_write_byte(frame_buf, ascii_idx, 32i32); // ' '
+                    }
+                    hex_cursor = raw write_str(frame_buf, hex_cursor, " ");
+                    ascii_idx = ascii_idx + 1i64;
+                    c = c + 1i64;
+                }
+                
+                idx = ascii_idx; // Move idx to the end of the ASCII part
+                idx = raw write_str(frame_buf, idx, "\r\n");
+            }
+            r = r + 1i64;
+        }
+
+        drop sys(WRITE, 1i64, frame_buf, idx);
+        
+        status_msg = "Ready. Ctrl+S to Save, Esc to Quit.";
+
+        int32:key = -1i32;
+        while (key == -1i32) {
+            key = raw Term.read_key();
+            if (key == -1i32) {
+                drop Term.sleep(10i32);
+            }
+        }
+        
+        if (key == 27i32) { // Esc
+            int32:next_key = raw Term.read_key();
+            if (next_key == 91i32) { // '[' (Arrow key)
+                int32:arrow = raw Term.read_key();
+                if (arrow == 65i32) { // Up
+                    if (cursor_idx >= 16i64) { cursor_idx = cursor_idx - 16i64; }
+                    nibble_idx = 0i32;
+                }
+                if (arrow == 66i32) { // Down
+                    if (cursor_idx + 16i64 < sz) { cursor_idx = cursor_idx + 16i64; }
+                    nibble_idx = 0i32;
+                }
+                if (arrow == 67i32) { // Right
+                    if (nibble_idx == 0i32) {
+                        nibble_idx = 1i32;
+                    } else {
+                        if (cursor_idx + 1i64 < sz) {
+                            cursor_idx = cursor_idx + 1i64;
+                            nibble_idx = 0i32;
+                        }
+                    }
+                }
+                if (arrow == 68i32) { // Left
+                    if (nibble_idx == 1i32) {
+                        nibble_idx = 0i32;
+                    } else {
+                        if (cursor_idx > 0i64) {
+                            cursor_idx = cursor_idx - 1i64;
+                            nibble_idx = 1i32;
+                        }
+                    }
+                }
+            } else {
+                running = 0i32; // Esc to quit
+            }
+        }
+        
+        if (key == 19i32) { // Ctrl+S
+            int32:res = hexowl_save_file(file_path, file_buf, file_size);
+            if (res == 0i32) {
+                status_msg = "\x1b[32mSaved successfully!\x1b[0m";
+            } else {
+                status_msg = "\x1b[31mSave failed!\x1b[0m";
+            }
+        }
+        
+        // Hex typing
+        int32:hex_val = -1i32;
+        if (key >= 48i32) { if (key <= 57i32) { hex_val = key - 48i32; } } // 0-9
+        if (key >= 97i32) { if (key <= 102i32) { hex_val = key - 87i32; } } // a-f
+        if (key >= 65i32) { if (key <= 70i32) { hex_val = key - 55i32; } } // A-F
+        
+        if (hex_val != -1i32) {
+            int32:b = nitpick_libc_mem_read_byte(file_buf, cursor_idx);
+            if (nibble_idx == 0i32) {
+                b = (b % 16i32) + (hex_val * 16i32);
+                nitpick_libc_mem_write_byte(file_buf, cursor_idx, b);
+                nibble_idx = 1i32;
+            } else {
+                b = (b / 16i32) * 16i32 + hex_val;
+                nitpick_libc_mem_write_byte(file_buf, cursor_idx, b);
+                nibble_idx = 0i32;
+                if (cursor_idx + 1i64 < sz) {
+                    cursor_idx = cursor_idx + 1i64;
+                }
+            }
+            status_msg = "\x1b[33mUnsaved changes*\x1b[0m";
+        }
+    }
+
+    drop sys(MUNMAP, frame_buf, 1048576i64);
+
+    drop Term.show_cursor();
+    drop Term.alt_screen(0i32);
+    drop Term.restore();
+    
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    drop Term.restore();
+    exit 1;
+};

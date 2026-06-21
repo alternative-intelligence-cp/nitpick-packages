@@ -1,0 +1,4 @@
+    string:root_key = nitpick_crypto_sha256(passphrase);
+    int64:buf = nitpick_libc_mem_alloc(1024i64);
+    int64:keystream_buf = nitpick_libc_mem_alloc(32i64);
+    int64:counter = 0i64;

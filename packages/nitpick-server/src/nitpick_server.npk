@@ -1,73 +1,184 @@
-// nitpick_server.npk — HTTP/1.1 server for Nitpick (v0.12.0)
+// nitpick_server.npk — HTTP/1.1 server for Nitpick (v0.12.0) - PURE NITPICK MIGRATION
 
-extern "nitpick_libc_server" {
-    // lifecycle
-    func:nitpick_libc_server_listen       = int64(string:addr, int64:port, int64:backlog);
-    func:nitpick_libc_server_accept       = int64(int64:server_fd);
-    func:nitpick_libc_server_close        = int64(int64:fd);
-    func:nitpick_libc_server_close_client = int64(int64:client_fd);
-    func:nitpick_libc_server_error        = string();
+use "../../../../libn/src/syscall/syscall_numbers.npk".*;
+use "../../../../libn/src/syscall/posix_constants.npk".*;
 
-    // request reading
-    func:nitpick_libc_server_read_request = int64(int64:client_fd);
+pub struct:Request = {
+    string:method;
+    string:path;
+    string:query;
+    string:version;
+    string:body;
+    string:raw_req;
+    string:headers_raw;
+};
 
-    // request accessors
-    func:nitpick_libc_server_req_method       = string();
-    func:nitpick_libc_server_req_path         = string();
-    func:nitpick_libc_server_req_query        = string();
-    func:nitpick_libc_server_req_version      = string();
-    func:nitpick_libc_server_req_body         = string();
-    func:nitpick_libc_server_req_body_length  = int64();
-    func:nitpick_libc_server_req_header       = string(string:name);
-    func:nitpick_libc_server_req_header_count = int64();
-    func:nitpick_libc_server_req_header_name  = string(int64:idx);
-    func:nitpick_libc_server_req_header_value = string(int64:idx);
-
-    // peer info
-    func:nitpick_libc_server_peer_addr = string();
-    func:nitpick_libc_server_peer_port = int64();
-
-    // response
-    func:nitpick_libc_server_respond         = int64(int64:client_fd, int64:status_code, string:body);
-    func:nitpick_libc_server_respond_headers = int64(int64:client_fd, int64:status_code, string:headers, string:body);
-    func:nitpick_libc_server_respond_type    = int64(int64:client_fd, int64:status_code, string:content_type, string:body);
-
-    // raw
-    func:nitpick_libc_server_req_raw    = string();
-    func:nitpick_libc_server_req_length = int64();
-}
+pub Rules<int64>:ValidNetworkBufferSize = { $ >= 1, $ <= 65536 };
 
 pub Type:Server = {
     // lifecycle
-    func:bind_and_listen = int64(string:addr, int64:port, int64:backlog) { pass nitpick_libc_server_listen(addr, port, backlog); };
-    func:accept_client   = int64(int64:fd) { pass nitpick_libc_server_accept(fd); };
-    func:close_srv       = int64(int64:fd) { pass nitpick_libc_server_close(fd); };
-    func:close_cli       = int64(int64:fd) { pass nitpick_libc_server_close_client(fd); };
-    func:last_error      = string() { string:r = nitpick_libc_server_error(); pass r; };
+    func:bind_and_listen = int64(string:addr, int64:port, int64:backlog) {
+        Result<int64>:sock_res = sys!!(SYS_SOCKET, 2i64, 1i64, 0i64); // AF_INET=2, SOCK_STREAM=1
+        if (sock_res.is_error) { pass -1i64; }
+        int64:fd = sock_res.value;
 
-    // request
-    func:read_req      = int64(int64:fd) { pass nitpick_libc_server_read_request(fd); };
-    func:method        = string() { string:r = nitpick_libc_server_req_method(); pass r; };
-    func:uri_path      = string() { string:r = nitpick_libc_server_req_path(); pass r; };
-    func:query_str     = string() { string:r = nitpick_libc_server_req_query(); pass r; };
-    func:http_ver      = string() { string:r = nitpick_libc_server_req_version(); pass r; };
-    func:body          = string() { string:r = nitpick_libc_server_req_body(); pass r; };
-    func:body_len      = int64() { pass nitpick_libc_server_req_body_length(); };
-    func:hdr           = string(string:name) { string:r = nitpick_libc_server_req_header(name); pass r; };
-    func:hdr_count     = int64() { pass nitpick_libc_server_req_header_count(); };
-    func:hdr_name      = string(int64:i) { string:r = nitpick_libc_server_req_header_name(i); pass r; };
-    func:hdr_value     = string(int64:i) { string:r = nitpick_libc_server_req_header_value(i); pass r; };
+        int32->:opt = alloc(4i64) => int32->;
+        opt[0] = 1i32;
+        int64:opt_ptr = asm!!!<int64>("x86_64", "movq $1, $0", "=r,r", opt);
+        drop(sys!!(SYS_SETSOCKOPT, fd, 1i64, 2i64, opt_ptr, 4i64)); // SOL_SOCKET=1, SO_REUSEADDR=2
 
-    // peer
-    func:peer_ip   = string() { string:r = nitpick_libc_server_peer_addr(); pass r; };
-    func:peer_port = int64() { pass nitpick_libc_server_peer_port(); };
+        int8->:addr_struct = alloc(16i64);
+        int16->:addr_struct_16 = addr_struct => int16->;
+        int32->:addr_struct_32 = addr_struct => int32->;
+        int64->:addr_struct_64 = addr_struct => int64->;
+        
+        addr_struct_16[0] = 2i16; // sin_family
+        
+        int16:port16 = port => int16;
+        int16:port_nbo = ((port16 & 0xFFi16) << 8i16) | ((port16 >> 8i16) & 0xFFi16);
+        addr_struct_16[1] = port_nbo; // offset 2 bytes
+        
+        int32:ip_addr = 0i32;
+        if (addr == "localhost" || addr == "127.0.0.1" || addr == "127.0.0.1\0") {
+            ip_addr = 16777343i32; // 0x0100007F
+        }
+        addr_struct_32[1] = ip_addr; // offset 4 bytes
+        
+        addr_struct_64[1] = 0i64; // offset 8 bytes
+
+        int64:addr_ptr = asm!!!<int64>("x86_64", "movq $1, $0", "=r,r", addr_struct);
+        Result<int64>:bind_res = sys!!(SYS_BIND, fd, addr_ptr, 16i64);
+        if (bind_res.is_error) {
+            drop(sys!!(SYS_CLOSE, fd));
+            pass -1i64;
+        }
+
+        Result<int64>:listen_res = sys!!(SYS_LISTEN, fd, backlog);
+        if (listen_res.is_error) {
+            drop(sys!!(SYS_CLOSE, fd));
+            pass -1i64;
+        }
+        
+        pass fd;
+    };
+
+    func:accept_client = int64(int64:fd) {
+        int8->:addr_struct = alloc(16i64);
+        int64->:addr_len_ptr = alloc(8i64) => int64->;
+        addr_len_ptr[0] = 16i64;
+        
+        int64:addr_ptr = asm!!!<int64>("x86_64", "movq $1, $0", "=r,r", addr_struct);
+        int64:len_ptr = asm!!!<int64>("x86_64", "movq $1, $0", "=r,r", addr_len_ptr);
+        Result<int64>:res = sys!!(SYS_ACCEPT, fd, addr_ptr, len_ptr);
+        if (res.is_error) {
+            pass -1i64;
+        }
+        pass res.value;
+    };
+
+    func:close_srv = int64(int64:fd) {
+        drop(sys!!(SYS_CLOSE, fd));
+        pass 1i64;
+    };
+
+    func:close_cli = int64(int64:fd) {
+        drop(sys!!(SYS_CLOSE, fd));
+        pass 1i64;
+    };
+
+    func:read_req = Request(int64:fd) {
+        limit<ValidNetworkBufferSize> int64:buf_size = 16384i64;
+        int8->:buf_ptr = alloc(buf_size);
+        int64:buf_addr = asm!!!<int64>("x86_64", "movq $1, $0", "=r,r", buf_ptr);
+        Result<int64>:recv_res = sys!!(SYS_RECVFROM, fd, buf_addr, buf_size, 0i64, 0i64, 0i64);
+        
+        Request:req = Request{
+            method: "",
+            path: "",
+            query: "",
+            version: "",
+            body: "",
+            raw_req: "",
+            headers_raw: ""
+        };
+        
+        if (recv_res.is_error) { pass req; }
+        if (recv_res.value <= 0i64) { pass req; }
+        
+        int64:read_len = recv_res.value;
+        buf_ptr[read_len] = 0i8; // null terminate
+        
+        string:raw_str = string_from_cstr(buf_ptr);
+        req.raw_req = raw_str;
+        
+        // Simple HTTP parser
+        int64:line1_end = string_index_of(raw_str, "\r\n");
+        if (line1_end >= 0i64) {
+            string:line1 = string_substring(raw_str, 0i64, line1_end);
+            int64:space1 = string_index_of(line1, " ");
+            if (space1 >= 0i64) {
+                req.method = string_substring(line1, 0i64, space1);
+                string:path_ver = string_substring(line1, space1 + 1i64, string_length(line1));
+                int64:space2 = string_index_of(path_ver, " ");
+                if (space2 >= 0i64) {
+                    req.path = string_substring(path_ver, 0i64, space2);
+                    req.version = string_substring(path_ver, space2 + 1i64, string_length(path_ver));
+                }
+            }
+        }
+        
+        if (string_length(req.path) > 0i64) {
+            string:full_path = req.path;
+            int64:qidx = string_index_of(full_path, "?");
+            if (qidx >= 0i64) {
+                req.path = string_substring(full_path, 0i64, qidx);
+                req.query = string_substring(full_path, qidx + 1i64, string_length(full_path));
+            }
+        }
+        
+        int64:hdr_end = string_index_of(raw_str, "\r\n\r\n");
+        if (hdr_end >= 0i64) {
+            req.body = string_substring(raw_str, hdr_end + 4i64, string_length(raw_str));
+            req.headers_raw = string_substring(raw_str, line1_end + 2i64, hdr_end);
+        }
+        
+        pass req;
+    };
 
     // response
-    func:send_text   = int64(int64:fd, int64:code, string:body) { pass nitpick_libc_server_respond(fd, code, body); };
-    func:send_hdrs   = int64(int64:fd, int64:code, string:hdrs, string:body) { pass nitpick_libc_server_respond_headers(fd, code, hdrs, body); };
-    func:send_typed  = int64(int64:fd, int64:code, string:ct, string:body) { pass nitpick_libc_server_respond_type(fd, code, ct, body); };
+    func:send_text = int64(int64:fd, int64:code, string:body) {
+        string:code_str = string_from_int(code);
+        int64:len = string_length(body);
+        string:len_str = string_from_int(len);
+        string:resp = "HTTP/1.1 " + code_str + " OK\r\nContent-Length: " + len_str + "\r\n\r\n" + body;
+        
+        int64:resp_ptr = string_to_cstr(resp);
+        int64:resp_len = string_length(resp);
+        drop(sys!!(SYS_SENDTO, fd, resp_ptr, resp_len, 0i64, 0i64, 0i64));
+        pass 1i64;
+    };
 
-    // raw
-    func:raw_req = string() { string:r = nitpick_libc_server_req_raw(); pass r; };
-    func:raw_len = int64() { pass nitpick_libc_server_req_length(); };
+    func:send_hdrs = int64(int64:fd, int64:code, string:hdrs, string:body) {
+        string:code_str = string_from_int(code);
+        int64:len = string_length(body);
+        string:len_str = string_from_int(len);
+        string:resp = "HTTP/1.1 " + code_str + " OK\r\n" + hdrs + "\r\nContent-Length: " + len_str + "\r\n\r\n" + body;
+        
+        int64:resp_ptr = string_to_cstr(resp);
+        int64:resp_len = string_length(resp);
+        drop(sys!!(SYS_SENDTO, fd, resp_ptr, resp_len, 0i64, 0i64, 0i64));
+        pass 1i64;
+    };
+
+    func:send_typed = int64(int64:fd, int64:code, string:ct, string:body) {
+        string:code_str = string_from_int(code);
+        int64:len = string_length(body);
+        string:len_str = string_from_int(len);
+        string:resp = "HTTP/1.1 " + code_str + " OK\r\nContent-Type: " + ct + "\r\nContent-Length: " + len_str + "\r\n\r\n" + body;
+        
+        int64:resp_ptr = string_to_cstr(resp);
+        int64:resp_len = string_length(resp);
+        drop(sys!!(SYS_SENDTO, fd, resp_ptr, resp_len, 0i64, 0i64, 0i64));
+        pass 1i64;
+    };
 };

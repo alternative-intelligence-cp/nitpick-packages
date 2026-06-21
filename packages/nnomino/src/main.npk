@@ -1,0 +1,173 @@
+use "nitpick_cli.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_display.npk".*;
+
+extern "nitpick_regex_shim" {
+    func:nitpick_regex_compile = int32(string:pattern);
+    func:nitpick_regex_search = int32(string:text);
+    func:nitpick_regex_group = string(int32:idx);
+    func:nitpick_regex_free = void();
+}
+
+extern "libc" {
+    func:atoi = int32(string:str);
+}
+
+func:failsafe = int32(tbb32:err) {
+    print("Runtime error!\n");
+    exit 1i32;
+};
+
+// Simple utility to parse $1, $2, etc from replacement string
+// and replace them with the matched groups
+func:expand_template = string(string:text, string:template) {
+    string:result = "";
+    int64:len = string_length(template);
+    int64:i = 0i64;
+    
+    while (i < len) {
+        string:c = raw Str.char_at(template, i);
+        if (string_equals(c, "$")) {
+            i = i + 1i64;
+            if (i < len) {
+                string:nc = raw Str.char_at(template, i);
+                if (string_equals(nc, "0") || string_equals(nc, "1") || string_equals(nc, "2") || string_equals(nc, "3") || string_equals(nc, "4") || string_equals(nc, "5") || string_equals(nc, "6") || string_equals(nc, "7") || string_equals(nc, "8") || string_equals(nc, "9")) {
+                    // It's a digit
+                    int32:group_num = 0i32;
+                    if (string_equals(nc, "1")) { group_num = 1i32; }
+                    if (string_equals(nc, "2")) { group_num = 2i32; }
+                    if (string_equals(nc, "3")) { group_num = 3i32; }
+                    if (string_equals(nc, "4")) { group_num = 4i32; }
+                    if (string_equals(nc, "5")) { group_num = 5i32; }
+                    if (string_equals(nc, "6")) { group_num = 6i32; }
+                    if (string_equals(nc, "7")) { group_num = 7i32; }
+                    if (string_equals(nc, "8")) { group_num = 8i32; }
+                    if (string_equals(nc, "9")) { group_num = 9i32; }
+
+                    string:group_val = nitpick_regex_group(group_num);
+                    if (string_is_empty(group_val) == false) {
+                        result = string_concat(result, group_val);
+                    }
+                } else {
+                    // Not a digit, just append the '$' and the char
+                    result = string_concat(result, "$");
+                    result = string_concat(result, nc);
+                }
+            } else {
+                result = string_concat(result, "$");
+            }
+        } else {
+            result = string_concat(result, c);
+        }
+        i = i + 1i64;
+    }
+    
+    pass result;
+};
+
+func:main = int32() {
+    drop(Cli.register_flag("--help\0", "-h\0"));
+    drop(Cli.register_flag("--dry-run\0", "-d\0"));
+    drop(Cli.register_option("--pattern\0", "-p\0", "\0"));
+    drop(Cli.register_option("--replace\0", "-r\0", "\0"));
+    drop(Cli.register_option("--dir\0", "-w\0", "\0"));
+    
+    drop(Cli.parse());
+    
+    if (raw Cli.get_flag("--help\0") == 1i64) {
+        print("nnomino - Batch file renaming utility\n");
+        print("Usage: nnomino --pattern <regex> --replace <str> [--dry-run] [--dir <path>]\n");
+        print("\nOptions:\n");
+        print("  -p, --pattern <regex>   Regex pattern to match filenames\n");
+        print("  -r, --replace <str>     Replacement string (use $1, $2 for capture groups)\n");
+        print("  -d, --dry-run           Preview renames without executing them\n");
+        print("  -w, --dir <path>        Directory to process (default: .)\n");
+        exit 0i32;
+    }
+    
+    string:pattern = raw Cli.get_option("--pattern\0");
+    if (string_is_empty(pattern)) {
+        print("Error: --pattern is required\n");
+        exit 1i32;
+    }
+    
+    string:replace_str = raw Cli.get_option("--replace\0");
+    if (string_is_empty(replace_str)) {
+        print("Error: --replace is required\n");
+        exit 1i32;
+    }
+    
+    int64:dry_run = raw Cli.get_flag("--dry-run\0");
+    
+    string:dir = raw Cli.get_option("--dir\0");
+    if (string_is_empty(dir)) {
+        dir = ".";
+    }
+    
+    int32:re = nitpick_regex_compile(pattern);
+    if (re == 0i32) {
+        print("Error: Invalid regex pattern\n");
+        exit 1i32;
+    }
+    
+    string:entries = raw fs_list_dir(dir);
+    if (string_is_empty(entries)) {
+        print("Error: Could not list directory\n");
+        exit 1i32;
+    }
+    
+    int64:count = raw Str.line_count(entries);
+    int64:i = 0i64;
+    int64:renamed_count = 0i64;
+    
+    while (i < count) {
+        string:name = raw Str.token(entries, "\n", i);
+        if (string_is_empty(name) == false) {
+            int32:match_result = nitpick_regex_search(name);
+            if (match_result == 1i32) {
+                // We have a match! Let's build the new filename
+                string:new_name = raw expand_template(name, replace_str);
+                
+                string:old_path = string_concat(string_concat(dir, "/"), name);
+                string:new_path = string_concat(string_concat(dir, "/"), new_name);
+                
+                if (string_equals(dir, ".")) {
+                    old_path = name;
+                    new_path = new_name;
+                }
+                
+                if (dry_run == 1i64) {
+                    print("[DRY RUN] Would rename: ");
+                    print(name);
+                    print(" -> ");
+                    print(new_name);
+                    print("\n");
+                } else {
+                    int32:res = raw fs_rename(old_path, new_path);
+                    if (res == 1i32) {
+                        print("Renamed: ");
+                        print(name);
+                        print(" -> ");
+                        print(new_name);
+                        print("\n");
+                    } else {
+                        print("Failed to rename: ");
+                        print(name);
+                        print("\n");
+                    }
+                }
+                renamed_count = renamed_count + 1i64;
+            }
+        }
+        i = i + 1i64;
+    }
+    
+    nitpick_regex_free();
+    
+    if (renamed_count == 0i64) {
+        print("No files matched the pattern.\n");
+    }
+    
+    exit 0i32;
+};

@@ -1,0 +1,139 @@
+// ncmatrix.npk - Terminal Matrix Effect
+use "stdlib/io.npk".*;
+use "stdlib/sys.npk".*;
+use "stdlib/process.npk".*;
+use "stdlib/string.npk".*;
+use "stdlib/string_convert.npk".*;
+use "../../packages/nitpick-term/src/nitpick_term.npk".*;
+
+extern "libc" {
+    func:npk_mem_write_byte = int64(int64:ptr, int64:offset, int64:val);
+}
+
+extern "ncmatrix_shim" {
+    func:ncmatrix_init = void(int32:cols, int32:rows);
+    func:ncmatrix_get_char = int32(int32:x, int32:y);
+    func:ncmatrix_get_color = int32(int32:x, int32:y);
+    func:ncmatrix_tick = void();
+}
+
+func:write_CSI_H = int64(int64:buf, int64:idx) {
+    drop npk_mem_write_byte(buf, idx, 27i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 91i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 72i64); idx = idx + 1i64;
+    pass idx;
+};
+
+func:write_CSI_0m = int64(int64:buf, int64:idx) {
+    drop npk_mem_write_byte(buf, idx, 27i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 91i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 48i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 109i64); idx = idx + 1i64;
+    pass idx;
+};
+
+func:write_CSI_1_37m = int64(int64:buf, int64:idx) {
+    drop npk_mem_write_byte(buf, idx, 27i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 91i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 49i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 59i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 51i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 55i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 109i64); idx = idx + 1i64;
+    pass idx;
+};
+
+func:write_CSI_1_32m = int64(int64:buf, int64:idx) {
+    drop npk_mem_write_byte(buf, idx, 27i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 91i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 49i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 59i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 51i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 50i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 109i64); idx = idx + 1i64;
+    pass idx;
+};
+
+func:write_CSI_32m = int64(int64:buf, int64:idx) {
+    drop npk_mem_write_byte(buf, idx, 27i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 91i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 51i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 50i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 109i64); idx = idx + 1i64;
+    pass idx;
+};
+
+func:write_rn = int64(int64:buf, int64:idx) {
+    drop npk_mem_write_byte(buf, idx, 13i64); idx = idx + 1i64;
+    drop npk_mem_write_byte(buf, idx, 10i64); idx = idx + 1i64;
+    pass idx;
+};
+
+func:main = int32() {
+    drop Term.init();
+    drop Term.alt_screen(1i32);
+    drop Term.hide_cursor();
+    
+    int32:cols = raw Term.get_cols();
+    int32:rows = raw Term.get_rows();
+    
+    drop ncmatrix_init(cols, rows);
+    
+    int64:frame_buf = sys(MMAP, 0i64, 1048576i64, 3i64, 34i64, -1i64, 0i64) ? 0i64;
+    if (frame_buf <= 0i64) { exit 1; }
+    
+    int32:running = 1i32;
+    
+    while (running == 1i32) {
+        drop ncmatrix_tick();
+        
+        int64:idx = 0i64;
+        idx = raw write_CSI_H(frame_buf, idx);
+        
+        int32:y = 0i32;
+        while (y < rows) {
+            int32:x = 0i32;
+            int32:last_color = -1i32;
+            while (x < cols) {
+                int32:c = ncmatrix_get_color(x, y);
+                if (c != last_color) {
+                    if (c == 0i32) { idx = raw write_CSI_0m(frame_buf, idx); }
+                    if (c == 1i32) { idx = raw write_CSI_1_37m(frame_buf, idx); }
+                    if (c == 2i32) { idx = raw write_CSI_1_32m(frame_buf, idx); }
+                    if (c == 3i32) { idx = raw write_CSI_32m(frame_buf, idx); }
+                    last_color = c;
+                }
+                int32:ch = ncmatrix_get_char(x, y);
+                drop npk_mem_write_byte(frame_buf, idx, @cast_unchecked<int64>(ch));
+                idx = idx + 1i64;
+                x = x + 1i32;
+            }
+            if (y < rows - 1i32) {
+                idx = raw write_rn(frame_buf, idx);
+            }
+            y = y + 1i32;
+        }
+        
+        drop sys(WRITE, 1i64, frame_buf, idx);
+        
+        int32:key = raw Term.read_key();
+        if (key == 113i32) { running = 0i32; } // q
+        if (key == 27i32) { running = 0i32; }  // esc
+        if (key == 3i32) { running = 0i32; }   // ctrl+c
+        
+        drop Term.sleep(30i32); // ~33fps
+    }
+    
+    drop sys(MUNMAP, frame_buf, 1048576i64);
+    
+    drop Term.show_cursor();
+    drop Term.alt_screen(0i32);
+    drop Term.restore();
+    
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    drop Term.restore();
+    exit 1;
+};

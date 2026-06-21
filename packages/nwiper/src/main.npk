@@ -1,0 +1,121 @@
+use "nitpick_cli.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_fs.npk".*;
+
+func:parse_int = int64(string:s) {
+    if (string_equals(s, "1")) { pass 1i64; } else {
+    if (string_equals(s, "2")) { pass 2i64; } else {
+    if (string_equals(s, "3")) { pass 3i64; } else {
+    if (string_equals(s, "4")) { pass 4i64; } else {
+    if (string_equals(s, "5")) { pass 5i64; } else {
+    if (string_equals(s, "6")) { pass 6i64; } else {
+    if (string_equals(s, "7")) { pass 7i64; } else {
+    pass 3i64; // default to 3
+    }}}}}}}
+};
+
+func:main = int32() {
+    raw Cli.register_option("--passes\0", "-p\0", "3\0");
+    raw Cli.parse();
+
+    int64:count = raw Cli.get_positional_count();
+    if (count < 1i64) {
+        print("Usage: nwiper <file_path> [--passes <N>]\n\0");
+        exit 1i32;
+    }
+
+    string:file_path = raw Cli.get_positional(0i64);
+    string:file_path_null = string_concat(file_path, "\0");
+    
+    string:passes_str = raw Cli.get_option("--passes\0");
+    int64:passes = raw parse_int(passes_str);
+
+    int32:exists = raw fs_exists(file_path_null);
+    if (exists != 1i32) {
+        print("Error: File not found -> \0"); print(file_path); print("\n\0");
+        exit 1i32;
+    }
+
+    int64:fsize = raw fs_file_size(file_path_null);
+    if (fsize < 0i64) {
+        print("Error: Could not determine file size.\n\0");
+        exit 1i32;
+    }
+    
+    if (fsize == 0i64) {
+        print("File is empty, deleting immediately.\n\0");
+        raw fs_remove(file_path_null);
+        exit 0i32;
+    } else {}
+
+    // Build a 1MB block of garbage (20 doublings of 1 byte)
+    string:block = "X";
+    till(20, 1) {
+        block = string_concat(block, block);
+    }
+    
+    int64:block_size = 1048576i64; // 1MB
+    int64:full_blocks = fsize / block_size;
+    int64:rem = fsize - (full_blocks * block_size);
+    
+    string:rem_block = string_substring(block, 0i64, rem);
+    string:block_null = string_concat(block, "\0");
+    string:rem_block_null = string_concat(rem_block, "\0");
+
+    int64:p = 0i64;
+    till(10, 1) {
+        if (p >= passes) {
+            // skip
+        } else {
+            print("Wiping pass \0"); 
+            
+            // print pass number
+            if (p==0i64) { print("1\0"); } else {
+            if (p==1i64) { print("2\0"); } else {
+            if (p==2i64) { print("3\0"); } else {
+            if (p==3i64) { print("4\0"); } else {
+            if (p==4i64) { print("5\0"); } else {
+            if (p==5i64) { print("6\0"); } else {
+            if (p==6i64) { print("7\0"); } else {
+                print("...\0");
+            }}}}}}}
+            
+            print("...\n\0");
+            
+            // Truncate file
+            raw fs_write_file(file_path_null, "\0");
+            
+            // Write full blocks
+            int64:b = 0i64;
+            till(4096, 1) { // Up to 4GB files
+                if (b >= full_blocks) {
+                    // skip
+                } else {
+                    raw fs_append_file(file_path_null, block_null);
+                    b = b + 1i64;
+                }
+            }
+            
+            // Write remainder
+            if (rem > 0i64) {
+                raw fs_append_file(file_path_null, rem_block_null);
+            } else {}
+            
+            p = p + 1i64;
+        }
+    }
+
+    // Finally, remove the file
+    int32:rm_res = raw fs_remove(file_path_null);
+    if (rm_res == 1i32) {
+        print("File securely wiped and deleted: \0"); print(file_path); print("\n\0");
+    } else {
+        print("Error: Could not remove file.\n\0");
+    }
+
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

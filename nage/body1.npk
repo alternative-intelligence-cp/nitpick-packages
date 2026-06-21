@@ -1,0 +1,3 @@
+    string:passphrase = raw Process.getenv("NAGE_PASS");
+    string:in_file = raw Process.getenv("NAGE_IN");
+    string:out_file = raw Process.getenv("NAGE_OUT");

@@ -1,0 +1,4 @@
+    drop sys!!!(3i64, fd_in);
+    drop sys!!!(3i64, fd_out);
+    drop nitpick_libc_mem_free(buf);
+    drop nitpick_libc_mem_free(keystream_buf);

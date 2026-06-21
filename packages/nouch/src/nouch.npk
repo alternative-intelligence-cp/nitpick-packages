@@ -1,0 +1,119 @@
+use "nitpick_cli.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+
+extern "libc" {
+    func:fopen = int64(string:filename, string:mode);
+    func:fwrite = int64(string:ptr, int64:size, int64:nmemb, int64:f);
+    func:fclose = int32(int64:f);
+    func:printf = int32(string:fmt, string:v1);
+}
+
+extern "nitpick_compress_shim" {
+    func:nitpick_compress_deflate   = int32(string:data, int32:len);
+    func:nitpick_compress_inflate   = int32(string:data, int32:len);
+    func:nitpick_compress_gzip      = int32(string:data, int32:len);
+    func:nitpick_compress_gunzip    = int32(string:data, int32:len);
+    func:nitpick_compress_get_result = string();
+    func:nitpick_compress_get_length = int32();
+    func:nitpick_compress_get_error  = int32();
+}
+
+func:main = int32() {
+    drop(Cli.register_flag("help\0", "h\0"));
+    drop(Cli.parse());
+    
+    if (raw Cli.get_flag("help\0") == 1i64) {
+        print("Usage: nouch [c|d] <file>\n\0");
+        exit 0i32;
+    }
+    
+    int64:argc = raw Cli.get_positional_count();
+    if (argc < 2i64) {
+        print("Error: Expected action and file\n\0");
+        exit 1i32;
+    }
+    
+    string:action = raw Cli.get_positional(0i64);
+    string:file = raw Cli.get_positional(1i64);
+    
+    int32:is_c = 0i32;
+    int32:is_d = 0i32;
+    if (string_equals(action, "c")) { is_c = 1i32; }
+    if (string_equals(action, "d")) { is_d = 1i32; }
+    
+    if (is_c == 0i32 && is_d == 0i32) {
+        drop(printf("Error: Unknown action '%s'. Use 'c' for compress, 'd' for decompress.\n\0", action));
+        exit 1i32;
+    }
+    
+    if (raw fs_exists(file) == 0i32) {
+        print("Error: File does not exist.\n\0");
+        exit 1i32;
+    }
+    
+    string:content = raw fs_read_file(file);
+    int64:content_len = raw fs_read_length();
+
+    if (is_c == 1i32) {
+        int32:res = nitpick_compress_gzip(content, @cast_unchecked<int32>(content_len));
+        if (res < 0i32) {
+            print("Error: Compression failed.\n\0");
+            exit 1i32;
+        }
+        
+        string:out_file = string_concat(file, ".gz\0");
+        string:comp_data = nitpick_compress_get_result();
+        int32:comp_len = nitpick_compress_get_length();
+        
+        int32:wres = raw write_bin(out_file, comp_data, @cast_unchecked<int64>(comp_len));
+        if (wres == 0i32) {
+            print("Error: Could not write output file.\n\0");
+            exit 1i32;
+        }
+        
+        drop(printf("Compressed %s successfully.\n\0", out_file));
+    } else {
+        int32:res = nitpick_compress_gunzip(content, @cast_unchecked<int32>(content_len));
+        if (res < 0i32) {
+            print("Error: Decompression failed.\n\0");
+            exit 1i32;
+        }
+        
+        string:out_file = file;
+        if (string_ends_with(file, ".gz\0")) {
+            int64:flen = string_length(file);
+            out_file = string_substring(file, 0i64, flen - 3i64);
+        } else {
+            out_file = string_concat(file, ".out\0");
+        }
+        
+        string:decomp_data = nitpick_compress_get_result();
+        int32:decomp_len = nitpick_compress_get_length();
+        
+        int32:wres = raw write_bin(out_file, decomp_data, @cast_unchecked<int64>(decomp_len));
+        if (wres == 0i32) {
+            print("Error: Could not write output file.\n\0");
+            exit 1i32;
+        }
+        
+        drop(printf("Decompressed %s successfully.\n\0", out_file));
+    }
+    
+    drop(fs_cleanup());
+    exit 0i32;
+};
+
+func:write_bin = int32(string:path, string:data, int64:len) {
+    int64:f = fopen(path, "wb\0");
+    if (f == 0i64) {
+        pass 0i32;
+    }
+    drop(fwrite(data, 1i64, len, f));
+    drop(fclose(f));
+    pass 1i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

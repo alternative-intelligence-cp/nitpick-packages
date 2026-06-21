@@ -1,0 +1,13 @@
+extern "libc" { func:test_func = void(wild any*:ptr); }
+extern func:printf = int32(string:fmt, int64:v1);
+
+func:main = int32() {
+    wild int8->:ptr = alloc(32i64);
+    drop(printf("Allocated: %ld\n\0", @cast_unchecked<int64>(ptr)));
+    defer { dalloc(ptr); }
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};

@@ -183,7 +183,7 @@ pub func:SDLK_RIGHT  = int32() { pass(1073741903i32); };
 // ── public API: init / quit ─────────────────────────────────────────
 
 
-Type:Sdl2 = {
+pub Type:Sdl2 = {
 func:init = int32(int32:flags) {
     int32:r = nitpick_sdl2_init(flags);
     pass(r);

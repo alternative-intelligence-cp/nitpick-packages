@@ -1,0 +1,255 @@
+// nrustscan - A blazing fast port scanner in Nitpick
+use "sys.npk".*;
+use "net.npk".*;
+use "thread.npk".*;
+use "channel.npk".*;
+use "string_convert.npk".*;
+
+extern "nitpick_runtime" {
+    func:npk_shim_atomic_int32_create = int64(int32:initial);
+    func:npk_shim_atomic_int32_destroy = int32(int64:handle);
+    func:npk_shim_atomic_int32_load = int32(int64:handle, int32:order);
+    func:npk_shim_atomic_int32_fetch_add = int32(int64:handle, int32:value, int32:order);
+}
+
+extern "nitpick_libc_net" {
+    func:nitpick_libc_net_socket_tcp     = int64();
+    func:nitpick_libc_net_close          = int32(int64:fd);
+    func:nitpick_libc_net_connect        = int32(int64:fd, string:addr, int32:port);
+    func:nitpick_libc_net_set_nonblocking = int32(int64:fd);
+}
+
+extern "nitpick_libc" {
+    func:sleep = int32(int32:seconds);
+    func:usleep = int32(int32:usec);
+}
+
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_malloc      = int64(int64:size);
+    func:nitpick_libc_mem_free        = void(int64:ptr);
+    func:nitpick_libc_mem_read_i64    = int64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_i64   = void(int64:ptr, int64:offset, int64:val);
+    func:nitpick_libc_mem_read_byte   = int32(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_write_byte  = void(int64:ptr, int64:offset, int32:val);
+}
+
+func:main = int32() {
+    println("Starting nrustscan...");
+    print("Target IP: 127.0.0.1\n");
+    
+    // Initialize atomics
+    int64:h_ports_scanned = npk_shim_atomic_int32_create(0i32);
+    int64:h_open_ports_count = npk_shim_atomic_int32_create(0i32);
+    
+    // Allocate buffer for up to 65536 open ports (65536 * 4 = 262144 bytes)
+    int64:p_open_ports = nitpick_libc_mem_malloc(262144i64);
+    
+    // Create shared context (24 bytes)
+    int64:shared_ctx = nitpick_libc_mem_malloc(24i64);
+    nitpick_libc_mem_write_i64(shared_ctx, 0i64, h_ports_scanned);
+    nitpick_libc_mem_write_i64(shared_ctx, 8i64, h_open_ports_count);
+    nitpick_libc_mem_write_i64(shared_ctx, 16i64, p_open_ports);
+
+    // Create a channel for distributing ports
+    int64:ch = raw Channel.create(10000i32);
+
+    (int64)(int64):worker_task = int64(int64:args_ptr) {
+        int64:channel = nitpick_libc_mem_read_i64(args_ptr, 0i64);
+        int64:ctx = nitpick_libc_mem_read_i64(args_ptr, 8i64);
+        
+        int64:ports_scanned_handle = nitpick_libc_mem_read_i64(ctx, 0i64);
+        int64:open_ports_count_handle = nitpick_libc_mem_read_i64(ctx, 8i64);
+        int64:open_ports_ptr = nitpick_libc_mem_read_i64(ctx, 16i64);
+
+        while (true) {
+            int64:port64 = raw Channel.recv(channel);
+            if (port64 < 0i64) {
+                // Termination signal received
+                break;
+            }
+            
+            int32:port = @cast_unchecked<int32>(port64);
+            int64:fd = nitpick_libc_net_socket_tcp();
+            if (fd >= 0i64) {
+                _ = nitpick_libc_net_set_nonblocking(fd);
+                int32:rc = nitpick_libc_net_connect(fd, "127.0.0.1", port);
+                
+                int64:pfd_ptr = nitpick_libc_mem_malloc(8i64);
+                
+                int64:fd64 = fd;
+                int32:b0 = @cast_unchecked<int32>(fd64) & 255i32;
+                int32:b1 = @cast_unchecked<int32>(fd64 / 256i64) & 255i32;
+                int32:b2 = @cast_unchecked<int32>(fd64 / 65536i64) & 255i32;
+                int32:b3 = @cast_unchecked<int32>(fd64 / 16777216i64) & 255i32;
+                nitpick_libc_mem_write_byte(pfd_ptr, 0i64, b0);
+                nitpick_libc_mem_write_byte(pfd_ptr, 1i64, b1);
+                nitpick_libc_mem_write_byte(pfd_ptr, 2i64, b2);
+                nitpick_libc_mem_write_byte(pfd_ptr, 3i64, b3);
+                
+                nitpick_libc_mem_write_byte(pfd_ptr, 4i64, 4i32);
+                nitpick_libc_mem_write_byte(pfd_ptr, 5i64, 0i32);
+                
+                nitpick_libc_mem_write_byte(pfd_ptr, 6i64, 0i32);
+                nitpick_libc_mem_write_byte(pfd_ptr, 7i64, 0i32);
+                
+                int64:poll_res = sys!!!(7i64, pfd_ptr, 1i64, 500i64);
+                
+                if (poll_res > 0i64) {
+                    int32:r0 = nitpick_libc_mem_read_byte(pfd_ptr, 6i64);
+                    int32:r1 = nitpick_libc_mem_read_byte(pfd_ptr, 7i64);
+                    int32:rev = r0 + (r1 * 256i32);
+                    
+                    if (rev == 4i32) {
+                        int32:idx = npk_shim_atomic_int32_fetch_add(open_ports_count_handle, 1i32, 0i32);
+                        int64:offset = @cast_unchecked<int64>(idx) * 4i64;
+                        
+                        int32:pb0 = @cast_unchecked<int32>(port64) & 255i32;
+                        int32:pb1 = @cast_unchecked<int32>(port64 / 256i64) & 255i32;
+                        int32:pb2 = @cast_unchecked<int32>(port64 / 65536i64) & 255i32;
+                        int32:pb3 = @cast_unchecked<int32>(port64 / 16777216i64) & 255i32;
+                        
+                        nitpick_libc_mem_write_byte(open_ports_ptr, offset, pb0);
+                        nitpick_libc_mem_write_byte(open_ports_ptr, offset + 1i64, pb1);
+                        nitpick_libc_mem_write_byte(open_ports_ptr, offset + 2i64, pb2);
+                        nitpick_libc_mem_write_byte(open_ports_ptr, offset + 3i64, pb3);
+                    }
+                }
+                
+                nitpick_libc_mem_free(pfd_ptr);
+                _ = nitpick_libc_net_close(fd);
+            }
+            
+            _ = npk_shim_atomic_int32_fetch_add(ports_scanned_handle, 1i32, 0i32);
+        }
+        
+        nitpick_libc_mem_free(args_ptr);
+        pass 0i64;
+    };
+    
+    // We need an args struct for each thread
+    int64:a1 = nitpick_libc_mem_malloc(16i64);
+    nitpick_libc_mem_write_i64(a1, 0i64, ch);
+    nitpick_libc_mem_write_i64(a1, 8i64, shared_ctx);
+    int64:t1 = raw Thread.spawn(worker_task, a1);
+
+    int64:a2 = nitpick_libc_mem_malloc(16i64);
+    nitpick_libc_mem_write_i64(a2, 0i64, ch);
+    nitpick_libc_mem_write_i64(a2, 8i64, shared_ctx);
+    int64:t2 = raw Thread.spawn(worker_task, a2);
+
+    int64:a3 = nitpick_libc_mem_malloc(16i64);
+    nitpick_libc_mem_write_i64(a3, 0i64, ch);
+    nitpick_libc_mem_write_i64(a3, 8i64, shared_ctx);
+    int64:t3 = raw Thread.spawn(worker_task, a3);
+
+    int64:a4 = nitpick_libc_mem_malloc(16i64);
+    nitpick_libc_mem_write_i64(a4, 0i64, ch);
+    nitpick_libc_mem_write_i64(a4, 8i64, shared_ctx);
+    int64:t4 = raw Thread.spawn(worker_task, a4);
+
+    int64:start_port = 1i64;
+    int64:end_port = 1000i64;
+    int64:total_ports = end_port - start_port + 1i64;
+    
+    println("Dispatching tasks...");
+    
+    int64:p = start_port;
+    while (p <= end_port) {
+        raw Channel.send(ch, p);
+        p = p + 1i64;
+    }
+    
+    // Send termination signals (-1) to all 4 threads
+    raw Channel.send(ch, -1i64);
+    raw Channel.send(ch, -1i64);
+    raw Channel.send(ch, -1i64);
+    raw Channel.send(ch, -1i64);
+
+    // Wait for completion
+    raw Thread.join(t1);
+    raw Thread.join(t2);
+    raw Thread.join(t3);
+    raw Thread.join(t4);
+    
+    // Wait for all to finish
+    int32:last_printed = 0i32;
+    while (1i32 == 1i32) {
+        int32:done = npk_shim_atomic_int32_load(h_ports_scanned, 0i32);
+        if (done == @cast_unchecked<int32>(total_ports)) {
+            break;
+        }
+        if (done - last_printed >= 5000i32) {
+            print("Scanned ");
+            print(int64_toString(@cast_unchecked<int64>(done)));
+            println(" ports...");
+            last_printed = done;
+        }
+        _ = usleep(10000i32); // 10ms
+    }
+    
+    println("\nScan complete!");
+    int32:open_count = npk_shim_atomic_int32_load(h_open_ports_count, 0i32);
+    print("Total open ports: ");
+    println(int64_toString(@cast_unchecked<int64>(open_count)));
+    
+    // Bubble sort the open ports
+    int32:i = 0i32;
+    while (i < open_count) {
+        int32:j = 0i32;
+        while (j < open_count - i - 1i32) {
+            int64:off1 = @cast_unchecked<int64>(j) * 4i64;
+            int64:off2 = @cast_unchecked<int64>(j + 1i32) * 4i64;
+            
+            int32:v1b0 = nitpick_libc_mem_read_byte(p_open_ports, off1);
+            int32:v1b1 = nitpick_libc_mem_read_byte(p_open_ports, off1 + 1i64);
+            int32:v1b2 = nitpick_libc_mem_read_byte(p_open_ports, off1 + 2i64);
+            int32:v1b3 = nitpick_libc_mem_read_byte(p_open_ports, off1 + 3i64);
+            int32:val1 = v1b0 + (v1b1 * 256i32) + (v1b2 * 65536i32) + (v1b3 * 16777216i32);
+            
+            int32:v2b0 = nitpick_libc_mem_read_byte(p_open_ports, off2);
+            int32:v2b1 = nitpick_libc_mem_read_byte(p_open_ports, off2 + 1i64);
+            int32:v2b2 = nitpick_libc_mem_read_byte(p_open_ports, off2 + 2i64);
+            int32:v2b3 = nitpick_libc_mem_read_byte(p_open_ports, off2 + 3i64);
+            int32:val2 = v2b0 + (v2b1 * 256i32) + (v2b2 * 65536i32) + (v2b3 * 16777216i32);
+            
+            if (val1 > val2) {
+                nitpick_libc_mem_write_byte(p_open_ports, off1, v2b0);
+                nitpick_libc_mem_write_byte(p_open_ports, off1 + 1i64, v2b1);
+                nitpick_libc_mem_write_byte(p_open_ports, off1 + 2i64, v2b2);
+                nitpick_libc_mem_write_byte(p_open_ports, off1 + 3i64, v2b3);
+                
+                nitpick_libc_mem_write_byte(p_open_ports, off2, v1b0);
+                nitpick_libc_mem_write_byte(p_open_ports, off2 + 1i64, v1b1);
+                nitpick_libc_mem_write_byte(p_open_ports, off2 + 2i64, v1b2);
+                nitpick_libc_mem_write_byte(p_open_ports, off2 + 3i64, v1b3);
+            }
+            j = j + 1i32;
+        }
+        i = i + 1i32;
+    }
+    
+    println("\nOpen Ports:");
+    i = 0i32;
+    while (i < open_count) {
+        int64:off = @cast_unchecked<int64>(i) * 4i64;
+        int32:vb0 = nitpick_libc_mem_read_byte(p_open_ports, off);
+        int32:vb1 = nitpick_libc_mem_read_byte(p_open_ports, off + 1i64);
+        int32:vb2 = nitpick_libc_mem_read_byte(p_open_ports, off + 2i64);
+        int32:vb3 = nitpick_libc_mem_read_byte(p_open_ports, off + 3i64);
+        int32:val = vb0 + (vb1 * 256i32) + (vb2 * 65536i32) + (vb3 * 16777216i32);
+        
+        println(int64_toString(@cast_unchecked<int64>(val)));
+        i = i + 1i32;
+    }
+    
+    _ = npk_shim_atomic_int32_destroy(h_ports_scanned);
+    _ = npk_shim_atomic_int32_destroy(h_open_ports_count);
+    nitpick_libc_mem_free(p_open_ports);
+    nitpick_libc_mem_free(shared_ctx);
+    
+    exit(0i32);
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit(1i32);
+};

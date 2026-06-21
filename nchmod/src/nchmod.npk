@@ -1,0 +1,161 @@
+// nchmod.npk - Interactive chmod permissions generator
+use "stdlib/io.npk".*;
+use "stdlib/sys.npk".*;
+use "stdlib/process.npk".*;
+use "stdlib/string.npk".*;
+use "stdlib/string_convert.npk".*;
+use "../../packages/nitpick-term/src/nitpick_term.npk".*;
+
+func:main = int32() {
+    drop Term.init();
+    drop Term.alt_screen(1i32);
+    drop Term.hide_cursor();
+    
+    int32:or = 0i32; int32:ow = 0i32; int32:ox = 0i32;
+    int32:gr = 0i32; int32:gw = 0i32; int32:gx = 0i32;
+    int32:ur = 0i32; int32:uw = 0i32; int32:ux = 0i32;
+    
+    int32:sel_r = 0i32;
+    int32:sel_c = 0i32;
+    int32:running = 1i32;
+    string:octal = "";
+    
+    while (running == 1i32) {
+        string:frame = "\x1b[2J\x1b[H";
+        frame = string_concat(frame, "\x1b[7m NCHMOD \x1b[0m Interactive Permissions\r\n\r\n");
+        
+        // Calculate Octal
+        octal = "0";
+        octal = string_concat(octal, string_from_int(@cast<int64>(or * 4i32 + ow * 2i32 + ox)));
+        octal = string_concat(octal, string_from_int(@cast<int64>(gr * 4i32 + gw * 2i32 + gx)));
+        octal = string_concat(octal, string_from_int(@cast<int64>(ur * 4i32 + uw * 2i32 + ux)));
+        
+        // Calculate Symbolic
+        string:sym = "-";
+        if (or == 1i32) { sym = string_concat(sym, "r"); } else { sym = string_concat(sym, "-"); }
+        if (ow == 1i32) { sym = string_concat(sym, "w"); } else { sym = string_concat(sym, "-"); }
+        if (ox == 1i32) { sym = string_concat(sym, "x"); } else { sym = string_concat(sym, "-"); }
+        if (gr == 1i32) { sym = string_concat(sym, "r"); } else { sym = string_concat(sym, "-"); }
+        if (gw == 1i32) { sym = string_concat(sym, "w"); } else { sym = string_concat(sym, "-"); }
+        if (gx == 1i32) { sym = string_concat(sym, "x"); } else { sym = string_concat(sym, "-"); }
+        if (ur == 1i32) { sym = string_concat(sym, "r"); } else { sym = string_concat(sym, "-"); }
+        if (uw == 1i32) { sym = string_concat(sym, "w"); } else { sym = string_concat(sym, "-"); }
+        if (ux == 1i32) { sym = string_concat(sym, "x"); } else { sym = string_concat(sym, "-"); }
+        
+        frame = string_concat(frame, " Octal:    \x1b[32m");
+        frame = string_concat(frame, octal);
+        frame = string_concat(frame, "\x1b[0m\r\n");
+        
+        frame = string_concat(frame, " Symbolic: \x1b[36m");
+        frame = string_concat(frame, sym);
+        frame = string_concat(frame, "\x1b[0m\r\n\r\n");
+        
+        frame = string_concat(frame, "         Read   Write  Execute\r\n");
+        
+        int32:row = 0i32;
+        while (row < 3i32) {
+            if (row == 0i32) { frame = string_concat(frame, " Owner   "); }
+            if (row == 1i32) { frame = string_concat(frame, " Group   "); }
+            if (row == 2i32) { frame = string_concat(frame, " Public  "); }
+            
+            int32:col = 0i32;
+            while (col < 3i32) {
+                int32:val = 0i32;
+                if (row == 0i32) {
+                    if (col == 0i32) { val = or; }
+                    if (col == 1i32) { val = ow; }
+                    if (col == 2i32) { val = ox; }
+                }
+                if (row == 1i32) {
+                    if (col == 0i32) { val = gr; }
+                    if (col == 1i32) { val = gw; }
+                    if (col == 2i32) { val = gx; }
+                }
+                if (row == 2i32) {
+                    if (col == 0i32) { val = ur; }
+                    if (col == 1i32) { val = uw; }
+                    if (col == 2i32) { val = ux; }
+                }
+                
+                string:disp = "[ ]    ";
+                if (val == 1i32) { disp = "[\x1b[32mx\x1b[0m]    "; }
+                
+                if (row == sel_r) {
+                    if (col == sel_c) {
+                        disp = "\x1b[7m[";
+                        if (val == 1i32) { disp = string_concat(disp, "x"); } else { disp = string_concat(disp, " "); }
+                        disp = string_concat(disp, "]\x1b[0m    ");
+                    }
+                }
+                
+                frame = string_concat(frame, disp);
+                col = col + 1i32;
+            }
+            frame = string_concat(frame, "\r\n");
+            row = row + 1i32;
+        }
+        
+        frame = string_concat(frame, "\r\n(Arrows to move, Space to toggle, Enter to copy command, Esc to quit)\r\n");
+        drop Term.print(frame);
+        
+        int32:key = -1i32;
+        while (key == -1i32) {
+            key = raw Term.read_key();
+            if (key == -1i32) { drop Term.sleep(10i32); }
+        }
+        
+        if (key == 27i32) { // Esc
+            int32:next_key = raw Term.read_key();
+            if (next_key == 91i32) {
+                int32:arrow = raw Term.read_key();
+                if (arrow == 65i32) { if (sel_r > 0i32) { sel_r = sel_r - 1i32; } } // Up
+                if (arrow == 66i32) { if (sel_r < 2i32) { sel_r = sel_r + 1i32; } } // Down
+                if (arrow == 67i32) { if (sel_c < 2i32) { sel_c = sel_c + 1i32; } } // Right
+                if (arrow == 68i32) { if (sel_c > 0i32) { sel_c = sel_c - 1i32; } } // Left
+            } else {
+                running = 0i32;
+                octal = ""; // Cancelled
+            }
+        }
+        
+        if (key == 32i32) { // Space
+            if (sel_r == 0i32) {
+                if (sel_c == 0i32) { or = 1i32 - or; }
+                if (sel_c == 1i32) { ow = 1i32 - ow; }
+                if (sel_c == 2i32) { ox = 1i32 - ox; }
+            }
+            if (sel_r == 1i32) {
+                if (sel_c == 0i32) { gr = 1i32 - gr; }
+                if (sel_c == 1i32) { gw = 1i32 - gw; }
+                if (sel_c == 2i32) { gx = 1i32 - gx; }
+            }
+            if (sel_r == 2i32) {
+                if (sel_c == 0i32) { ur = 1i32 - ur; }
+                if (sel_c == 1i32) { uw = 1i32 - uw; }
+                if (sel_c == 2i32) { ux = 1i32 - ux; }
+            }
+        }
+        
+        if (key == 13i32) { // Enter
+            running = 0i32;
+        }
+    }
+    
+    drop Term.show_cursor();
+    drop Term.alt_screen(0i32);
+    drop Term.restore();
+    
+    if (octal != "") {
+        string:out = "chmod ";
+        out = string_concat(out, octal);
+        out = string_concat(out, " <file>");
+        println(out);
+    }
+    
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    drop Term.restore();
+    exit 1;
+};

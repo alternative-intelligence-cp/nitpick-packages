@@ -1,0 +1,104 @@
+use "nitpick_display.npk".*;
+use "nitpick_tui.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_cli.npk".*;
+use "nitpick_input.npk".*;
+
+extern func:usleep = int32(int32:usec);
+extern func:nitpick_input_read_key = int32();
+
+func:main = int32() {
+    raw Cli.parse();
+    int64:count = raw Cli.get_positional_count();
+    
+    // If there is an argument, append it to journal.txt
+    if (count > 0i64) {
+        string:entry = raw Cli.get_positional(0i64);
+        
+        string:existing = "";
+        int32:exists = raw fs_exists("journal.txt\0");
+        if (exists == 1i32) {
+            existing = raw fs_read_file("journal.txt\0");
+        }
+        
+        string:part1 = string_concat("[Entry] ", entry);
+        string:part2 = string_concat(part1, "\n\0");
+        string:new_content = string_concat(existing, part2);
+        
+        raw fs_write_file("journal.txt\0", new_content);
+        
+        print("Entry added to journal.txt\n\0");
+        exit 0i32;
+    }
+
+    // No arguments -> start TUI
+    int32:exists2 = raw fs_exists("journal.txt\0");
+    string:file_content = "";
+    if (exists2 == 1i32) {
+        file_content = raw fs_read_file("journal.txt\0");
+    } else {
+        file_content = "[Entry] Hello ncaps-log!\n[Entry] Day 2: Still coding\n\0";
+        raw fs_write_file("journal.txt\0", file_content);
+    }
+    
+    string:listbox_items = raw Str.replace_all(file_content, "\n\0", "|\0");
+    int64:entry_count = raw Str.token_count(listbox_items, "|\0");
+    int32:selected = 0i32;
+    
+    raw Tui.init();
+    
+    int32:running = 1i32;
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0");
+        
+        Widget:banner = raw Tui.panel(0i32, 0i32, 80i32, 3i32, 6i32, 0i32);
+        raw Tui.draw_widget(banner);
+        
+        Widget:title = raw Tui.label(2i32, 1i32, "  ncaps-log  |  Journaling TUI  ", 6i32, 0i32);
+        raw Tui.draw_widget(title);
+        
+        Widget:entries_list = raw Tui.listbox(0i32, 3i32, 30i32, 20i32, listbox_items, selected);
+        entries_list.focused = 1i32;
+        raw Tui.draw_widget(entries_list);
+        
+        Widget:detail_panel = raw Tui.panel(30i32, 3i32, 50i32, 20i32, 7i32, 0i32);
+        raw Tui.draw_widget(detail_panel);
+        
+        string:full_content = "";
+        if (@cast<int64>(selected) < entry_count) {
+            full_content = raw Str.token(file_content, "\n\0", @cast<int64>(selected));
+        }
+        
+        Widget:content_area = raw Tui.textarea(32i32, 5i32, 46i32, 16i32, full_content);
+        raw Tui.draw_widget(content_area);
+        
+        Widget:hint = raw Tui.label(2i32, 23i32, " Up/Down: Navigate | q/ESC: Quit ", 7i32, 4i32);
+        raw Tui.draw_widget(hint);
+        
+        int32:k = nitpick_input_read_key();
+        
+        if (k == 113i32) { running = 0i32; } // q
+        else if (k == 27i32) { running = 0i32; } // ESC
+        else if (k == 258i32) { selected = selected + 1i32; }
+        else if (k == 259i32) { selected = selected - 1i32; }
+        else if (k == 2i32) { selected = selected + 1i32; } // fallback DOWN
+        else if (k == 1i32) { selected = selected - 1i32; } // fallback UP
+        
+        if (selected < 0i32) { selected = 0i32; }
+        if (@cast<int64>(selected) >= entry_count) { 
+            selected = @cast_unchecked<int32>(entry_count) - 1i32; 
+        }
+        if (selected < 0i32) { selected = 0i32; } // safe-guard against negative count
+        
+        int32:slp = usleep(50000i32);
+    }
+    
+    raw Tui.shutdown();
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    raw Tui.shutdown();
+    exit 1i32;
+};

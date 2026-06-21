@@ -1,0 +1,130 @@
+use "nitpick_cli.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_term.npk".*;
+use "nitpick_display.npk".*;
+
+extern "pty_shim" {
+    func:ntrec_forkpty = int32();
+    func:ntrec_restore_term = void();
+    func:ntrec_read_pty = int32();
+    func:ntrec_get_read_buf = string();
+    func:ntrec_read_stdin = int32();
+    func:ntrec_write_pty = void(string:data, int32:len);
+    func:ntrec_write_stdout = void(string:data, int32:len);
+    func:ntrec_get_time_ms = int64();
+    func:ntrec_sleep_ms = void(int32:ms);
+    func:ntrec_check_exit = int32();
+    func:ntrec_escape_json = string(string:input, int32:len);
+}
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};
+
+func:main = int32() {
+    drop(Cli.register_flag("--help\0", "-h\0"));
+    drop(Cli.register_option("--out\0", "-o\0", "\0"));
+    
+    drop(Cli.parse());
+    
+    if (raw Cli.get_flag("--help\0") == 1i64) {
+        print("nt-rec - Nitpick Terminal Recorder\n");
+        print("Usage: nt-rec --out <file.cast>\n");
+        exit 0i32;
+    }
+    
+    string:out_file = raw Cli.get_option("--out\0");
+    if (string_is_empty(out_file)) {
+        out_file = "recording.cast";
+    }
+    
+    int32:cols = raw Term.get_cols();
+    int32:rows = raw Term.get_rows();
+    if (cols <= 0i32) { cols = 80i32; }
+    if (rows <= 0i32) { rows = 24i32; }
+    
+    // Write header
+    string:header = "{\"version\": 2, \"width\": ";
+    header = string_concat(header, string_from_int(@cast<int64>(cols)));
+    header = string_concat(header, ", \"height\": ");
+    header = string_concat(header, string_from_int(@cast<int64>(rows)));
+    header = string_concat(header, ", \"timestamp\": ");
+    int64:start_time = ntrec_get_time_ms();
+    header = string_concat(header, string_from_int(start_time / 1000i64));
+    header = string_concat(header, ", \"env\": {\"SHELL\": \"/bin/bash\", \"TERM\": \"xterm-256color\"}}\n");
+    
+    drop fs_write_file(out_file, header);
+    
+    print("nt-rec: starting recording to ");
+    print(out_file);
+    print("\r\n");
+    
+    int32:res = ntrec_forkpty();
+    if (res < 0i32) {
+        print("Failed to forkpty.\n");
+        exit 1i32;
+    }
+    
+    // Main loop
+    int32:running = 1i32;
+    while (running == 1i32) {
+        // Check if child exited
+        if (ntrec_check_exit() == 1i32) {
+            running = 0i32;
+        }
+        
+        // Read from PTY
+        int32:pty_len = ntrec_read_pty();
+        if (pty_len > 0i32) {
+            string:pty_data = ntrec_get_read_buf();
+            ntrec_write_stdout(pty_data, pty_len);
+            
+            // Format cast JSON line
+            int64:now = ntrec_get_time_ms();
+            int64:diff_ms = now - start_time;
+            
+            // Decimal seconds format: X.YYY
+            int64:secs = diff_ms / 1000i64;
+            int64:ms = diff_ms - (secs * 1000i64);
+            
+            string:line = "[";
+            line = string_concat(line, string_from_int(secs));
+            line = string_concat(line, ".");
+            if (ms < 100i64) {
+                line = string_concat(line, "0");
+                if (ms < 10i64) {
+                    line = string_concat(line, "0");
+                }
+            }
+            line = string_concat(line, string_from_int(ms));
+            line = string_concat(line, ", \"o\", \"");
+            
+            string:escaped = ntrec_escape_json(pty_data, pty_len);
+            line = string_concat(line, escaped);
+            line = string_concat(line, "\"]\n");
+            
+            drop fs_append_file(out_file, line);
+        }
+        
+        // Read from stdin (user keystrokes)
+        int32:stdin_len = ntrec_read_stdin();
+        if (stdin_len > 0i32) {
+            string:stdin_data = ntrec_get_read_buf();
+            ntrec_write_pty(stdin_data, stdin_len);
+        }
+        
+        if (running == 1i32) {
+            if ((pty_len <= 0i32) && (stdin_len <= 0i32)) {
+                ntrec_sleep_ms(10i32);
+            }
+        }
+    }
+    
+    ntrec_restore_term();
+    print("nt-rec: recording saved to ");
+    print(out_file);
+    print("\n");
+    
+    exit 0i32;
+};

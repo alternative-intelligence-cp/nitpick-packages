@@ -1,0 +1,233 @@
+use "nitpick_tui.npk".*;
+use "nitpick_display.npk".*;
+
+extern "libc" {
+    func:chess_init = void();
+    func:chess_get_piece = int32(int32:sq);
+    func:chess_gen_moves = int32(int32:white_turn);
+    func:chess_get_move_from = int32(int32:idx);
+    func:chess_get_move_to = int32(int32:idx);
+    func:chess_apply_move = int32(int32:from_sq, int32:to_sq);
+    func:getchar = int32();
+    func:printf = int32(string:fmt, int32:v1, int32:v2, int32:v3);
+    func:printf_1 = int32(string:fmt, int32:v1);
+}
+
+func:failsafe = int32(tbb32:err) {
+    drop(Tui.shutdown());
+    exit 1i32;
+};
+
+func:term_setpos = NIL(int32:x, int32:y) {
+    drop(printf("\x1b[%d;%dH\0", y, x, 0i32));
+    pass NIL;
+};
+
+func:term_set_color = NIL(int32:fg, int32:bg) {
+    int32:ansi_fg = 30i32 + fg;
+    if (fg == 7i32) { ansi_fg = 37i32; }
+    if (fg == 9i32) { ansi_fg = 97i32; } // bright white
+    
+    int32:ansi_bg = 40i32 + bg;
+    drop(printf("\x1b[%d;%dm\0", ansi_fg, ansi_bg, 0i32));
+    pass NIL;
+};
+
+func:draw_piece = NIL(int32:p, int32:x, int32:y, int32:bg_color) {
+    raw term_setpos(x, y);
+    
+    if (p == 0i32) {
+        raw term_set_color(0i32, bg_color);
+        print("   \0");
+        pass NIL;
+    }
+    
+    int32:is_white = 0i32;
+    if (p >= 1i32 && p <= 6i32) { is_white = 1i32; }
+    
+    int32:ptype = p;
+    if (ptype >= 7i32) { ptype = ptype - 6i32; }
+    
+    string:text = " ? \0";
+    if (is_white == 1i32) {
+        if (ptype == 1i32) { text = " P \0"; }
+        if (ptype == 2i32) { text = " N \0"; }
+        if (ptype == 3i32) { text = " B \0"; }
+        if (ptype == 4i32) { text = " R \0"; }
+        if (ptype == 5i32) { text = " Q \0"; }
+        if (ptype == 6i32) { text = " K \0"; }
+        raw term_set_color(9i32, bg_color); // Bright White
+    } else {
+        if (ptype == 1i32) { text = " p \0"; }
+        if (ptype == 2i32) { text = " n \0"; }
+        if (ptype == 3i32) { text = " b \0"; }
+        if (ptype == 4i32) { text = " r \0"; }
+        if (ptype == 5i32) { text = " q \0"; }
+        if (ptype == 6i32) { text = " k \0"; }
+        raw term_set_color(0i32, bg_color); // Black
+    }
+    
+    print(text);
+    pass NIL;
+};
+
+func:main = int32() {
+    drop(Tui.init());
+    
+    chess_init();
+    
+    int32:white_turn = 1i32;
+    int32:cursor_sq = 36i32; // e2
+    int32:selected_sq = 0i32 - 1i32;
+    int32:game_over = 0i32; // 0=playing, 1=white wins, 2=black wins, 3=draw
+    int32:num_moves = chess_gen_moves(white_turn);
+    int32:running = 1i32;
+    
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0"); // clear screen
+        
+        raw term_set_color(7i32, 0i32);
+        raw term_setpos(2i32, 1i32);
+        print("Nitpick Chess TUI\0");
+        
+        int32:bx = 4i32;
+        int32:by = 3i32;
+        
+        // Draw board
+        int32:r = 0i32;
+        while (r < 8i32) {
+            int32:f = 0i32;
+            while (f < 8i32) {
+                int32:sq = (r * 8i32) + f;
+                int32:is_light = (r + f) % 2i32;
+                
+                int32:bg_color = 2i32; // Green
+                if (is_light == 1i32) {
+                    bg_color = 3i32; // Yellow
+                }
+                
+                int32:x = bx + (f * 3i32);
+                int32:y = by + (7i32 - r);
+                
+                if (sq == cursor_sq) {
+                    bg_color = 6i32; // Cyan highlight for cursor
+                } else if (sq == selected_sq) {
+                    bg_color = 5i32; // Magenta highlight for selected piece
+                } else if (selected_sq != (0i32 - 1i32)) {
+                    // check valid moves
+                    int32:i = 0i32;
+                    while (i < num_moves) {
+                        if (chess_get_move_from(i) == selected_sq && chess_get_move_to(i) == sq) {
+                            bg_color = 1i32; // Red valid move highlight
+                        }
+                        i = i + 1i32;
+                    }
+                }
+                
+                raw draw_piece(chess_get_piece(sq), x, y, bg_color);
+                
+                f = f + 1i32;
+            }
+            r = r + 1i32;
+        }
+        
+        // Status text
+        raw term_set_color(7i32, 0i32);
+        raw term_setpos(2i32, by + 10i32);
+        if (game_over == 1i32) {
+            print("WHITE WINS! [R] to restart\0");
+        } else if (game_over == 2i32) {
+            print("BLACK WINS! [R] to restart\0");
+        } else if (game_over == 3i32) {
+            print("STALEMATE! [R] to restart\0");
+        } else {
+            if (white_turn == 1i32) {
+                print("White's Turn\0");
+            } else {
+                print("Black's Turn\0");
+            }
+        }
+        
+        raw term_setpos(2i32, by + 12i32);
+        print("WASD to move cursor, SPACE/ENTER to select, Q to quit\0");
+        
+        // Reset color and flush
+        print("\x1b[0m\0");
+        
+        // Get input
+        int32:vk = getchar();
+        
+        if (vk == 113i32 || vk == 27i32) { // q or ESC
+            running = 0i32;
+        }
+        if (vk == 114i32 && game_over != 0i32) { // r
+            chess_init();
+            white_turn = 1i32;
+            selected_sq = 0i32 - 1i32;
+            game_over = 0i32;
+            num_moves = chess_gen_moves(white_turn);
+        }
+        
+        if (game_over == 0i32) {
+            int32:cr = cursor_sq / 8i32;
+            int32:cf = cursor_sq % 8i32;
+            
+            if (vk == 119i32) { // w (up)
+                if (cr < 7i32) { cursor_sq = cursor_sq + 8i32; }
+            }
+            if (vk == 115i32) { // s (down)
+                if (cr > 0i32) { cursor_sq = cursor_sq - 8i32; }
+            }
+            if (vk == 97i32) { // a (left)
+                if (cf > 0i32) { cursor_sq = cursor_sq - 1i32; }
+            }
+            if (vk == 100i32) { // d (right)
+                if (cf < 7i32) { cursor_sq = cursor_sq + 1i32; }
+            }
+            
+            if (vk == 32i32 || vk == 10i32) { // SPACE or ENTER
+                int32:p = chess_get_piece(cursor_sq);
+                int32:owns = 0i32;
+                if (white_turn == 1i32 && p >= 1i32 && p <= 6i32) { owns = 1i32; }
+                if (white_turn == 0i32 && p >= 7i32 && p <= 12i32) { owns = 1i32; }
+                
+                if (owns == 1i32) {
+                    selected_sq = cursor_sq;
+                } else if (selected_sq != (0i32 - 1i32)) {
+                    int32:is_valid = 0i32;
+                    int32:i = 0i32;
+                    while (i < num_moves) {
+                        if (chess_get_move_from(i) == selected_sq && chess_get_move_to(i) == cursor_sq) {
+                            is_valid = 1i32;
+                            i = num_moves;
+                        } else {
+                            i = i + 1i32;
+                        }
+                    }
+                    
+                    if (is_valid == 1i32) {
+                        int32:cap = chess_apply_move(selected_sq, cursor_sq);
+                        selected_sq = 0i32 - 1i32;
+                        
+                        if (cap == 6i32) {
+                            game_over = 2i32;
+                        } else if (cap == 12i32) {
+                            game_over = 1i32;
+                        } else {
+                            white_turn = 1i32 - white_turn;
+                            num_moves = chess_gen_moves(white_turn);
+                            if (num_moves == 0i32) {
+                                game_over = 3i32;
+                            }
+                        }
+                    } else {
+                        selected_sq = 0i32 - 1i32;
+                    }
+                }
+            }
+        }
+    }
+    
+    drop(Tui.shutdown());
+    exit 0i32;
+};

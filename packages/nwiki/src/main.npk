@@ -1,0 +1,126 @@
+use "nitpick_cli.npk".*;
+use "nitpick_http.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_display.npk".*;
+use "nitpick_tui.npk".*;
+use "nitpick_input.npk".*;
+
+extern func:usleep = int32(int32:usec);
+extern func:nitpick_input_read_key = int32();
+
+func:main = int32() {
+    raw Cli.parse();
+    int64:count = raw Cli.get_positional_count();
+    
+    if (count == 0i64) {
+        print("Usage: nwiki <search_query>\n\0");
+        exit 1i32;
+    }
+    
+    string:query = raw Cli.get_positional(0i64);
+    
+    drop(http_init());
+    raw http_set_user_agent("nwiki/1.0 (https://github.com/nitpick/nwiki)\0");
+    
+    print("Searching Wikipedia for: \0"); print(query); print("...\n\0");
+    string:url = string_concat("https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=", string_concat(query, "&utf8=&format=json\0"));
+    
+    int32:res = raw http_get(url);
+    if (res != 1i32) {
+        print("Failed to fetch Wikipedia API.\n\0");
+        exit 1i32;
+    }
+    
+    string:body = raw http_body();
+    
+    // Parse the JSON into listbox string
+    string:listbox_items = "";
+    int64:num = raw Str.token_count(body, "\"title\":\"");
+    
+    if (num <= 1i64) {
+        print("No results found.\n\0");
+        exit 0i32;
+    }
+    
+    int64:i = 1i64;
+    while (i < num) {
+        string:tok = raw Str.token(body, "\"title\":\"", i);
+        string:title = raw Str.token(tok, "\",\"", 0i64);
+        
+        if (i == 1i64) {
+            listbox_items = string_concat(listbox_items, title);
+        } else {
+            listbox_items = string_concat(listbox_items, string_concat("|", title));
+        }
+        
+        i = i + 1i64;
+    }
+    
+    raw Tui.init();
+    
+    int32:selected = 0i32;
+    int32:running = 1i32;
+    
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0");
+        
+        Widget:banner = raw Tui.panel(0i32, 0i32, 80i32, 3i32, 6i32, 0i32);
+        raw Tui.draw_widget(banner);
+        
+        Widget:wtitle = raw Tui.label(2i32, 1i32, "  nwiki  |  Terminal Wikipedia  \0", 6i32, 0i32);
+        raw Tui.draw_widget(wtitle);
+        
+        Widget:entries_list = raw Tui.listbox(0i32, 3i32, 30i32, 20i32, listbox_items, selected);
+        entries_list.focused = 1i32;
+        raw Tui.draw_widget(entries_list);
+        
+        Widget:detail_panel = raw Tui.panel(30i32, 3i32, 50i32, 20i32, 7i32, 0i32);
+        raw Tui.draw_widget(detail_panel);
+        
+        // Extract the snippet for the selected item
+        string:full_content = "";
+        if (@cast<int64>(selected) < (num - 1i64)) {
+            string:sel_tok = raw Str.token(body, "\"title\":\"", @cast<int64>(selected) + 1i64);
+            string:snippet = raw Str.between(sel_tok, "\"snippet\":\"", "\",\"timestamp\"");
+            
+            // basic HTML cleanup
+            snippet = raw Str.replace_all(snippet, "<span class=\\\"searchmatch\\\">", "");
+            snippet = raw Str.replace_all(snippet, "</span>", "");
+            snippet = raw Str.replace_all(snippet, "&quot;", "\"");
+            
+            full_content = snippet;
+        }
+        
+        Widget:content_area = raw Tui.textarea(32i32, 5i32, 46i32, 16i32, full_content);
+        raw Tui.draw_widget(content_area);
+        
+        Widget:hint = raw Tui.label(2i32, 23i32, " Up/Down: Navigate | q/ESC: Quit \0", 7i32, 4i32);
+        raw Tui.draw_widget(hint);
+        
+        int32:k = nitpick_input_read_key();
+        
+        if (k == 113i32) { running = 0i32; } // q
+        else if (k == 27i32) { running = 0i32; } // ESC
+        else if (k == 258i32) { selected = selected + 1i32; }
+        else if (k == 259i32) { selected = selected - 1i32; }
+        else if (k == 2i32) { selected = selected + 1i32; } // fallback DOWN
+        else if (k == 1i32) { selected = selected - 1i32; } // fallback UP
+        
+        int32:max_sel = @cast_unchecked<int32>(num) - 2i32;
+        if (selected < 0i32) { selected = 0i32; }
+        if (selected > max_sel) { 
+            selected = max_sel; 
+        }
+        
+        int32:slp = usleep(50000i32);
+    }
+    
+    raw Tui.shutdown();
+    drop(http_cleanup());
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    raw Tui.shutdown();
+    exit 1i32;
+};

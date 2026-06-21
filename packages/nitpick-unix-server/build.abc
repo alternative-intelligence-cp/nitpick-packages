@@ -1,0 +1,13 @@
+[project]
+name = "nitpick-unix-server"
+version = "0.1.0"
+
+[target.nitpick-unix-server]
+type = "library"
+sources = ["src/nitpick_unix_server.npk"]
+
+[target.test-nitpick-unix-server]
+type = "binary"
+sources = ["tests/test_unix_server.npk"]
+deps = ["nitpick-unix-server"]
+flags = ["-I", "src", "-I", "../nitpick-unix-socket/src", "-I", "../nitpick-thread/src", "-I", "../nitpick-sync/src", "-L../nitpick-unix-socket/shim", "-lnitpick_unix_socket_shim", "-L../nitpick-test/shim", "-lnitpick_test_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_string", "-lnitpick_libc_mem", "-lnitpick_libc_io", "-lpthread"]

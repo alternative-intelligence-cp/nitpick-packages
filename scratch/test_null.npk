@@ -1,0 +1,30 @@
+use "string.npk".*;
+use "string_convert.npk".*;
+
+func:main = int32() {
+    // Write 3 bytes including a null byte
+    int64:fd = sys!!!(2i64, "test.bin", 65i64, 438i64); // SYS_OPEN = 2, O_WRONLY|O_CREAT
+    int64:buf = raw str_split("A,B", ","); // Just grab some memory, wait let's use string_from_char
+    
+    string:s = string_concat("A", string_from_char(0i32));
+    s = string_concat(s, "B");
+    
+    // length of string with null byte
+    int64:l = string_length(s);
+    println(raw int64_toString(l));
+    
+    // Let's print bytes
+    println(raw int64_toString(raw str_byte_at(s, 0i64)));
+    println(raw int64_toString(raw str_byte_at(s, 1i64)));
+    println(raw int64_toString(raw str_byte_at(s, 2i64)));
+    
+    // Now let's try writing it using writeFile built-in
+    _ = raw writeFile("test_bin.out", s);
+    
+    // And reading it back
+    string:s2 = raw readFile("test_bin.out");
+    println(raw int64_toString(string_length(s2)));
+    
+    exit 0;
+};
+func:failsafe = int32(tbb32:err) { exit 1; };

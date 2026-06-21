@@ -5,23 +5,23 @@
     "compiler_hash": ""
   },
   "targets": {
-    "test-nitpick-toml": {
-      "artifact_path": ".nitpick_make/build/test-nitpick-toml",
-      "source_hash": "fnv1a:18038966583158623148",
-      "command_hash": 9205784059032370183,
-      "source_timestamp": 18446744069053433700,
-      "build_timestamp": 1781546083,
-      "build_duration_ms": 214,
+    "nitpick-toml": {
+      "artifact_path": ".nitpick_make/build/libnitpick-toml.a",
+      "source_hash": "fnv1a:6420722808932079595",
+      "command_hash": 14695981039346656037,
+      "source_timestamp": 18446744069053916987,
+      "build_timestamp": 1782029376,
+      "build_duration_ms": 82,
       "dependencies": [],
       "implicit_inputs": []
     },
-    "nitpick-toml": {
-      "artifact_path": ".nitpick_make/build/libnitpick-toml.a",
-      "source_hash": "fnv1a:10307608572923850511",
-      "command_hash": 16057219218579305301,
-      "source_timestamp": 18446744069053433700,
-      "build_timestamp": 1781546083,
-      "build_duration_ms": 88,
+    "test-nitpick-toml": {
+      "artifact_path": ".nitpick_make/build/test-nitpick-toml",
+      "source_hash": "fnv1a:14348737266662029812",
+      "command_hash": 16989995645336292072,
+      "source_timestamp": 18446744069053916939,
+      "build_timestamp": 1782029376,
+      "build_duration_ms": 171,
       "dependencies": [],
       "implicit_inputs": []
     }

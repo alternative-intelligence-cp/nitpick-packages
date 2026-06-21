@@ -1,0 +1,37 @@
+use "string.npk".*;
+use "string_convert.npk".*;
+
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_malloc     = int64(int64:size);
+    func:nitpick_libc_mem_free       = void(int64:ptr);
+    func:nitpick_libc_mem_write_byte = void(int64:ptr, int64:offset, int32:val);
+    func:nitpick_libc_mem_read_i64   = int64(int64:ptr, int64:offset);
+}
+
+func:mem_read_byte = int32(int64:buf, int64:offset) {
+    int64:word_off = offset / 8i64;
+    int64:byte_off = offset % 8i64;
+    int64:word = nitpick_libc_mem_read_i64(buf, word_off * 8i64);
+    
+    int64:shift = byte_off * 8i64;
+    int64:val = (word >> shift) & 255i64;
+    pass @cast_unchecked<int32>(val);
+};
+
+func:main = int32() {
+    int64:buf = nitpick_libc_mem_malloc(16i64);
+    drop nitpick_libc_mem_write_byte(buf, 0i64, 10i32);
+    drop nitpick_libc_mem_write_byte(buf, 1i64, 20i32);
+    drop nitpick_libc_mem_write_byte(buf, 2i64, 30i32);
+    drop nitpick_libc_mem_write_byte(buf, 3i64, 255i32);
+    
+    // Read them back
+    println(raw int64_toString(@cast_unchecked<int64>(raw mem_read_byte(buf, 0i64))));
+    println(raw int64_toString(@cast_unchecked<int64>(raw mem_read_byte(buf, 1i64))));
+    println(raw int64_toString(@cast_unchecked<int64>(raw mem_read_byte(buf, 2i64))));
+    println(raw int64_toString(@cast_unchecked<int64>(raw mem_read_byte(buf, 3i64))));
+    
+    nitpick_libc_mem_free(buf);
+    exit 0;
+};
+func:failsafe = int32(tbb32:err) { exit 1; };

@@ -19,6 +19,8 @@ extern "nitpick_crypto_shim" {
     func:nitpick_crypto_sha1          = string(string:data);
     func:nitpick_crypto_sha256        = string(string:data);
     func:nitpick_crypto_md5           = string(string:data);
+    func:nitpick_crypto_hmac_sha1     = string(string:key, string:data);
+    func:nitpick_crypto_hmac_sha1_hex = string(string:key_hex, string:data_hex);
     func:nitpick_crypto_hmac_sha256   = string(string:key, string:data);
     func:nitpick_crypto_sha256_verify = int32(string:data, string:expected);
     func:nitpick_crypto_md5_verify    = int32(string:data, string:expected);
@@ -40,6 +42,12 @@ extern "nitpick_crypto_shim" {
     func:nitpick_crypto_sha256_update   = int32(int64:ctx, int64:buf_ptr, int64:length);
     func:nitpick_crypto_sha256_finalize = string(int64:ctx);
     func:nitpick_crypto_sha256_free     = int32(int64:ctx);
+
+    // ── BLAKE2b streaming ──────────────────────────────────────────────────────
+    func:nitpick_crypto_blake2b_init     = int64(int32:outlen);
+    func:nitpick_crypto_blake2b_update   = int32(int64:ctx, int64:buf_ptr, int64:length);
+    func:nitpick_crypto_blake2b_finalize = string(int64:ctx);
+    func:nitpick_crypto_blake2b_free     = int32(int64:ctx);
 }
 
 // ── Type wrapper ──────────────────────────────────────────────────────────────
@@ -58,6 +66,14 @@ pub Type:Crypto = {
 
     func:md5 = string(string:data) {
         pass nitpick_crypto_md5(data);
+    };
+
+    func:hmac_sha1 = string(string:key, string:data) {
+        pass nitpick_crypto_hmac_sha1(key, data);
+    };
+
+    func:hmac_sha1_hex = string(string:key_hex, string:data_hex) {
+        pass nitpick_crypto_hmac_sha1_hex(key_hex, data_hex);
     };
 
     func:hmac_sha256 = string(string:key, string:data) {
@@ -126,5 +142,27 @@ pub Type:Crypto = {
 
     func:sha256_free = int32(int64:ctx) {
         pass nitpick_crypto_sha256_free(ctx);
+    };
+
+    // ── BLAKE2b streaming ────────────────────────────────────────────────────
+
+    func:blake2b_init_len = int64(int32:outlen) {
+        pass nitpick_crypto_blake2b_init(outlen);
+    };
+
+    func:blake2b_init = int64() {
+        pass nitpick_crypto_blake2b_init(64i32);
+    };
+
+    func:blake2b_update = int32(int64:ctx, int64:buf_ptr, int64:length) {
+        pass nitpick_crypto_blake2b_update(ctx, buf_ptr, length);
+    };
+
+    func:blake2b_finalize = string(int64:ctx) {
+        pass nitpick_crypto_blake2b_finalize(ctx);
+    };
+
+    func:blake2b_free = int32(int64:ctx) {
+        pass nitpick_crypto_blake2b_free(ctx);
     };
 };

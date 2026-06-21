@@ -1,0 +1,67 @@
+use "nitpick_cli.npk".*;
+use "nitpick_str.npk".*;
+
+func:get_block = string(int64:idx) {
+    if (idx <= 0i64) { pass(" "); }
+    if (idx == 1i64) { pass("▂"); }
+    if (idx == 2i64) { pass("▃"); }
+    if (idx == 3i64) { pass("▄"); }
+    if (idx == 4i64) { pass("▅"); }
+    if (idx == 5i64) { pass("▆"); }
+    if (idx == 6i64) { pass("▇"); }
+    pass("█");
+};
+
+func:main = int32() {
+    raw Cli.parse();
+    int64:count = raw Cli.get_positional_count();
+    
+    if (count == 0i64) {
+        print("Usage: nincplot <numbers...>\n\0");
+        exit 1i32;
+    }
+    
+    // Find min and max
+    int64:min = 99999999i64;
+    int64:max = -99999999i64;
+    
+    int64:i = 0i64;
+    while (i < count) {
+        string:arg = raw Cli.get_positional(i);
+        int64:val = string_to_int(arg);
+        if (val < min) { min = val; }
+        if (val > max) { max = val; }
+        i = i + 1i64;
+    }
+    
+    int64:range = max - min;
+    if (range == 0i64) {
+        range = 1i64; // prevent div by zero
+    }
+    
+    print("Plot:\n\0");
+    
+    string:plot = "";
+    
+    i = 0i64;
+    while (i < count) {
+        string:arg = raw Cli.get_positional(i);
+        int64:val = string_to_int(arg);
+        
+        int64:idx = (val - min) * 7i64 / range;
+        string:block = raw get_block(idx);
+        plot = string_concat(plot, block);
+        
+        i = i + 1i64;
+    }
+    
+    plot = string_concat(plot, "\n\0");
+    
+    print(plot);
+    
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

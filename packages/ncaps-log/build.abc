@@ -1,0 +1,22 @@
+[target.ncaps-log]
+type = "executable"
+src = ["src/main.npk"]
+include_dirs = [
+    "src",
+    "../nitpick-tui/src",
+    "../nitpick-display/src",
+    "../nitpick-input/src",
+    "../nitpick-fs/src",
+    "../nitpick-str/src",
+    "../nitpick-cli/src"
+]
+libs = [
+    "../nitpick-display/shim/libnitpick_display_shim.a",
+    "../nitpick-input/shim/libnitpick_input.a",
+    "../nitpick-fs/shim/libnitpick_fs_shim.a",
+    "../nitpick-cli/libnitpick_cli_shim.a",
+    "../nitpick-cli/libcli_args.a",
+    "../../../nitpick-libc/shim/libnitpick_libc_string.a",
+    "../../../nitpick-libc/shim/libnitpick_libc_mem.a",
+    "../../../nitpick-libc/shim/libnitpick_libc_io.a"
+]

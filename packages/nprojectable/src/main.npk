@@ -1,0 +1,164 @@
+use "nitpick_cli.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_tui.npk".*;
+use "nitpick_display.npk".*;
+use "nitpick_input.npk".*;
+use "_proc_fork.npk".*;
+
+extern func:usleep = int32(int32:usec);
+extern func:nitpick_input_read_key = int32();
+
+func:setpos = NIL(int32:x, int32:y) {
+    print("\x1b[\0");
+    print(string_from_int(@cast<int64>(y)));
+    print(";\0");
+    print(string_from_int(@cast<int64>(x)));
+    print("H\0");
+    pass NIL;
+};
+
+func:main = int32() {
+    int64:status = raw libc_system("ls -1 -p > /tmp/nproj_ls.txt\0");
+    
+    int32:exists = raw fs_exists("/tmp/nproj_ls.txt\0");
+    if (exists != 1i32) {
+        print("Error: Could not list directory.\n\0");
+        exit 1i32;
+    }
+    
+    string:out = raw fs_read_file("/tmp/nproj_ls.txt\0");
+    string:listbox_items = raw Str.replace_all(out, "\n", "|");
+    if (string_ends_with(listbox_items, "|")) {
+        int64:len = string_length(listbox_items);
+        listbox_items = string_substring(listbox_items, 0i64, len - 1i64);
+    }
+    
+    int64:num_files = raw Str.token_count(listbox_items, "|");
+    
+    string:preview_content = "";
+    string:preview_filename = "";
+    
+    raw Tui.init();
+    
+    int32:selected = 0i32;
+    int32:running = 1i32;
+    
+    while (running == 1i32) {
+        print("\x1b[2J\x1b[H\0");
+        
+        Widget:banner = raw Tui.panel(0i32, 0i32, 80i32, 3i32, 6i32, 0i32);
+        raw Tui.draw_widget(banner);
+        
+        Widget:wtitle = raw Tui.label(2i32, 1i32, "  nprojectable  |  Project Manager  \0", 6i32, 0i32);
+        raw Tui.draw_widget(wtitle);
+        
+        Widget:left_panel = raw Tui.listbox(0i32, 3i32, 30i32, 30i32, listbox_items, selected);
+        left_panel.focused = 1i32;
+        raw Tui.draw_widget(left_panel);
+        
+        Widget:right_panel = raw Tui.panel(31i32, 3i32, 49i32, 30i32, 7i32, 0i32);
+        raw Tui.draw_widget(right_panel);
+        
+        if (string_is_empty(preview_filename)) {
+            raw setpos(34i32, 5i32);
+            print("Press Enter to preview a file.\0");
+        } else {
+            raw setpos(33i32, 4i32);
+            print("\x1b[1m\0"); print(preview_filename); print("\x1b[0m\0");
+            
+            raw setpos(33i32, 5i32);
+            print("-------------------------------------------\0");
+            
+            int64:num_lines = raw Str.token_count(preview_content, "\n");
+            int64:i = 0i64;
+            till(26, 1) {
+                if (i >= num_lines) {} else {
+                    raw setpos(33i32, 6i32 + @cast_unchecked<int32>(i));
+                    string:line = raw Str.token(preview_content, "\n", i);
+                    line = raw Str.replace_all(line, "\t", "    ");
+                    line = raw Str.replace_all(line, "\r", "");
+                    
+                    if (string_length(line) > 44i64) {
+                        line = string_substring(line, 0i64, 41i64);
+                        line = string_concat(line, "...\0");
+                    }
+                    print(line);
+                    i = i + 1i64;
+                }
+            }
+        }
+        
+        Widget:hint = raw Tui.label(2i32, 34i32, " Up/Down: Navigate | Enter: Preview | q/ESC: Quit \0", 7i32, 4i32);
+        raw Tui.draw_widget(hint);
+        
+        int32:k = nitpick_input_read_key();
+        
+        if (k == 113i32) { running = 0i32; } // q
+        else if (k == 27i32) { running = 0i32; } // ESC
+        else if (k == 258i32) { selected = selected + 1i32; }
+        else if (k == 259i32) { selected = selected - 1i32; }
+        else if (k == 2i32) { selected = selected + 1i32; } // fallback DOWN
+        else if (k == 1i32) { selected = selected - 1i32; } // fallback UP
+        else if (k == 10i32) { // Enter
+            string:filename = raw Str.token(listbox_items, "|", @cast<int64>(selected));
+            if (string_ends_with(filename, "/")) {
+                preview_filename = filename;
+                preview_content = "<Directory>\0";
+            } else {
+                int32:f_exists = raw fs_exists(filename);
+                if (f_exists == 1i32) {
+                    preview_filename = filename;
+                    string:f_content = raw fs_read_file(filename);
+                    if (string_is_empty(string_trim(f_content))) {
+                        preview_content = "<Empty File>\0";
+                    } else {
+                        preview_content = f_content;
+                    }
+                } else {
+                    preview_filename = filename;
+                    preview_content = "<File not found or access denied>\0";
+                }
+            }
+        }
+        else if (k == 13i32) { // CR
+            string:filename = raw Str.token(listbox_items, "|", @cast<int64>(selected));
+            if (string_ends_with(filename, "/")) {
+                preview_filename = filename;
+                preview_content = "<Directory>\0";
+            } else {
+                int32:f_exists = raw fs_exists(filename);
+                if (f_exists == 1i32) {
+                    preview_filename = filename;
+                    string:f_content = raw fs_read_file(filename);
+                    if (string_is_empty(string_trim(f_content))) {
+                        preview_content = "<Empty File>\0";
+                    } else {
+                        preview_content = f_content;
+                    }
+                } else {
+                    preview_filename = filename;
+                    preview_content = "<File not found or access denied>\0";
+                }
+            }
+        }
+        else {}
+        
+        int32:max_sel = @cast_unchecked<int32>(num_files) - 1i32;
+        if (selected < 0i32) { selected = 0i32; }
+        if (selected > max_sel) { selected = max_sel; }
+        
+        int32:slp = usleep(50000i32);
+    }
+    
+    raw Tui.shutdown();
+    raw fs_remove("/tmp/nproj_ls.txt\0");
+    
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    raw Tui.shutdown();
+    raw fs_remove("/tmp/nproj_ls.txt\0");
+    exit 1i32;
+};

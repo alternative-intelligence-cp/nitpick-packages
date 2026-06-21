@@ -1,0 +1,125 @@
+// ndu - Nitpick Disk Usage
+use "sys.npk".*;
+use "string_convert.npk".*;
+
+extern "nitpick_libc_mem" {
+    func:nitpick_libc_mem_malloc      = int64(int64:size);
+    func:nitpick_libc_mem_free        = void(int64:ptr);
+    func:nitpick_libc_mem_read_i64    = int64(int64:ptr, int64:offset);
+    func:nitpick_libc_mem_read_byte   = int32(int64:ptr, int64:offset);
+}
+
+func:ndu_walk = int64(int64:dirfd) {
+    int64:total_blocks = 0i64;
+    int64:buf = nitpick_libc_mem_malloc(8192i64);
+    int64:statbuf = nitpick_libc_mem_malloc(256i64);
+    
+    int64:AT_SYMLINK_NOFOLLOW = 256i64;
+    int64:O_RDONLY = 0i64;
+    int64:O_DIRECTORY = 65536i64;
+    int64:O_CLOEXEC = 524288i64;
+    
+    while (true) {
+        int64:nread = sys!!!(217i64, dirfd, buf, 8192i64);
+        if (nread <= 0i64) {
+            break;
+        }
+        
+        int64:bpos = 0i64;
+        while (bpos < nread) {
+            int32:reclen_lo = nitpick_libc_mem_read_byte(buf, bpos + 16i64);
+            int32:reclen_hi = nitpick_libc_mem_read_byte(buf, bpos + 17i64);
+            int64:d_reclen = @cast_unchecked<int64>(reclen_lo + (reclen_hi * 256i32));
+            
+            int64:d_name_ptr = buf + bpos + 19i64;
+            
+            int32:c0 = nitpick_libc_mem_read_byte(buf, bpos + 19i64);
+            int32:c1 = nitpick_libc_mem_read_byte(buf, bpos + 20i64);
+            int32:c2 = nitpick_libc_mem_read_byte(buf, bpos + 21i64);
+            
+            int32:skip = 0i32;
+            if (c0 == 46i32) {
+                if (c1 == 0i32) {
+                    skip = 1i32;
+                }
+                if (c1 == 46i32) {
+                    if (c2 == 0i32) {
+                        skip = 1i32;
+                    }
+                }
+            }
+            
+            if (skip == 0i32) {
+                int64:res = sys!!!(262i64, dirfd, d_name_ptr, statbuf, AT_SYMLINK_NOFOLLOW);
+                if (res == 0i64) {
+                    int64:st_blocks = nitpick_libc_mem_read_i64(statbuf, 64i64);
+                    int64:st_mode_ext = nitpick_libc_mem_read_i64(statbuf, 24i64);
+                    int64:st_mode = st_mode_ext & 4294967295i64;
+                    
+                    total_blocks = total_blocks + st_blocks;
+                    
+                    if ((st_mode & 61440i64) == 16384i64) {
+                        int64:sub_fd = sys!!!(257i64, dirfd, d_name_ptr, O_RDONLY + O_DIRECTORY + O_CLOEXEC);
+                        if (sub_fd >= 0i64) {
+                            int64:sub_blocks = raw ndu_walk(sub_fd);
+                            total_blocks = total_blocks + sub_blocks;
+                            _ = sys!!!(3i64, sub_fd);
+                        }
+                    }
+                }
+            }
+            
+            bpos = bpos + d_reclen;
+        }
+    }
+    
+    nitpick_libc_mem_free(buf);
+    nitpick_libc_mem_free(statbuf);
+    pass total_blocks;
+};
+
+func:print_human_readable = int32(int64:bytes) {
+    if (bytes < 1024i64) {
+        print(int64_toString(bytes));
+        println(" B");
+    } else if (bytes < 1048576i64) {
+        print(int64_toString(bytes / 1024i64));
+        println(" KB");
+    } else if (bytes < 1073741824i64) {
+        print(int64_toString(bytes / 1048576i64));
+        println(" MB");
+    } else {
+        print(int64_toString(bytes / 1073741824i64));
+        println(" GB");
+    }
+    pass 0i32;
+};
+
+func:main = int32() {
+    println("ndu v0.1 - Nitpick Disk Usage");
+    
+    int64:AT_FDCWD = -100i64;
+    int64:O_RDONLY = 0i64;
+    int64:O_DIRECTORY = 65536i64;
+    int64:O_CLOEXEC = 524288i64;
+    
+    // Default to current directory "."
+    int64:root_fd = sys!!!(257i64, AT_FDCWD, ".", O_RDONLY + O_DIRECTORY + O_CLOEXEC);
+    if (root_fd < 0i64) {
+        println("Failed to open current directory.");
+        exit 1;
+    }
+    
+    int64:blocks = raw ndu_walk(root_fd);
+    _ = sys!!!(3i64, root_fd);
+    
+    int64:bytes = blocks * 512i64;
+    print("Total size: ");
+    _ = print_human_readable(bytes);
+    
+    exit 0;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1;
+};

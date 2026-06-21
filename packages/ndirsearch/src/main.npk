@@ -1,0 +1,62 @@
+use "nitpick_cli.npk".*;
+use "nitpick_str.npk".*;
+use "nitpick_fs.npk".*;
+use "nitpick_http.npk".*;
+
+func:main = int32() {
+    raw Cli.register_option("--url\0", "-u\0", "\0");
+    raw Cli.register_option("--wordlist\0", "-w\0", "\0");
+    raw Cli.parse();
+
+    string:url = raw Cli.get_option("--url\0");
+    string:wordlist = raw Cli.get_option("--wordlist\0");
+
+    if (string_length(url) == 0i64) {
+        print("Usage: ndirsearch --url <url> --wordlist <file>\n\0");
+        exit 1i32;
+    }
+
+    if (string_length(wordlist) == 0i64) {
+        print("Usage: ndirsearch --url <url> --wordlist <file>\n\0");
+        exit 1i32;
+    }
+    
+    int32:exists = raw fs_exists(wordlist);
+    if (exists != 1i32) {
+        print("Wordlist not found.\n\0");
+        exit 1i32;
+    }
+
+    string:content = raw fs_read_file(wordlist);
+    int64:num_words = raw Str.token_count(content, "\n");
+    
+    print("Starting ndirsearch on \0"); print(url); print(" ...\n\n\0");
+    
+    drop(http_init());
+
+    int64:i = 0i64;
+    while (i < num_words) {
+        string:word = raw Str.token(content, "\n", i);
+        if (string_length(word) > 0i64) {
+            string:target = string_concat(url, string_concat("/", string_concat(word, "\0")));
+            int32:res = raw http_get(target);
+            if (res == 1i32) {
+                int32:code = raw http_status();
+                if (code == 200i32) {
+                    print("[200 OK] \0");
+                    print(target);
+                    print("\n\0");
+                }
+            }
+        }
+        i = i + 1i64;
+    }
+    
+    drop(http_cleanup());
+    print("\nScan complete.\n\0");
+    exit 0i32;
+};
+
+func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

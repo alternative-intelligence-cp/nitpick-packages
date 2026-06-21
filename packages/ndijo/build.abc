@@ -1,0 +1,20 @@
+[target.ndijo]
+type = "executable"
+src = ["src/main.npk"]
+include_dirs = [
+    "src",
+    "../nitpick-str/src",
+    "../nitpick-fs/src",
+    "../nitpick-tui/src",
+    "../nitpick-display/src",
+    "../nitpick-input/src",
+    "../../../nitpick-libc/src"
+]
+libs = [
+    "../nitpick-fs/shim/libnitpick_fs_shim.a",
+    "../nitpick-display/shim/libnitpick_display_shim.a",
+    "../nitpick-input/shim/libnitpick_input.a",
+    "../../../nitpick-libc/shim/libnitpick_libc_string.a",
+    "../../../nitpick-libc/shim/libnitpick_libc_mem.a",
+    "../../../nitpick-libc/shim/libnitpick_libc_io.a"
+]
