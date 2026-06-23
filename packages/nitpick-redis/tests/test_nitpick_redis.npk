@@ -10,45 +10,53 @@ extern "nitpick_redis_shim" {
     func:nitpick_redis_connect    = int32(string:host, int32:port);
     func:nitpick_redis_disconnect = int32(int32:conn_id);
     func:nitpick_redis_last_conn  = int32();
-
     func:nitpick_redis_set    = int32(int32:conn_id, string:key, string:value);
     func:nitpick_redis_set_ex = int32(int32:conn_id, string:key, string:value, int32:seconds);
     func:nitpick_redis_get    = int32(int32:conn_id, string:key);
     func:nitpick_redis_del    = int32(int32:conn_id, string:key);
+}
+
+extern "nitpick_redis_shim" {
     func:nitpick_redis_exists = int32(int32:conn_id, string:key);
     func:nitpick_redis_expire = int32(int32:conn_id, string:key, int32:seconds);
     func:nitpick_redis_ttl    = int64(int32:conn_id, string:key);
     func:nitpick_redis_incr   = int32(int32:conn_id, string:key);
     func:nitpick_redis_incrby = int32(int32:conn_id, string:key, int64:amount);
-
     func:nitpick_redis_reply_int = int64(int32:conn_id);
-
     func:nitpick_redis_lpush  = int32(int32:conn_id, string:key, string:value);
+}
+
+extern "nitpick_redis_shim" {
     func:nitpick_redis_rpush  = int32(int32:conn_id, string:key, string:value);
     func:nitpick_redis_lpop   = int32(int32:conn_id, string:key);
     func:nitpick_redis_rpop   = int32(int32:conn_id, string:key);
     func:nitpick_redis_llen   = int64(int32:conn_id, string:key);
     func:nitpick_redis_lrange = int32(int32:conn_id, string:key, int32:start, int32:stop);
     func:nitpick_redis_list_count = int32(int32:conn_id);
-
     func:nitpick_redis_hset    = int32(int32:conn_id, string:key, string:field, string:value);
+}
+
+extern "nitpick_redis_shim" {
     func:nitpick_redis_hget    = int32(int32:conn_id, string:key, string:field);
     func:nitpick_redis_hdel    = int32(int32:conn_id, string:key, string:field);
     func:nitpick_redis_hexists = int32(int32:conn_id, string:key, string:field);
     func:nitpick_redis_hlen    = int64(int32:conn_id, string:key);
-
     func:nitpick_redis_sadd      = int32(int32:conn_id, string:key, string:member);
     func:nitpick_redis_srem      = int32(int32:conn_id, string:key, string:member);
     func:nitpick_redis_sismember = int32(int32:conn_id, string:key, string:member);
-    func:nitpick_redis_scard     = int64(int32:conn_id, string:key);
+}
 
+extern "nitpick_redis_shim" {
+    func:nitpick_redis_scard     = int64(int32:conn_id, string:key);
     func:nitpick_redis_command   = int32(int32:conn_id, string:cmd);
     func:nitpick_redis_ping      = int32(int32:conn_id);
     func:nitpick_redis_dbsize    = int64(int32:conn_id);
     func:nitpick_redis_flushdb   = int32(int32:conn_id);
     func:nitpick_redis_select_db = int32(int32:conn_id, int32:db);
-
     // assertion helpers
+}
+
+extern "nitpick_redis_shim" {
     func:nitpick_redis_assert_true     = void(bool:val, string:msg);
     func:nitpick_redis_assert_int_eq   = void(int64:actual, int64:expected, string:msg);
     func:nitpick_redis_assert_reply_eq = void(int32:conn_id, string:expected, string:msg);

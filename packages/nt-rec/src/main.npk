@@ -12,6 +12,9 @@ extern "pty_shim" {
     func:ntrec_read_stdin = int32();
     func:ntrec_write_pty = void(string:data, int32:len);
     func:ntrec_write_stdout = void(string:data, int32:len);
+}
+
+extern "pty_shim" {
     func:ntrec_get_time_ms = int64();
     func:ntrec_sleep_ms = void(int32:ms);
     func:ntrec_check_exit = int32();

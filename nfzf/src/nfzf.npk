@@ -14,9 +14,11 @@ extern "nfzf_shim" {
     func:nfzf_tty_read_key = int32();
     func:nfzf_tty_write = void(string:s, int32:len);
     func:nfzf_tty_sleep_10ms = void();
-    
     func:nfzf_read_stdin = void();
     func:nfzf_get_line_count = int32();
+}
+
+extern "nfzf_shim" {
     func:nfzf_get_line = string(int32:i);
 }
 

@@ -25,27 +25,30 @@ extern "raw Sqlite.shim" {
     func:raw Sqlite.prepare    = int32(int32:db_id, string:sql);
     func:raw Sqlite.end_stmt   = int32(int32:stmt_id);
     func:raw Sqlite.reset      = int32(int32:stmt_id);
-
     func:raw Sqlite.bind_int    = int32(int32:stmt_id, int32:idx, int64:val);
+}
+
+extern "raw Sqlite.shim" {
     func:raw Sqlite.bind_double = int32(int32:stmt_id, int32:idx, float64:val);
     func:raw Sqlite.bind_text   = int32(int32:stmt_id, int32:idx, string:val);
     func:raw Sqlite.bind_null   = int32(int32:stmt_id, int32:idx);
-
     func:raw Sqlite.step           = int32(int32:stmt_id);
     func:raw Sqlite.column_count   = int32();
     func:raw Sqlite.column_is_null = int32(int32:col);
-
     func:raw Sqlite.begin    = int32(int32:db_id);
+}
+
+extern "raw Sqlite.shim" {
     func:raw Sqlite.commit   = int32(int32:db_id);
     func:raw Sqlite.rollback = int32(int32:db_id);
-
     func:raw Sqlite.last_insert_id = int64(int32:db_id);
     func:raw Sqlite.changes        = int32(int32:db_id);
-
     func:raw Sqlite.db   = int32();
     func:raw Sqlite.stmt = int32();
-
     func:nitpick_sqlite_assert_int_eq      = void(int32:actual, int32:expected, string:msg);
+}
+
+extern "raw Sqlite.shim" {
     func:nitpick_sqlite_assert_int64_eq    = void(int64:actual, int64:expected, string:msg);
     func:nitpick_sqlite_assert_true        = void(bool:val, string:msg);
     func:nitpick_sqlite_assert_col_text_eq = void(int32:col, string:expected, string:msg);

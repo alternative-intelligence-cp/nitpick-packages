@@ -8,6 +8,9 @@ extern "npk_runtime" {
     func:npk_shim_thread_sleep_ms = NIL(int64:ms);
     func:npk_shim_thread_sleep_ns = NIL(int64:ns);
     func:npk_shim_thread_hardware_concurrency = int32();
+}
+
+extern "npk_runtime" {
     func:npk_shim_thread_current_id = int64();
 }
 

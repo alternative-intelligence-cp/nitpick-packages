@@ -9,36 +9,43 @@ extern "nitpick_http_shim" {
     // init / cleanup
     func:nitpick_http_init    = int32();
     func:nitpick_http_cleanup = void();
-
     // request configuration
     func:nitpick_http_set_header           = void(string:header);
     func:nitpick_http_clear_headers        = void();
     func:nitpick_http_set_timeout          = void(int32:seconds);
+}
+
+extern "nitpick_http_shim" {
     func:nitpick_http_set_follow_redirects = void(int32:follow);
     func:nitpick_http_set_user_agent       = void(string:ua);
-
     // HTTP methods
     func:nitpick_http_get    = int32(string:url);
     func:nitpick_http_post   = int32(string:url, string:body);
     func:nitpick_http_put    = int32(string:url, string:body);
     func:nitpick_http_delete = int32(string:url);
+}
+
+extern "nitpick_http_shim" {
     func:nitpick_http_patch  = int32(string:url, string:body);
     func:nitpick_http_head   = int32(string:url);
-
     // response accessors
     func:nitpick_http_status           = int32();
     func:nitpick_http_response_body    = int64();
     func:nitpick_http_response_length  = int32();
     func:nitpick_http_response_headers = int64();
-    func:nitpick_http_error            = int64();
+}
 
+extern "nitpick_http_shim" {
+    func:nitpick_http_error            = int64();
     // Ollama streaming
     func:nitpick_http_enable_ollama_stream = void(int32:enable);
     func:nitpick_http_get_ollama_content = int64();
     func:nitpick_http_get_ollama_tool = int64();
     func:nitpick_http_get_ollama_arg = int64();
     func:nitpick_http_get_ollama_conf = int32();
+}
 
+extern "nitpick_http_shim" {
     // URL encoding
     func:nitpick_http_url_encode = int64(string:str);
     func:nitpick_http_last_result = int64();

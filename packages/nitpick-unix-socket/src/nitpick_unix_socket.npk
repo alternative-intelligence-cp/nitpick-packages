@@ -12,28 +12,32 @@ extern "nitpick_unix_socket_shim" {
     func:nitpick_unix_socket_connect      = int64(int64:fd, string:path);
     func:nitpick_unix_socket_accept       = int64(int64:fd);
     func:nitpick_unix_socket_send         = int64(int64:fd, string:data, int64:len);
+}
+
+extern "nitpick_unix_socket_shim" {
     func:nitpick_unix_socket_recv         = string(int64:fd, int64:max_len);
     func:nitpick_unix_socket_close        = int64(int64:fd);
     func:nitpick_unix_socket_unlink       = int64(string:path);
-
     // ── Socketpair ──────────────────────────────────────────────────────────
     func:nitpick_unix_socket_pair_a       = int64();
     func:nitpick_unix_socket_pair_b       = int64();
-
     // ── Socket options ──────────────────────────────────────────────────────
+}
+
+extern "nitpick_unix_socket_shim" {
     func:nitpick_unix_socket_set_nonblock = int64(int64:fd, int64:enable);
     func:nitpick_unix_socket_set_timeout  = int64(int64:fd, int64:seconds);
-
     // ── Peer credentials (SO_PEERCRED) ──────────────────────────────────────
     func:nitpick_unix_socket_peer_uid     = int64(int64:fd);
     func:nitpick_unix_socket_peer_gid     = int64(int64:fd);
     func:nitpick_unix_socket_peer_pid     = int64(int64:fd);
-
     // ── Datagram sockets ────────────────────────────────────────────────────
+}
+
+extern "nitpick_unix_socket_shim" {
     func:nitpick_unix_socket_create_dgram = int64();
     func:nitpick_unix_socket_sendto       = int64(int64:fd, string:data, int64:len, string:dest_path);
     func:nitpick_unix_socket_recvfrom     = string(int64:fd, int64:max_len);
-
     // ── Error reporting ─────────────────────────────────────────────────────
     func:nitpick_unix_socket_last_error   = int64();
     func:nitpick_unix_socket_error_str    = string();

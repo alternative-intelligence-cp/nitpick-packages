@@ -7,8 +7,10 @@ extern "nitpick_archive" {
     func:nitpick_tar_create_reader = int64(string:filename);
     func:nitpick_tar_reader_get = string(int64:handle, string:name);
     func:nitpick_tar_reader_close = void(int64:handle);
-
     func:nitpick_zip_create_writer = int64(string:filename);
+}
+
+extern "nitpick_archive" {
     func:nitpick_zip_writer_add = void(int64:handle, string:name, string:content);
     func:nitpick_zip_writer_close = void(int64:handle);
     func:nitpick_zip_create_reader = int64(string:filename);

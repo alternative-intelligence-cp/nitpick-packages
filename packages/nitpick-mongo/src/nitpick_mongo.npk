@@ -7,14 +7,14 @@ extern "nitpick_mongo_shim" {
     func:nitpick_mongo_cleanup    = int32();
     func:nitpick_mongo_connect    = int32(string:uri);
     func:nitpick_mongo_disconnect = int32(int32:conn_id);
-    
     func:nitpick_mongo_last_conn   = int32();
     func:nitpick_mongo_last_cursor = int32();
-    
     func:nitpick_mongo_insert = int32(int32:conn_id, string:db, string:col, string:json_doc);
+}
+
+extern "nitpick_mongo_shim" {
     func:nitpick_mongo_find   = int32(int32:conn_id, string:db, string:col, string:json_query, string:opts_json);
     func:nitpick_mongo_delete = int32(int32:conn_id, string:db, string:col, string:json_query);
-    
     func:nitpick_mongo_cursor_next  = string(int32:cursor_id);
     func:nitpick_mongo_cursor_close = int32(int32:cursor_id);
 }

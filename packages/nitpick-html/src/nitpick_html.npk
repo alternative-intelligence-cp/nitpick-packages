@@ -8,6 +8,9 @@ extern "nitpick_html_shim" {
     func:nitpick_html_node_count = int32();
     func:nitpick_html_clear      = NIL();
     func:nitpick_html_create_node = int32(string:tag);
+}
+
+extern "nitpick_html_shim" {
     func:nitpick_html_set_attr    = NIL(int32:node_idx, string:key, string:val);
     func:nitpick_html_set_text    = NIL(int32:node_idx, string:text);
     func:nitpick_html_append_child= NIL(int32:parent_idx, int32:child_idx);

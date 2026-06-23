@@ -20,6 +20,9 @@ extern "nitpick_audio" {
     func:nitpick_audio_sample_rate   = int32();
     func:nitpick_audio_samples_for_ms = int32(int32:ms);
     func:nitpick_audio_note_freq     = int32(int32:midi_note);
+}
+
+extern "nitpick_audio" {
     func:nitpick_audio_play_tone     = int32(int32:channel, int32:freq_hz, int32:waveform, int32:duration_ms);
     func:nitpick_audio_stop_channel  = int32(int32:channel);
     func:nitpick_audio_stop_all      = int32();
@@ -27,6 +30,9 @@ extern "nitpick_audio" {
     func:nitpick_audio_is_playing    = int32(int32:channel);
     func:nitpick_audio_get_volume    = int32(int32:channel);
     func:nitpick_audio_square_sample = int32(int32:phase_sample, int32:freq_hz);
+}
+
+extern "nitpick_audio" {
     func:nitpick_audio_lfsr_step     = int32(int32:state);
     func:nitpick_audio_set_envelope  = int32(int32:channel, int32:attack_ms, int32:decay_ms, int32:sustain, int32:release_ms);
     func:nitpick_audio_clear_envelope = int32(int32:channel);

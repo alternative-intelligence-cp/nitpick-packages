@@ -8,6 +8,9 @@ extern "nitpick_fs_shim" {
     func:nitpick_fs_append_file   = int32(string:path, string:data);
     func:nitpick_fs_exists        = int32(string:path);
     func:nitpick_fs_is_file       = int32(string:path);
+}
+
+extern "nitpick_fs_shim" {
     func:nitpick_fs_is_dir        = int32(string:path);
     func:nitpick_fs_file_size     = int64(string:path);
     func:nitpick_fs_modified_time = int64(string:path);
@@ -15,6 +18,9 @@ extern "nitpick_fs_shim" {
     func:nitpick_fs_rmdir         = int32(string:path);
     func:nitpick_fs_list_dir      = string(string:path);
     func:nitpick_fs_remove        = int32(string:path);
+}
+
+extern "nitpick_fs_shim" {
     func:nitpick_fs_rename        = int32(string:oldp, string:newp);
     func:nitpick_fs_copy          = int32(string:src, string:dst);
     func:nitpick_fs_get_cwd       = string();
@@ -22,6 +28,9 @@ extern "nitpick_fs_shim" {
     func:nitpick_fs_extension     = string(string:path);
     func:nitpick_fs_basename      = string(string:path);
     func:nitpick_fs_dirname       = string(string:path);
+}
+
+extern "nitpick_fs_shim" {
     func:nitpick_fs_last_result   = string();
     func:nitpick_fs_cleanup       = void();
 }

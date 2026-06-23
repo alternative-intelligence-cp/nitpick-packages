@@ -26,27 +26,31 @@ extern "nitpick_sqlite_shim" {
     func:nitpick_sqlite_prepare    = int32(int32:db_id, string:sql);
     func:nitpick_sqlite_finalize   = int32(int32:stmt_id);
     func:nitpick_sqlite_reset      = int32(int32:stmt_id);
-
     func:nitpick_sqlite_bind_int    = int32(int32:stmt_id, int32:idx, int64:val);
+}
+
+extern "nitpick_sqlite_shim" {
     func:nitpick_sqlite_bind_double = int32(int32:stmt_id, int32:idx, float64:val);
     func:nitpick_sqlite_bind_text   = int32(int32:stmt_id, int32:idx, string:val);
     func:nitpick_sqlite_bind_null   = int32(int32:stmt_id, int32:idx);
-
     func:nitpick_sqlite_step           = int32(int32:stmt_id);
     func:nitpick_sqlite_column_count   = int32();
     func:nitpick_sqlite_column_type    = int32(int32:col);
     func:nitpick_sqlite_column_int     = int64(int32:col);
+}
+
+extern "nitpick_sqlite_shim" {
     func:nitpick_sqlite_column_double  = float64(int32:col);
     func:nitpick_sqlite_column_text    = string(int32:col);
     func:nitpick_sqlite_column_is_null = int32(int32:col);
-
     func:nitpick_sqlite_begin    = int32(int32:db_id);
     func:nitpick_sqlite_commit   = int32(int32:db_id);
     func:nitpick_sqlite_rollback = int32(int32:db_id);
-
     func:nitpick_sqlite_last_insert_id = int64(int32:db_id);
-    func:nitpick_sqlite_changes        = int32(int32:db_id);
+}
 
+extern "nitpick_sqlite_shim" {
+    func:nitpick_sqlite_changes        = int32(int32:db_id);
     func:nitpick_sqlite_last_db   = int32();
     func:nitpick_sqlite_last_stmt = int32();
 }

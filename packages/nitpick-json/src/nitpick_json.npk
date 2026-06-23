@@ -12,14 +12,19 @@ extern "nitpick_json_shim" {
     func:nitpick_json_get_type    = int32(string:path);
     func:nitpick_json_has_key     = int32(string:path);
     func:nitpick_json_get_string  = string(string:path);
+}
+
+extern "nitpick_json_shim" {
     func:nitpick_json_get_int     = int64(string:path);
     func:nitpick_json_get_float   = float64(string:path);
     func:nitpick_json_get_bool    = int32(string:path);
     func:nitpick_json_array_count = int32(string:path);
     func:nitpick_json_object_get_key = string(string:path, int32:index);
-    
     // Builder API
     func:nitpick_json_parse_to_builder = int32(string:text);
+}
+
+extern "nitpick_json_shim" {
     func:nitpick_json_create_object = int32();
     func:nitpick_json_create_array  = int32();
     func:nitpick_json_create_string = int32(string:val);
@@ -27,6 +32,9 @@ extern "nitpick_json_shim" {
     func:nitpick_json_create_bool   = int32(int32:val);
     func:nitpick_json_object_set    = void(int32:obj_id, string:key, int32:child_id);
     func:nitpick_json_array_append  = void(int32:arr_id, int32:child_id);
+}
+
+extern "nitpick_json_shim" {
     func:nitpick_json_array_get_size = int32(int32:arr_id);
     func:nitpick_json_array_remove = void(int32:arr_id, int32:index);
     func:nitpick_json_serialize     = int32(int32:root_id);

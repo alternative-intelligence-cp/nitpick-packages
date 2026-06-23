@@ -8,6 +8,9 @@ extern "nitpick_semver_shim" {
     func:nitpick_semver_get_prerelease = string();
     func:nitpick_semver_get_build      = string();
     func:nitpick_semver_to_string      = string();
+}
+
+extern "nitpick_semver_shim" {
     func:nitpick_semver_compare        = int32(string:a, string:b);
     func:nitpick_semver_satisfies      = int32(string:version, string:constraint);
     func:nitpick_semver_bump_major     = string(string:version);

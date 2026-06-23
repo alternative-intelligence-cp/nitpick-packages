@@ -9,6 +9,9 @@ extern "libc" {
     func:chess_get_move_to = int32(int32:idx);
     func:chess_apply_move = int32(int32:from_sq, int32:to_sq);
     func:getchar = int32();
+}
+
+extern "libc" {
     func:printf = int32(string:fmt, int32:v1, int32:v2, int32:v3);
     func:printf_1 = int32(string:fmt, int32:v1);
 }

@@ -12,41 +12,45 @@ extern "nitpick_libc_net" {
     // creation
     func:nitpick_libc_net_socket_tcp       = int64();
     func:nitpick_libc_net_socket_udp       = int64();
-
     // options
     func:nitpick_libc_net_setsockopt_reuse = int64(int64:fd);
     func:nitpick_libc_net_set_nonblocking  = int64(int64:fd);
     func:nitpick_libc_net_set_blocking     = int64(int64:fd);
-    func:nitpick_libc_net_set_timeout      = int64(int64:fd, int64:seconds);
+}
 
+extern "nitpick_libc_net" {
+    func:nitpick_libc_net_set_timeout      = int64(int64:fd, int64:seconds);
     // bind / listen / accept / connect
     func:nitpick_libc_net_bind    = int64(int64:fd, string:addr, int64:port);
     func:nitpick_libc_net_listen  = int64(int64:fd, int64:backlog);
     func:nitpick_libc_net_accept  = int64(int64:fd);
     func:nitpick_libc_net_connect = int64(int64:fd, string:host, int64:port);
-
     // TCP send / recv
+}
+
+extern "nitpick_libc_net" {
     func:nitpick_libc_net_send     = int64(int64:fd, string:data, int64:len);
     func:nitpick_libc_net_send_str = int64(int64:fd, string:data);
     func:nitpick_libc_net_recv     = string(int64:fd, int64:max_len);
-
     // UDP sendto / recvfrom
     func:nitpick_libc_net_sendto   = int64(int64:fd, string:data, int64:len, string:host, int64:port);
     func:nitpick_libc_net_recvfrom = string(int64:fd);
-
     // poll
+}
+
+extern "nitpick_libc_net" {
     func:nitpick_libc_net_poll_read  = int64(int64:fd, int64:timeout_ms);
     func:nitpick_libc_net_poll_write = int64(int64:fd, int64:timeout_ms);
-
     // close / error
     func:nitpick_libc_net_close       = int64(int64:fd);
     func:nitpick_libc_net_errno       = int64();
     func:nitpick_libc_net_strerror    = string();
     func:nitpick_libc_net_recv_length = int64();
+}
 
+extern "nitpick_libc_net" {
     // DNS
     func:nitpick_libc_net_resolve = string(string:hostname);
-
     // peer info
     func:nitpick_libc_net_getpeername = string(int64:fd);
     func:nitpick_libc_net_getpeerport = int64(int64:fd);

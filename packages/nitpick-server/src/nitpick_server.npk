@@ -2,6 +2,16 @@
 
 use "../../../../libn/src/syscall/syscall_numbers.npk".*;
 use "../../../../libn/src/syscall/posix_constants.npk".*;
+use "../../nitpick-str/src/nitpick_str.npk".*;
+
+extern "nitpick_libc_string" {
+    func:str_to_int = int64(string:s);
+}
+
+extern "nitpick_libc_alloc" {
+    func:npk_core_alloc = int64(int64:size);
+    func:npk_core_dalloc = int32(int64:ptr);
+}
 
 pub struct:Request = {
     string:method;
@@ -11,6 +21,9 @@ pub struct:Request = {
     string:body;
     string:raw_req;
     string:headers_raw;
+    int64:body_ptr;
+    int64:body_len;
+    int64:buf_addr;
 };
 
 pub Rules<int64>:ValidNetworkBufferSize = { $ >= 1, $ <= 65536 };
@@ -87,28 +100,74 @@ pub Type:Server = {
     };
 
     func:read_req = Request(int64:fd) {
-        limit<ValidNetworkBufferSize> int64:buf_size = 16384i64;
-        int8->:buf_ptr = alloc(buf_size);
-        int64:buf_addr = asm!!!<int64>("x86_64", "movq $1, $0", "=r,r", buf_ptr);
-        Result<int64>:recv_res = sys!!(SYS_RECVFROM, fd, buf_addr, buf_size, 0i64, 0i64, 0i64);
+        int64:buf_size = 134217728i64; // 128MB
+        int64:buf_addr = npk_core_alloc(buf_size + 1i64);
+        int8->:buf_ptr = @cast_unchecked<int8->>(buf_addr);
         
         Request:req = Request{
-            method: "",
-            path: "",
-            query: "",
-            version: "",
-            body: "",
-            raw_req: "",
-            headers_raw: ""
+            method: "", path: "", query: "", version: "",
+            body: "", raw_req: "", headers_raw: "", body_ptr: 0i64, body_len: 0i64, buf_addr: buf_addr
         };
         
-        if (recv_res.is_error) { pass req; }
-        if (recv_res.value <= 0i64) { pass req; }
+        string:raw_str = "";
         
-        int64:read_len = recv_res.value;
-        buf_ptr[read_len] = 0i8; // null terminate
+        int64:bytes_read = sys!!(SYS_RECVFROM, fd, buf_addr, buf_size, 0i64, 0i64, 0i64).value;
+        if (bytes_read > 0i64) {
+            buf_ptr[bytes_read] = 0i8;
+            
+            int64:hdr_end = -1i64;
+            int64:i = 0i64;
+            while (i < bytes_read - 3i64) {
+                if (buf_ptr[i] == 13i8 && buf_ptr[i+1i64] == 10i8 && buf_ptr[i+2i64] == 13i8 && buf_ptr[i+3i64] == 10i8) {
+                    hdr_end = i;
+                    break;
+                }
+                i = i + 1i64;
+            }
+            
+            if (hdr_end > 0i64) {
+                int64:body_start = hdr_end + 4i64;
+                int8:old_char = buf_ptr[body_start];
+                buf_ptr[body_start] = 0i8;
+                raw_str = string_from_cstr(buf_ptr);
+                buf_ptr[body_start] = old_char;
+                
+                int64:cl_start = string_index_of(raw_str, "Content-Length: ");
+                if (cl_start >= 0i64) {
+                    cl_start = cl_start + 16i64;
+                    string:cl_sub = string_substring(raw_str, cl_start, string_length(raw_str));
+                    int64:cl_end = string_index_of(cl_sub, "\r\n");
+                    if (cl_end >= 0i64) {
+                        int64:content_len = 0i64;
+                        int64:cl_i = 0i64;
+                        while (cl_i < cl_end) {
+                            int64:c = buf_ptr[cl_start + cl_i] => int64;
+                            if (c >= 48i64 && c <= 57i64) {
+                                content_len = content_len * 10i64 + (c - 48i64);
+                            }
+                            cl_i = cl_i + 1i64;
+                        }
+                        
+                        int64:total_expected = hdr_end + 4i64 + content_len;
+                        println("DEBUG: content_len=" + string_from_int(content_len) + " total_expected=" + string_from_int(total_expected) + " bytes_read=" + string_from_int(bytes_read));
+                    
+                        // Loop until we have the full body
+                        while (bytes_read < total_expected && bytes_read < buf_size) {
+                            int64:rem = buf_size - bytes_read;
+                            int64:dest = buf_addr + bytes_read;
+                            int64:more = sys!!(SYS_RECVFROM, fd, dest, rem, 0i64, 0i64, 0i64).value;
+                            if (more <= 0i64) { break; }
+                            bytes_read = bytes_read + more;
+                        }
+                        
+                        req.body = "";
+                        req.body_ptr = buf_addr + body_start;
+                        req.body_len = bytes_read - body_start;
+                    }
+                }
+            }
+        }
         
-        string:raw_str = string_from_cstr(buf_ptr);
         req.raw_req = raw_str;
         
         // Simple HTTP parser
@@ -125,6 +184,7 @@ pub Type:Server = {
                     req.version = string_substring(path_ver, space2 + 1i64, string_length(path_ver));
                 }
             }
+            req.headers_raw = string_substring(raw_str, line1_end + 2i64, string_length(raw_str));
         }
         
         if (string_length(req.path) > 0i64) {
@@ -134,12 +194,6 @@ pub Type:Server = {
                 req.path = string_substring(full_path, 0i64, qidx);
                 req.query = string_substring(full_path, qidx + 1i64, string_length(full_path));
             }
-        }
-        
-        int64:hdr_end = string_index_of(raw_str, "\r\n\r\n");
-        if (hdr_end >= 0i64) {
-            req.body = string_substring(raw_str, hdr_end + 4i64, string_length(raw_str));
-            req.headers_raw = string_substring(raw_str, line1_end + 2i64, hdr_end);
         }
         
         pass req;

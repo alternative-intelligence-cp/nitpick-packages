@@ -18,43 +18,46 @@ extern "nitpick_postgres_shim" {
     func:nitpick_postgres_connect    = int32(string:conninfo);
     func:nitpick_postgres_disconnect = int32(int32:conn_id);
     func:nitpick_postgres_last_conn  = int32();
-
     // execute (no result set)
     func:nitpick_postgres_exec = int32(int32:conn_id, string:sql);
-
     // parameter staging
+}
+
+extern "nitpick_postgres_shim" {
     func:nitpick_postgres_param_clear      = int32();
     func:nitpick_postgres_param_add_text   = int32(string:val);
     func:nitpick_postgres_param_add_int    = int32(int64:val);
     func:nitpick_postgres_param_add_double = int32(float64:val);
     func:nitpick_postgres_param_add_null   = int32();
-
     // parameterized query / execute
     func:nitpick_postgres_query   = int32(int32:conn_id, string:sql);
-    func:nitpick_postgres_execute = int32(int32:conn_id, string:sql);
+}
 
+extern "nitpick_postgres_shim" {
+    func:nitpick_postgres_execute = int32(int32:conn_id, string:sql);
     // result navigation
     func:nitpick_postgres_next_row     = int32(int32:conn_id);
     func:nitpick_postgres_row_count    = int32(int32:conn_id);
     func:nitpick_postgres_column_count = int32(int32:conn_id);
-
     // column accessors
     func:nitpick_postgres_column_int     = int64(int32:conn_id, int32:col);
+}
+
+extern "nitpick_postgres_shim" {
     func:nitpick_postgres_column_double  = float64(int32:conn_id, int32:col);
     func:nitpick_postgres_column_is_null = int32(int32:conn_id, int32:col);
-
     // result management
     func:nitpick_postgres_clear_result = int32(int32:conn_id);
     func:nitpick_postgres_affected_rows = int64(int32:conn_id);
-
     // transactions
     func:nitpick_postgres_begin    = int32(int32:conn_id);
+}
+
+extern "nitpick_postgres_shim" {
     func:nitpick_postgres_commit   = int32(int32:conn_id);
     func:nitpick_postgres_rollback = int32(int32:conn_id);
-
     // utility
     func:nitpick_postgres_status = int32(int32:conn_id);
-
     // LISTEN / NOTIFY
     func:nitpick_postgres_listen = int32(int32:conn_id, string:channel);
     func:nitpick_postgres_notify = int32(int32:conn_id, string:channel, string:payload);

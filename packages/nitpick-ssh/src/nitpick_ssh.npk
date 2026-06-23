@@ -17,39 +17,49 @@ extern "nitpick_ssh_shim" {
     func:nitpick_ssh_buf_clear        = void(int64:handle);
     func:nitpick_ssh_buf_write_byte   = int64(int64:handle, int32:val);
     func:nitpick_ssh_buf_read_byte    = int32(int64:handle, int64:pos);
+}
+
+extern "nitpick_ssh_shim" {
     func:nitpick_ssh_buf_write_bytes  = int64(int64:handle, string:src, int32:count);
     func:nitpick_ssh_buf_write_from   = int64(int64:dst, int64:src);
     func:nitpick_ssh_buf_extract_str  = string(int64:handle, int64:offset, int64:count);
     func:nitpick_ssh_buf_equals_str   = int32(int64:handle, string:expected);
-
     // Wire format encoding (write to buffer, return possibly-reallocated handle)
     func:nitpick_ssh_encode_uint32      = int64(int64:handle, int64:val);
     func:nitpick_ssh_decode_uint32      = int64(int64:handle, int64:offset);
+}
+
+extern "nitpick_ssh_shim" {
     func:nitpick_ssh_encode_string      = int64(int64:handle, string:data);
     func:nitpick_ssh_decode_string_len  = int64(int64:handle, int64:offset);
     func:nitpick_ssh_decode_string_data = string(int64:handle, int64:offset);
     func:nitpick_ssh_encode_byte        = int64(int64:handle, int32:val);
     func:nitpick_ssh_encode_bool        = int64(int64:handle, int32:val);
     func:nitpick_ssh_encode_name_list   = int64(int64:handle, string:csv);
-
     // Packet operations
+}
+
+extern "nitpick_ssh_shim" {
     func:nitpick_ssh_packet_pad_length  = int32(int64:payload_len, int64:block_size);
     func:nitpick_ssh_packet_encode      = int64(int64:payload_handle);
     func:nitpick_ssh_packet_decode      = int64(int64:raw_handle);
-
     // mpint (RFC 4251 §5) — big integer wire format
     func:nitpick_ssh_encode_mpint       = int64(int64:dst, int64:src_buf);
     func:nitpick_ssh_decode_mpint       = int64(int64:handle, int64:offset);
     func:nitpick_ssh_mpint_size         = int64(int64:handle, int64:offset);
+}
 
+extern "nitpick_ssh_shim" {
     // Binary buffer operations
     func:nitpick_ssh_buf_write_buf_as_string = int64(int64:dst, int64:src);
     func:nitpick_ssh_buf_compare        = int32(int64:a, int64:b);
     func:nitpick_ssh_buf_clone          = int64(int64:handle);
     func:nitpick_ssh_buf_extract_range  = int64(int64:handle, int64:offset, int64:count);
-
     // Type conversion (int64 <-> decimal string)
     func:nitpick_ssh_int64_to_str       = string(int64:val);
+}
+
+extern "nitpick_ssh_shim" {
     func:nitpick_ssh_str_to_int64       = int64(string:s);
 }
 
@@ -61,37 +71,43 @@ extern "nitpick_ssh_crypto_shim" {
     // CSPRNG
     func:ssh_crypto_random_fill     = int64(int64:handle, int32:count);
     func:ssh_crypto_random_uint32   = int64();
-
     // AES-CTR mode
     func:ssh_crypto_aes_ctr_create  = int64(int64:key_buf, int64:iv_buf);
     func:ssh_crypto_aes_ctr_process = int64(int64:state, int64:in_buf);
     func:ssh_crypto_aes_ctr_free    = void(int64:state);
+}
 
+extern "nitpick_ssh_crypto_shim" {
     // SHA-256 / HMAC-SHA256 (raw 32-byte output buffers)
     func:ssh_crypto_sha256_raw      = int64(int64:in_buf);
     func:ssh_crypto_hmac_sha256_raw = int64(int64:key_buf, int64:data_buf);
-
     // Diffie-Hellman Group 14
     func:ssh_crypto_dh_generate     = int64(int32:group);
     func:ssh_crypto_dh_public_key   = int64(int64:dh_handle);
     func:ssh_crypto_dh_shared_secret = int64(int64:dh_handle, int64:peer_pub_buf);
-    func:ssh_crypto_dh_free         = void(int64:dh_handle);
+}
 
+extern "nitpick_ssh_crypto_shim" {
+    func:ssh_crypto_dh_free         = void(int64:dh_handle);
     // Public key / signature verification
     func:ssh_crypto_rsa_verify        = int64(int64:pubkey_buf, int64:sig_buf, int64:hash_buf);
     func:ssh_crypto_ed25519_verify    = int64(int64:pubkey_buf, int64:sig_buf, int64:msg_buf);
     func:ssh_crypto_key_type          = string(int64:pubkey_buf);
     func:ssh_crypto_extract_sig_blob  = int64(int64:sig_buf);
     func:ssh_crypto_base64_decode     = int64(string:input);
+}
 
+extern "nitpick_ssh_crypto_shim" {
     // Phase 0.8.2 — Signing + Private Key Parsing
     func:ssh_crypto_rsa_sign          = int64(int64:privkey_handle, int64:data_buf);
     func:ssh_crypto_ed25519_sign      = int64(int64:privkey_handle, int64:data_buf);
     func:ssh_crypto_parse_pem_privkey = int64(string:pem_text);
     func:ssh_crypto_privkey_type      = string(int64:privkey_handle);
     func:ssh_crypto_privkey_free      = void(int64:privkey_handle);
-
     // Known hosts management
+}
+
+extern "nitpick_ssh_crypto_shim" {
     func:ssh_crypto_known_hosts_load  = int64(string:path);
     func:ssh_crypto_known_hosts_check = int64(int64:kh_buf, string:host, string:key_type, int64:key_blob);
     func:ssh_crypto_known_hosts_add   = int64(string:path, string:host, string:key_type, string:key_b64);
@@ -107,7 +123,9 @@ extern "nitpick_ssh_shim" {
     func:nitpick_ssh_net_recv_exact   = int64(int64:fd, int64:count);
     func:nitpick_ssh_net_recv_line    = string(int64:fd);
     func:nitpick_ssh_net_set_timeout  = int64(int64:fd, int64:seconds);
+}
 
+extern "nitpick_ssh_shim" {
     // Security hardening (Phase 1.0.0)
     func:nitpick_ssh_buf_compare_ct   = int32(int64:a, int64:b);
     func:nitpick_ssh_buf_secure_wipe  = void(int64:handle);

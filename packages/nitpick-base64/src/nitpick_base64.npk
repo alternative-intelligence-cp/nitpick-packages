@@ -8,6 +8,9 @@ extern "nitpick_base64_shim" {
     func:nitpick_base64_decode         = string(string:encoded);
     func:nitpick_base64_last_result     = string();
     func:nitpick_base64_decode_length  = int64();
+}
+
+extern "nitpick_base64_shim" {
     func:nitpick_base64_encoded_length = int64(int32:input_len);
     func:nitpick_base64_is_valid       = int32(string:str);
     func:nitpick_base64_cleanup        = void();

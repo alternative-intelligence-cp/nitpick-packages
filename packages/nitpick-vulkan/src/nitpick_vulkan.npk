@@ -11,19 +11,21 @@ extern "nitpick_vulkan_shim" {
     func:nitpick_vk_poll_events = int32();
     func:nitpick_vk_cleanup     = void();
     func:nitpick_vk_get_error   = string();
-
     func:nitpick_vk_load_shader = int32(string:filename);
-    func:nitpick_vk_build_pipeline = int32(int32:vert_id, int32:frag_id);
+}
 
+extern "nitpick_vulkan_shim" {
+    func:nitpick_vk_build_pipeline = int32(int32:vert_id, int32:frag_id);
     func:nitpick_vk_buf_clear = void();
     func:nitpick_vk_buf_push = void(flt32:val);
     func:nitpick_vk_buf_push3 = void(flt32:a, flt32:b, flt32:c);
     func:nitpick_vk_buf_push6 = void(flt32:a, flt32:b, flt32:c, flt32:d, flt32:e, flt32:f);
     func:nitpick_vk_buf_count = int32();
-
     func:nitpick_vk_gen_buffer = int32();
-    func:nitpick_vk_upload_vertex_buffer = void(int32:id);
+}
 
+extern "nitpick_vulkan_shim" {
+    func:nitpick_vk_upload_vertex_buffer = void(int32:id);
     func:nitpick_vk_cmd_bind_pipeline = void(int32:id);
     func:nitpick_vk_cmd_bind_vertex_buffer = void(int32:id);
     func:nitpick_vk_draw = void(int32:count);

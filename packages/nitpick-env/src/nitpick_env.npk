@@ -8,6 +8,9 @@ extern "nitpick_env_shim" {
     func:nitpick_env_get_or = string(string:name, string:default_val);
     func:nitpick_env_count  = int32();
     func:nitpick_env_home   = string();
+}
+
+extern "nitpick_env_shim" {
     func:nitpick_env_path   = string();
     func:nitpick_env_user   = string();
     func:nitpick_env_shell  = string();

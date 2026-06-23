@@ -11,10 +11,12 @@ extern "libc" {
     func:nigrep_push_key = void(int32:key);
     func:nigrep_pop_key = int32();
     func:nigrep_spawn_workers = void();
-    
     // Task Queue C functions
     func:nigrep_push_task = void(string:path);
     func:nigrep_pop_task = string();
+}
+
+extern "libc" {
     func:nigrep_set_tasks_done = void(int32:done);
     func:nigrep_clear_tasks = void();
     func:nigrep_free_task = void(string:task);

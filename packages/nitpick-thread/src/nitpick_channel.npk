@@ -8,6 +8,9 @@ extern "npk_runtime" {
     func:npk_shim_channel_try_send = int32(int64:handle, int64:value);
     func:npk_shim_channel_recv = int64(int64:handle);
     func:npk_shim_channel_try_recv = int64(int64:handle);
+}
+
+extern "npk_runtime" {
     func:npk_shim_channel_count = int32(int64:handle);
     func:npk_shim_channel_capacity = int32(int64:handle);
     func:npk_shim_channel_get_mode = int32(int64:handle);

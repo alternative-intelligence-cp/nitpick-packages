@@ -6,10 +6,10 @@ version = "0.11.2"
 type = "library"
 sources = ["src/nitpick_crypto.npk"]
 deps = []
-flags = ["-L.", "-lnitpick_crypto_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+flags = ["-L/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-crypto", "-lnitpick_crypto_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
 
 [target.test-nitpick-crypto]
 type = "binary"
 sources = ["tests/test_nitpick_crypto.npk"]
 deps = []
-flags = ["-I", "src", "-L.", "-lnitpick_crypto_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]
+flags = ["-I", "src", "-L/home/randy/Workspace/REPOS/nitpick-packages/packages/nitpick-crypto", "-lnitpick_crypto_shim", "-L../../../nitpick-libc/shim", "-lnitpick_libc_mem", "-lnitpick_libc_io"]

@@ -11,14 +11,15 @@ extern "nitpick_csv_shim" {
     func:nitpick_csv_num_cols = int32();
     func:nitpick_csv_get_s    = int32(int32:row, int32:col);
     func:nitpick_csv_last_result = string();
-
     // writing
+}
+
+extern "nitpick_csv_shim" {
     func:nitpick_csv_write_begin    = void();
     func:nitpick_csv_write_field    = void(string:value);
     func:nitpick_csv_write_row_end  = void();
     func:nitpick_csv_write_result   = string();
     func:nitpick_csv_write_length   = int32();
-
     // cleanup
     func:nitpick_csv_cleanup = void();
 }

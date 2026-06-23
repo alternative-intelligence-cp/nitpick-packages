@@ -13,34 +13,41 @@ extern "nitpick_opengl_shim" {
     func:aria_gl_quit        = void();
     func:aria_gl_swap        = void();
     func:aria_gl_set_vsync   = int32(int32:on);
-
     // viewport + clear
     func:aria_gl_viewport    = void(int32:x, int32:y, int32:w, int32:h);
+}
+
+extern "nitpick_opengl_shim" {
     func:aria_gl_clear_color = void(flt32:r, flt32:g, flt32:b, flt32:a);
     func:aria_gl_clear       = void(int32:mask);
     func:aria_gl_enable      = void(int32:cap);
     func:aria_gl_disable     = void(int32:cap);
-
     // shaders
     func:aria_gl_create_shader     = int32(int32:shader_type);
     func:aria_gl_shader_source     = void(int32:shader, string:source);
+}
+
+extern "nitpick_opengl_shim" {
     func:aria_gl_compile_shader    = void(int32:shader);
     func:aria_gl_get_shader_status = int32(int32:shader);
     func:aria_gl_print_shader_log  = void(int32:shader);
     func:aria_gl_delete_shader     = void(int32:shader);
-
     // programs
     func:aria_gl_create_program     = int32();
     func:aria_gl_attach_shader      = void(int32:program, int32:shader);
+}
+
+extern "nitpick_opengl_shim" {
     func:aria_gl_link_program       = void(int32:program);
     func:aria_gl_get_program_status = int32(int32:program);
     func:aria_gl_use_program        = void(int32:program);
     func:aria_gl_delete_program     = void(int32:program);
     func:aria_gl_print_program_log = void(int32:program);
-
     // compile+link helper
     func:aria_gl_build_program = int32(string:vert_src, string:frag_src);
+}
 
+extern "nitpick_opengl_shim" {
     // buffers
     func:aria_gl_gen_vao      = int32();
     func:aria_gl_bind_vao     = void(int32:vao);
@@ -48,7 +55,9 @@ extern "nitpick_opengl_shim" {
     func:aria_gl_gen_buffer   = int32();
     func:aria_gl_bind_buffer  = void(int32:target, int32:buffer);
     func:aria_gl_delete_buffer = void(int32:buffer);
+}
 
+extern "nitpick_opengl_shim" {
     // float buffer (scratch for vertex data)
     func:aria_gl_buf_clear    = void();
     func:aria_gl_buf_push     = void(flt32:val);
@@ -56,22 +65,29 @@ extern "nitpick_opengl_shim" {
     func:aria_gl_buf_push6    = void(flt32:a, flt32:b, flt32:c,
                                      flt32:d, flt32:e, flt32:f);
     func:aria_gl_buf_count    = int32();
-    func:aria_gl_buffer_data_f = void(int32:target, int32:usage);
+}
 
+extern "nitpick_opengl_shim" {
+    func:aria_gl_buffer_data_f = void(int32:target, int32:usage);
     // vertex attributes
     func:aria_gl_vertex_attrib_pointer  = void(int32:index, int32:size,
                                                int32:stride_floats, int32:offset_floats);
     func:aria_gl_enable_vertex_attrib  = void(int32:index);
     func:aria_gl_disable_vertex_attrib = void(int32:index);
     func:aria_gl_vertex_attrib_divisor = void(int32:index, int32:divisor);
+}
+
+extern "nitpick_opengl_shim" {
     func:aria_gl_draw_arrays      = void(int32:mode, int32:first, int32:count);
     func:aria_gl_draw_arrays_instanced = void(int32:mode, int32:first, int32:count, int32:instancecount);
     func:aria_gl_draw_elements    = void(int32:mode, int32:count, int32:type, int32:indices);
     func:aria_gl_draw_elements_instanced = void(int32:mode, int32:count, int32:type, int32:indices, int32:instancecount);
-
     // uniforms
     func:aria_gl_get_uniform_location = int32(int32:program, string:name);
     func:aria_gl_uniform1i           = void(int32:loc, int32:val);
+}
+
+extern "nitpick_opengl_shim" {
     func:aria_gl_uniform1f           = void(int32:loc, flt32:val);
     func:aria_gl_uniform3f           = void(int32:loc, flt32:x, flt32:y, flt32:z);
     func:aria_gl_uniform4f           = void(int32:loc, flt32:x, flt32:y, flt32:z, flt32:w);
@@ -79,31 +95,39 @@ extern "nitpick_opengl_shim" {
     func:aria_gl_uniform_mat4        = void(int32:loc,
                                             flt32:m0,  flt32:m1,  flt32:m2,  flt32:m3,
                                             flt32:m4,  flt32:m5,  flt32:m6,  flt32:m7,
+}
+
+extern "nitpick_opengl_shim" {
                                             flt32:m8,  flt32:m9,  flt32:m10, flt32:m11,
                                             flt32:m12, flt32:m13, flt32:m14, flt32:m15);
-
     // textures
     func:aria_gl_gen_texture      = int32();
     func:aria_gl_bind_texture     = void(int32:target, int32:texture);
     func:aria_gl_tex_parameter_i  = void(int32:target, int32:pname, int32:param);
     func:aria_gl_delete_texture   = void(int32:texture);
-    func:aria_gl_load_texture_from_file = int32(string:filename);
+}
 
+extern "nitpick_opengl_shim" {
+    func:aria_gl_load_texture_from_file = int32(string:filename);
     // framebuffers
     func:aria_gl_gen_framebuffer  = int32();
     func:aria_gl_bind_framebuffer = void(int32:target, int32:framebuffer);
     func:aria_gl_framebuffer_texture_2d = void(int32:target, int32:attachment, int32:textarget, int32:texture, int32:level);
     func:aria_gl_check_framebuffer_status = int32(int32:target);
     func:aria_gl_delete_framebuffer = void(int32:framebuffer);
+}
 
+extern "nitpick_opengl_shim" {
     // blending
     func:aria_gl_blend_func       = void(int32:sfactor, int32:dfactor);
-
     // matrix helpers (output in internal float buffer)
     func:aria_gl_mat4_identity    = void();
     func:aria_gl_mat4_perspective = void(flt32:fov_deg, flt32:aspect,
                                          flt32:near, flt32:far);
     func:aria_gl_mat4_translate   = void(flt32:x, flt32:y, flt32:z);
+}
+
+extern "nitpick_opengl_shim" {
     func:aria_gl_mat4_rotate_y    = void(flt32:angle_deg);
     func:aria_gl_mat4_rotate_x    = void(flt32:angle_deg);
     func:aria_gl_mat4_rotate_z    = void(flt32:angle_deg);
@@ -111,22 +135,29 @@ extern "nitpick_opengl_shim" {
     func:aria_gl_mat4_ortho       = void(flt32:left, flt32:right, flt32:bottom, flt32:top, flt32:near, flt32:far);
     func:aria_gl_mat4_look_at     = void(flt32:ex, flt32:ey, flt32:ez, flt32:cx, flt32:cy, flt32:cz, flt32:ux, flt32:uy, flt32:uz);
     func:aria_gl_mat4_multiply    = void();
+}
+
+extern "nitpick_opengl_shim" {
     func:aria_gl_mat4_store       = void(int32:slot);
     func:aria_gl_mat4_load        = void(int32:slot);
     func:aria_gl_mat4_mul_slots   = void(int32:a_slot, int32:b_slot);
-
     // event forwarding
     func:aria_gl_poll_event         = int32();
     func:aria_gl_event_type         = int32();
     func:aria_gl_event_key_scancode = int32();
+}
+
+extern "nitpick_opengl_shim" {
     func:aria_gl_event_key_keycode  = int32();
     func:aria_gl_get_mouse_x        = int32();
     func:aria_gl_get_mouse_y        = int32();
     func:aria_gl_get_mouse_buttons  = int32();
     func:aria_gl_get_ticks          = int32();
     func:aria_gl_delay              = void(int32:ms);
-
     // constants
+}
+
+extern "nitpick_opengl_shim" {
     func:aria_gl_COLOR_BUFFER_BIT    = int32();
     func:aria_gl_DEPTH_BUFFER_BIT    = int32();
     func:aria_gl_DEPTH_TEST          = int32();
@@ -134,6 +165,9 @@ extern "nitpick_opengl_shim" {
     func:aria_gl_SRC_ALPHA           = int32();
     func:aria_gl_ONE_MINUS_SRC_ALPHA = int32();
     func:aria_gl_FRAMEBUFFER         = int32();
+}
+
+extern "nitpick_opengl_shim" {
     func:aria_gl_COLOR_ATTACHMENT0   = int32();
     func:aria_gl_FRAMEBUFFER_COMPLETE= int32();
     func:aria_gl_VERTEX_SHADER       = int32();
@@ -141,6 +175,9 @@ extern "nitpick_opengl_shim" {
     func:aria_gl_ARRAY_BUFFER        = int32();
     func:aria_gl_ELEMENT_ARRAY_BUFFER = int32();
     func:aria_gl_STATIC_DRAW         = int32();
+}
+
+extern "nitpick_opengl_shim" {
     func:aria_gl_DYNAMIC_DRAW        = int32();
     func:aria_gl_TRIANGLES           = int32();
     func:aria_gl_LINES               = int32();
@@ -148,15 +185,19 @@ extern "nitpick_opengl_shim" {
     func:aria_gl_UNSIGNED_INT        = int32();
     func:aria_gl_UNSIGNED_SHORT      = int32();
     func:aria_gl_TEXTURE_2D          = int32();
+}
+
+extern "nitpick_opengl_shim" {
     func:aria_gl_TEXTURE_MIN_FILTER  = int32();
     func:aria_gl_TEXTURE_MAG_FILTER  = int32();
     func:aria_gl_LINEAR              = int32();
     func:aria_gl_NEAREST             = int32();
     func:aria_gl_CULL_FACE           = int32();
-
-
     // pre-built geometry
     func:aria_gl_load_cube_geometry = void();
+}
+
+extern "nitpick_opengl_shim" {
     func:aria_gl_load_quad_geometry = void();
 }
 

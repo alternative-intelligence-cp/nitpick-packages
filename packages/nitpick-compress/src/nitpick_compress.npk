@@ -11,6 +11,9 @@ extern "nitpick_compress_shim" {
     func:nitpick_compress_get_result = string();
     func:nitpick_compress_get_length = int32();
     func:nitpick_compress_get_error  = int32();
+}
+
+extern "nitpick_compress_shim" {
     func:nitpick_compress_roundtrip  = int32(string:data, int32:len);
     func:nitpick_compress_version    = string();
 }

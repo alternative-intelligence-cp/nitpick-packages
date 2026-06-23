@@ -8,6 +8,9 @@ extern "nitpick_socket_shim" {
     func:nitpick_socket_udp_create      = int32();
     func:nitpick_socket_udp_bind        = int32(int32:fd, string:addr, int32:port);
     func:nitpick_socket_udp_sendto      = int32(int32:fd, string:data, int32:len, string:host, int32:port);
+}
+
+extern "nitpick_socket_shim" {
     func:nitpick_socket_udp_recvfrom    = string(int32:fd);
     func:nitpick_socket_send            = int32(int32:fd, string:data, int32:len);
     func:nitpick_socket_send_str        = int32(int32:fd, string:data);
@@ -15,6 +18,9 @@ extern "nitpick_socket_shim" {
     func:nitpick_socket_last_result     = string();
     func:nitpick_socket_recv_length     = int64();
     func:nitpick_socket_set_nonblocking = int32(int32:fd);
+}
+
+extern "nitpick_socket_shim" {
     func:nitpick_socket_poll_read       = int32(int32:fd, int32:timeout_ms);
     func:nitpick_socket_close           = void(int32:fd);
     func:nitpick_socket_set_timeout     = int32(int32:fd, int32:seconds);

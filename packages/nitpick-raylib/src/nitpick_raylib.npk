@@ -13,56 +13,69 @@ extern "nitpick_raylib_shim" {
     func:aria_rl_is_window_ready      = int32();
     func:aria_rl_is_window_fullscreen = int32();
     func:aria_rl_toggle_fullscreen    = void();
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_set_window_size      = void(int32:w, int32:h);
     func:aria_rl_set_window_title     = void(string:title);
     func:aria_rl_set_window_position  = void(int32:x, int32:y);
     func:aria_rl_get_screen_width     = int32();
     func:aria_rl_get_screen_height    = int32();
-
     // drawing lifecycle
     func:aria_rl_begin_drawing    = void();
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_end_drawing      = void();
     func:aria_rl_clear_background = void(int32:r, int32:g, int32:b, int32:a);
-
     // timing
     func:aria_rl_set_target_fps = void(int32:fps);
     func:aria_rl_get_fps        = int32();
     func:aria_rl_get_frame_time = flt32();
     func:aria_rl_get_time       = flt64();
+}
 
+extern "nitpick_raylib_shim" {
     // shapes: pixel
     func:aria_rl_draw_pixel = void(int32:x, int32:y,
                                    int32:r, int32:g, int32:b, int32:a);
-
     // shapes: line
     func:aria_rl_draw_line = void(int32:x1, int32:y1, int32:x2, int32:y2,
                                   int32:r, int32:g, int32:b, int32:a);
-
     // shapes: circle
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_draw_circle       = void(int32:cx, int32:cy, flt32:radius,
                                           int32:r, int32:g, int32:b, int32:a);
     func:aria_rl_draw_circle_lines = void(int32:cx, int32:cy, flt32:radius,
                                           int32:r, int32:g, int32:b, int32:a);
-
     // shapes: rectangle
     func:aria_rl_draw_rectangle       = void(int32:x, int32:y, int32:w, int32:h,
                                              int32:r, int32:g, int32:b, int32:a);
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_draw_rectangle_lines = void(int32:x, int32:y, int32:w, int32:h,
                                              int32:r, int32:g, int32:b, int32:a);
-
     // shapes: triangle
     func:aria_rl_draw_triangle       = void(flt32:x1, flt32:y1,
                                             flt32:x2, flt32:y2,
                                             flt32:x3, flt32:y3,
                                             int32:r, int32:g, int32:b, int32:a);
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_draw_triangle_lines = void(flt32:x1, flt32:y1,
                                             flt32:x2, flt32:y2,
                                             flt32:x3, flt32:y3,
                                             int32:r, int32:g, int32:b, int32:a);
-
     // 3D
     func:aria_rl_create_camera_3d = int32(flt32:pos_x, flt32:pos_y, flt32:pos_z,
                                           flt32:tar_x, flt32:tar_y, flt32:tar_z,
+}
+
+extern "nitpick_raylib_shim" {
                                           flt32:up_x, flt32:up_y, flt32:up_z,
                                           flt32:fovy, int32:projection);
     func:aria_rl_destroy_camera_3d = void(int32:handle);
@@ -70,14 +83,19 @@ extern "nitpick_raylib_shim" {
     func:aria_rl_begin_mode_3d_camera = void(int32:handle);
     func:aria_rl_get_camera_3d_pos_x = flt32(int32:handle);
     func:aria_rl_get_camera_3d_pos_y = flt32(int32:handle);
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_get_camera_3d_pos_z = flt32(int32:handle);
     func:aria_rl_get_camera_3d_target_x = flt32(int32:handle);
     func:aria_rl_get_camera_3d_target_y = flt32(int32:handle);
     func:aria_rl_get_camera_3d_target_z = flt32(int32:handle);
-
     func:aria_rl_begin_mode_3d = void(flt32:pos_x, flt32:pos_y, flt32:pos_z,
                                       flt32:tar_x, flt32:tar_y, flt32:tar_z,
                                       flt32:up_x, flt32:up_y, flt32:up_z,
+}
+
+extern "nitpick_raylib_shim" {
                                       flt32:fovy, int32:projection);
     func:aria_rl_end_mode_3d = void();
     func:aria_rl_draw_cube = void(flt32:x, flt32:y, flt32:z,
@@ -85,6 +103,9 @@ extern "nitpick_raylib_shim" {
                                   int32:r, int32:g, int32:b, int32:a);
     func:aria_rl_draw_cube_wires = void(flt32:x, flt32:y, flt32:z,
                                         flt32:width, flt32:height, flt32:length,
+}
+
+extern "nitpick_raylib_shim" {
                                         int32:r, int32:g, int32:b, int32:a);
     func:aria_rl_draw_sphere = void(flt32:x, flt32:y, flt32:z, flt32:radius,
                                     int32:r, int32:g, int32:b, int32:a);
@@ -92,39 +113,49 @@ extern "nitpick_raylib_shim" {
                                           int32:rings, int32:slices,
                                           int32:r, int32:g, int32:b, int32:a);
     func:aria_rl_draw_grid = void(int32:slices, flt32:spacing);
+}
 
+extern "nitpick_raylib_shim" {
     // models
     func:aria_rl_load_model = int32(string:path);
     func:aria_rl_unload_model = void(int32:handle);
     func:aria_rl_draw_model = void(int32:handle, flt32:x, flt32:y, flt32:z,
                                    flt32:scale, int32:r, int32:g, int32:b, int32:a);
     func:aria_rl_set_model_material_texture = void(int32:model_handle, int32:material_idx, int32:map_type, int32:tex_handle);
-
     // text
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_draw_text    = void(string:text, int32:x, int32:y,
                                      int32:font_size,
                                      int32:r, int32:g, int32:b, int32:a);
     func:aria_rl_draw_fps     = void(int32:x, int32:y);
     func:aria_rl_measure_text = int32(string:text, int32:font_size);
-
     // keyboard
     func:aria_rl_is_key_pressed  = int32(int32:key);
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_is_key_down     = int32(int32:key);
     func:aria_rl_is_key_released = int32(int32:key);
     func:aria_rl_is_key_up       = int32(int32:key);
     func:aria_rl_get_key_pressed = int32();
-
     // mouse
     func:aria_rl_get_mouse_x              = int32();
     func:aria_rl_get_mouse_y              = int32();
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_is_mouse_button_pressed  = int32(int32:button);
     func:aria_rl_is_mouse_button_down     = int32(int32:button);
     func:aria_rl_is_mouse_button_released = int32(int32:button);
     func:aria_rl_get_mouse_wheel_move     = flt32();
     func:aria_rl_set_mouse_position       = void(int32:x, int32:y);
     func:aria_rl_set_mouse_cursor         = void(int32:cursor);
-
     // textures
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_load_texture      = int32(string:path);
     func:aria_rl_unload_texture    = void(int32:handle);
     func:aria_rl_is_texture_valid  = int32(int32:handle);
@@ -132,6 +163,9 @@ extern "nitpick_raylib_shim" {
     func:aria_rl_get_texture_height = int32(int32:handle);
     func:aria_rl_draw_texture      = void(int32:handle, int32:x, int32:y,
                                           int32:r, int32:g, int32:b, int32:a);
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_draw_texture_ex   = void(int32:handle, flt32:x, flt32:y,
                                           flt32:rotation, flt32:scale,
                                           int32:r, int32:g, int32:b, int32:a);
@@ -139,30 +173,39 @@ extern "nitpick_raylib_shim" {
                                           flt32:sx, flt32:sy, flt32:sw, flt32:sh,
                                           flt32:dx, flt32:dy,
                                           int32:r, int32:g, int32:b, int32:a);
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_draw_texture_pro  = void(int32:handle,
                                           flt32:sx, flt32:sy, flt32:sw, flt32:sh,
                                           flt32:dx, flt32:dy, flt32:dw, flt32:dh,
                                           flt32:ox, flt32:oy, flt32:rotation,
                                           int32:r, int32:g, int32:b, int32:a);
-
     // audio: device
     func:aria_rl_init_audio_device     = void();
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_close_audio_device    = void();
     func:aria_rl_is_audio_device_ready = int32();
     func:aria_rl_set_master_volume     = void(flt32:vol);
-
     // audio: sounds
     func:aria_rl_load_sound       = int32(string:path);
     func:aria_rl_unload_sound     = void(int32:handle);
     func:aria_rl_play_sound       = void(int32:handle);
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_stop_sound       = void(int32:handle);
     func:aria_rl_is_sound_playing = int32(int32:handle);
     func:aria_rl_set_sound_volume = void(int32:handle, flt32:vol);
-
     // audio: music
     func:aria_rl_load_music             = int32(string:path);
     func:aria_rl_unload_music           = void(int32:handle);
     func:aria_rl_play_music             = void(int32:handle);
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_stop_music             = void(int32:handle);
     func:aria_rl_update_music           = void(int32:handle);
     func:aria_rl_pause_music            = void(int32:handle);
@@ -170,48 +213,59 @@ extern "nitpick_raylib_shim" {
     func:aria_rl_is_music_playing       = int32(int32:handle);
     func:aria_rl_set_music_volume       = void(int32:handle, flt32:vol);
     func:aria_rl_get_music_time_length  = flt32(int32:handle);
-    func:aria_rl_get_music_time_played  = flt32(int32:handle);
+}
 
+extern "nitpick_raylib_shim" {
+    func:aria_rl_get_music_time_played  = flt32(int32:handle);
     // gamepad
     func:aria_rl_is_gamepad_available        = int32(int32:gamepad);
     func:aria_rl_is_gamepad_button_pressed   = int32(int32:gamepad, int32:button);
     func:aria_rl_is_gamepad_button_down      = int32(int32:gamepad, int32:button);
     func:aria_rl_is_gamepad_button_released  = int32(int32:gamepad, int32:button);
     func:aria_rl_get_gamepad_axis_movement   = flt32(int32:gamepad, int32:axis);
+}
 
+extern "nitpick_raylib_shim" {
     // procedural beep (wave_type: 0=square 1=triangle 2=sawtooth 3=sine)
     func:aria_rl_gen_beep = int32(int32:freq, int32:dur_ms, int32:wave, flt32:vol);
-
     // advanced shapes
     func:aria_rl_draw_line_ex = void(flt32:x1, flt32:y1, flt32:x2, flt32:y2, flt32:thick,
                                      int32:r, int32:g, int32:b, int32:a);
     func:aria_rl_draw_rectangle_rounded = void(flt32:x, flt32:y, flt32:w, flt32:h,
                                                flt32:roundness, int32:segments,
+}
+
+extern "nitpick_raylib_shim" {
                                                int32:r, int32:g, int32:b, int32:a);
     func:aria_rl_draw_rectangle_rounded_lines = void(flt32:x, flt32:y, flt32:w, flt32:h,
                                                      flt32:roundness, int32:segments,
                                                      int32:r, int32:g, int32:b, int32:a);
-
     // 2D Camera
     func:aria_rl_begin_mode_2d = void(flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom);
     func:aria_rl_end_mode_2d = void();
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_get_screen_to_world_2d_x = flt32(flt32:pos_x, flt32:pos_y, flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom);
     func:aria_rl_get_screen_to_world_2d_y = flt32(flt32:pos_x, flt32:pos_y, flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom);
     func:aria_rl_get_world_to_screen_2d_x = flt32(flt32:pos_x, flt32:pos_y, flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom);
     func:aria_rl_get_world_to_screen_2d_y = flt32(flt32:pos_x, flt32:pos_y, flt32:offset_x, flt32:offset_y, flt32:target_x, flt32:target_y, flt32:rotation, flt32:zoom);
-
     // custom fonts
     func:aria_rl_load_font = int32(string:path);
     func:aria_rl_unload_font = void(int32:handle);
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_draw_text_ex = void(int32:font_handle, string:text, flt32:x, flt32:y, flt32:font_size, flt32:spacing, int32:r, int32:g, int32:b, int32:a);
     func:aria_rl_measure_text_ex_x = flt32(int32:font_handle, string:text, flt32:font_size, flt32:spacing);
     func:aria_rl_measure_text_ex_y = flt32(int32:font_handle, string:text, flt32:font_size, flt32:spacing);
-
     // collision detection
     func:aria_rl_check_collision_recs = int32(flt32:x1, flt32:y1, flt32:w1, flt32:h1, flt32:x2, flt32:y2, flt32:w2, flt32:h2);
     func:aria_rl_check_collision_circles = int32(flt32:x1, flt32:y1, flt32:r1, flt32:x2, flt32:y2, flt32:r2);
     func:aria_rl_check_collision_point_rec = int32(flt32:px, flt32:py, flt32:rx, flt32:ry, flt32:rw, flt32:rh);
+}
 
+extern "nitpick_raylib_shim" {
     // shaders
     func:aria_rl_load_shader = int32(string:vs_path, string:fs_path);
     func:aria_rl_unload_shader = void(int32:handle);
@@ -219,6 +273,9 @@ extern "nitpick_raylib_shim" {
     func:aria_rl_end_shader_mode = void();
     func:aria_rl_get_shader_location = int32(int32:handle, string:uniform_name);
     func:aria_rl_set_shader_value_float = void(int32:handle, int32:locIndex, flt32:val);
+}
+
+extern "nitpick_raylib_shim" {
     func:aria_rl_set_shader_value_int = void(int32:handle, int32:locIndex, int32:val);
     func:aria_rl_set_shader_value_vec2 = void(int32:handle, int32:locIndex, flt32:x, flt32:y);
     func:aria_rl_set_shader_value_vec3 = void(int32:handle, int32:locIndex, flt32:x, flt32:y, flt32:z);

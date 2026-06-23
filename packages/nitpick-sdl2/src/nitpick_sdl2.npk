@@ -9,11 +9,13 @@ extern "nitpick_sdl2_shim" {
     // init / quit
     func:nitpick_sdl2_init = int32(int32:flags);
     func:nitpick_sdl2_quit = void();
-
     // window
     func:nitpick_sdl2_create_window     = int32(string:title, int32:x, int32:y,
                                              int32:w, int32:h, int32:flags);
     func:nitpick_sdl2_set_window_title    = void(string:title);
+}
+
+extern "nitpick_sdl2_shim" {
     func:nitpick_sdl2_set_window_size     = void(int32:w, int32:h);
     func:nitpick_sdl2_set_window_position = void(int32:x, int32:y);
     func:nitpick_sdl2_get_window_width    = int32();
@@ -21,108 +23,129 @@ extern "nitpick_sdl2_shim" {
     func:nitpick_sdl2_show_window         = void();
     func:nitpick_sdl2_hide_window         = void();
     func:nitpick_sdl2_maximize_window     = void();
-    func:nitpick_sdl2_minimize_window     = void();
+}
 
+extern "nitpick_sdl2_shim" {
+    func:nitpick_sdl2_minimize_window     = void();
     // renderer
     func:nitpick_sdl2_create_renderer       = int32(int32:flags);
     func:nitpick_sdl2_set_render_draw_color = void(int32:r, int32:g, int32:b, int32:a);
     func:nitpick_sdl2_render_clear          = void();
     func:nitpick_sdl2_render_present        = void();
-
     // drawing
+}
+
+extern "nitpick_sdl2_shim" {
     func:nitpick_sdl2_render_draw_point = void(int32:x, int32:y);
     func:nitpick_sdl2_render_draw_line  = void(int32:x1, int32:y1, int32:x2, int32:y2);
     func:nitpick_sdl2_render_draw_rect  = void(int32:x, int32:y, int32:w, int32:h);
     func:nitpick_sdl2_render_fill_rect  = void(int32:x, int32:y, int32:w, int32:h);
-
     // events
     func:nitpick_sdl2_poll_event  = int32();
     func:nitpick_sdl2_event_type  = int32();
+}
 
+extern "nitpick_sdl2_shim" {
     // keyboard event fields
     func:nitpick_sdl2_event_key_scancode = int32();
     func:nitpick_sdl2_event_key_keycode  = int32();
     func:nitpick_sdl2_event_key_mod      = int32();
     func:nitpick_sdl2_event_key_repeat   = int32();
-
     // mouse motion event fields
     func:nitpick_sdl2_event_mouse_x    = int32();
+}
+
+extern "nitpick_sdl2_shim" {
     func:nitpick_sdl2_event_mouse_y    = int32();
     func:nitpick_sdl2_event_mouse_xrel = int32();
     func:nitpick_sdl2_event_mouse_yrel = int32();
-
     // mouse button event fields
     func:nitpick_sdl2_event_mouse_button   = int32();
     func:nitpick_sdl2_event_mouse_clicks   = int32();
     func:nitpick_sdl2_event_mouse_button_x = int32();
-    func:nitpick_sdl2_event_mouse_button_y = int32();
+}
 
+extern "nitpick_sdl2_shim" {
+    func:nitpick_sdl2_event_mouse_button_y = int32();
     // mouse wheel event fields
     func:nitpick_sdl2_event_wheel_x = int32();
     func:nitpick_sdl2_event_wheel_y = int32();
-
     // window event fields
     func:nitpick_sdl2_event_window_event_id = int32();
     func:nitpick_sdl2_event_window_data1    = int32();
-    func:nitpick_sdl2_event_window_data2    = int32();
+}
 
+extern "nitpick_sdl2_shim" {
+    func:nitpick_sdl2_event_window_data2    = int32();
     // keyboard state
     func:nitpick_sdl2_get_keyboard_state = int32(int32:scancode);
-
     // mouse state
     func:nitpick_sdl2_get_mouse_state_x       = int32();
     func:nitpick_sdl2_get_mouse_state_y       = int32();
     func:nitpick_sdl2_get_mouse_state_buttons = int32();
+}
 
+extern "nitpick_sdl2_shim" {
     // timing
     func:nitpick_sdl2_get_ticks = int32();
     func:nitpick_sdl2_delay     = void(int32:ms);
-
     // misc
     func:nitpick_sdl2_get_error                  = string();
     func:nitpick_sdl2_set_render_draw_blend_mode = int32(int32:mode);
-
     // textures
+}
+
+extern "nitpick_sdl2_shim" {
     func:nitpick_sdl2_load_bmp_texture = int32(string:path);
     func:nitpick_sdl2_destroy_texture = void(int32:handle);
     func:nitpick_sdl2_render_copy = void(int32:handle, int32:sx, int32:sy, int32:sw, int32:sh, int32:dx, int32:dy, int32:dw, int32:dh);
     func:nitpick_sdl2_render_copy_full = void(int32:handle, int32:dx, int32:dy, int32:dw, int32:dh);
     func:nitpick_sdl2_query_texture_w = int32(int32:handle);
     func:nitpick_sdl2_query_texture_h = int32(int32:handle);
-
     // render scaling & clipping
+}
+
+extern "nitpick_sdl2_shim" {
     func:nitpick_sdl2_render_set_logical_size = void(int32:w, int32:h);
     func:nitpick_sdl2_render_set_scale = void(flt32:scale_x, flt32:scale_y);
     func:nitpick_sdl2_render_set_clip_rect = void(int32:x, int32:y, int32:w, int32:h);
     func:nitpick_sdl2_render_disable_clip = void();
-
     // text input events
     func:nitpick_sdl2_start_text_input = void();
     func:nitpick_sdl2_stop_text_input = void();
-    func:nitpick_sdl2_event_text_input = string();
+}
 
+extern "nitpick_sdl2_shim" {
+    func:nitpick_sdl2_event_text_input = string();
     // extensions
     func:nitpick_sdl2_load_image_texture = int32(string:path);
     func:nitpick_sdl2_ttf_init = int32();
     func:nitpick_sdl2_ttf_quit = void();
     func:nitpick_sdl2_load_font = int32(string:path, int32:ptsize);
     func:nitpick_sdl2_destroy_font = void(int32:handle);
+}
+
+extern "nitpick_sdl2_shim" {
     func:nitpick_sdl2_render_text_blended = int32(int32:font_handle, string:text, int32:r, int32:g, int32:b, int32:a);
-    
     func:nitpick_sdl2_mixer_init = int32(int32:frequency, int32:channels, int32:chunksize);
     func:nitpick_sdl2_mixer_quit = void();
     func:nitpick_sdl2_load_wav = int32(string:path);
     func:nitpick_sdl2_destroy_wav = void(int32:handle);
     func:nitpick_sdl2_play_channel = void(int32:channel, int32:handle, int32:loops);
     func:nitpick_sdl2_load_music = int32(string:path);
+}
+
+extern "nitpick_sdl2_shim" {
     func:nitpick_sdl2_play_music = void(int32:loops);
     func:nitpick_sdl2_pause_music = void();
     func:nitpick_sdl2_resume_music = void();
     func:nitpick_sdl2_halt_music = void();
-
     func:nitpick_sdl2_controller_open = int32(int32:device_index);
     func:nitpick_sdl2_controller_close = void(int32:handle);
     func:nitpick_sdl2_controller_get_button = int32(int32:handle, int32:button);
+}
+
+extern "nitpick_sdl2_shim" {
     func:nitpick_sdl2_controller_get_axis = int32(int32:handle, int32:axis);
 }
 

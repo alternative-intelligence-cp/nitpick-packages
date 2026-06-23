@@ -146,6 +146,9 @@ extern "nitpick_websocket_shim" {
     func:nitpick_ws_parse_payload_len     = int64(string:frame);
     func:nitpick_ws_parse_payload_offset  = int64(string:frame);
     func:nitpick_ws_unmask_payload        = string(string:frame);
+}
+
+extern "nitpick_websocket_shim" {
     func:nitpick_ws_cleanup               = void();
 }
 

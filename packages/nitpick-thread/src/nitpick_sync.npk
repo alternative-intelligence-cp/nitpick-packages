@@ -6,17 +6,21 @@ extern "npk_runtime" {
     func:npk_shim_mutex_trylock = int32(int64:handle);
     func:npk_shim_mutex_unlock = int32(int64:handle);
     func:npk_shim_mutex_destroy = int32(int64:handle);
-
     func:npk_shim_condvar_create = int64();
     func:npk_shim_condvar_wait = int32(int64:cv, int64:mutex);
+}
+
+extern "npk_runtime" {
     func:npk_shim_condvar_timedwait = int32(int64:cv, int64:mutex, int64:timeout_ns);
     func:npk_shim_condvar_signal = int32(int64:cv);
     func:npk_shim_condvar_broadcast = int32(int64:cv);
     func:npk_shim_condvar_destroy = int32(int64:cv);
-
     func:npk_shim_rwlock_create = int64();
     func:npk_shim_rwlock_rdlock = int32(int64:handle);
     func:npk_shim_rwlock_tryrdlock = int32(int64:handle);
+}
+
+extern "npk_runtime" {
     func:npk_shim_rwlock_wrlock = int32(int64:handle);
     func:npk_shim_rwlock_trywrlock = int32(int64:handle);
     func:npk_shim_rwlock_unlock = int32(int64:handle);

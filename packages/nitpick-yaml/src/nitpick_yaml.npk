@@ -11,6 +11,9 @@ extern "nitpick_yaml_shim" {
     func:nitpick_yaml_get_string = string(string:key);
     func:nitpick_yaml_get_int    = int64(string:key);
     func:nitpick_yaml_get_float  = flt64(string:key);
+}
+
+extern "nitpick_yaml_shim" {
     func:nitpick_yaml_get_bool   = int32(string:key);
     func:nitpick_yaml_has_key    = int32(string:key);
     func:nitpick_yaml_set_string = int32(string:key, string:val);
@@ -18,6 +21,9 @@ extern "nitpick_yaml_shim" {
     func:nitpick_yaml_set_bool   = int32(string:key, int32:val);
     func:nitpick_yaml_count      = int32();
     func:nitpick_yaml_clear      = NIL();
+}
+
+extern "nitpick_yaml_shim" {
     func:nitpick_yaml_serialize  = string();
     func:nitpick_yaml_write_file = int32(string:path);
 }

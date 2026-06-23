@@ -6,6 +6,9 @@ extern "nitpick_mysql_shim" {
     func:nitpick_mysql_execute = int32(int32:conn_id, string:sql);
     func:nitpick_mysql_simple_query = int32(int32:conn_id, string:sql);
     func:nitpick_mysql_next_row     = int32(int32:conn_id);
+}
+
+extern "nitpick_mysql_shim" {
     func:nitpick_mysql_column_text  = string(int32:conn_id, int32:col);
 }
 

@@ -10,6 +10,9 @@ extern "nitpick_log_shim" {
     func:nitpick_log_set_output_file   = void(string:path);
     func:nitpick_log_set_output_stderr = void();
     func:nitpick_log_set_output_stdout = void();
+}
+
+extern "nitpick_log_shim" {
     func:nitpick_log_show_timestamp    = void(int32:show);
     func:nitpick_log_show_level        = void(int32:show);
     func:nitpick_log_trace = void(string:msg);
@@ -17,6 +20,9 @@ extern "nitpick_log_shim" {
     func:nitpick_log_info  = void(string:msg);
     func:nitpick_log_warn  = void(string:msg);
     func:nitpick_log_error = void(string:msg);
+}
+
+extern "nitpick_log_shim" {
     func:nitpick_log_fatal = void(string:msg);
     func:nitpick_log_count = int64();
 }

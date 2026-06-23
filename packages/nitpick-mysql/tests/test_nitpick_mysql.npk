@@ -15,38 +15,43 @@ extern "nitpick_mysql_shim" {
     func:nitpick_mysql_connect    = int32(string:host, string:user, string:passwd, string:db, int32:port);
     func:nitpick_mysql_disconnect = int32(int32:conn_id);
     func:nitpick_mysql_last_conn  = int32();
-
     func:nitpick_mysql_exec = int32(int32:conn_id, string:sql);
-
     func:nitpick_mysql_param_clear      = int32();
     func:nitpick_mysql_param_add_text   = int32(string:val);
     func:nitpick_mysql_param_add_int    = int32(int64:val);
+}
+
+extern "nitpick_mysql_shim" {
     func:nitpick_mysql_param_add_double = int32(float64:val);
     func:nitpick_mysql_param_add_null   = int32();
-
     func:nitpick_mysql_execute      = int32(int32:conn_id, string:sql);
     func:nitpick_mysql_select       = int32(int32:conn_id, string:sql);
     func:nitpick_mysql_simple_query = int32(int32:conn_id, string:sql);
-
     func:nitpick_mysql_next_row     = int32(int32:conn_id);
     func:nitpick_mysql_row_count    = int32(int32:conn_id);
+}
+
+extern "nitpick_mysql_shim" {
     func:nitpick_mysql_column_count = int32(int32:conn_id);
     func:nitpick_mysql_column_int   = int64(int32:conn_id, int32:col);
     func:nitpick_mysql_column_is_null = int32(int32:conn_id, int32:col);
     func:nitpick_mysql_clear_result = int32(int32:conn_id);
     func:nitpick_mysql_affected_rows = int64(int32:conn_id);
     func:nitpick_mysql_last_insert_id = int64(int32:conn_id);
-
     func:nitpick_mysql_begin    = int32(int32:conn_id);
+}
+
+extern "nitpick_mysql_shim" {
     func:nitpick_mysql_commit   = int32(int32:conn_id);
     func:nitpick_mysql_rollback = int32(int32:conn_id);
-
     func:nitpick_mysql_status = int32(int32:conn_id);
-
     // test assertion helpers (C-side)
     func:nitpick_mysql_assert_int_eq   = void(int64:actual, int64:expected, string:msg);
     func:nitpick_mysql_assert_true     = void(bool:val, string:msg);
     func:nitpick_mysql_column_text    = string(int32:conn_id, int32:col);
+}
+
+extern "nitpick_mysql_shim" {
     func:nitpick_mysql_assert_str_eq      = void(string:actual, string:expected, string:msg);
     func:nitpick_mysql_assert_col_int_eq  = void(int32:conn_id, int32:col, int64:expected, string:msg);
     func:nitpick_mysql_assert_col_is_null = void(int32:conn_id, int32:col, string:msg);

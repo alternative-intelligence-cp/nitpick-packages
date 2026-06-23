@@ -8,6 +8,9 @@ extern "nitpick_test_shim" {
     func:nitpick_test_failed_count    = int64();
     func:nitpick_test_skipped_count   = int64();
     func:nitpick_test_total_count     = int64();
+}
+
+extern "nitpick_test_shim" {
     func:nitpick_test_skip            = void(string:name);
     func:nitpick_test_assert          = void(string:name, int32:cond);
     func:nitpick_test_assert_eq_i32   = void(string:name, int32:actual, int32:expected);
@@ -15,6 +18,9 @@ extern "nitpick_test_shim" {
     func:nitpick_test_assert_eq_str   = void(string:name, string:actual, string:expected);
     func:nitpick_test_assert_near_f64 = void(string:name, flt64:actual, flt64:expected, flt64:epsilon);
     func:nitpick_test_assert_not_empty = void(string:name, string:value);
+}
+
+extern "nitpick_test_shim" {
     func:nitpick_test_assert_gt_i32   = void(string:name, int32:actual, int32:threshold);
     func:nitpick_test_assert_gt_i64   = void(string:name, int64:actual, int64:threshold);
     func:nitpick_test_assert_ne_i32   = void(string:name, int32:actual, int32:unexpected);

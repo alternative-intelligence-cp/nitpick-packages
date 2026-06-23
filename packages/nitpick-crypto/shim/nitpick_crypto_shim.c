@@ -707,3 +707,41 @@ int32_t nitpick_crypto_blake2b_free(int64_t ctx_ptr) {
     if (!p) return -1;
     free(p); return 0;
 }
+
+/* ========== CKSUM CRC32 Implementation ========== */
+
+static uint32_t cksum_crctab[256];
+static int cksum_crc_initialized = 0;
+
+static void cksum_init_crc(void) {
+    uint32_t i, j, c;
+    for (i = 0; i < 256; ++i) {
+        c = i << 24;
+        for (j = 0; j < 8; ++j) {
+            if (c & 0x80000000) c = (c << 1) ^ 0x04C11DB7;
+            else c = c << 1;
+        }
+        cksum_crctab[i] = c;
+    }
+    cksum_crc_initialized = 1;
+}
+
+int64_t nitpick_crypto_cksum_update(int64_t crc, int64_t buf_ptr, int64_t length) {
+    if (!cksum_crc_initialized) cksum_init_crc();
+    uint32_t c = (uint32_t)crc;
+    const uint8_t *buf = (const uint8_t *)(uintptr_t)buf_ptr;
+    for (size_t i = 0; i < (size_t)length; i++) {
+        c = (c << 8) ^ cksum_crctab[((c >> 24) ^ buf[i]) & 0xFF];
+    }
+    return (int64_t)c;
+}
+
+int64_t nitpick_crypto_cksum_finalize(int64_t crc, int64_t total_len) {
+    if (!cksum_crc_initialized) cksum_init_crc();
+    uint32_t c = (uint32_t)crc;
+    while (total_len != 0) {
+        c = (c << 8) ^ cksum_crctab[((c >> 24) ^ (total_len & 0xFF)) & 0xFF];
+        total_len >>= 8;
+    }
+    return (int64_t)(~c);
+}

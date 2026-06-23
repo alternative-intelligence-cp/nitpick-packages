@@ -16,6 +16,9 @@ extern "nitpick_libc_router" {
     func:nitpick_libc_router_param_name  = string(int64:idx);
     func:nitpick_libc_router_param_value = string(int64:idx);
     func:nitpick_libc_router_use_mw     = int64(int64:middleware_id);
+}
+
+extern "nitpick_libc_router" {
     func:nitpick_libc_router_mw_count   = int64();
     func:nitpick_libc_router_mw_id      = int64(int64:idx);
     func:nitpick_libc_router_route_count = int64();

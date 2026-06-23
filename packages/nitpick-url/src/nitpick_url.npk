@@ -8,6 +8,9 @@ extern "nitpick_url_shim" {
     func:nitpick_url_get_path     = string();
     func:nitpick_url_get_query    = string();
     func:nitpick_url_get_fragment = string();
+}
+
+extern "nitpick_url_shim" {
     func:nitpick_url_encode       = string(string:input);
     func:nitpick_url_decode       = string(string:input);
 }

@@ -10,49 +10,54 @@ extern "nitpick_cuda_shim" {
     func:nitpick_cuda_device_get_attribute = int32(int32:device, int32:attr);
     func:nitpick_cuda_get_error_name = string(int32:error_code);
     func:nitpick_cuda_get_error_string = string(int32:error_code);
+}
 
+extern "nitpick_cuda_shim" {
     func:nitpick_cuda_malloc = int64(int32:byte_size);
     func:nitpick_cuda_free = int32(int64:ptr);
-
     func:nitpick_cuda_malloc_managed = int64(int32:byte_size);
     func:nitpick_cuda_managed_set_f32 = void(int64:ptr, int32:index, flt32:val);
     func:nitpick_cuda_managed_get_f32 = flt32(int64:ptr, int32:index);
     func:nitpick_cuda_managed_set_i32 = void(int64:ptr, int32:index, int32:val);
     func:nitpick_cuda_managed_get_i32 = int32(int64:ptr, int32:index);
+}
+
+extern "nitpick_cuda_shim" {
     func:nitpick_cuda_prefetch_async = int32(int64:ptr, int32:byte_size, int32:dst_device, int64:cu_stream);
     func:nitpick_cuda_cpu_device_id = int32();
-
     func:nitpick_cuda_buf_clear = void();
     func:nitpick_cuda_buf_push_f32 = void(flt32:val);
     func:nitpick_cuda_buf_push_i32 = void(int32:val);
     func:nitpick_cuda_buf_get_f32 = flt32(int32:index);
     func:nitpick_cuda_buf_get_i32 = int32(int32:index);
-    func:nitpick_cuda_buf_count = int32();
+}
 
+extern "nitpick_cuda_shim" {
+    func:nitpick_cuda_buf_count = int32();
     func:nitpick_cuda_memcpy_to_device = int32(int64:dst_ptr, int32:byte_size);
     func:nitpick_cuda_memcpy_to_host = int32(int64:src_ptr, int32:byte_size);
-
     func:nitpick_cuda_memcpy_to_device_async = int32(int64:dst_ptr, int32:byte_size, int64:cu_stream);
     func:nitpick_cuda_memcpy_to_host_async = int32(int64:src_ptr, int32:byte_size, int64:cu_stream);
-
     func:nitpick_cuda_stream_create = int64();
     func:nitpick_cuda_stream_destroy = int32(int64:cu_stream);
-    func:nitpick_cuda_stream_synchronize = int32(int64:cu_stream);
+}
 
+extern "nitpick_cuda_shim" {
+    func:nitpick_cuda_stream_synchronize = int32(int64:cu_stream);
     func:nitpick_cuda_event_create = int64();
     func:nitpick_cuda_event_destroy = int32(int64:event);
     func:nitpick_cuda_event_record = int32(int64:event, int64:cu_stream);
     func:nitpick_cuda_event_synchronize = int32(int64:event);
     func:nitpick_cuda_event_elapsed_time = flt32(int64:start_event, int64:end_event);
-
     func:nitpick_cuda_module_load = int64(string:filename);
-    func:nitpick_cuda_module_get_function = int64(int64:module, string:name);
+}
 
+extern "nitpick_cuda_shim" {
+    func:nitpick_cuda_module_get_function = int64(int64:module, string:name);
     func:nitpick_cuda_args_clear = void();
     func:nitpick_cuda_args_push_f32 = void(flt32:val);
     func:nitpick_cuda_args_push_i32 = void(int32:val);
     func:nitpick_cuda_args_push_i64 = void(int64:val);
-
     func:nitpick_cuda_launch_kernel = int32(int64:func, int32:gx, int32:gy, int32:gz, int32:bx, int32:by, int32:bz, int32:shared_mem, int64:cu_stream);
 }
 

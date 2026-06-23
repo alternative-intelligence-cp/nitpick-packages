@@ -8,6 +8,9 @@ extern "nitpick_xml_shim" {
     func:nitpick_xml_has_tag    = int32(string:tag);
     func:nitpick_xml_node_count = int32();
     func:nitpick_xml_clear      = NIL();
+}
+
+extern "nitpick_xml_shim" {
     func:nitpick_xml_get_path   = string(string:path);
 }
 

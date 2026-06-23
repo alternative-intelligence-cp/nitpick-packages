@@ -19,6 +19,9 @@ extern "aria_libc_mem" {
     func:aria_libc_mem_write_i64   = void(int64:ptr, int64:offset, int64:val);
     func:aria_libc_mem_read_byte   = int64(int64:ptr, int64:offset);
     func:aria_libc_mem_write_byte  = int64(int64:ptr, int64:offset, int64:val);
+}
+
+extern "aria_libc_mem" {
     func:aria_libc_mem_zero        = void(int64:ptr, int64:nbytes);
 }
 
