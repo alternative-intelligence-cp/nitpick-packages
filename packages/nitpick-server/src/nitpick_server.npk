@@ -111,7 +111,7 @@ pub Type:Server = {
         
         string:raw_str = "";
         
-        int64:bytes_read = sys!!(SYS_RECVFROM, fd, buf_addr, buf_size, 0i64, 0i64, 0i64).value;
+        int64:bytes_read = raw sys!!(SYS_RECVFROM, fd, buf_addr, buf_size, 0i64, 0i64, 0i64);
         if (bytes_read > 0i64) {
             buf_ptr[bytes_read] = 0i8;
             
@@ -155,7 +155,7 @@ pub Type:Server = {
                         while (bytes_read < total_expected && bytes_read < buf_size) {
                             int64:rem = buf_size - bytes_read;
                             int64:dest = buf_addr + bytes_read;
-                            int64:more = sys!!(SYS_RECVFROM, fd, dest, rem, 0i64, 0i64, 0i64).value;
+                            int64:more = raw sys!!(SYS_RECVFROM, fd, dest, rem, 0i64, 0i64, 0i64);
                             if (more <= 0i64) { break; }
                             bytes_read = bytes_read + more;
                         }

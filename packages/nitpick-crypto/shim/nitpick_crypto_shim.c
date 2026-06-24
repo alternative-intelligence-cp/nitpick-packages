@@ -4,19 +4,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* ========== MD5 Implementation ========== */
+typedef struct {
+    const char* data;
+    int64_t length;
+} NpkString;
+
+static const uint32_t *md5_k_npk = NULL;
+int32_t nitpick_crypto_set_md5_k(const NpkString *ptr) {
+    if (ptr) md5_k_npk = (const uint32_t *)ptr->data;
+    return 0;
+}
 
 static void md5_transform(uint32_t state[4], const uint8_t block[64]) {
-    static const uint32_t K[64] = {
-        0xd76aa478,0xe8c7b756,0x242070db,0xc1bdceee,0xf57c0faf,0x4787c62a,0xa8304613,0xfd469501,
-        0x698098d8,0x8b44f7af,0xffff5bb1,0x895cd7be,0x6b901122,0xfd987193,0xa679438e,0x49b40821,
-        0xf61e2562,0xc040b340,0x265e5a51,0xe9b6c7aa,0xd62f105d,0x02441453,0xd8a1e681,0xe7d3fbc8,
-        0x21e1cde6,0xc33707d6,0xf4d50d87,0x455a14ed,0xa9e3e905,0xfcefa3f8,0x676f02d9,0x8d2a4c8a,
-        0xfffa3942,0x8771f681,0x6d9d6122,0xfde5380c,0xa4beea44,0x4bdecfa9,0xf6bb4b60,0xbebfbc70,
-        0x289b7ec6,0xeaa127fa,0xd4ef3085,0x04881d05,0xd9d4d039,0xe6db99e5,0x1fa27cf8,0xc4ac5665,
-        0xf4292244,0x432aff97,0xab9423a7,0xfc93a039,0x655b59c3,0x8f0ccc92,0xffeff47d,0x85845dd1,
-        0x6fa87e4f,0xfe2ce6e0,0xa3014314,0x4e0811a1,0xf7537e82,0xbd3af235,0x2ad7d2bb,0xeb86d391
-    };
+    const uint32_t *K = md5_k_npk;
     static const uint8_t S[64] = {
         7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,
         5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
@@ -68,19 +68,6 @@ static void md5_hash(const uint8_t *data, size_t len, uint8_t out[16]) {
     }
 }
 
-/* ========== SHA-256 Implementation ========== */
-
-static const uint32_t sha256_k[64] = {
-    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
-    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
-    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
-    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
-    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
-    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
-    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
-    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
-};
-
 #define RR(x,n) (((x)>>(n))|((x)<<(32-(n))))
 #define CH(x,y,z) (((x)&(y))^(~(x)&(z)))
 #define MAJ(x,y,z) (((x)&(y))^((x)&(z))^((y)&(z)))
@@ -89,7 +76,13 @@ static const uint32_t sha256_k[64] = {
 #define SIG0(x) (RR(x,7)^RR(x,18)^((x)>>3))
 #define SIG1(x) (RR(x,17)^RR(x,19)^((x)>>10))
 
+static const uint32_t *sha256_k_npk = NULL;
+void nitpick_crypto_set_sha256_k(const NpkString* ptr) {
+    if (ptr) sha256_k_npk = (const uint32_t *)ptr->data;
+}
+
 static void sha256_transform(uint32_t state[8], const uint8_t block[64]) {
+    const uint32_t *sha256_k = sha256_k_npk;
     uint32_t w[64];
     for (int i = 0; i < 16; i++)
         w[i] = ((uint32_t)block[i*4]<<24) | ((uint32_t)block[i*4+1]<<16) | ((uint32_t)block[i*4+2]<<8) | block[i*4+3];
@@ -279,27 +272,27 @@ static void hmac_sha1(const uint8_t *key, size_t klen, const uint8_t *msg, size_
 
 /* ========== Public API — one-shot ========== */
 
-const char *nitpick_crypto_sha1(const char *data) {
+const char *nitpick_crypto_sha1(const NpkString *npk_data) {
     uint8_t hash[20];
-    sha1_hash((const uint8_t *)data, strlen(data), hash);
+    sha1_hash((const uint8_t *)npk_data->data, npk_data->length, hash);
     return to_hex(hash, 20);
 }
 
-const char *nitpick_crypto_sha256(const char *data) {
+const char *nitpick_crypto_sha256(const NpkString *npk_data) {
     uint8_t hash[32];
-    sha256_hash((const uint8_t *)data, strlen(data), hash);
+    sha256_hash((const uint8_t *)npk_data->data, npk_data->length, hash);
     return to_hex(hash, 32);
 }
 
-const char *nitpick_crypto_md5(const char *data) {
+const char *nitpick_crypto_md5(const NpkString *npk_data) {
     uint8_t hash[16];
-    md5_hash((const uint8_t *)data, strlen(data), hash);
+    md5_hash((const uint8_t *)npk_data->data, npk_data->length, hash);
     return to_hex(hash, 16);
 }
 
-const char *nitpick_crypto_hmac_sha1(const char *key, const char *data) {
+const char *nitpick_crypto_hmac_sha1(const NpkString *npk_key, const NpkString *npk_data) {
     uint8_t hash[20];
-    hmac_sha1((const uint8_t *)key, strlen(key), (const uint8_t *)data, strlen(data), hash);
+    hmac_sha1((const uint8_t *)npk_key->data, npk_key->length, (const uint8_t *)npk_data->data, npk_data->length, hash);
     return to_hex(hash, 20);
 }
 
@@ -316,34 +309,34 @@ static void hex_to_bytes(const char *hex, uint8_t *out, size_t out_len) {
     }
 }
 
-const char *nitpick_crypto_hmac_sha1_hex(const char *key_hex, const char *data_hex) {
-    size_t klen = strlen(key_hex) / 2;
-    size_t dlen = strlen(data_hex) / 2;
+const char *nitpick_crypto_hmac_sha1_hex(const NpkString *npk_key_hex, const NpkString *npk_data_hex) {
+    size_t klen = npk_key_hex->length / 2;
+    size_t dlen = npk_data_hex->length / 2;
     uint8_t kbuf[4096];
     uint8_t dbuf[4096];
     if (klen > 4096) klen = 4096;
     if (dlen > 4096) dlen = 4096;
-    hex_to_bytes(key_hex, kbuf, klen);
-    hex_to_bytes(data_hex, dbuf, dlen);
+    hex_to_bytes(npk_key_hex->data, kbuf, klen);
+    hex_to_bytes(npk_data_hex->data, dbuf, dlen);
     uint8_t hash[20];
     hmac_sha1(kbuf, klen, dbuf, dlen, hash);
     return to_hex(hash, 20);
 }
 
-const char *nitpick_crypto_hmac_sha256(const char *key, const char *data) {
+const char *nitpick_crypto_hmac_sha256(const NpkString *npk_key, const NpkString *npk_data) {
     uint8_t hash[32];
-    hmac_sha256((const uint8_t *)key, strlen(key), (const uint8_t *)data, strlen(data), hash);
+    hmac_sha256((const uint8_t *)npk_key->data, npk_key->length, (const uint8_t *)npk_data->data, npk_data->length, hash);
     return to_hex(hash, 32);
 }
 
-int32_t nitpick_crypto_sha256_verify(const char *data, const char *expected_hex) {
-    const char *computed = nitpick_crypto_sha256(data);
-    return (strcmp(computed, expected_hex) == 0) ? 1 : 0;
+int32_t nitpick_crypto_sha256_verify(const NpkString *npk_data, const NpkString *npk_expected_hex) {
+    const char *computed = nitpick_crypto_sha256(npk_data);
+    return (strncmp(computed, npk_expected_hex->data, 64) == 0) ? 1 : 0;
 }
 
-int32_t nitpick_crypto_md5_verify(const char *data, const char *expected_hex) {
-    const char *computed = nitpick_crypto_md5(data);
-    return (strcmp(computed, expected_hex) == 0) ? 1 : 0;
+int32_t nitpick_crypto_md5_verify(const NpkString *npk_data, const NpkString *npk_expected_hex) {
+    const char *computed = nitpick_crypto_md5(npk_data);
+    return (strncmp(computed, npk_expected_hex->data, 32) == 0) ? 1 : 0;
 }
 
 /* ========== Streaming API =========================================
@@ -710,24 +703,14 @@ int32_t nitpick_crypto_blake2b_free(int64_t ctx_ptr) {
 
 /* ========== CKSUM CRC32 Implementation ========== */
 
-static uint32_t cksum_crctab[256];
-static int cksum_crc_initialized = 0;
-
-static void cksum_init_crc(void) {
-    uint32_t i, j, c;
-    for (i = 0; i < 256; ++i) {
-        c = i << 24;
-        for (j = 0; j < 8; ++j) {
-            if (c & 0x80000000) c = (c << 1) ^ 0x04C11DB7;
-            else c = c << 1;
-        }
-        cksum_crctab[i] = c;
-    }
-    cksum_crc_initialized = 1;
+static const uint32_t *cksum_crctab_npk = NULL;
+int32_t nitpick_crypto_set_cksum_crctab(const NpkString *ptr) {
+    if (ptr) cksum_crctab_npk = (const uint32_t *)ptr->data;
+    return 0;
 }
 
 int64_t nitpick_crypto_cksum_update(int64_t crc, int64_t buf_ptr, int64_t length) {
-    if (!cksum_crc_initialized) cksum_init_crc();
+    const uint32_t *cksum_crctab = cksum_crctab_npk;
     uint32_t c = (uint32_t)crc;
     const uint8_t *buf = (const uint8_t *)(uintptr_t)buf_ptr;
     for (size_t i = 0; i < (size_t)length; i++) {
@@ -737,7 +720,7 @@ int64_t nitpick_crypto_cksum_update(int64_t crc, int64_t buf_ptr, int64_t length
 }
 
 int64_t nitpick_crypto_cksum_finalize(int64_t crc, int64_t total_len) {
-    if (!cksum_crc_initialized) cksum_init_crc();
+    const uint32_t *cksum_crctab = cksum_crctab_npk;
     uint32_t c = (uint32_t)crc;
     while (total_len != 0) {
         c = (c << 8) ^ cksum_crctab[((c >> 24) ^ (total_len & 0xFF)) & 0xFF];

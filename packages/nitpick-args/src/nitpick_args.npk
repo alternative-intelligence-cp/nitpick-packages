@@ -1,7 +1,6 @@
 // nitpick-args v0.2.0 — CLI argument parsing for Nitpick
 use "nitpick_cli.npk".*;
 
-extern "libc" { func:string_length = int64(string:s); }
 extern "nitpick_cli_shim" {
     func:nitpick_cli_bright_green = string(string:text);
     func:nitpick_cli_cyan = string(string:text);
